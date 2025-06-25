@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -5,6 +6,7 @@ import {
   suggestRecipe,
   SuggestRecipeOutput,
 } from "@/ai/flows/suggest-ingredients";
+import { saveFavoriteRecipe } from "@/services/recipes";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -18,7 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "./ui/scroll-area";
-import { Loader2, Sparkles, ChefHat, Wallet, HeartPulse } from "lucide-react";
+import { Loader2, Sparkles, ChefHat, Wallet, HeartPulse, Bookmark } from "lucide-react";
 
 type RecipeSuggesterProps = {
   ingredients: { name: string; price: number | null; }[];
@@ -28,6 +30,7 @@ export function RecipeSuggester({ ingredients }: RecipeSuggesterProps) {
   const [open, setOpen] = useState(false);
   const [recipe, setRecipe] = useState<SuggestRecipeOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
 
   const handleSuggest = async () => {
@@ -49,12 +52,34 @@ export function RecipeSuggester({ ingredients }: RecipeSuggesterProps) {
     }
   };
 
+  const handleSave = async () => {
+    if (!recipe) return;
+    setIsSaving(true);
+    try {
+      await saveFavoriteRecipe(recipe);
+      toast({
+        title: "Recette sauvegardée !",
+        description: `${recipe.recipeName} a été ajoutée à votre carnet.`,
+      });
+    } catch (error) {
+      console.error("Failed to save recipe:", error);
+      toast({
+        variant: "destructive",
+        title: "Erreur de sauvegarde",
+        description: "La recette n'a pas pu être sauvegardée.",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const handleOpenChange = (isOpen: boolean) => {
     setOpen(isOpen);
     if (!isOpen) {
       setTimeout(() => {
         setRecipe(null);
         setIsLoading(false);
+        setIsSaving(false);
       }, 300);
     }
   };
@@ -155,9 +180,15 @@ export function RecipeSuggester({ ingredients }: RecipeSuggesterProps) {
             </div>
           )}
         </div>
-        <DialogFooter>
+        <DialogFooter className="sm:justify-between gap-2">
+           {recipe && (
+              <Button variant="outline" onClick={handleSave} disabled={isSaving}>
+                {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Bookmark className="mr-2 h-4 w-4" />}
+                {isSaving ? "Enregistrement..." : "Sauvegarder"}
+              </Button>
+            )}
           <DialogClose asChild>
-            <Button variant="outline" onClick={() => handleOpenChange(false)}>
+            <Button variant="outline" onClick={() => handleOpenChange(false)} className={!recipe ? 'w-full' : ''}>
               Fermer
             </Button>
           </DialogClose>

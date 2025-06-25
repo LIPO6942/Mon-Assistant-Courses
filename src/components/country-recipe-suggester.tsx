@@ -1,11 +1,13 @@
+
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import {
   suggestCountryRecipe,
   SuggestCountryRecipeOutput,
   SuggestCountryRecipeInput,
 } from "@/ai/flows/suggest-country-recipe";
+import { saveFavoriteRecipe } from "@/services/recipes";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -17,7 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "./ui/scroll-area";
-import { Loader2, ChefHat, Palette, RefreshCw } from "lucide-react";
+import { Loader2, ChefHat, Palette, RefreshCw, Bookmark, Globe } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
@@ -28,7 +30,6 @@ type CountryRecipeSuggesterProps = {
 };
 
 const continentConfig = [
-  { value: "any", label: "Monde", color: "bg-gray-400" },
   { value: "Europe", label: "Europe", color: "bg-blue-600" },
   { value: "Asie", label: "Asie", color: "bg-yellow-400" },
   { value: "Afrique", label: "Afrique", color: "bg-black" },
@@ -39,14 +40,16 @@ const continentConfig = [
 export function CountryRecipeSuggester({ open, onOpenChange }: CountryRecipeSuggesterProps) {
   const [suggestion, setSuggestion] = useState<SuggestCountryRecipeOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedContinent, setSelectedContinent] = useState<string>("any");
+  const [isSaving, setIsSaving] = useState(false);
+  const [selectedContinent, setSelectedContinent] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleSuggest = useCallback(async (continent: string) => {
+    setSelectedContinent(continent);
     setIsLoading(true);
     setSuggestion(null);
     try {
-      const input: SuggestCountryRecipeInput = continent === "any" ? {} : { continent };
+      const input: SuggestCountryRecipeInput = { continent };
       const result = await suggestCountryRecipe(input);
       setSuggestion(result);
     } catch (error) {
@@ -61,11 +64,27 @@ export function CountryRecipeSuggester({ open, onOpenChange }: CountryRecipeSugg
     }
   }, [toast]);
 
-  useEffect(() => {
-    if (open) {
-      handleSuggest(selectedContinent);
+  const handleSave = async () => {
+    if (!suggestion) return;
+    setIsSaving(true);
+    try {
+      await saveFavoriteRecipe(suggestion);
+      toast({
+        title: "Recette sauvegardée !",
+        description: `${suggestion.recipeName} a été ajoutée à votre carnet.`,
+      });
+    } catch (error) {
+      console.error("Failed to save recipe:", error);
+      toast({
+        variant: "destructive",
+        title: "Erreur de sauvegarde",
+        description: "La recette n'a pas pu être sauvegardée.",
+      });
+    } finally {
+      setIsSaving(false);
     }
-  }, [open, selectedContinent, handleSuggest]);
+  };
+
 
   const handleOpenChange = (isOpen: boolean) => {
     onOpenChange(isOpen);
@@ -73,6 +92,7 @@ export function CountryRecipeSuggester({ open, onOpenChange }: CountryRecipeSugg
       setTimeout(() => {
         setSuggestion(null);
         setIsLoading(false);
+        setSelectedContinent(null);
       }, 300);
     }
   };
@@ -88,7 +108,7 @@ export function CountryRecipeSuggester({ open, onOpenChange }: CountryRecipeSugg
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
-                      onClick={() => setSelectedContinent(continent.value)}
+                      onClick={() => handleSuggest(continent.value)}
                       disabled={isLoading}
                       className={cn(
                         "h-10 w-10 rounded-full flex items-center justify-center font-bold transition-transform duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-ring",
@@ -158,17 +178,26 @@ export function CountryRecipeSuggester({ open, onOpenChange }: CountryRecipeSugg
             </ScrollArea>
           ) : (
             <div className="flex flex-col items-center justify-center gap-4 text-center">
-              <p className="text-muted-foreground px-4">
-                  Une erreur est survenue. Veuillez réessayer.
+               <Globe className="h-12 w-12 text-muted-foreground/50" />
+               <p className="text-muted-foreground px-4 font-medium">
+                  Envie d’évasion ? 🌍 <br/> Clique sur un continent et découvre ce que l’on cuisine ailleurs.
               </p>
             </div>
           )}
         </div>
         <DialogFooter className="sm:justify-between gap-2">
-          <Button variant="secondary" onClick={() => handleSuggest(selectedContinent)} disabled={isLoading}>
-            <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-            Nouvelle Suggestion
-          </Button>
+          <div className="flex gap-2">
+              <Button variant="secondary" onClick={() => selectedContinent && handleSuggest(selectedContinent)} disabled={isLoading || !selectedContinent}>
+                <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                Nouvelle Suggestion
+              </Button>
+              {suggestion && (
+                <Button variant="outline" onClick={handleSave} disabled={isSaving}>
+                  {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Bookmark className="mr-2 h-4 w-4" />}
+                  {isSaving ? "Enregistrement..." : "Sauvegarder"}
+                </Button>
+              )}
+          </div>
           <DialogClose asChild>
             <Button variant="outline" onClick={() => handleOpenChange(false)}>
               Fermer

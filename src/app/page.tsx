@@ -21,6 +21,8 @@ import { suggestIcon } from "@/ai/flows/suggest-icon";
 import { useToast } from "@/hooks/use-toast";
 import { getGroceryLists, updateGroceryLists } from "@/services/grocery";
 import { CountryRecipeSuggester } from "@/components/country-recipe-suggester";
+import { FavoriteRecipes } from "@/components/favorite-recipes";
+
 
 export type GroceryItem = {
   id: number;
@@ -56,6 +58,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [isAddSheetOpen, setAddSheetOpen] = useState(false);
   const [isCountryRecipeOpen, setCountryRecipeOpen] = useState(false);
+  const [isFavoritesOpen, setFavoritesOpen] = useState(false);
   const [budget, setBudget] = useState<number>(150);
   const { toast } = useToast();
 
@@ -299,6 +302,7 @@ export default function Home() {
       <Header 
         ingredients={ingredientsForRecipe} 
         onCountryRecipeClick={() => setCountryRecipeOpen(true)}
+        onFavoritesClick={() => setFavoritesOpen(true)}
       />
       <main className="flex-1 container mx-auto p-4 md:p-8">
         <div className="grid lg:grid-cols-3 gap-8">
@@ -363,6 +367,11 @@ export default function Home() {
       <CountryRecipeSuggester 
         open={isCountryRecipeOpen}
         onOpenChange={setCountryRecipeOpen}
+      />
+
+      <FavoriteRecipes
+        open={isFavoritesOpen}
+        onOpenChange={setFavoritesOpen}
       />
     </div>
   );

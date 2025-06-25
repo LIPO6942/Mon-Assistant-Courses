@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -13,8 +13,9 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Loader2, PlusCircle } from "lucide-react";
+import { Plus, Loader2, PlusCircle, Wand2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { suggestCategory } from "@/ai/flows/suggest-category";
 
 
 type AddItemFormProps = {
@@ -34,9 +35,44 @@ export function AddItemForm({ categories, onAddItem }: AddItemFormProps) {
   const [newCategoryName, setNewCategoryName] = useState("");
   const [isEssential, setIsEssential] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
+  const [isSuggesting, setIsSuggesting] = useState(false);
   const { toast } = useToast();
 
   const isCreatingNewCategory = category === "__NEW__";
+
+  const fetchCategorySuggestion = useCallback(async (name: string) => {
+      if (name.trim().length < 3 || isAdding) return;
+      setIsSuggesting(true);
+      try {
+          const result = await suggestCategory({
+              ingredientName: name,
+              categories,
+          });
+          const suggestedCategory = result.categoryName;
+          if (suggestedCategory) {
+              if (categories.includes(suggestedCategory)) {
+                  setCategory(suggestedCategory);
+              } else {
+                  setCategory("__NEW__");
+                  setNewCategoryName(suggestedCategory);
+              }
+          }
+      } catch (error) {
+          console.error("Failed to suggest category:", error);
+          // Don't show a toast, fail silently
+      } finally {
+          setIsSuggesting(false);
+      }
+  }, [categories, isAdding]);
+
+  useEffect(() => {
+    const debounce = setTimeout(() => {
+      fetchCategorySuggestion(itemName);
+    }, 500); // 500ms debounce
+    
+    return () => clearTimeout(debounce);
+  }, [itemName, fetchCategorySuggestion]);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -149,7 +185,10 @@ export function AddItemForm({ categories, onAddItem }: AddItemFormProps) {
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor="item-category-select">Catégorie</Label>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="item-category-select">Catégorie</Label>
+          {isSuggesting && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
+        </div>
         <Select value={category} onValueChange={setCategory} disabled={isAdding}>
           <SelectTrigger id="item-category-select" aria-label="Catégorie">
             <SelectValue placeholder="Choisir une catégorie..." />
