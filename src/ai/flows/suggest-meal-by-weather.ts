@@ -33,6 +33,7 @@ export async function suggestMealByWeather(input: SuggestMealByWeatherInput): Pr
 
 const prompt = ai.definePrompt({
   name: 'suggestMealByWeatherPrompt',
+  model: 'googleai/gemini-1.5-flash',
   tools: [getWeather],
   prompt: `Tu es un chef cuisinier qui adore adapter ses menus à la météo.
   
