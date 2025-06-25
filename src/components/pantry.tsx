@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -224,9 +223,8 @@ export function Pantry({
                       Tout désélectionner
                   </Button>
               )}
-              <Button onClick={onAddItemClick} size="sm">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Ajouter un article
+              <Button onClick={onAddItemClick} size="icon" className="h-9 w-9" aria-label="Ajouter un article">
+                  <Plus className="h-4 w-4" />
               </Button>
             </div>
         </div>
