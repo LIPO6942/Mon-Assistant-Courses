@@ -107,11 +107,6 @@ export function LazyFoodWheel({ isQuizAnsweredCorrectly }: LazyFoodWheelProps) {
         </Button>
       </CardHeader>
       <CardContent className="p-4 pt-0 text-center min-h-[8rem] flex flex-col justify-center">
-        {isQuizAnsweredCorrectly && !isSpinning && !result && (
-            <p className="text-xs text-primary font-semibold mb-2 animate-in fade-in">
-              Bravo pour le quiz ! Une surprise vous attend peut-être...
-            </p>
-        )}
         {isSpinning ? (
           <div className="flex items-center justify-center gap-4">
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -137,6 +132,12 @@ export function LazyFoodWheel({ isQuizAnsweredCorrectly }: LazyFoodWheelProps) {
                 </div>
             )}
           </div>
+        ) : isQuizAnsweredCorrectly ? (
+            <div className="flex items-center justify-center">
+              <p className="text-sm text-primary font-semibold animate-in fade-in">
+                Bravo pour le quiz ! Une surprise vous attend peut-être...
+              </p>
+            </div>
         ) : (
           <div className="flex items-center justify-center">
             <p className="text-muted-foreground text-sm">Cliquez sur "Lancer" pour trouver quoi manger !</p>
