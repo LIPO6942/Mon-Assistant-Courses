@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -11,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -20,13 +18,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "./ui/scroll-area";
 import { Loader2, ChefHat, Palette, Globe, RefreshCw } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 
 type CountryRecipeSuggesterProps = {
@@ -34,13 +27,13 @@ type CountryRecipeSuggesterProps = {
   onOpenChange: (open: boolean) => void;
 };
 
-const continents = [
-  { value: "any", label: "Tous les continents" },
-  { value: "Afrique", label: "Afrique" },
-  { value: "Amérique", label: "Amérique" },
-  { value: "Asie", label: "Asie" },
-  { value: "Europe", label: "Europe" },
-  { value: "Océanie", label: "Océanie" },
+const continentConfig = [
+  { value: "any", label: "Monde", color: "bg-gray-400 text-white", icon: Globe },
+  { value: "Europe", label: "Europe", color: "bg-blue-600 text-white" },
+  { value: "Asie", label: "Asie", color: "bg-yellow-400 text-black" },
+  { value: "Afrique", label: "Afrique", color: "bg-black text-white" },
+  { value: "Amérique", label: "Amériques", color: "bg-red-600 text-white" },
+  { value: "Océanie", label: "Océanie", color: "bg-green-600 text-white" },
 ];
 
 export function CountryRecipeSuggester({ open, onOpenChange }: CountryRecipeSuggesterProps) {
@@ -89,24 +82,35 @@ export function CountryRecipeSuggester({ open, onOpenChange }: CountryRecipeSugg
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Suggestion du Globe-Trotter</DialogTitle>
-           <div className="flex items-center gap-2 pt-4">
-            <Globe className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-            <Select 
-              value={selectedContinent} 
-              onValueChange={setSelectedContinent}
-              disabled={isLoading}
-            >
-              <SelectTrigger className="w-full" aria-label="Choisir un continent">
-                <SelectValue placeholder="Choisir un continent..." />
-              </SelectTrigger>
-              <SelectContent>
-                {continents.map((c) => (
-                  <SelectItem key={c.value} value={c.value}>
-                    {c.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="flex justify-center items-center gap-3 pt-4">
+            {continentConfig.map((continent) => (
+              <TooltipProvider key={continent.value} delayDuration={100}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => setSelectedContinent(continent.value)}
+                      disabled={isLoading}
+                      className={cn(
+                        "h-10 w-10 rounded-full flex items-center justify-center font-bold transition-transform duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-ring",
+                        continent.color,
+                        selectedContinent === continent.value
+                          ? "ring-2 ring-offset-2 ring-primary scale-110 shadow-lg"
+                          : "hover:scale-110",
+                        isLoading ? "cursor-not-allowed opacity-60" : ""
+                      )}
+                      aria-label={continent.label}
+                    >
+                      {continent.icon ? (
+                        <continent.icon className="h-5 w-5" />
+                      ) : null}
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{continent.label}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ))}
           </div>
         </DialogHeader>
         <div className="py-4 min-h-[24rem] flex items-center justify-center">
