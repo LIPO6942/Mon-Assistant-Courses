@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -210,6 +211,7 @@ export function Pantry({
 }: PantryProps) {
   
   const allCategories = Object.keys(lists);
+  const isSearching = searchQuery.trim().length > 0;
 
   return (
     <Card>
@@ -255,7 +257,12 @@ export function Pantry({
             </div>
           )
         ) : (
-          <Accordion type="multiple" defaultValue={allCategories} className="w-full">
+          <Accordion 
+            type="multiple" 
+            key={isSearching ? 'search-results' : 'all-items'}
+            defaultValue={isSearching ? allCategories : []}
+            className="w-full"
+          >
             {allCategories.map((category) => (
               <AccordionItem value={category} key={category}>
                 <AccordionTrigger className="text-lg font-semibold">
