@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -5,12 +6,19 @@ import { Header } from "@/components/header";
 import { AddItemForm } from "@/components/add-item-form";
 import { GroceryList } from "@/components/grocery-list";
 import { WeatherSuggester } from "@/components/weather-suggester";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Wallet } from "lucide-react";
+import { BudgetTracker } from "@/components/budget-tracker";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { suggestIcon } from "@/ai/flows/suggest-icon";
 import { useToast } from "@/hooks/use-toast";
 import { getGroceryLists, updateGroceryLists } from "@/services/grocery";
-import { Skeleton } from "@/components/ui/skeleton";
 
 export type GroceryItem = {
   id: number;
@@ -42,6 +50,8 @@ const initialLists: GroceryLists = {
 export default function Home() {
   const [lists, setLists] = useState<GroceryLists | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAddSheetOpen, setAddSheetOpen] = useState(false);
+  const [budget, setBudget] = useState<number>(150);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -62,17 +72,27 @@ export default function Home() {
           title: "Erreur de chargement",
           description: "Impossible de charger les données. Vérifiez votre configuration Firebase et rafraîchissez la page.",
         });
-        setLists(initialLists); // Fallback to local data on error
+        setLists(initialLists); 
       } finally {
         setIsLoading(false);
       }
     };
     fetchLists();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    const savedBudget = localStorage.getItem('groceryBudget');
+    if (savedBudget) {
+      setBudget(JSON.parse(savedBudget));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  
+  const handleBudgetChange = (newBudget: number) => {
+    setBudget(newBudget);
+    localStorage.setItem('groceryBudget', JSON.stringify(newBudget));
+  };
 
   const handleUpdateLists = async (newLists: GroceryLists, oldLists: GroceryLists | null) => {
-    setLists(newLists); // Optimistic UI update
+    setLists(newLists); 
     try {
       await updateGroceryLists(newLists);
     } catch (error) {
@@ -83,7 +103,7 @@ export default function Home() {
         description: "La modification n'a pas pu être sauvegardée."
       });
       if (oldLists) {
-        setLists(oldLists); // Revert on failure
+        setLists(oldLists);
       }
     }
   };
@@ -98,11 +118,6 @@ export default function Home() {
       iconName = result.iconName;
     } catch (error) {
       console.error("Failed to suggest icon:", error);
-      toast({
-        variant: "default",
-        title: "Erreur d'icône",
-        description: "Impossible de suggérer une icône, une icône par défaut sera utilisée.",
-      });
     }
 
     const newLists = { ...lists };
@@ -114,6 +129,7 @@ export default function Home() {
     }
     
     await handleUpdateLists(newLists, oldLists);
+    setAddSheetOpen(false);
   };
 
   const handleToggleItem = async (category: string, itemId: number) => {
@@ -179,9 +195,9 @@ export default function Home() {
     <div className="flex flex-col min-h-screen w-full bg-muted/40">
       <Header ingredients={ingredientsForRecipe} />
       <main className="flex-1 container mx-auto p-4 md:p-8">
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-3 gap-8">
           
-          <div className="md:col-span-2">
+          <div className="lg:col-span-2">
             {isLoading ? (
               <Card>
                 <CardHeader>
@@ -201,39 +217,35 @@ export default function Home() {
                 onDeleteItem={handleDeleteItem}
                 onToggleEssential={handleToggleEssential}
                 onUpdateItem={handleUpdateItem}
+                onAddItemClick={() => setAddSheetOpen(true)}
               />
             )}
           </div>
 
-          <aside className="space-y-8 md:col-span-1">
-            <Card>
-              <CardHeader>
-                <CardTitle>Ajouter un article</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <AddItemForm categories={categories} onAddItem={handleAddItem} />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center gap-3 space-y-0">
-                <Wallet className="h-6 w-6 text-primary" />
-                <CardTitle>Total de la sélection</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {isLoading ? (
-                  <Skeleton className="h-9 w-1/2 mx-auto" />
-                ) : (
-                  <p className="text-3xl font-bold text-center">{totalCost.toFixed(2).replace('.', ',')} <span className="text-lg font-normal text-muted-foreground">TND</span></p>
-                )}
-              </CardContent>
-            </Card>
-
+          <aside className="space-y-8 lg:col-span-1">
+            <BudgetTracker 
+              totalCost={totalCost}
+              budget={budget}
+              onBudgetChange={handleBudgetChange}
+              isLoading={isLoading}
+            />
             <WeatherSuggester />
           </aside>
 
         </div>
       </main>
+
+       <Sheet open={isAddSheetOpen} onOpenChange={setAddSheetOpen}>
+        <SheetContent>
+            <SheetHeader className="mb-6">
+              <SheetTitle>Ajouter un nouvel article</SheetTitle>
+              <SheetDescription>
+                Remplissez les détails ci-dessous et ajoutez l'article à votre liste.
+              </SheetDescription>
+            </SheetHeader>
+            <AddItemForm categories={categories} onAddItem={handleAddItem} />
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
