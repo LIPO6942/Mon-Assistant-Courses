@@ -49,7 +49,16 @@ const suggestIconFlow = ai.defineFlow(
     outputSchema: SuggestIconOutputSchema,
   },
   async (input) => {
-    const {output} = await prompt(input);
-    return output!;
+    try {
+        const {output} = await prompt(input);
+        if (!output) {
+            return { iconName: 'ShoppingCart' };
+        }
+        return output;
+    } catch (e) {
+        console.error("Error suggesting icon:", e);
+        // Fail silently on API errors (like 429 quota exceeded) and return the default icon.
+        return { iconName: 'ShoppingCart' };
+    }
   }
 );
