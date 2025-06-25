@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -79,13 +78,21 @@ export function FavoriteRecipes({ open, onOpenChange }: FavoriteRecipesProps) {
               title: "Recette supprimée",
               description: "La recette a bien été retirée de votre carnet.",
           });
-      } catch (error) {
+      } catch (error: any) {
           console.error("Failed to delete recipe:", error);
-          toast({
-            variant: "destructive",
-            title: "Erreur",
-            description: "La recette n'a pas pu être supprimée.",
-          });
+           if (error.code === 'firebase-not-configured') {
+            toast({
+                variant: "destructive",
+                title: "Mode local",
+                description: error.message,
+            });
+          } else {
+            toast({
+              variant: "destructive",
+              title: "Erreur",
+              description: "La recette n'a pas pu être supprimée.",
+            });
+          }
       } finally {
           setIsDeleting(null);
       }

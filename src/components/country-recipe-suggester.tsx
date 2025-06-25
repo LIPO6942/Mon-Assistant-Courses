@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useCallback } from "react";
@@ -73,13 +72,21 @@ export function CountryRecipeSuggester({ open, onOpenChange }: CountryRecipeSugg
         title: "Recette sauvegardée !",
         description: `${suggestion.recipeName} a été ajoutée à votre carnet.`,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to save recipe:", error);
-      toast({
-        variant: "destructive",
-        title: "Erreur de sauvegarde",
-        description: "La recette n'a pas pu être sauvegardée.",
-      });
+      if (error.code === 'firebase-not-configured') {
+          toast({
+            variant: "destructive",
+            title: "Mode local",
+            description: error.message,
+          });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Erreur de sauvegarde",
+          description: "La recette n'a pas pu être sauvegardée.",
+        });
+      }
     } finally {
       setIsSaving(false);
     }

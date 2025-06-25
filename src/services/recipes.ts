@@ -36,9 +36,15 @@ function isCountryRecipe(recipe: RecipeSuggestion): recipe is SuggestCountryReci
     return 'country' in recipe;
 }
 
+const createFirebaseNotConfiguredError = () => {
+    const error = new Error("Firebase n'est pas configuré. Cette fonctionnalité est désactivée en mode local.");
+    (error as any).code = 'firebase-not-configured';
+    return error;
+};
+
 export async function saveFavoriteRecipe(recipe: RecipeSuggestion): Promise<void> {
     if (!firebaseInitialized) {
-        throw new Error("La configuration Firebase est manquante. Impossible de sauvegarder la recette.");
+        throw createFirebaseNotConfiguredError();
     }
     try {
         const collectionRef = collection(db, RECIPE_COLLECTION);
@@ -107,7 +113,7 @@ export async function getFavoriteRecipes(): Promise<FavoriteRecipe[]> {
 
 export async function deleteFavoriteRecipe(recipeId: string): Promise<void> {
     if (!firebaseInitialized) {
-        throw new Error("La configuration Firebase est manquante. Impossible de supprimer la recette.");
+        throw createFirebaseNotConfiguredError();
     }
     try {
         const docRef = doc(db, RECIPE_COLLECTION, recipeId);
