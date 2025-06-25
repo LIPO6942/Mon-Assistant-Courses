@@ -22,7 +22,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Trash2, Star, Plus, MoreHorizontal, MoveRight, XCircle } from "lucide-react";
+import { Trash2, Star, Plus, MoreHorizontal, MoveRight, XCircle, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { GroceryItem, GroceryLists } from "@/app/page";
 import { DynamicIcon } from "./dynamic-icon";
@@ -31,6 +31,8 @@ type PantryProps = {
   lists: GroceryLists;
   cartItemIds: Set<number>;
   categories: string[];
+  searchQuery: string;
+  onSearchChange: (query: string) => void;
   onToggleItem: (item: GroceryItem) => void;
   onDeleteItem: (category: string, itemId: number) => void;
   onToggleEssential: (category: string, itemId: number) => void;
@@ -158,6 +160,8 @@ export function Pantry({
   lists, 
   cartItemIds,
   categories,
+  searchQuery,
+  onSearchChange,
   onToggleItem, 
   onDeleteItem, 
   onToggleEssential, 
@@ -187,14 +191,32 @@ export function Pantry({
               </Button>
             </div>
         </div>
+        <div className="relative pt-2">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+              type="search"
+              placeholder="Rechercher un ingrédient..."
+              className="w-full rounded-md bg-background pl-10"
+              value={searchQuery}
+              onChange={(e) => onSearchChange(e.target.value)}
+          />
+        </div>
       </CardHeader>
       <CardContent>
         {allCategories.length === 0 ? (
-          <div className="flex flex-col items-center justify-center min-h-[400px] text-center text-muted-foreground p-4">
-            <DynamicIcon name="Box" className="h-16 w-16 mb-4 text-muted-foreground/50"/>
-            <p className="text-lg font-semibold">Votre garde-manger est vide.</p>
-            <p className="mt-1">Cliquez sur "Ajouter un article" pour commencer à le remplir.</p>
-          </div>
+          searchQuery ? (
+            <div className="flex flex-col items-center justify-center min-h-[400px] text-center text-muted-foreground p-4">
+              <DynamicIcon name="SearchX" className="h-16 w-16 mb-4 text-muted-foreground/50"/>
+              <p className="text-lg font-semibold">Aucun résultat</p>
+              <p className="mt-1 text-sm">Aucun ingrédient ne correspond à votre recherche.</p>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center min-h-[400px] text-center text-muted-foreground p-4">
+              <DynamicIcon name="Box" className="h-16 w-16 mb-4 text-muted-foreground/50"/>
+              <p className="text-lg font-semibold">Votre garde-manger est vide.</p>
+              <p className="mt-1">Cliquez sur "Ajouter un article" pour commencer à le remplir.</p>
+            </div>
+          )
         ) : (
           <Accordion type="multiple" defaultValue={allCategories} className="w-full">
             {allCategories.map((category) => (

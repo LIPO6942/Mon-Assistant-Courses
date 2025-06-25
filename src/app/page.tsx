@@ -53,6 +53,7 @@ const initialLists: GroceryLists = {
 
 export default function Home() {
   const [pantryLists, setPantryLists] = useState<GroceryLists | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const [cartItems, setCartItems] = useState<GroceryItem[]>([]);
   const [purchasedItemIds, setPurchasedItemIds] = useState(new Set<number>());
   const [isLoading, setIsLoading] = useState(true);
@@ -312,6 +313,24 @@ export default function Home() {
     setIsQuizAnsweredCorrectly(true);
   }, []);
 
+  const filteredPantryLists = useMemo(() => {
+    if (!pantryLists) return null;
+    if (!searchQuery.trim()) return pantryLists;
+
+    const lowerCaseQuery = searchQuery.toLowerCase();
+    const filtered: GroceryLists = {};
+
+    for (const category in pantryLists) {
+        const matchingItems = pantryLists[category].filter(item => 
+            item.name.toLowerCase().includes(lowerCaseQuery)
+        );
+        if (matchingItems.length > 0) {
+            filtered[category] = matchingItems;
+        }
+    }
+    return filtered;
+  }, [pantryLists, searchQuery]);
+
   return (
     <div className="flex flex-col min-h-screen w-full bg-muted/40">
       <Header 
@@ -338,9 +357,11 @@ export default function Home() {
               </Card>
             ) : (
               <Pantry
-                lists={pantryLists || {}}
+                lists={filteredPantryLists || {}}
                 cartItemIds={cartItemIds}
                 categories={categories}
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
                 onToggleItem={handleToggleCartItem} 
                 onDeleteItem={handleDeleteItem}
                 onToggleEssential={handleToggleEssential}
