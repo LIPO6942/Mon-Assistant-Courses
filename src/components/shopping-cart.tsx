@@ -130,7 +130,7 @@ export function ShoppingCart({
                     )}>
                       {(item.quantity * item.price).toFixed(2).replace('.',',')} TND
                     </p>
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onToggleItem(item)}>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onToggleItem(item)} aria-label={`Retirer ${item.name} du panier`}>
                         <X className="h-4 w-4" />
                     </Button>
                   </div>
