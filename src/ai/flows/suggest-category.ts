@@ -58,10 +58,19 @@ const suggestCategoryFlow = ai.defineFlow(
     outputSchema: SuggestCategoryOutputSchema,
   },
   async (input) => {
-    if (input.ingredientName.trim().length < 2) {
+    if (input.ingredientName.trim().length < 3) {
         return { categoryName: '' };
     }
-    const {output} = await prompt(input);
-    return output!;
+    try {
+        const {output} = await prompt(input);
+        if (!output) {
+          return { categoryName: '' };
+        }
+        return output;
+    } catch (e) {
+      console.error("Error suggesting category:", e);
+      // Fail silently on API errors (like 429 quota exceeded) to avoid showing the Next.js error overlay
+      return { categoryName: '' };
+    }
   }
 );
