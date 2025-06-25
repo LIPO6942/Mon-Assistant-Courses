@@ -43,7 +43,7 @@ La réponse doit être en français.`,
 const generateFoodQuizFlow = ai.defineFlow(
   {
     name: 'generateFoodQuizFlow',
-    inputSchema: z.undefined(),
+    inputSchema: z.void(),
     outputSchema: GenerateFoodQuizOutputSchema,
   },
   async () => {
