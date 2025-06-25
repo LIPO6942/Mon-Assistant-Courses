@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "./ui/scroll-area";
-import { Loader2, ChefHat, Palette, Globe, RefreshCw } from "lucide-react";
+import { Loader2, ChefHat, Palette, RefreshCw } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
@@ -28,12 +28,12 @@ type CountryRecipeSuggesterProps = {
 };
 
 const continentConfig = [
-  { value: "any", label: "Monde", color: "bg-gray-400 text-white", icon: Globe },
-  { value: "Europe", label: "Europe", color: "bg-blue-600 text-white" },
-  { value: "Asie", label: "Asie", color: "bg-yellow-400 text-black" },
-  { value: "Afrique", label: "Afrique", color: "bg-black text-white" },
-  { value: "Amérique", label: "Amériques", color: "bg-red-600 text-white" },
-  { value: "Océanie", label: "Océanie", color: "bg-green-600 text-white" },
+  { value: "any", label: "Monde", color: "bg-gray-400" },
+  { value: "Europe", label: "Europe", color: "bg-blue-600" },
+  { value: "Asie", label: "Asie", color: "bg-yellow-400" },
+  { value: "Afrique", label: "Afrique", color: "bg-black" },
+  { value: "Amérique", label: "Amériques", color: "bg-red-600" },
+  { value: "Océanie", label: "Océanie", color: "bg-green-600" },
 ];
 
 export function CountryRecipeSuggester({ open, onOpenChange }: CountryRecipeSuggesterProps) {
@@ -100,9 +100,6 @@ export function CountryRecipeSuggester({ open, onOpenChange }: CountryRecipeSugg
                       )}
                       aria-label={continent.label}
                     >
-                      {continent.icon ? (
-                        <continent.icon className="h-5 w-5" />
-                      ) : null}
                     </button>
                   </TooltipTrigger>
                   <TooltipContent>
