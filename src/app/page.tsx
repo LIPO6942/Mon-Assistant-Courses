@@ -7,7 +7,6 @@ import { AddItemForm } from "@/components/add-item-form";
 import { Pantry } from "@/components/pantry";
 import { ShoppingCart } from "@/components/shopping-cart";
 import { WeatherSuggester } from "@/components/weather-suggester";
-import { BudgetTracker } from "@/components/budget-tracker";
 import { LazyFoodWheel } from "@/components/lazy-food-wheel";
 import {
   Sheet,
@@ -318,12 +317,8 @@ export default function Home() {
               onToggleItem={handleToggleCartItem}
               onClearCart={handleClearCart}
               totalCost={totalCost}
-            />
-            <BudgetTracker 
-              totalCost={totalCost}
               budget={budget}
               onBudgetChange={handleBudgetChange}
-              isLoading={isLoading}
             />
             <WeatherSuggester />
             <LazyFoodWheel />
