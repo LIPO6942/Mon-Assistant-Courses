@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -39,7 +38,7 @@ import {
   updateCustomRecipe,
   FavoriteRecipe
 } from "@/services/recipes";
-import { ChefHat, Globe, Trash2, Loader2, BookHeart, PlusCircle, Pencil, NotebookPen } from "lucide-react";
+import { ChefHat, Globe, Trash2, Loader2, BookHeart, Plus, Pencil, NotebookPen } from "lucide-react";
 import { RecipeFormDialog } from "./recipe-form-dialog";
 
 type FavoriteRecipesProps = {
@@ -144,9 +143,8 @@ export function FavoriteRecipes({ open, onOpenChange }: FavoriteRecipesProps) {
           <SheetHeader>
             <div className="flex justify-between items-center">
               <SheetTitle>Mon Carnet de Recettes</SheetTitle>
-              <Button variant="outline" size="sm" onClick={handleAddClick}>
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Ajouter
+              <Button variant="outline" size="icon" onClick={handleAddClick} className="h-8 w-8" aria-label="Ajouter une recette">
+                  <Plus className="h-4 w-4" />
               </Button>
             </div>
             <SheetDescription>
