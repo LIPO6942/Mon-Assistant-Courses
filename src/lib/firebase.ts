@@ -14,20 +14,21 @@ const firebaseConfig = {
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const db = getFirestore(app);
 
+let persistenceEnabled = false;
+
 const enablePersistence = async () => {
-  if (typeof window !== 'undefined') {
+  if (typeof window !== 'undefined' && !persistenceEnabled) {
     try {
       await enableIndexedDbPersistence(db);
+      persistenceEnabled = true;
     } catch (err: any) {
-      if (err.code === 'failed-precondition') {
-        console.warn("Firestore offline persistence failed: multiple tabs open.");
-      } else if (err.code === 'unimplemented') {
-        console.warn("Firestore offline persistence not supported in this browser.");
-      } else if (err.code === 'unavailable') {
-        console.warn("Firestore offline persistence is unavailable in this environment (e.g., private browsing).");
-      } else {
-        console.error("Error enabling Firestore persistence", err);
-      }
+        if (err.code === 'failed-precondition') {
+            console.log("Firestore persistence failed: multiple tabs open.");
+        } else if (err.code === 'unimplemented') {
+            console.log("Firestore persistence not supported in this browser.");
+        } else if (err.code === 'unavailable') {
+            console.log("Firestore persistence is unavailable. App will work online.");
+        }
     }
   }
 };
