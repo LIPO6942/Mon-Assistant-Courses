@@ -60,7 +60,7 @@ export default function Home() {
       setIsLoading(true);
       try {
         let data = await getGroceryLists();
-        if (!data) {
+        if (!data || Object.keys(data).length === 0) {
           console.log("No data found in Firestore, seeding with initial data.");
           data = initialLists;
           await updateGroceryLists(data);
@@ -153,6 +153,30 @@ export default function Home() {
     }
     await handleUpdateLists(newLists, oldLists);
   };
+  
+  const handleMoveItem = async (itemId: number, oldCategory: string, newCategory: string) => {
+    if (!lists || oldCategory === newCategory) return;
+    const oldLists = JSON.parse(JSON.stringify(lists));
+    const newLists = JSON.parse(JSON.stringify(lists));
+
+    const itemToMove = newLists[oldCategory]?.find((item: GroceryItem) => item.id === itemId);
+    if (!itemToMove) return;
+
+    // Remove from old category
+    newLists[oldCategory] = newLists[oldCategory].filter((item: GroceryItem) => item.id !== itemId);
+    if (newLists[oldCategory].length === 0) {
+        delete newLists[oldCategory];
+    }
+    
+    // Add to new category
+    if (!newLists[newCategory]) {
+        newLists[newCategory] = [];
+    }
+    newLists[newCategory].push(itemToMove);
+
+    await handleUpdateLists(newLists, oldLists);
+  };
+
 
   const handleToggleEssential = async (category: string, itemId: number) => {
     if (!lists) return;
@@ -226,11 +250,13 @@ export default function Home() {
               </Card>
             ) : (
               <GroceryList 
-                lists={lists || {}} 
+                lists={lists || {}}
+                categories={categories}
                 onToggleItem={handleToggleItem} 
                 onDeleteItem={handleDeleteItem}
                 onToggleEssential={handleToggleEssential}
                 onUpdateItem={handleUpdateItem}
+                onMoveItem={handleMoveItem}
                 onAddItemClick={() => setAddSheetOpen(true)}
                 onDeselectAll={handleDeselectAll}
               />

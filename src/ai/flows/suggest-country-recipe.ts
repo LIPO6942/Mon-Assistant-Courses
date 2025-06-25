@@ -1,7 +1,7 @@
 
 'use server';
 /**
- * @fileOverview Suggests a random recipe from a random country.
+ * @fileOverview Suggests a random recipe from a random country using creative axes.
  *
  * - suggestCountryRecipe - A function that suggests a recipe.
  * - SuggestCountryRecipeOutput - The return type for the function.
@@ -11,11 +11,12 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const SuggestCountryRecipeOutputSchema = z.object({
+  theme: z.string().describe("Le thème créatif ou l'axe de suggestion choisi. Ex: 'Par Humeur : Réconfort' ou 'Par Pays Méconnu : Arménie'."),
   country: z.string().describe("Le pays d'origine de la recette. Ex: Italie"),
   recipeName: z.string().describe("Le nom du plat. Ex: Pizza Margherita"),
   ingredients: z.array(z.string()).describe("La liste des ingrédients nécessaires pour la recette."),
   instructions: z.array(z.string()).describe("Les étapes de préparation de la recette."),
-  decorationIdea: z.string().describe("Une suggestion humoristique et thématique pour décorer la table en accord avec le plat du pays."),
+  decorationIdea: z.string().describe("Une suggestion humoristique et thématique pour décorer la table ou l'ambiance, en accord avec l'axe et le plat."),
 });
 
 export type SuggestCountryRecipeOutput = z.infer<typeof SuggestCountryRecipeOutputSchema>;
@@ -27,16 +28,39 @@ export async function suggestCountryRecipe(): Promise<SuggestCountryRecipeOutput
 const prompt = ai.definePrompt({
     name: 'suggestCountryRecipePrompt',
     output: { schema: SuggestCountryRecipeOutputSchema },
-    prompt: `Tu es un globe-trotter culinaire et un comédien.
+    prompt: `
+    Tu es un guide culinaire globe-trotter, créatif et plein d'humour.
     
-    Ta mission est de surprendre l'utilisateur avec une recette d'un pays choisi complètement au hasard.
+    Ta mission est de surprendre l'utilisateur avec une suggestion de recette originale. Pour cela, tu dois d'abord choisir AU HASARD UN SEUL des axes de suggestion créatifs suivants. Ta réponse entière doit être basée sur l'axe que tu as choisi.
 
-    1.  Choisis un pays au hasard dans le monde.
-    2.  Trouve une recette emblématique et accessible de ce pays.
-    3.  Liste les ingrédients et les instructions claires en français.
-    4.  IMPORTANT : Ajoute une touche finale en proposant une idée de décoration de table humoristique et un peu cliché, en lien avec le pays de la recette. Par exemple, pour une paella espagnole, suggérer de mettre des castagnettes à côté des assiettes et de diffuser un fond sonore de flamenco.
+    Voici les axes possibles :
 
-    Sois créatif, drôle et inspirant !`,
+    1.  **Par Humeur :** Propose un plat qui correspond à une humeur.
+        -   Exemples : "Besoin de réconfort ?" → Curry japonais doux. "Envie d’aventure ?" → Bibimbap coréen. "Tu veux impressionner ?" → Pastilla marocaine.
+
+    2.  **Par Pays Méconnu :** Sors des sentiers battus et choisis un pays dont la cuisine est moins connue.
+        -   Exemples : Arménie (Harissa aux aubergines), Éthiopie (Injera et wat), Laos (Larb de bœuf), Islande (Plokkfiskur).
+
+    3.  **Par Couleur Dominante :** Le plat doit avoir une couleur principale très marquée.
+        -   Exemples : Rouge (Shakshuka), Vert (Soupe thaïe au lait de coco), Jaune (Dhal indien), Noir (Risotto à l’encre de seiche).
+
+    4.  **Par Moment de la Journée Original :** Pense à des moments spécifiques.
+        -   Exemples : Brunch du monde, Dîner mystique sous la lune, Repas de rue nocturne.
+
+    5.  **Par Ingrédient Local avec une Torsion Étrangère :** Prends un ingrédient de base tunisien et cuisine-le d'une manière totalement différente.
+        -   Exemples : Couscous tunisien revisité à la coréenne (avec kimchi et œuf mollet). Poivron tunisien farci façon grecque (avec feta, origan).
+
+    6.  **Par Ambiance Sonore Associée :** Suggère une ambiance musicale ou sonore pour accompagner la préparation.
+        -   Exemples : Ramen (pluie japonaise + shamisen), Tacos (ambiance de rue mexicaine), Souvlaki (mer grecque et bouzouki).
+
+    ÉTAPES DE TA RÉPONSE :
+    1.  Choisis un seul axe au hasard.
+    2.  Définis le champ "theme" avec le nom de l'axe et une précision. Ex: "Par Humeur : Aventure" ou "Par Ambiance Sonore".
+    3.  Construis ta suggestion (recette, pays, ingrédients, instructions) en respectant cet axe.
+    4.  IMPORTANT : Ta "decorationIdea" doit être en lien direct avec l'axe choisi. Sois créatif et drôle. Pour l'ambiance sonore, l'idée de déco peut être la description de l'ambiance.
+
+    Sois créatif, drôle et inspirant ! La réponse doit être en français.
+    `,
 });
 
 const suggestCountryRecipeFlow = ai.defineFlow(

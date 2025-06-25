@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -70,7 +69,7 @@ export function CountryRecipeSuggester() {
         <CardContent>
             <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>
-                <Button className="w-full" variant="outline">
+                <Button className="w-full" variant="outline" onClick={handleSuggest}>
                     <PartyPopper className="mr-2 h-4 w-4 text-accent" />
                     Me surprendre !
                 </Button>
@@ -97,6 +96,7 @@ export function CountryRecipeSuggester() {
                             <ChefHat className="h-6 w-6 text-primary" />
                             {suggestion.recipeName} ({suggestion.country})
                         </h3>
+                        <p className="text-sm text-primary font-semibold -mt-1 mb-2">{suggestion.theme}</p>
                         
                         <div>
                             <h4 className="font-semibold mb-2">Ingrédients :</h4>
