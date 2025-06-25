@@ -51,13 +51,15 @@ export function FavoriteRecipes({ open, onOpenChange }: FavoriteRecipesProps) {
     try {
       const savedRecipes = await getFavoriteRecipes();
       setRecipes(savedRecipes);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to fetch favorite recipes:", error);
-      toast({
-        variant: "destructive",
-        title: "Erreur de chargement",
-        description: "Impossible de charger les recettes sauvegardées.",
-      });
+      if (error.code !== 'unavailable') {
+        toast({
+            variant: "destructive",
+            title: "Erreur de chargement",
+            description: "Impossible de charger les recettes sauvegardées.",
+        });
+      }
     } finally {
       setIsLoading(false);
     }

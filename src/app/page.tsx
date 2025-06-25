@@ -89,13 +89,16 @@ export default function Home() {
         setPantryLists(loadedPantryLists);
         setCartItems(loadedCartItems);
 
-      } catch (error) {
+      } catch (error: any) {
         console.error("Failed to load or seed grocery lists:", error);
-        toast({
-          variant: "destructive",
-          title: "Erreur de chargement",
-          description: "Impossible de charger les données. Vérifiez votre configuration Firebase.",
-        });
+        // Don't show toast for offline error, just fallback silently
+        if (error.code !== 'unavailable') {
+          toast({
+            variant: "destructive",
+            title: "Erreur de chargement",
+            description: "Impossible de charger les données. Vérifiez votre configuration Firebase.",
+          });
+        }
         setPantryLists(initialLists); 
       } finally {
         setIsLoading(false);
