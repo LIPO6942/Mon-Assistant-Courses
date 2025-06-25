@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dices, Loader2, Gift, Wallet } from "lucide-react";
+import { Dices, Loader2, Wallet } from "lucide-react";
 
 const foodOptions = [
   "Quesadilla",
@@ -73,46 +73,44 @@ export function LazyFoodWheel() {
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between p-4 md:p-6 space-y-0">
         <div className="flex items-center gap-3">
-          <Dices className="h-6 w-6 text-primary" />
-          <CardTitle>J’ai la flemme...</CardTitle>
+          <Dices className="h-6 w-6 text-primary flex-shrink-0" />
+          <div>
+            <CardTitle className="text-lg md:text-xl">J’ai la flemme...</CardTitle>
+            <CardDescription className="text-xs md:text-sm">Pas envie de cuisiner ?</CardDescription>
+          </div>
         </div>
-        <CardDescription>
-          Pas envie de cuisiner ? Laissez le hasard décider pour vous.
-        </CardDescription>
+        <Button onClick={handleSpin} disabled={isSpinning} size="sm" className="shrink-0">
+          <Dices className="mr-2 h-4 w-4" />
+          {isSpinning ? "..." : "Lancer"}
+        </Button>
       </CardHeader>
-      <CardContent className="flex flex-col items-center justify-center gap-4 text-center min-h-[10rem]">
+      <CardContent className="p-4 pt-0 text-center min-h-[8rem] flex flex-col justify-center">
         {isSpinning ? (
-          <>
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-2xl font-bold transition-all duration-100">
+          <div className="flex items-center justify-center gap-4">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            <p className="text-xl font-bold transition-all duration-100">
               {spinningText}
             </p>
-          </>
+          </div>
         ) : result ? (
           <div className="flex flex-col items-center gap-2 animate-in fade-in zoom-in-50">
-            <Gift className="h-8 w-8 text-accent" />
-            <p className="text-sm text-muted-foreground">Et le plat choisi est...</p>
-            <p className="text-3xl font-bold text-primary">{result} !</p>
-
+            <p className="text-2xl font-bold text-primary">{result} !</p>
             {payer && (
-                <div className="mt-4 text-center p-3 bg-primary/10 rounded-lg w-full">
-                    <div className="flex items-center justify-center gap-2 mb-2">
-                        <Wallet className="h-5 w-5" />
+                <div className="mt-2 text-center p-2 bg-primary/10 rounded-lg w-full">
+                    <div className="flex items-center justify-center gap-2 text-sm">
+                        <Wallet className="h-4 w-4" />
                         <p className="font-semibold">{message}</p>
                     </div>
                 </div>
             )}
           </div>
         ) : (
-          <p className="text-muted-foreground">Cliquez sur le bouton pour laisser le destin choisir !</p>
+          <div className="flex items-center justify-center">
+            <p className="text-muted-foreground text-sm">Cliquez sur "Lancer" pour trouver quoi manger !</p>
+          </div>
         )}
-        
-        <Button onClick={handleSpin} disabled={isSpinning} className="mt-4">
-          <Dices className="mr-2 h-4 w-4" />
-          {isSpinning ? "Ça tourne..." : "Qui va payer ?"}
-        </Button>
       </CardContent>
     </Card>
   );
