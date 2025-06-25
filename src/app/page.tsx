@@ -7,7 +7,7 @@ import { AddItemForm } from "@/components/add-item-form";
 import { GroceryList } from "@/components/grocery-list";
 import { WeatherSuggester } from "@/components/weather-suggester";
 import { BudgetTracker } from "@/components/budget-tracker";
-import { CountryRecipeSuggester } from "@/components/country-recipe-suggester";
+import { LazyFoodWheel } from "@/components/lazy-food-wheel";
 import {
   Sheet,
   SheetContent,
@@ -20,6 +20,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { suggestIcon } from "@/ai/flows/suggest-icon";
 import { useToast } from "@/hooks/use-toast";
 import { getGroceryLists, updateGroceryLists } from "@/services/grocery";
+import { CountryRecipeSuggester } from "@/components/country-recipe-suggester";
 
 export type GroceryItem = {
   id: number;
@@ -52,6 +53,7 @@ export default function Home() {
   const [lists, setLists] = useState<GroceryLists | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAddSheetOpen, setAddSheetOpen] = useState(false);
+  const [isCountryRecipeOpen, setCountryRecipeOpen] = useState(false);
   const [budget, setBudget] = useState<number>(150);
   const { toast } = useToast();
 
@@ -231,7 +233,10 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen w-full bg-muted/40">
-      <Header ingredients={ingredientsForRecipe} />
+      <Header 
+        ingredients={ingredientsForRecipe} 
+        onCountryRecipeClick={() => setCountryRecipeOpen(true)}
+      />
       <main className="flex-1 container mx-auto p-4 md:p-8">
         <div className="grid lg:grid-cols-3 gap-8">
           
@@ -271,7 +276,7 @@ export default function Home() {
               isLoading={isLoading}
             />
             <WeatherSuggester />
-            <CountryRecipeSuggester />
+            <LazyFoodWheel />
           </aside>
 
         </div>
@@ -288,6 +293,11 @@ export default function Home() {
             <AddItemForm categories={categories} onAddItem={handleAddItem} />
         </SheetContent>
       </Sheet>
+
+      <CountryRecipeSuggester 
+        open={isCountryRecipeOpen}
+        onOpenChange={setCountryRecipeOpen}
+      />
     </div>
   );
 }

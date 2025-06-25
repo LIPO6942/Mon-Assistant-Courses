@@ -1,11 +1,14 @@
 import { Logo } from "@/components/icons";
 import { RecipeSuggester } from "./recipe-suggester";
+import { Button } from "./ui/button";
+import { PartyPopper } from "lucide-react";
 
 type HeaderProps = {
   ingredients: { name: string; price: number | null; }[];
+  onCountryRecipeClick: () => void;
 };
 
-export function Header({ ingredients }: HeaderProps) {
+export function Header({ ingredients, onCountryRecipeClick }: HeaderProps) {
   return (
     <header className="w-full bg-card border-b sticky top-0 z-10">
       <div className="container mx-auto flex items-center justify-between p-4">
@@ -15,7 +18,13 @@ export function Header({ ingredients }: HeaderProps) {
             Mon Assistant de Courses
           </h1>
         </div>
-        <RecipeSuggester ingredients={ingredients} />
+        <div className="flex items-center gap-2">
+            <RecipeSuggester ingredients={ingredients} />
+            <Button variant="outline" onClick={onCountryRecipeClick}>
+                <PartyPopper className="mr-2 h-4 w-4 text-accent" />
+                Me surprendre !
+            </Button>
+        </div>
       </div>
     </header>
   );
