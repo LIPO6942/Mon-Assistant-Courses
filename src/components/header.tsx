@@ -2,15 +2,16 @@
 import { Logo } from "@/components/icons";
 import { RecipeSuggester } from "./recipe-suggester";
 import { Button } from "./ui/button";
-import { PartyPopper, Bookmark } from "lucide-react";
+import { PartyPopper, Bookmark, ShoppingCart } from "lucide-react";
 
 type HeaderProps = {
   ingredients: { name: string; price: number | null; }[];
   onCountryRecipeClick: () => void;
   onFavoritesClick: () => void;
+  onCartClick: () => void;
 };
 
-export function Header({ ingredients, onCountryRecipeClick, onFavoritesClick }: HeaderProps) {
+export function Header({ ingredients, onCountryRecipeClick, onFavoritesClick, onCartClick }: HeaderProps) {
   return (
     <header className="w-full bg-card border-b sticky top-0 z-10">
       <div className="container mx-auto flex items-center justify-between p-4">
@@ -28,6 +29,9 @@ export function Header({ ingredients, onCountryRecipeClick, onFavoritesClick }: 
             </Button>
             <Button variant="ghost" size="icon" onClick={onFavoritesClick} aria-label="Recettes favorites">
                 <Bookmark />
+            </Button>
+            <Button variant="ghost" size="icon" onClick={onCartClick} aria-label="Panier">
+                <ShoppingCart />
             </Button>
         </div>
       </div>

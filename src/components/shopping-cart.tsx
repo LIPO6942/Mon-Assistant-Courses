@@ -2,7 +2,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { 
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+} from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -72,25 +77,27 @@ export function ShoppingCart({
   }
 
   return (
-    <Card>
-      <CardHeader>
+    <>
+      <SheetHeader>
         <div className="flex items-center gap-3">
           <ShoppingCartIcon className="h-6 w-6 text-primary" />
-          <CardTitle>Mon Panier & Budget</CardTitle>
+          <SheetTitle>Mon Panier & Budget</SheetTitle>
         </div>
-        <CardDescription>
+        <SheetDescription>
           Les articles à acheter et le suivi de votre budget.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
+        </SheetDescription>
+      </SheetHeader>
+      
+      <div className="flex-1 overflow-y-auto py-4">
         {items.length === 0 ? (
-          <div className="flex flex-col items-center justify-center text-center text-muted-foreground p-4 min-h-[10rem]">
+          <div className="flex flex-col h-full items-center justify-center text-center text-muted-foreground p-4">
+            <ShoppingCartIcon className="h-16 w-16 mb-4 text-muted-foreground/50"/>
             <p>Votre panier est vide.</p>
             <p className="text-xs mt-1">Cochez des articles dans le garde-manger pour les ajouter.</p>
           </div>
         ) : (
-          <ScrollArea className="h-64">
-            <div className="space-y-2 pr-4">
+          <ScrollArea className="h-full pr-4">
+            <div className="space-y-2">
               {sortedItems.map(item => (
                 <div key={item.id} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
                   <div className="flex items-center gap-3 flex-1">
@@ -132,10 +139,10 @@ export function ShoppingCart({
             </div>
           </ScrollArea>
         )}
-      </CardContent>
+      </div>
       
-      <CardFooter className="flex-col items-stretch gap-4 !pt-4 border-t">
-        <div className="space-y-4">
+      <SheetFooter className="pt-4 border-t">
+        <div className="flex flex-col gap-4 w-full">
             <div className="flex justify-between items-center text-sm">
                   <span className="text-muted-foreground">Coût restant :</span>
                   <span className="font-semibold">
@@ -189,18 +196,18 @@ export function ShoppingCart({
                     <p>Attention, budget dépassé !</p>
                 </div>
             )}
+        
+            {items.length > 0 && (
+            <>
+                <Separator />
+                <Button variant="outline" size="sm" onClick={onClearCart} className="w-full">
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Vider le panier
+                </Button>
+            </>
+            )}
         </div>
-
-        {items.length > 0 && (
-          <>
-            <Separator />
-            <Button variant="outline" size="sm" onClick={onClearCart} className="w-full mt-4">
-                <Trash2 className="mr-2 h-4 w-4" />
-                Vider le panier
-            </Button>
-          </>
-        )}
-      </CardFooter>
-    </Card>
+      </SheetFooter>
+    </>
   );
 }

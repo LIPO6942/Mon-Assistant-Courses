@@ -59,6 +59,7 @@ export default function Home() {
   const [isAddSheetOpen, setAddSheetOpen] = useState(false);
   const [isCountryRecipeOpen, setCountryRecipeOpen] = useState(false);
   const [isFavoritesOpen, setFavoritesOpen] = useState(false);
+  const [isCartOpen, setCartOpen] = useState(false);
   const [budget, setBudget] = useState<number>(150);
   const { toast } = useToast();
 
@@ -165,6 +166,9 @@ export default function Home() {
       });
     } else {
       newCartItems = [...cartItems, item];
+      if (cartItems.length === 0) {
+        setCartOpen(true);
+      }
     }
     setCartItems(newCartItems);
 
@@ -303,11 +307,12 @@ export default function Home() {
         ingredients={ingredientsForRecipe} 
         onCountryRecipeClick={() => setCountryRecipeOpen(true)}
         onFavoritesClick={() => setFavoritesOpen(true)}
+        onCartClick={() => setCartOpen(true)}
       />
       <main className="flex-1 container mx-auto p-4 md:p-8">
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-5 gap-8">
           
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-3">
             {isLoading ? (
               <Card>
                 <CardHeader>
@@ -335,16 +340,7 @@ export default function Home() {
             )}
           </div>
 
-          <aside className="space-y-8 lg:col-span-1">
-            <ShoppingCart 
-              items={cartItems} 
-              purchasedItemIds={purchasedItemIds}
-              onTogglePurchased={handleTogglePurchased}
-              onToggleItem={handleToggleCartItem}
-              onClearCart={handleClearCart}
-              budget={budget}
-              onBudgetChange={handleBudgetChange}
-            />
+          <aside className="space-y-8 lg:col-span-2">
             <WeatherSuggester />
             <LazyFoodWheel />
           </aside>
@@ -373,6 +369,21 @@ export default function Home() {
         open={isFavoritesOpen}
         onOpenChange={setFavoritesOpen}
       />
+
+      <Sheet open={isCartOpen} onOpenChange={setCartOpen}>
+        <SheetContent className="flex w-full flex-col sm:max-w-md">
+            <ShoppingCart 
+              items={cartItems} 
+              purchasedItemIds={purchasedItemIds}
+              onTogglePurchased={handleTogglePurchased}
+              onToggleItem={handleToggleCartItem}
+              onClearCart={handleClearCart}
+              budget={budget}
+              onBudgetChange={handleBudgetChange}
+            />
+        </SheetContent>
+      </Sheet>
+
     </div>
   );
 }
