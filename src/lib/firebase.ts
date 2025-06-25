@@ -16,8 +16,8 @@ let db: any;
 let persistenceEnabled = false;
 let firebaseInitialized = false;
 
-// Check if the essential config is present
-if (firebaseConfig.projectId) {
+// Check if the essential config is present and doesn't contain placeholder values
+if (firebaseConfig.projectId && firebaseConfig.apiKey && !firebaseConfig.apiKey.includes('VOTRE_')) {
     try {
         // Initialize Firebase
         const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
@@ -27,7 +27,7 @@ if (firebaseConfig.projectId) {
         console.log("Could not initialize Firebase. The app will run in a local-only mode.", e);
     }
 } else {
-    console.log("Firebase project ID is not set. The app will run in a local-only mode.");
+    console.log("Firebase configuration is incomplete or uses placeholder values. The app will run in a local-only mode.");
 }
 
 const enablePersistence = async () => {
