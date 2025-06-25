@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { Header } from "@/components/header";
 import { AddItemForm } from "@/components/add-item-form";
 import { Pantry } from "@/components/pantry";
@@ -304,6 +304,14 @@ export default function Home() {
   
   const cartItemIds = useMemo(() => new Set(cartItems.map(item => item.id)), [cartItems]);
 
+  const handleNewQuiz = useCallback(() => {
+    setIsQuizAnsweredCorrectly(false);
+  }, []);
+
+  const handleQuizCorrect = useCallback(() => {
+    setIsQuizAnsweredCorrectly(true);
+  }, []);
+
   return (
     <div className="flex flex-col min-h-screen w-full bg-muted/40">
       <Header 
@@ -346,8 +354,8 @@ export default function Home() {
 
           <aside className="space-y-8 lg:col-span-2 order-1 lg:order-2">
             <WeatherSuggester
-              onNewQuiz={() => setIsQuizAnsweredCorrectly(false)}
-              onQuizCorrect={() => setIsQuizAnsweredCorrectly(true)}
+              onNewQuiz={handleNewQuiz}
+              onQuizCorrect={handleQuizCorrect}
             />
             <LazyFoodWheel isQuizAnsweredCorrectly={isQuizAnsweredCorrectly} />
           </aside>
