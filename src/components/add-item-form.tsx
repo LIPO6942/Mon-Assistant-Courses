@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -14,54 +14,72 @@ import { Plus } from "lucide-react";
 
 type AddItemFormProps = {
   categories: string[];
-  onAddItem: (item: string, category: string) => void;
+  onAddItem: (item: string, category: string, price: number | null) => void;
 };
 
-const DEFAULT_CATEGORY = "Maison";
+const DEFAULT_CATEGORY = "Divers";
 
 export function AddItemForm({ categories, onAddItem }: AddItemFormProps) {
   const [itemName, setItemName] = useState("");
-  const [category, setCategory] = useState(DEFAULT_CATEGORY);
+  const [itemPrice, setItemPrice] = useState("");
+  const [category, setCategory] = useState(categories[0] || DEFAULT_CATEGORY);
+
+  useEffect(() => {
+    if (![...categories, DEFAULT_CATEGORY].includes(category)) {
+      setCategory(categories[0] || DEFAULT_CATEGORY);
+    }
+  }, [categories, category]);
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (itemName.trim()) {
-      onAddItem(itemName.trim(), category);
+      const priceAsNumber = itemPrice ? parseFloat(itemPrice.replace(",", ".")) : null;
+      onAddItem(itemName.trim(), category, priceAsNumber && !isNaN(priceAsNumber) ? priceAsNumber : null);
       setItemName("");
+      setItemPrice("");
     }
   };
 
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-col sm:flex-row gap-2"
+      className="flex flex-col gap-4"
     >
-      <Input
-        type="text"
-        placeholder="Nom de l'article (ex: Tomates)"
-        value={itemName}
-        onChange={(e) => setItemName(e.target.value)}
-        className="flex-grow"
-        aria-label="Nom de l'article"
-      />
+      <div className="flex gap-2">
+        <Input
+            type="text"
+            placeholder="Nom de l'article (ex: Tomates)"
+            value={itemName}
+            onChange={(e) => setItemName(e.target.value)}
+            className="flex-grow"
+            aria-label="Nom de l'article"
+            required
+        />
+        <Input
+            type="text"
+            placeholder="Prix (€)"
+            value={itemPrice}
+            onChange={(e) => setItemPrice(e.target.value)}
+            className="w-24"
+            aria-label="Prix de l'article"
+            pattern="[0-9]*[.,]?[0-9]+"
+        />
+      </div>
+
       <Select value={category} onValueChange={setCategory}>
-        <SelectTrigger className="w-full sm:w-[180px]" aria-label="Catégorie">
+        <SelectTrigger aria-label="Catégorie">
           <SelectValue placeholder="Catégorie" />
         </SelectTrigger>
         <SelectContent>
-          {categories.map((cat) => (
+          {[...categories, DEFAULT_CATEGORY].filter((v, i, a) => a.indexOf(v) === i).map((cat) => (
             <SelectItem key={cat} value={cat}>
               {cat}
             </SelectItem>
           ))}
-           {!categories.includes(DEFAULT_CATEGORY) && (
-            <SelectItem value={DEFAULT_CATEGORY}>
-              {DEFAULT_CATEGORY}
-            </SelectItem>
-          )}
         </SelectContent>
       </Select>
-      <Button type="submit" className="w-full sm:w-auto">
+      <Button type="submit" className="w-full">
         <Plus className="mr-2 h-4 w-4" /> Ajouter
       </Button>
     </form>

@@ -5,36 +5,38 @@ import { Header } from "@/components/header";
 import { AddItemForm } from "@/components/add-item-form";
 import { GroceryList } from "@/components/grocery-list";
 import { WeatherSuggester } from "@/components/weather-suggester";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-type GroceryItem = {
+export type GroceryItem = {
   id: number;
   name: string;
   checked: boolean;
+  price: number | null;
 };
 
-type GroceryLists = Record<string, GroceryItem[]>;
+export type GroceryLists = Record<string, GroceryItem[]>;
 
 const initialLists: GroceryLists = {
   "Fruits et Légumes": [
-    { id: 1, name: "Pommes", checked: false },
-    { id: 2, name: "Carottes", checked: true },
-    { id: 3, name: "Épinards", checked: false },
+    { id: 1, name: "Pommes", checked: false, price: 2.5 },
+    { id: 2, name: "Carottes", checked: true, price: 1.8 },
+    { id: 3, name: "Épinards", checked: false, price: 3.0 },
   ],
-  Boulangerie: [{ id: 4, name: "Baguette", checked: false }],
+  Boulangerie: [{ id: 4, name: "Baguette", checked: false, price: 1.1 }],
   "Produits Laitiers": [
-    { id: 5, name: "Lait", checked: false },
-    { id: 6, name: "Yaourts nature", checked: false },
-    { id: 7, name: "Fromage râpé", checked: true },
+    { id: 5, name: "Lait", checked: false, price: 1.2 },
+    { id: 6, name: "Yaourts nature", checked: false, price: 2.0 },
+    { id: 7, name: "Fromage râpé", checked: true, price: 2.75 },
   ],
 };
 
 export default function Home() {
   const [lists, setLists] = useState<GroceryLists>(initialLists);
 
-  const handleAddItem = (item: string, category: string) => {
+  const handleAddItem = (item: string, category: string, price: number | null) => {
     setLists((prevLists) => {
       const newLists = { ...prevLists };
-      const newItem = { id: Date.now(), name: item, checked: false };
+      const newItem: GroceryItem = { id: Date.now(), name: item, checked: false, price };
       if (newLists[category]) {
         newLists[category] = [...newLists[category], newItem];
       } else {
@@ -54,23 +56,50 @@ export default function Home() {
     });
   };
 
+  const handleDeleteItem = (category: string, itemId: number) => {
+    setLists(prevLists => {
+      const newLists = { ...prevLists };
+      newLists[category] = newLists[category].filter(item => item.id !== itemId);
+      if (newLists[category].length === 0) {
+        delete newLists[category];
+      }
+      return newLists;
+    });
+  };
+
   const categories = Object.keys(lists);
   const allIngredients = Object.values(lists)
     .flat()
     .map((item) => item.name);
 
   return (
-    <div className="flex flex-col items-center min-h-screen w-full">
+    <div className="flex flex-col min-h-screen w-full bg-muted/40">
       <Header ingredients={allIngredients} />
-      <main className="w-full max-w-4xl p-4 md:p-8 space-y-8">
-        <WeatherSuggester />
+      <main className="flex-1 container mx-auto p-4 md:p-8">
+        <div className="grid md:grid-cols-3 gap-8">
+          
+          <div className="md:col-span-2">
+            <GroceryList 
+              lists={lists} 
+              onToggleItem={handleToggleItem} 
+              onDeleteItem={handleDeleteItem}
+            />
+          </div>
 
-        <div>
-          <h2 className="text-2xl font-bold mb-4">Ajouter un article</h2>
-          <AddItemForm categories={categories} onAddItem={handleAddItem} />
+          <aside className="space-y-8 md:col-span-1">
+            <Card>
+              <CardHeader>
+                <CardTitle>Ajouter un article</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <AddItemForm categories={categories} onAddItem={handleAddItem} />
+              </CardContent>
+            </Card>
+
+            <WeatherSuggester />
+          </aside>
+
         </div>
-        
-        <GroceryList lists={lists} onToggleItem={handleToggleItem} />
       </main>
     </div>
   );

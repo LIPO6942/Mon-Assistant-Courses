@@ -12,15 +12,16 @@ const mockWeather = {
   'Lyon': { temperature: 18, condition: 'rainy', frenchCondition: 'pluvieux' },
   'Toulouse': { temperature: 22, condition: 'sunny', frenchCondition: 'ensoleillé' },
   'Nice': { temperature: 24, condition: 'sunny', frenchCondition: 'ensoleillé' },
+  'Tunis': { temperature: 28, condition: 'sunny', frenchCondition: 'ensoleillé' },
 };
 const defaultWeather = { temperature: 12, condition: 'cloudy', frenchCondition: 'nuageux' };
 
 export const getWeather = ai.defineTool(
   {
     name: 'getWeatherForLocation',
-    description: 'Obtient la météo actuelle pour un lieu donné. Le lieu doit être une grande ville française.',
+    description: 'Obtient la météo actuelle pour un lieu donné. Le lieu doit être une grande ville française ou Tunis.',
     inputSchema: z.object({
-      location: z.string().describe('La ville pour laquelle obtenir la météo. Ex: Paris, Marseille, Lyon.'),
+      location: z.string().describe('La ville pour laquelle obtenir la météo. Ex: Paris, Marseille, Lyon, Tunis.'),
     }),
     outputSchema: z.object({
       location: z.string(),
