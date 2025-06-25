@@ -1,3 +1,4 @@
+
 import { db } from '@/lib/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import type { GroceryLists } from '@/app/page';
@@ -27,9 +28,8 @@ export async function getGroceryLists(): Promise<GroceryLists | null> {
         }
     } catch (error) {
         console.error("Error getting document:", error);
-        // This can happen if Firebase config is missing/wrong.
-        // Let the caller handle the error and fallback.
-        throw new Error("Failed to fetch grocery lists from Firestore.");
+        // Re-throw the original error to preserve its code (e.g., 'unavailable' for offline)
+        throw error;
     }
 }
 
@@ -40,6 +40,6 @@ export async function updateGroceryLists(lists: GroceryLists): Promise<void> {
         await setDoc(docRef, { lists });
     } catch (error) {
         console.error("Error updating document:", error);
-        throw new Error("Failed to update grocery lists in Firestore.");
+        throw error;
     }
 }

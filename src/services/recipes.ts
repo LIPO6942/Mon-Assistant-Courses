@@ -71,7 +71,7 @@ export async function saveFavoriteRecipe(recipe: RecipeSuggestion): Promise<void
 
     } catch (error) {
         console.error("Error saving recipe:", error);
-        throw new Error("Failed to save favorite recipe in Firestore.");
+        throw error;
     }
 }
 
@@ -96,7 +96,7 @@ export async function getFavoriteRecipes(): Promise<FavoriteRecipe[]> {
         return recipes;
     } catch (error) {
         console.error("Error getting favorite recipes:", error);
-        throw new Error("Failed to fetch favorite recipes from Firestore.");
+        throw error;
     }
 }
 
@@ -106,6 +106,6 @@ export async function deleteFavoriteRecipe(recipeId: string): Promise<void> {
         await deleteDoc(docRef);
     } catch (error) {
         console.error("Error deleting recipe:", error);
-        throw new Error("Failed to delete favorite recipe from Firestore.");
+        throw error;
     }
 }
