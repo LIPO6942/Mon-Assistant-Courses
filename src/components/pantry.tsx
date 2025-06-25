@@ -1,6 +1,7 @@
 
 "use client";
 
+import { useState, useEffect } from "react";
 import {
   Accordion,
   AccordionContent,
@@ -63,13 +64,45 @@ const ItemRow = ({
   onUpdateItem: (category: string, itemId: number, updates: Partial<Pick<GroceryItem, 'price' | 'quantity'>>) => void,
   onMoveItem: (itemId: number, oldCategory: string, newCategory: string) => void,
 }) => {
+  const [quantity, setQuantity] = useState(item.quantity.toString());
+  const [price, setPrice] = useState(item.price.toString());
+
+  useEffect(() => {
+    setQuantity(item.quantity.toString());
+  }, [item.quantity]);
+
+  useEffect(() => {
+    setPrice(item.price.toString());
+  }, [item.price]);
   
-  const handleNumericUpdate = (field: 'price' | 'quantity', value: string) => {
-    const numericValue = parseFloat(value.replace(",", "."));
-    if (!isNaN(numericValue) && numericValue >= 0) {
-      onUpdateItem(category, item.id, { [field]: numericValue });
+  const handleUpdate = (field: 'price' | 'quantity') => {
+    const value = field === 'price' ? price : quantity;
+    let numericValue = parseFloat(value.replace(",", "."));
+    
+    if (isNaN(numericValue) || numericValue < 0) {
+      numericValue = 0;
+    }
+
+    if (item[field] !== numericValue) {
+        onUpdateItem(category, item.id, { [field]: numericValue });
+    } else if (value !== item[field].toString()) {
+        // This handles cases where the user enters an invalid value (like "abc")
+        // but the underlying numeric value hasn't changed (e.g., was already 0).
+        // We revert the input to the valid value from the parent state.
+        if (field === 'price') setPrice(item.price.toString());
+        else setQuantity(item.quantity.toString());
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, field: 'price' | 'quantity') => {
+    if (e.key === 'Enter') {
+      handleUpdate(field);
+      e.currentTarget.blur();
     }
   }
+
+  const currentPrice = parseFloat(price.replace(",", ".")) || 0;
+  const currentQuantity = parseFloat(quantity.replace(",", ".")) || 0;
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-12 items-center gap-x-3 gap-y-2 md:gap-3 group p-2 rounded-lg">
@@ -92,9 +125,12 @@ const ItemRow = ({
       <div className="col-span-1 md:col-span-2">
         <div className="flex items-center gap-1">
           <Input 
-            type="number"
-            value={item.quantity}
-            onChange={(e) => handleNumericUpdate('quantity', e.target.value)}
+            type="text"
+            inputMode="decimal"
+            value={quantity}
+            onChange={(e) => setQuantity(e.target.value)}
+            onBlur={() => handleUpdate('quantity')}
+            onKeyDown={(e) => handleKeyDown(e, 'quantity')}
             className="h-8 text-center"
             aria-label={`Quantité pour ${item.name}`}
           />
@@ -104,16 +140,19 @@ const ItemRow = ({
 
       <div className="col-span-1 md:col-span-2">
         <Input 
-            type="number"
-            value={item.price}
-            onChange={(e) => handleNumericUpdate('price', e.target.value)}
+            type="text"
+            inputMode="decimal"
+            value={price}
+            onChange={(e) => setPrice(e.target.value)}
+            onBlur={() => handleUpdate('price')}
+            onKeyDown={(e) => handleKeyDown(e, 'price')}
             className="h-8 text-right"
             aria-label={`Prix pour ${item.name}`}
           />
       </div>
       
       <div className="col-span-1 md:col-span-1 font-mono text-sm text-right font-semibold">
-        {`${(item.price * item.quantity).toFixed(2).replace('.', ',')} TND`}
+        {`${(currentPrice * currentQuantity).toFixed(2).replace('.', ',')} TND`}
       </div>
       
       <div className="col-span-1 md:col-span-2 flex items-center justify-end gap-1">
@@ -192,7 +231,7 @@ export function Pantry({
             </div>
         </div>
         <div className="relative pt-2">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
               type="search"
               placeholder="Rechercher un ingrédient..."
