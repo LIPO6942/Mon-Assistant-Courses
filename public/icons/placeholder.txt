@@ -1,0 +1,4 @@
+Veuillez remplacer ce fichier par vos icônes d'application (au format .png).
+Exemples de noms de fichiers attendus par manifest.webmanifest :
+- icon-192x192.png
+- icon-512x512.png
