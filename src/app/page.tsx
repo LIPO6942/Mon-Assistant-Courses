@@ -94,8 +94,13 @@ export default function Home() {
   };
 
   const categories = Object.keys(lists);
-  // For recipe suggester, we pass the price per unit
-  const allIngredientsForAI = Object.values(lists).flat().map(item => ({ name: item.name, price: item.price }));
+  
+  const ingredientsForRecipe = useMemo(() => {
+    return Object.values(lists)
+      .flat()
+      .filter(item => item.checked)
+      .map(item => ({ name: item.name, price: item.price }));
+  }, [lists]);
 
   const totalCost = useMemo(() => {
     return Object.values(lists)
@@ -107,7 +112,7 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen w-full bg-muted/40">
-      <Header ingredients={allIngredientsForAI} />
+      <Header ingredients={ingredientsForRecipe} />
       <main className="flex-1 container mx-auto p-4 md:p-8">
         <div className="grid md:grid-cols-3 gap-8">
           

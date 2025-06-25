@@ -34,8 +34,7 @@ export function RecipeSuggester({ ingredients }: RecipeSuggesterProps) {
     setIsLoading(true);
     setRecipe(null);
     try {
-      const recipeIngredients = ingredients.map(({ name, price }) => ({ name, price }));
-      const result = await suggestRecipe({ ingredients: recipeIngredients });
+      const result = await suggestRecipe({ ingredients });
       setRecipe(result);
     } catch (error) {
       console.error("Failed to suggest recipe:", error);
@@ -146,12 +145,12 @@ export function RecipeSuggester({ ingredients }: RecipeSuggesterProps) {
             <div className="flex flex-col items-center justify-center gap-4 text-center">
               <p className="text-muted-foreground px-4">
                 {ingredients.length > 0
-                  ? `Cliquez ci-dessous pour trouver une recette avec vos ${ingredients.length} ingrédient(s).`
-                  : "Votre liste est vide, mais nous pouvons quand même vous suggérer quelque chose !"}
+                  ? `Cliquez ci-dessous pour trouver une recette avec les ${ingredients.length} ingrédient(s) que vous avez sélectionné(s).`
+                  : "Cochez des ingrédients dans votre liste pour obtenir une suggestion personnalisée. Sinon, nous vous proposerons une recette simple."}
               </p>
               <Button onClick={handleSuggest} disabled={isLoading}>
                 <ChefHat className="mr-2 h-4 w-4" />
-                Trouver une recette
+                {ingredients.length > 0 ? "Trouver une recette" : "Suggérer une recette simple"}
               </Button>
             </div>
           )}
