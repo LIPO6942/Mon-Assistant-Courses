@@ -70,8 +70,8 @@ const ItemRow = ({
   }
 
   return (
-    <div className="grid grid-cols-12 items-center gap-2 md:gap-3 group p-2 rounded-lg">
-      <div className="col-span-12 md:col-span-5 flex items-center gap-3">
+    <div className="grid grid-cols-2 md:grid-cols-12 items-center gap-x-3 gap-y-2 md:gap-3 group p-2 rounded-lg">
+      <div className="col-span-2 md:col-span-5 flex items-center gap-3">
         <Checkbox
           id={`pantry-${item.id}`}
           checked={isChecked}
@@ -87,34 +87,34 @@ const ItemRow = ({
         </Label>
       </div>
 
-      <div className="col-span-6 md:col-span-2">
+      <div className="col-span-1 md:col-span-2">
         <div className="flex items-center gap-1">
           <Input 
             type="number"
             value={item.quantity}
             onChange={(e) => handleNumericUpdate('quantity', e.target.value)}
-            className="h-8 w-20 text-center"
+            className="h-8 text-center"
             aria-label={`Quantité pour ${item.name}`}
           />
           <span className="text-xs text-muted-foreground">{item.unit}</span>
         </div>
       </div>
 
-      <div className="col-span-6 md:col-span-2">
+      <div className="col-span-1 md:col-span-2">
         <Input 
             type="number"
             value={item.price}
             onChange={(e) => handleNumericUpdate('price', e.target.value)}
-            className="h-8 w-24 text-right"
+            className="h-8 text-right"
             aria-label={`Prix pour ${item.name}`}
           />
       </div>
       
-      <div className="col-span-6 md:col-span-1 font-mono text-sm text-right font-semibold">
+      <div className="col-span-1 md:col-span-1 font-mono text-sm text-right font-semibold">
         {`${(item.price * item.quantity).toFixed(2).replace('.', ',')} TND`}
       </div>
       
-      <div className="col-span-6 md:col-span-2 flex items-center justify-end gap-1">
+      <div className="col-span-1 md:col-span-2 flex items-center justify-end gap-1">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="size-8">

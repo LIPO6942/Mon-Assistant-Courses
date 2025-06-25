@@ -16,16 +16,16 @@ export function Header({ ingredients, onCountryRecipeClick, onFavoritesClick, on
     <header className="w-full bg-card border-b sticky top-0 z-10">
       <div className="container mx-auto flex items-center justify-between p-4">
         <div className="flex items-center gap-3">
-          <Logo className="h-8 w-8 text-primary" />
-          <h1 className="text-xl md:text-2xl font-bold text-foreground">
+          <Logo className="h-8 w-8 text-primary flex-shrink-0" />
+          <h1 className="text-lg sm:text-xl font-bold text-foreground truncate">
             Mon Assistant de Courses
           </h1>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2">
             <RecipeSuggester ingredients={ingredients} />
             <Button variant="outline" onClick={onCountryRecipeClick}>
-                <PartyPopper className="mr-2 h-4 w-4 text-accent" />
-                Me surprendre !
+                <PartyPopper className="h-4 w-4 text-accent sm:mr-2" />
+                <span className="hidden sm:inline">Me surprendre !</span>
             </Button>
             <Button variant="ghost" size="icon" onClick={onFavoritesClick} aria-label="Recettes favorites">
                 <Bookmark />

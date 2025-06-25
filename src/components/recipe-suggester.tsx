@@ -88,8 +88,8 @@ export function RecipeSuggester({ ingredients }: RecipeSuggesterProps) {
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button variant="outline">
-          <Sparkles className="mr-2 h-4 w-4 text-accent" />
-          Idée Recette
+          <Sparkles className="h-4 w-4 text-accent sm:mr-2" />
+          <span className="hidden sm:inline">Idée Recette</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg">
