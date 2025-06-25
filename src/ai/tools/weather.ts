@@ -1,20 +1,37 @@
 
+'use server';
 /**
  * @fileOverview A tool for getting the current weather.
  */
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 
-// Mock weather data. In a real app, this would call a weather API.
-const mockWeather = {
-  'Paris': { temperature: 15, condition: 'cloudy', frenchCondition: 'nuageux' },
-  'Marseille': { temperature: 25, condition: 'sunny', frenchCondition: 'ensoleillé' },
-  'Lyon': { temperature: 18, condition: 'rainy', frenchCondition: 'pluvieux' },
-  'Toulouse': { temperature: 22, condition: 'sunny', frenchCondition: 'ensoleillé' },
-  'Nice': { temperature: 24, condition: 'sunny', frenchCondition: 'ensoleillé' },
-  'Tunis': { temperature: 28, condition: 'sunny', frenchCondition: 'ensoleillé' },
+
+const generateDynamicWeather = (location: string) => {
+    // In a real app, this would call a weather API.
+    // For this prototype, we'll generate dynamic data for Tunis.
+    if (location.toLowerCase().includes('tunis')) {
+        const conditions = [
+            { condition: 'sunny', frenchCondition: 'ensoleillé', minTemp: 26, maxTemp: 34 },
+            { condition: 'cloudy', frenchCondition: 'nuageux', minTemp: 22, maxTemp: 28 },
+            { condition: 'partly-cloudy', frenchCondition: 'partiellement nuageux', minTemp: 24, maxTemp: 30 },
+            { condition: 'rainy', frenchCondition: 'pluvieux', minTemp: 18, maxTemp: 24 },
+        ];
+
+        const randomCondition = conditions[Math.floor(Math.random() * conditions.length)];
+        const temperature = Math.floor(Math.random() * (randomCondition.maxTemp - randomCondition.minTemp + 1)) + randomCondition.minTemp;
+
+        return {
+            temperature,
+            condition: randomCondition.condition,
+            frenchCondition: randomCondition.frenchCondition,
+        };
+    }
+
+    // Fallback for other locations
+    return { temperature: 18, condition: 'cloudy', frenchCondition: 'nuageux' };
 };
-const defaultWeather = { temperature: 12, condition: 'cloudy', frenchCondition: 'nuageux' };
+
 
 export const getWeather = ai.defineTool(
   {
@@ -26,18 +43,16 @@ export const getWeather = ai.defineTool(
     outputSchema: z.object({
       location: z.string(),
       temperature: z.number().describe('La température en degrés Celsius.'),
-      condition: z.string().describe('La condition météo en anglais (ex: sunny, cloudy, rainy).'),
+      condition: z.string().describe('La condition météo en anglais (ex: sunny, cloudy, rainy, partly-cloudy).'),
       frenchCondition: z.string().describe('La condition météo en français (ex: ensoleillé, nuageux, pluvieux).'),
     }),
   },
   async ({ location }) => {
-    // In a real app, you would call a weather API here.
-    // For this prototype, we'll return mock data.
-    const city = Object.keys(mockWeather).find(city => location.toLowerCase().includes(city.toLowerCase()));
-    const weather = city ? mockWeather[city as keyof typeof mockWeather] : defaultWeather;
+    // We use a function to make the weather more dynamic for the demo.
+    const weather = generateDynamicWeather(location);
     
     return {
-      location: city || location,
+      location,
       ...weather,
     };
   }
