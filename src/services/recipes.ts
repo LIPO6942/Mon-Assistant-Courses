@@ -1,5 +1,5 @@
 
-import { db } from '@/lib/firebase';
+import { db, firebaseInitialized } from '@/lib/firebase';
 import { collection, addDoc, getDocs, doc, deleteDoc, serverTimestamp, orderBy, query } from 'firebase/firestore';
 import type { SuggestCountryRecipeOutput } from '@/ai/flows/suggest-country-recipe';
 import type { SuggestRecipeOutput } from '@/ai/flows/suggest-ingredients';
@@ -37,6 +37,9 @@ function isCountryRecipe(recipe: RecipeSuggestion): recipe is SuggestCountryReci
 }
 
 export async function saveFavoriteRecipe(recipe: RecipeSuggestion): Promise<void> {
+    if (!firebaseInitialized) {
+        throw new Error("La configuration Firebase est manquante. Impossible de sauvegarder la recette.");
+    }
     try {
         const collectionRef = collection(db, RECIPE_COLLECTION);
         
@@ -77,6 +80,9 @@ export async function saveFavoriteRecipe(recipe: RecipeSuggestion): Promise<void
 
 
 export async function getFavoriteRecipes(): Promise<FavoriteRecipe[]> {
+    if (!firebaseInitialized) {
+        return [];
+    }
     try {
         const q = query(
             collection(db, RECIPE_COLLECTION),
@@ -95,12 +101,14 @@ export async function getFavoriteRecipes(): Promise<FavoriteRecipe[]> {
         });
         return recipes;
     } catch (error) {
-        console.error("Error getting favorite recipes:", error);
         throw error;
     }
 }
 
 export async function deleteFavoriteRecipe(recipeId: string): Promise<void> {
+    if (!firebaseInitialized) {
+        throw new Error("La configuration Firebase est manquante. Impossible de supprimer la recette.");
+    }
     try {
         const docRef = doc(db, RECIPE_COLLECTION, recipeId);
         await deleteDoc(docRef);

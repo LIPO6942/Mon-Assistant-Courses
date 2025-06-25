@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getFirestore, enableIndexedDbPersistence } from "firebase/firestore";
+import { getFirestore, enableIndexedDbPersistence, Firestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -10,14 +10,28 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-const db = getFirestore(app);
-
+// Use 'any' to avoid TypeScript errors when db is not initialized.
+// The firebaseInitialized flag will be the source of truth.
+let db: any;
 let persistenceEnabled = false;
+let firebaseInitialized = false;
+
+// Check if the essential config is present
+if (firebaseConfig.projectId) {
+    try {
+        // Initialize Firebase
+        const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+        db = getFirestore(app);
+        firebaseInitialized = true;
+    } catch (e) {
+        console.log("Could not initialize Firebase. The app will run in a local-only mode.", e);
+    }
+} else {
+    console.log("Firebase project ID is not set. The app will run in a local-only mode.");
+}
 
 const enablePersistence = async () => {
-  if (typeof window !== 'undefined' && !persistenceEnabled) {
+  if (typeof window !== 'undefined' && !persistenceEnabled && firebaseInitialized) {
     try {
       await enableIndexedDbPersistence(db);
       persistenceEnabled = true;
@@ -27,7 +41,7 @@ const enablePersistence = async () => {
         } else if (err.code === 'unimplemented') {
             console.log("Firestore persistence not supported in this browser.");
         } else if (err.code === 'unavailable') {
-            console.log("Firestore persistence is unavailable. App will work online.");
+            console.log("Firestore persistence is unavailable. App will work online (if connected).");
         }
     }
   }
@@ -36,4 +50,5 @@ const enablePersistence = async () => {
 // Attempt to enable persistence
 enablePersistence();
 
-export { db };
+// Export a flag to check if firebase is initialized
+export { db, firebaseInitialized };
