@@ -108,15 +108,14 @@ export function CountryRecipeSuggester({ open, onOpenChange }: CountryRecipeSugg
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
-                      onClick={() => handleSuggest(continent.value)}
-                      disabled={isLoading}
+                      onClick={() => !isLoading && handleSuggest(continent.value)}
                       className={cn(
                         "h-10 w-10 rounded-full flex items-center justify-center font-bold transition-transform duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-ring",
                         continent.color,
                         selectedContinent === continent.value
                           ? "ring-2 ring-offset-2 ring-primary scale-110 shadow-lg"
                           : "hover:scale-110",
-                        isLoading ? "cursor-not-allowed opacity-60" : ""
+                        isLoading ? "cursor-not-allowed opacity-60 pointer-events-none" : ""
                       )}
                       aria-label={continent.label}
                     >
