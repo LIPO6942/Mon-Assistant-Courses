@@ -5,7 +5,6 @@ import {
   suggestRecipe,
   SuggestRecipeOutput,
 } from "@/ai/flows/suggest-ingredients";
-import type { GroceryItem } from "@/app/page";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -22,7 +21,7 @@ import { ScrollArea } from "./ui/scroll-area";
 import { Loader2, Sparkles, ChefHat, Wallet, HeartPulse } from "lucide-react";
 
 type RecipeSuggesterProps = {
-  ingredients: GroceryItem[];
+  ingredients: { name: string; price: number | null; }[];
 };
 
 export function RecipeSuggester({ ingredients }: RecipeSuggesterProps) {

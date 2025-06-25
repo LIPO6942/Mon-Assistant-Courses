@@ -10,27 +10,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Trash2, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-type GroceryItem = {
-  id: number;
-  name: string;
-  checked: boolean;
-  price: number | null;
-  isEssential: boolean;
-};
-
-type GroceryLists = Record<string, GroceryItem[]>;
+import type { GroceryItem, GroceryLists } from "@/app/page";
 
 type GroceryListProps = {
   lists: GroceryLists;
   onToggleItem: (category: string, itemId: number) => void;
   onDeleteItem: (category: string, itemId: number) => void;
   onToggleEssential: (category: string, itemId: number) => void;
+  onUpdateItem: (category: string, itemId: number, updates: Partial<Pick<GroceryItem, 'price' | 'quantity'>>) => void;
 };
 
-export function GroceryList({ lists, onToggleItem, onDeleteItem, onToggleEssential }: GroceryListProps) {
+export function GroceryList({ lists, onToggleItem, onDeleteItem, onToggleEssential, onUpdateItem }: GroceryListProps) {
   const categories = Object.keys(lists);
 
   if (categories.length === 0) {
@@ -44,9 +37,16 @@ export function GroceryList({ lists, onToggleItem, onDeleteItem, onToggleEssenti
     );
   }
 
-  const formatPrice = (price: number | null) => {
-    if (price === null || isNaN(price)) return "";
+  const formatPrice = (price: number) => {
+    if (isNaN(price)) return "";
     return `${price.toFixed(2).replace('.', ',')} TND`;
+  }
+  
+  const handleNumericUpdate = (category: string, itemId: number, field: 'price' | 'quantity', value: string) => {
+    const numericValue = parseFloat(value.replace(",", "."));
+    if (!isNaN(numericValue) && numericValue >= 0) {
+      onUpdateItem(category, itemId, { [field]: numericValue });
+    }
   }
 
   return (
@@ -62,29 +62,67 @@ export function GroceryList({ lists, onToggleItem, onDeleteItem, onToggleEssenti
                 {category}
               </AccordionTrigger>
               <AccordionContent>
-                <div className="flex flex-col gap-3 pt-2">
+                <div className="flex flex-col gap-4 pt-2">
+                  {/* Header Row */}
+                  <div className="hidden md:grid grid-cols-12 items-center gap-3 text-sm font-medium text-muted-foreground px-4">
+                    <div className="col-span-4">Article</div>
+                    <div className="col-span-2">Quantité</div>
+                    <div className="col-span-2">Prix Unitaire</div>
+                    <div className="col-span-2 text-right">Total</div>
+                    <div className="col-span-2 text-right">Actions</div>
+                  </div>
                   {lists[category].map((item) => (
-                    <div key={item.id} className="flex items-center gap-3 group">
-                      <Checkbox
-                        id={`${category}-${item.id}`}
-                        checked={item.checked}
-                        onCheckedChange={() => onToggleItem(category, item.id)}
-                        className="size-5"
-                      />
-                      <Label
-                        htmlFor={`${category}-${item.id}`}
-                        className={`flex-1 text-base transition-colors ${
-                          item.checked
-                            ? "text-muted-foreground line-through"
-                            : "text-foreground"
-                        }`}
-                      >
-                        {item.name}
-                      </Label>
-                      <span className={`font-mono text-sm ${item.checked ? "text-muted-foreground line-through" : "text-foreground"}`}>
-                        {formatPrice(item.price)}
-                      </span>
-                      <div className="flex items-center gap-1">
+                    <div key={item.id} className={cn("grid grid-cols-12 items-center gap-2 md:gap-3 group p-2 rounded-lg", item.checked && "bg-muted/50")}>
+                      {/* Mobile view combines checkbox and label */}
+                      <div className="col-span-12 md:col-span-4 flex items-center gap-3">
+                        <Checkbox
+                          id={`${category}-${item.id}`}
+                          checked={item.checked}
+                          onCheckedChange={() => onToggleItem(category, item.id)}
+                          className="size-5"
+                        />
+                        <Label
+                          htmlFor={`${category}-${item.id}`}
+                          className={cn("flex-1 text-base transition-colors", item.checked && "text-muted-foreground line-through")}
+                        >
+                          {item.name}
+                        </Label>
+                      </div>
+
+                      {/* Quantity Input */}
+                      <div className="col-span-6 md:col-span-2">
+                        <div className="flex items-center gap-1">
+                          <Input 
+                            type="number"
+                            value={item.quantity}
+                            onChange={(e) => handleNumericUpdate(category, item.id, 'quantity', e.target.value)}
+                            className="h-8 w-20 text-center"
+                            aria-label={`Quantité pour ${item.name}`}
+                            disabled={item.checked}
+                          />
+                          <span className="text-xs text-muted-foreground">{item.unit}</span>
+                        </div>
+                      </div>
+
+                      {/* Price Input */}
+                       <div className="col-span-6 md:col-span-2">
+                         <Input 
+                            type="number"
+                            value={item.price}
+                            onChange={(e) => handleNumericUpdate(category, item.id, 'price', e.target.value)}
+                            className="h-8 w-24 text-right"
+                            aria-label={`Prix pour ${item.name}`}
+                            disabled={item.checked}
+                          />
+                      </div>
+                      
+                      {/* Total Price */}
+                      <div className={cn("col-span-6 md:col-span-2 font-mono text-sm text-right font-semibold", item.checked && "text-muted-foreground line-through")}>
+                        {formatPrice(item.price * item.quantity)}
+                      </div>
+                      
+                      {/* Actions */}
+                      <div className="col-span-6 md:col-span-2 flex items-center justify-end gap-1">
                         <Button
                           variant="ghost"
                           size="icon"
