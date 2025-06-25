@@ -90,7 +90,6 @@ export default function Home() {
         setCartItems(loadedCartItems);
 
       } catch (error: any) {
-        console.error("Failed to load or seed grocery lists:", error);
         // Don't show toast for offline error, just fallback silently
         if (error.code !== 'unavailable') {
           toast({

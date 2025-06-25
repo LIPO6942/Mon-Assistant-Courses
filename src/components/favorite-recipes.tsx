@@ -52,7 +52,6 @@ export function FavoriteRecipes({ open, onOpenChange }: FavoriteRecipesProps) {
       const savedRecipes = await getFavoriteRecipes();
       setRecipes(savedRecipes);
     } catch (error: any) {
-      console.error("Failed to fetch favorite recipes:", error);
       if (error.code !== 'unavailable') {
         toast({
             variant: "destructive",
