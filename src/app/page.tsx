@@ -336,6 +336,7 @@ export default function Home() {
                 onUpdateItem={handleUpdateItem}
                 onMoveItem={handleMoveItem}
                 onAddItemClick={() => setAddSheetOpen(true)}
+                onClearCart={handleClearCart}
               />
             )}
           </div>

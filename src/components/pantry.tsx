@@ -22,7 +22,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Trash2, Star, Plus, MoreHorizontal, MoveRight } from "lucide-react";
+import { Trash2, Star, Plus, MoreHorizontal, MoveRight, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { GroceryItem, GroceryLists } from "@/app/page";
 import { DynamicIcon } from "./dynamic-icon";
@@ -37,6 +37,7 @@ type PantryProps = {
   onUpdateItem: (category: string, itemId: number, updates: Partial<Pick<GroceryItem, 'price' | 'quantity'>>) => void;
   onMoveItem: (itemId: number, oldCategory: string, newCategory: string) => void;
   onAddItemClick: () => void;
+  onClearCart: () => void;
 };
 
 const ItemRow = ({ 
@@ -163,6 +164,7 @@ export function Pantry({
   onUpdateItem, 
   onMoveItem,
   onAddItemClick,
+  onClearCart,
 }: PantryProps) {
   
   const allCategories = Object.keys(lists);
@@ -172,10 +174,18 @@ export function Pantry({
       <CardHeader>
         <div className="flex flex-wrap items-center justify-between gap-2">
             <CardTitle>Mon Garde-Manger</CardTitle>
-            <Button onClick={onAddItemClick} size="sm">
-                <Plus className="mr-2 h-4 w-4" />
-                Ajouter un article
-            </Button>
+            <div className="flex items-center gap-2">
+              {cartItemIds.size > 0 && (
+                  <Button onClick={onClearCart} variant="outline" size="sm">
+                      <XCircle className="mr-2 h-4 w-4" />
+                      Tout désélectionner
+                  </Button>
+              )}
+              <Button onClick={onAddItemClick} size="sm">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Ajouter un article
+              </Button>
+            </div>
         </div>
       </CardHeader>
       <CardContent>
