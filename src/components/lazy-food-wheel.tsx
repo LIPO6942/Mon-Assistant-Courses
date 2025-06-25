@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dices, Loader2, Wallet } from "lucide-react";
+import { Dices, Loader2, Wallet, Truck, Store } from "lucide-react";
 
 const foodOptions = [
   "Quesadilla",
@@ -21,6 +21,7 @@ const foodOptions = [
 ];
 
 const payers = ["Moslem", "Ran"];
+const locationOptions = ["avec livraison", "sur place"];
 
 const generateFunnyMessage = (winner: string, loser: string) => {
     const messages = [
@@ -40,6 +41,7 @@ export function LazyFoodWheel() {
   const [spinningText, setSpinningText] = useState<string>("");
   const [payer, setPayer] = useState<string | null>(null);
   const [message, setMessage] = useState<string>("");
+  const [locationType, setLocationType] = useState<string | null>(null);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -59,6 +61,9 @@ export function LazyFoodWheel() {
         setPayer(payingPerson);
         setMessage(generateFunnyMessage(payingPerson, otherPerson));
 
+        const finalLocationType = locationOptions[Math.floor(Math.random() * locationOptions.length)];
+        setLocationType(finalLocationType);
+
       }, 2000);
     }
     return () => clearInterval(interval);
@@ -68,6 +73,7 @@ export function LazyFoodWheel() {
     setResult(null);
     setPayer(null);
     setMessage("");
+    setLocationType(null);
     setIsSpinning(true);
   };
 
@@ -97,6 +103,12 @@ export function LazyFoodWheel() {
         ) : result ? (
           <div className="flex flex-col items-center gap-2 animate-in fade-in zoom-in-50">
             <p className="text-2xl font-bold text-primary">{result} !</p>
+            {locationType && (
+                <div className="flex items-center gap-2 text-md font-semibold text-muted-foreground capitalize">
+                    {locationType === 'avec livraison' ? <Truck className="h-5 w-5 text-primary" /> : <Store className="h-5 w-5 text-primary" />}
+                    <span>{locationType}</span>
+                </div>
+            )}
             {payer && (
                 <div className="mt-2 text-center p-2 bg-primary/10 rounded-lg w-full">
                     <div className="flex items-center justify-center gap-2 text-sm">
