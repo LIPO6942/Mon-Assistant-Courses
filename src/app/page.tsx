@@ -312,9 +312,9 @@ export default function Home() {
         onCartClick={() => setCartOpen(true)}
       />
       <main className="flex-1 container mx-auto p-4 md:p-8">
-        <div className="grid lg:grid-cols-5 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-3 order-2 lg:order-1">
             {isLoading ? (
               <Card>
                 <CardHeader>
@@ -343,7 +343,7 @@ export default function Home() {
             )}
           </div>
 
-          <aside className="space-y-8 lg:col-span-2">
+          <aside className="space-y-8 lg:col-span-2 order-1 lg:order-2">
             <WeatherSuggester />
             <LazyFoodWheel />
           </aside>
@@ -390,3 +390,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
