@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Trash2, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { GroceryItem, GroceryLists } from "@/app/page";
+import { DynamicIcon } from "./dynamic-icon";
 
 type GroceryListProps = {
   lists: GroceryLists;
@@ -73,7 +74,7 @@ export function GroceryList({ lists, onToggleItem, onDeleteItem, onToggleEssenti
                   </div>
                   {lists[category].map((item) => (
                     <div key={item.id} className={cn("grid grid-cols-12 items-center gap-2 md:gap-3 group p-2 rounded-lg", item.checked && "bg-muted/50")}>
-                      {/* Mobile view combines checkbox and label */}
+                      {/* Item name, checkbox and icon */}
                       <div className="col-span-12 md:col-span-4 flex items-center gap-3">
                         <Checkbox
                           id={`${category}-${item.id}`}
@@ -81,9 +82,10 @@ export function GroceryList({ lists, onToggleItem, onDeleteItem, onToggleEssenti
                           onCheckedChange={() => onToggleItem(category, item.id)}
                           className="size-5"
                         />
+                        <DynamicIcon name={item.icon} className="h-6 w-6 text-primary flex-shrink-0" />
                         <Label
                           htmlFor={`${category}-${item.id}`}
-                          className={cn("flex-1 text-base transition-colors", item.checked && "text-muted-foreground line-through")}
+                          className={cn("flex-1 text-base transition-colors cursor-pointer", item.checked && "text-muted-foreground line-through")}
                         >
                           {item.name}
                         </Label>

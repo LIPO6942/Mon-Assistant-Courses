@@ -7,6 +7,9 @@ import { GroceryList } from "@/components/grocery-list";
 import { WeatherSuggester } from "@/components/weather-suggester";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Wallet } from "lucide-react";
+import { suggestIcon } from "@/ai/flows/suggest-icon";
+import { useToast } from "@/hooks/use-toast";
+
 
 // Updated GroceryItem type
 export type GroceryItem = {
@@ -17,6 +20,7 @@ export type GroceryItem = {
   quantity: number;
   unit: string;
   isEssential: boolean;
+  icon?: string;
 };
 
 export type GroceryLists = Record<string, GroceryItem[]>;
@@ -24,25 +28,39 @@ export type GroceryLists = Record<string, GroceryItem[]>;
 // Updated initial data
 const initialLists: GroceryLists = {
   "Fruits et Légumes": [
-    { id: 1, name: "Pommes", checked: false, price: 3.5, quantity: 1, unit: 'kg', isEssential: false },
-    { id: 2, name: "Carottes", checked: true, price: 2.0, quantity: 0.5, unit: 'kg', isEssential: true },
-    { id: 3, name: "Épinards", checked: false, price: 4.0, quantity: 1, unit: 'sachet', isEssential: false },
+    { id: 1, name: "Pommes", checked: false, price: 3.5, quantity: 1, unit: 'kg', isEssential: false, icon: 'Apple' },
+    { id: 2, name: "Carottes", checked: true, price: 2.0, quantity: 0.5, unit: 'kg', isEssential: true, icon: 'Carrot' },
+    { id: 3, name: "Épinards", checked: false, price: 4.0, quantity: 1, unit: 'sachet', isEssential: false, icon: 'Leaf' },
   ],
-  Boulangerie: [{ id: 4, name: "Baguette", checked: false, price: 0.4, quantity: 2, unit: 'pièce(s)', isEssential: true }],
+  Boulangerie: [{ id: 4, name: "Baguette", checked: false, price: 0.4, quantity: 2, unit: 'pièce(s)', isEssential: true, icon: 'Wheat' }],
   "Produits Laitiers": [
-    { id: 5, name: "Lait", checked: false, price: 1.5, quantity: 1, unit: 'L', isEssential: true },
-    { id: 6, name: "Yaourts nature", checked: false, price: 0.8, quantity: 4, unit: 'pièce(s)', isEssential: false },
-    { id: 7, name: "Fromage râpé", checked: true, price: 5.0, quantity: 1, unit: 'sachet', isEssential: false },
+    { id: 5, name: "Lait", checked: false, price: 1.5, quantity: 1, unit: 'L', isEssential: true, icon: 'Milk' },
+    { id: 6, name: "Yaourts nature", checked: false, price: 0.8, quantity: 4, unit: 'pièce(s)', isEssential: false, icon: 'GlassWater' },
+    { id: 7, name: "Fromage râpé", checked: true, price: 5.0, quantity: 1, unit: 'sachet', isEssential: false, icon: 'Cheese' },
   ],
 };
 
 export default function Home() {
   const [lists, setLists] = useState<GroceryLists>(initialLists);
+  const { toast } = useToast();
 
-  const handleAddItem = (item: string, category: string, price: number, quantity: number, unit: string, isEssential: boolean) => {
+  const handleAddItem = async (item: string, category: string, price: number, quantity: number, unit: string, isEssential: boolean) => {
+    let iconName = 'ShoppingCart'; // Default icon
+    try {
+      const result = await suggestIcon({ ingredientName: item });
+      iconName = result.iconName;
+    } catch (error) {
+      console.error("Failed to suggest icon:", error);
+      toast({
+        variant: "default",
+        title: "Erreur d'icône",
+        description: "Impossible de suggérer une icône, une icône par défaut sera utilisée.",
+      });
+    }
+
     setLists((prevLists) => {
       const newLists = { ...prevLists };
-      const newItem: GroceryItem = { id: Date.now(), name: item, checked: false, price, quantity, unit, isEssential };
+      const newItem: GroceryItem = { id: Date.now(), name: item, checked: false, price, quantity, unit, isEssential, icon: iconName };
       if (newLists[category]) {
         newLists[category] = [...newLists[category], newItem];
       } else {
@@ -51,6 +69,7 @@ export default function Home() {
       return newLists;
     });
   };
+
 
   const handleToggleItem = (category: string, itemId: number) => {
     setLists((prevLists) => {
