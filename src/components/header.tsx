@@ -2,10 +2,10 @@ import { Logo } from "@/components/icons";
 import { RecipeSuggester } from "./recipe-suggester";
 
 type HeaderProps = {
-  onAddSuggestedItems: (items: string[]) => void;
+  ingredients: string[];
 };
 
-export function Header({ onAddSuggestedItems }: HeaderProps) {
+export function Header({ ingredients }: HeaderProps) {
   return (
     <header className="w-full bg-card border-b sticky top-0 z-10">
       <div className="container mx-auto flex items-center justify-between p-4">
@@ -15,7 +15,7 @@ export function Header({ onAddSuggestedItems }: HeaderProps) {
             Mon Assistant de Courses
           </h1>
         </div>
-        <RecipeSuggester onAddItems={onAddSuggestedItems} />
+        <RecipeSuggester ingredients={ingredients} />
       </div>
     </header>
   );

@@ -1,7 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { suggestIngredients } from "@/ai/flows/suggest-ingredients";
+import {
+  suggestRecipe,
+  SuggestRecipeOutput,
+} from "@/ai/flows/suggest-ingredients";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,138 +14,127 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogClose,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Checkbox } from "./ui/checkbox";
-import { Label } from "./ui/label";
 import { ScrollArea } from "./ui/scroll-area";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2, Sparkles, ChefHat } from "lucide-react";
 
 type RecipeSuggesterProps = {
-  onAddItems: (items: string[]) => void;
+  ingredients: string[];
 };
 
-export function RecipeSuggester({ onAddItems }: RecipeSuggesterProps) {
+export function RecipeSuggester({ ingredients }: RecipeSuggesterProps) {
   const [open, setOpen] = useState(false);
-  const [recipeName, setRecipeName] = useState("");
-  const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [selected, setSelected] = useState<Record<string, boolean>>({});
+  const [recipe, setRecipe] = useState<SuggestRecipeOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   const handleSuggest = async () => {
-    if (!recipeName.trim()) return;
-
     setIsLoading(true);
-    setSuggestions([]);
-    setSelected({});
+    setRecipe(null);
     try {
-      const result = await suggestIngredients({ recipeName });
-      setSuggestions(result.ingredients);
-      // Pre-select all by default
-      const initialSelection = result.ingredients.reduce((acc, ingredient) => {
-        acc[ingredient] = true;
-        return acc;
-      }, {} as Record<string, boolean>);
-      setSelected(initialSelection);
+      const result = await suggestRecipe({ ingredients });
+      setRecipe(result);
     } catch (error) {
-      console.error("Failed to suggest ingredients:", error);
+      console.error("Failed to suggest recipe:", error);
       toast({
         variant: "destructive",
         title: "Erreur de suggestion",
         description:
-          "Impossible de récupérer les suggestions d'ingrédients. Veuillez réessayer.",
+          "Impossible de récupérer la suggestion de recette. Veuillez réessayer.",
       });
     } finally {
       setIsLoading(false);
     }
   };
-  
-  const handleToggleSelection = (ingredient: string) => {
-    setSelected(prev => ({ ...prev, [ingredient]: !prev[ingredient]}));
-  }
 
-  const handleAddSelected = () => {
-    const itemsToAdd = Object.keys(selected).filter(key => selected[key]);
-    if (itemsToAdd.length > 0) {
-      onAddItems(itemsToAdd);
-      toast({
-        title: "Ingrédients ajoutés!",
-        description: `${itemsToAdd.length} ingrédient(s) ont été ajoutés à votre liste.`,
-      });
+  const handleOpenChange = (isOpen: boolean) => {
+    setOpen(isOpen);
+    if (!isOpen) {
+      setTimeout(() => {
+        setRecipe(null);
+        setIsLoading(false);
+      }, 300);
     }
-    setOpen(false);
-    // Reset state on close
-    setTimeout(() => {
-        setRecipeName('');
-        setSuggestions([]);
-        setSelected({});
-    }, 300);
   };
 
-  const selectedCount = Object.values(selected).filter(Boolean).length;
-
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button variant="outline">
           <Sparkles className="mr-2 h-4 w-4 text-accent" />
           Idée Recette
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Générer une liste d'ingrédients</DialogTitle>
+          <DialogTitle>Suggestion de Recette</DialogTitle>
           <DialogDescription>
-            Entrez le nom d'une recette et laissez l'IA vous suggérer les
-            ingrédients nécessaires.
+            Laissez l'IA vous suggérer une recette à partir des ingrédients de
+            votre liste.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="flex gap-2">
-            <Input
-              id="recipe-name"
-              placeholder="Ex: Crêpes au sucre"
-              value={recipeName}
-              onChange={(e) => setRecipeName(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSuggest()}
-            />
-            <Button onClick={handleSuggest} disabled={isLoading || !recipeName}>
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                "Suggérer"
-              )}
-            </Button>
-          </div>
-          {suggestions.length > 0 && (
-            <ScrollArea className="h-72 w-full rounded-md border p-4">
-              <div className="space-y-4">
-                <h4 className="font-medium">Ingrédients suggérés :</h4>
-                {suggestions.map((ingredient) => (
-                  <div key={ingredient} className="flex items-center space-x-3">
-                    <Checkbox
-                      id={ingredient}
-                      checked={selected[ingredient] || false}
-                      onCheckedChange={() => handleToggleSelection(ingredient)}
-                    />
-                    <Label htmlFor={ingredient} className="text-sm font-normal">
-                      {ingredient}
-                    </Label>
-                  </div>
-                ))}
+        <div className="py-4 min-h-[20rem] flex items-center justify-center">
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center gap-4">
+              <Loader2 className="h-12 w-12 animate-spin text-primary" />
+              <p className="text-muted-foreground">
+                Recherche d'une recette...
+              </p>
+            </div>
+          ) : recipe ? (
+            <ScrollArea className="h-80 w-full">
+              <div className="space-y-4 pr-6">
+                <h3 className="text-xl font-bold flex items-center gap-2">
+                  <ChefHat className="h-6 w-6 text-primary" />
+                  {recipe.recipeName}
+                </h3>
+
+                <div>
+                  <h4 className="font-semibold mb-2">Instructions:</h4>
+                  <ol className="list-decimal list-inside space-y-2 text-sm">
+                    {recipe.instructions.map((step, index) => (
+                      <li key={index}>{step}</li>
+                    ))}
+                  </ol>
+                </div>
+
+                {recipe.missingIngredients &&
+                  recipe.missingIngredients.length > 0 && (
+                    <div>
+                      <h4 className="font-semibold mt-4 mb-2">
+                        Ingrédients manquants suggérés :
+                      </h4>
+                      <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+                        {recipe.missingIngredients.map((item, index) => (
+                          <li key={index}>{item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
               </div>
             </ScrollArea>
+          ) : (
+            <div className="flex flex-col items-center justify-center gap-4 text-center">
+              <p className="text-muted-foreground px-4">
+                {ingredients.length > 0
+                  ? `Cliquez ci-dessous pour trouver une recette avec vos ${ingredients.length} ingrédient(s).`
+                  : "Votre liste est vide, mais nous pouvons quand même vous suggérer quelque chose !"}
+              </p>
+              <Button onClick={handleSuggest} disabled={isLoading}>
+                <ChefHat className="mr-2 h-4 w-4" />
+                Trouver une recette
+              </Button>
+            </div>
           )}
         </div>
         <DialogFooter>
-          <Button
-            onClick={handleAddSelected}
-            disabled={isLoading || selectedCount === 0}
-          >
-            Ajouter {selectedCount > 0 ? `(${selectedCount})` : ''} à la liste
-          </Button>
+          <DialogClose asChild>
+            <Button variant="outline" onClick={() => handleOpenChange(false)}>
+              Fermer
+            </Button>
+          </DialogClose>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -27,8 +27,6 @@ const initialLists: GroceryLists = {
   ],
 };
 
-const RECIPE_CATEGORY = "Pour la recette";
-
 export default function Home() {
   const [lists, setLists] = useState<GroceryLists>(initialLists);
 
@@ -54,30 +52,19 @@ export default function Home() {
       return newLists;
     });
   };
-  
-  const handleAddSuggestedItems = (items: string[]) => {
-    setLists((prevLists) => {
-      const newLists = { ...prevLists };
-      const newItems = items.map(name => ({ id: Date.now() + Math.random(), name, checked: false }));
-      
-      if (newLists[RECIPE_CATEGORY]) {
-        newLists[RECIPE_CATEGORY] = [...newLists[RECIPE_CATEGORY], ...newItems];
-      } else {
-        newLists[RECIPE_CATEGORY] = newItems;
-      }
-      return newLists;
-    });
-  };
 
   const categories = Object.keys(lists);
+  const allIngredients = Object.values(lists)
+    .flat()
+    .map((item) => item.name);
 
   return (
     <div className="flex flex-col items-center min-h-screen w-full">
-      <Header onAddSuggestedItems={handleAddSuggestedItems} />
+      <Header ingredients={allIngredients} />
       <main className="w-full max-w-4xl p-4 md:p-8">
         <div className="mb-8">
-            <h2 className="text-2xl font-bold mb-4">Ajouter un article</h2>
-            <AddItemForm categories={categories} onAddItem={handleAddItem} />
+          <h2 className="text-2xl font-bold mb-4">Ajouter un article</h2>
+          <AddItemForm categories={categories} onAddItem={handleAddItem} />
         </div>
         <GroceryList lists={lists} onToggleItem={handleToggleItem} />
       </main>
