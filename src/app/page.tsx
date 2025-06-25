@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Header } from "@/components/header";
 import { AddItemForm } from "@/components/add-item-form";
 import { GroceryList } from "@/components/grocery-list";
+import { WeatherSuggester } from "@/components/weather-suggester";
 
 type GroceryItem = {
   id: number;
@@ -61,11 +62,14 @@ export default function Home() {
   return (
     <div className="flex flex-col items-center min-h-screen w-full">
       <Header ingredients={allIngredients} />
-      <main className="w-full max-w-4xl p-4 md:p-8">
-        <div className="mb-8">
+      <main className="w-full max-w-4xl p-4 md:p-8 space-y-8">
+        <WeatherSuggester />
+
+        <div>
           <h2 className="text-2xl font-bold mb-4">Ajouter un article</h2>
           <AddItemForm categories={categories} onAddItem={handleAddItem} />
         </div>
+        
         <GroceryList lists={lists} onToggleItem={handleToggleItem} />
       </main>
     </div>
