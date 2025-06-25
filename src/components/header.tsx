@@ -17,8 +17,9 @@ export function Header({ ingredients, onCountryRecipeClick, onFavoritesClick, on
       <div className="container mx-auto flex items-center justify-between p-4">
         <div className="flex items-center gap-3">
           <Logo className="h-8 w-8 text-primary flex-shrink-0" />
-          <h1 className="text-lg sm:text-xl font-bold text-foreground truncate">
-            Mon Assistant de Courses
+          <h1 className="text-lg sm:text-xl font-bold text-foreground">
+            <span className="sm:hidden">MAC</span>
+            <span className="hidden sm:inline">Mon Assistant de Courses</span>
           </h1>
         </div>
         <div className="flex items-center gap-1 sm:gap-2">
