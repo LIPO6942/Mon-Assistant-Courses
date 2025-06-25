@@ -10,13 +10,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
+import { Trash2, Star } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type GroceryItem = {
   id: number;
   name: string;
   checked: boolean;
   price: number | null;
+  isEssential: boolean;
 };
 
 type GroceryLists = Record<string, GroceryItem[]>;
@@ -25,9 +27,10 @@ type GroceryListProps = {
   lists: GroceryLists;
   onToggleItem: (category: string, itemId: number) => void;
   onDeleteItem: (category: string, itemId: number) => void;
+  onToggleEssential: (category: string, itemId: number) => void;
 };
 
-export function GroceryList({ lists, onToggleItem, onDeleteItem }: GroceryListProps) {
+export function GroceryList({ lists, onToggleItem, onDeleteItem, onToggleEssential }: GroceryListProps) {
   const categories = Object.keys(lists);
 
   if (categories.length === 0) {
@@ -43,7 +46,7 @@ export function GroceryList({ lists, onToggleItem, onDeleteItem }: GroceryListPr
 
   const formatPrice = (price: number | null) => {
     if (price === null || isNaN(price)) return "";
-    return `${price.toFixed(2).replace('.', ',')} €`;
+    return `${price.toFixed(2).replace('.', ',')} TND`;
   }
 
   return (
@@ -81,15 +84,26 @@ export function GroceryList({ lists, onToggleItem, onDeleteItem }: GroceryListPr
                       <span className={`font-mono text-sm ${item.checked ? "text-muted-foreground line-through" : "text-foreground"}`}>
                         {formatPrice(item.price)}
                       </span>
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        className="size-8 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
-                        onClick={() => onDeleteItem(category, item.id)}
-                        aria-label="Supprimer l'article"
-                      >
-                        <Trash2 className="size-4" />
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="size-8 text-muted-foreground hover:text-yellow-500"
+                          onClick={() => onToggleEssential(category, item.id)}
+                          aria-label="Marquer comme essentiel"
+                        >
+                          <Star className={cn("size-4", item.isEssential && "fill-yellow-400 text-yellow-500")} />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="size-8 text-muted-foreground hover:text-destructive"
+                          onClick={() => onDeleteItem(category, item.id)}
+                          aria-label="Supprimer l'article"
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>

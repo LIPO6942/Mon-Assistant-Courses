@@ -1,8 +1,9 @@
 import { Logo } from "@/components/icons";
 import { RecipeSuggester } from "./recipe-suggester";
+import type { GroceryItem } from "@/app/page";
 
 type HeaderProps = {
-  ingredients: string[];
+  ingredients: GroceryItem[];
 };
 
 export function Header({ ingredients }: HeaderProps) {

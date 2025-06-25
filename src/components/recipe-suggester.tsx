@@ -5,6 +5,7 @@ import {
   suggestRecipe,
   SuggestRecipeOutput,
 } from "@/ai/flows/suggest-ingredients";
+import type { GroceryItem } from "@/app/page";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -18,10 +19,10 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "./ui/scroll-area";
-import { Loader2, Sparkles, ChefHat } from "lucide-react";
+import { Loader2, Sparkles, ChefHat, Wallet, HeartPulse } from "lucide-react";
 
 type RecipeSuggesterProps = {
-  ingredients: string[];
+  ingredients: GroceryItem[];
 };
 
 export function RecipeSuggester({ ingredients }: RecipeSuggesterProps) {
@@ -34,7 +35,8 @@ export function RecipeSuggester({ ingredients }: RecipeSuggesterProps) {
     setIsLoading(true);
     setRecipe(null);
     try {
-      const result = await suggestRecipe({ ingredients });
+      const recipeIngredients = ingredients.map(({ name, price }) => ({ name, price }));
+      const result = await suggestRecipe({ ingredients: recipeIngredients });
       setRecipe(result);
     } catch (error) {
       console.error("Failed to suggest recipe:", error);
@@ -67,7 +69,7 @@ export function RecipeSuggester({ ingredients }: RecipeSuggesterProps) {
           Idée Recette
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Suggestion de Recette</DialogTitle>
           <DialogDescription>
@@ -75,7 +77,7 @@ export function RecipeSuggester({ ingredients }: RecipeSuggesterProps) {
             votre liste.
           </DialogDescription>
         </DialogHeader>
-        <div className="py-4 min-h-[20rem] flex items-center justify-center">
+        <div className="py-4 min-h-[24rem] flex items-center justify-center">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center gap-4">
               <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -84,12 +86,31 @@ export function RecipeSuggester({ ingredients }: RecipeSuggesterProps) {
               </p>
             </div>
           ) : recipe ? (
-            <ScrollArea className="h-80 w-full">
+            <ScrollArea className="h-96 w-full">
               <div className="space-y-4 pr-6">
                 <h3 className="text-xl font-bold flex items-center gap-2">
                   <ChefHat className="h-6 w-6 text-primary" />
                   {recipe.recipeName}
                 </h3>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                    <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                        <Wallet className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
+                        <div>
+                            <h4 className="font-semibold">Coût estimé</h4>
+                            <p className="text-muted-foreground">{recipe.estimatedCost.toFixed(2)} TND</p>
+                        </div>
+                    </div>
+                     <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                        <HeartPulse className="h-5 w-5 text-destructive mt-1 flex-shrink-0" />
+                        <div>
+                            <h4 className="font-semibold">Analyse Nutritionnelle</h4>
+                            <p className="text-muted-foreground text-xs">
+                                Cal: {recipe.nutritionalAnalysis.calories} &bull; Prot: {recipe.nutritionalAnalysis.protein} &bull; Glu: {recipe.nutritionalAnalysis.carbs} &bull; Lip: {recipe.nutritionalAnalysis.fat}
+                            </p>
+                        </div>
+                    </div>
+                </div>
 
                 <div>
                   <h4 className="font-semibold mb-2">Instructions:</h4>
@@ -100,19 +121,26 @@ export function RecipeSuggester({ ingredients }: RecipeSuggesterProps) {
                   </ol>
                 </div>
 
-                {recipe.missingIngredients &&
-                  recipe.missingIngredients.length > 0 && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                     <div>
-                      <h4 className="font-semibold mt-4 mb-2">
-                        Ingrédients manquants suggérés :
-                      </h4>
-                      <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-                        {recipe.missingIngredients.map((item, index) => (
-                          <li key={index}>{item}</li>
-                        ))}
-                      </ul>
+                        <h4 className="font-semibold mb-2">Ingrédients utilisés:</h4>
+                        <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                            {recipe.usedIngredients.map((item, index) => (
+                                <li key={index}>{item}</li>
+                            ))}
+                        </ul>
                     </div>
-                  )}
+                    {recipe.missingIngredients && recipe.missingIngredients.length > 0 && (
+                        <div>
+                            <h4 className="font-semibold mb-2">Ingrédients manquants:</h4>
+                            <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                                {recipe.missingIngredients.map((item, index) => (
+                                    <li key={index}>{item}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+                </div>
               </div>
             </ScrollArea>
           ) : (

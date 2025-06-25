@@ -12,31 +12,32 @@ export type GroceryItem = {
   name: string;
   checked: boolean;
   price: number | null;
+  isEssential: boolean;
 };
 
 export type GroceryLists = Record<string, GroceryItem[]>;
 
 const initialLists: GroceryLists = {
   "Fruits et Légumes": [
-    { id: 1, name: "Pommes", checked: false, price: 2.5 },
-    { id: 2, name: "Carottes", checked: true, price: 1.8 },
-    { id: 3, name: "Épinards", checked: false, price: 3.0 },
+    { id: 1, name: "Pommes", checked: false, price: 3.5, isEssential: false },
+    { id: 2, name: "Carottes", checked: true, price: 2.0, isEssential: true },
+    { id: 3, name: "Épinards", checked: false, price: 4.0, isEssential: false },
   ],
-  Boulangerie: [{ id: 4, name: "Baguette", checked: false, price: 1.1 }],
+  Boulangerie: [{ id: 4, name: "Baguette", checked: false, price: 0.4, isEssential: true }],
   "Produits Laitiers": [
-    { id: 5, name: "Lait", checked: false, price: 1.2 },
-    { id: 6, name: "Yaourts nature", checked: false, price: 2.0 },
-    { id: 7, name: "Fromage râpé", checked: true, price: 2.75 },
+    { id: 5, name: "Lait", checked: false, price: 1.5, isEssential: true },
+    { id: 6, name: "Yaourts nature", checked: false, price: 2.5, isEssential: false },
+    { id: 7, name: "Fromage râpé", checked: true, price: 5.0, isEssential: false },
   ],
 };
 
 export default function Home() {
   const [lists, setLists] = useState<GroceryLists>(initialLists);
 
-  const handleAddItem = (item: string, category: string, price: number | null) => {
+  const handleAddItem = (item: string, category: string, price: number | null, isEssential: boolean) => {
     setLists((prevLists) => {
       const newLists = { ...prevLists };
-      const newItem: GroceryItem = { id: Date.now(), name: item, checked: false, price };
+      const newItem: GroceryItem = { id: Date.now(), name: item, checked: false, price, isEssential };
       if (newLists[category]) {
         newLists[category] = [...newLists[category], newItem];
       } else {
@@ -67,10 +68,18 @@ export default function Home() {
     });
   };
 
+  const handleToggleEssential = (category: string, itemId: number) => {
+    setLists((prevLists) => {
+      const newLists = { ...prevLists };
+      newLists[category] = newLists[category].map((item) =>
+        item.id === itemId ? { ...item, isEssential: !item.isEssential } : item
+      );
+      return newLists;
+    });
+  };
+
   const categories = Object.keys(lists);
-  const allIngredients = Object.values(lists)
-    .flat()
-    .map((item) => item.name);
+  const allIngredients = Object.values(lists).flat();
 
   return (
     <div className="flex flex-col min-h-screen w-full bg-muted/40">
@@ -83,6 +92,7 @@ export default function Home() {
               lists={lists} 
               onToggleItem={handleToggleItem} 
               onDeleteItem={handleDeleteItem}
+              onToggleEssential={handleToggleEssential}
             />
           </div>
 
