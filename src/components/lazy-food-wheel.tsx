@@ -6,6 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Dices, Loader2, Wallet, Truck, Store } from "lucide-react";
 
+type LazyFoodWheelProps = {
+  isQuizAnsweredCorrectly: boolean;
+};
+
 const foodOptions = [
   "Quesadilla",
   "Burrito",
@@ -35,7 +39,7 @@ const generateFunnyMessage = (winner: string, loser: string) => {
 };
 
 
-export function LazyFoodWheel() {
+export function LazyFoodWheel({ isQuizAnsweredCorrectly }: LazyFoodWheelProps) {
   const [isSpinning, setIsSpinning] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [spinningText, setSpinningText] = useState<string>("");
@@ -46,28 +50,38 @@ export function LazyFoodWheel() {
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isSpinning) {
+      const currentFoodOptions = isQuizAnsweredCorrectly
+        ? [...foodOptions, "Demande ce que tu veux"]
+        : foodOptions;
+
       interval = setInterval(() => {
-        setSpinningText(foodOptions[Math.floor(Math.random() * foodOptions.length)]);
+        setSpinningText(currentFoodOptions[Math.floor(Math.random() * currentFoodOptions.length)]);
       }, 100);
 
       setTimeout(() => {
         clearInterval(interval);
         setIsSpinning(false);
-        const finalResult = foodOptions[Math.floor(Math.random() * foodOptions.length)];
+        const finalResult = currentFoodOptions[Math.floor(Math.random() * currentFoodOptions.length)];
         setResult(finalResult);
         
         const payingPerson = payers[Math.floor(Math.random() * payers.length)];
         const otherPerson = payers.find(p => p !== payingPerson)!;
-        setPayer(payingPerson);
-        setMessage(generateFunnyMessage(payingPerson, otherPerson));
-
-        const finalLocationType = locationOptions[Math.floor(Math.random() * locationOptions.length)];
-        setLocationType(finalLocationType);
+        
+        if (finalResult === "Demande ce que tu veux") {
+          setPayer(otherPerson); // The other person pays
+          setMessage(`Quiz réussi ! Demande ce que tu veux, c'est ${otherPerson} qui régale !`);
+          setLocationType(null);
+        } else {
+          setPayer(payingPerson);
+          setMessage(generateFunnyMessage(payingPerson, otherPerson));
+          const finalLocationType = locationOptions[Math.floor(Math.random() * locationOptions.length)];
+          setLocationType(finalLocationType);
+        }
 
       }, 2000);
     }
     return () => clearInterval(interval);
-  }, [isSpinning]);
+  }, [isSpinning, isQuizAnsweredCorrectly]);
 
   const handleSpin = () => {
     setResult(null);
@@ -93,6 +107,11 @@ export function LazyFoodWheel() {
         </Button>
       </CardHeader>
       <CardContent className="p-4 pt-0 text-center min-h-[8rem] flex flex-col justify-center">
+        {isQuizAnsweredCorrectly && !isSpinning && !result && (
+            <p className="text-xs text-primary font-semibold mb-2 animate-in fade-in">
+              Bravo pour le quiz ! Une surprise vous attend peut-être...
+            </p>
+        )}
         {isSpinning ? (
           <div className="flex items-center justify-center gap-4">
             <Loader2 className="h-6 w-6 animate-spin text-primary" />

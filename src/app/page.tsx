@@ -61,6 +61,7 @@ export default function Home() {
   const [isFavoritesOpen, setFavoritesOpen] = useState(false);
   const [isCartOpen, setCartOpen] = useState(false);
   const [budget, setBudget] = useState<number>(150);
+  const [isQuizAnsweredCorrectly, setIsQuizAnsweredCorrectly] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -344,8 +345,11 @@ export default function Home() {
           </div>
 
           <aside className="space-y-8 lg:col-span-2 order-1 lg:order-2">
-            <WeatherSuggester />
-            <LazyFoodWheel />
+            <WeatherSuggester
+              onNewQuiz={() => setIsQuizAnsweredCorrectly(false)}
+              onQuizCorrect={() => setIsQuizAnsweredCorrectly(true)}
+            />
+            <LazyFoodWheel isQuizAnsweredCorrectly={isQuizAnsweredCorrectly} />
           </aside>
 
         </div>
@@ -390,5 +394,3 @@ export default function Home() {
     </div>
   );
 }
-
-    

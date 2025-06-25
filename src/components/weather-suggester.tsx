@@ -27,7 +27,12 @@ const weatherIcons: Record<string, React.ElementType> = {
 
 const DEFAULT_LOCATION = 'Tunis';
 
-export function WeatherSuggester() {
+type WeatherSuggesterProps = {
+  onQuizCorrect: () => void;
+  onNewQuiz: () => void;
+};
+
+export function WeatherSuggester({ onQuizCorrect, onNewQuiz }: WeatherSuggesterProps) {
   const [mealSuggestion, setMealSuggestion] = useState<SuggestMealByWeatherOutput | null>(null);
   const [quiz, setQuiz] = useState<GenerateFoodQuizOutput | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -42,6 +47,7 @@ export function WeatherSuggester() {
       setQuiz(null);
       setIsAnswered(false);
       setSelectedAnswer(null);
+      onNewQuiz();
 
       try {
         const [mealResult, quizResult] = await Promise.all([
@@ -68,7 +74,7 @@ export function WeatherSuggester() {
 
     fetchSuggestions();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [onNewQuiz]);
 
   const WeatherIcon = mealSuggestion ? weatherIcons[mealSuggestion.weather.condition.toLowerCase()] || Cloud : null;
 
@@ -76,6 +82,9 @@ export function WeatherSuggester() {
     if (isAnswered) return;
     setSelectedAnswer(index);
     setIsAnswered(true);
+    if (quiz && index === quiz.correctAnswerIndex) {
+      onQuizCorrect();
+    }
   };
 
   const renderQuiz = () => {
