@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { DynamicIcon } from "./dynamic-icon";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ShoppingCart as ShoppingCartIcon, X, Trash2, Pencil, AlertTriangle } from "lucide-react";
 import type { GroceryItem } from "@/app/page";
 import { cn } from "@/lib/utils";
@@ -15,22 +16,42 @@ import { Separator } from "./ui/separator";
 
 type ShoppingCartProps = {
   items: GroceryItem[];
+  purchasedItemIds: Set<number>;
+  onTogglePurchased: (itemId: number) => void;
   onToggleItem: (item: GroceryItem) => void;
   onClearCart: () => void;
-  totalCost: number;
   budget: number;
   onBudgetChange: (newBudget: number) => void;
 };
 
-export function ShoppingCart({ items, onToggleItem, onClearCart, totalCost, budget, onBudgetChange }: ShoppingCartProps) {
+export function ShoppingCart({ 
+  items, 
+  purchasedItemIds,
+  onTogglePurchased,
+  onToggleItem, 
+  onClearCart, 
+  budget, 
+  onBudgetChange 
+}: ShoppingCartProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [newBudget, setNewBudget] = useState(budget.toString());
+
+  const sortedItems = [...items].sort((a, b) => {
+    const aPurchased = purchasedItemIds.has(a.id);
+    const bPurchased = purchasedItemIds.has(b.id);
+    if (aPurchased === bPurchased) return 0;
+    return aPurchased ? 1 : -1;
+  });
+
+  const totalCost = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+  const remainingCost = items
+    .filter(item => !purchasedItemIds.has(item.id))
+    .reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   const budgetExceeded = totalCost > budget;
 
   useEffect(() => {
-    // Syncs the input value if the budget prop changes from outside,
-    // but only when the user is not actively editing it.
     if (!isEditing) {
       setNewBudget(budget.toString());
     }
@@ -70,19 +91,36 @@ export function ShoppingCart({ items, onToggleItem, onClearCart, totalCost, budg
         ) : (
           <ScrollArea className="h-64">
             <div className="space-y-2 pr-4">
-              {items.map(item => (
+              {sortedItems.map(item => (
                 <div key={item.id} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
                   <div className="flex items-center gap-3 flex-1">
+                    <Checkbox
+                      id={`cart-item-${item.id}`}
+                      checked={purchasedItemIds.has(item.id)}
+                      onCheckedChange={() => onTogglePurchased(item.id)}
+                      aria-label={`Marquer ${item.name} comme acheté`}
+                    />
                     <DynamicIcon name={item.icon} className="h-5 w-5 text-primary" />
                     <div className="flex-1">
-                      <p className="text-sm font-medium">{item.name}</p>
-                      <p className="text-xs text-muted-foreground">
+                       <p className={cn(
+                        "text-sm font-medium",
+                        purchasedItemIds.has(item.id) && "line-through text-muted-foreground"
+                      )}>
+                        {item.name}
+                      </p>
+                      <p className={cn(
+                        "text-xs text-muted-foreground",
+                        purchasedItemIds.has(item.id) && "line-through"
+                      )}>
                         {item.quantity} {item.unit} &times; {item.price.toFixed(2).replace('.',',')} TND
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <p className="text-sm font-semibold w-20 text-right">
+                    <p className={cn(
+                      "text-sm font-semibold w-20 text-right",
+                       purchasedItemIds.has(item.id) && "line-through text-muted-foreground"
+                    )}>
                       {(item.quantity * item.price).toFixed(2).replace('.',',')} TND
                     </p>
                     <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onToggleItem(item)}>
@@ -98,11 +136,17 @@ export function ShoppingCart({ items, onToggleItem, onClearCart, totalCost, budg
       
       <CardFooter className="flex-col items-stretch gap-4 !pt-4 border-t">
         <div className="space-y-4">
+            <div className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground">Coût restant :</span>
+                  <span className="font-semibold">
+                      {remainingCost.toFixed(2).replace('.',',')} TND
+                  </span>
+            </div>
             <div className="flex justify-between items-center">
                   <span className="text-lg font-semibold">Total du Panier:</span>
                   <span className={cn(
                       "text-lg font-bold",
-                      budgetExceeded ? "text-destructive" : "text-primary"
+                      budgetExceeded && totalCost > 0 ? "text-destructive" : "text-primary"
                   )}>
                       {totalCost.toFixed(2).replace('.',',')} TND
                   </span>

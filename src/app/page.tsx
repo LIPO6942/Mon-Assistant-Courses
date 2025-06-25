@@ -52,6 +52,7 @@ const initialLists: GroceryLists = {
 export default function Home() {
   const [pantryLists, setPantryLists] = useState<GroceryLists | null>(null);
   const [cartItems, setCartItems] = useState<GroceryItem[]>([]);
+  const [purchasedItemIds, setPurchasedItemIds] = useState(new Set<number>());
   const [isLoading, setIsLoading] = useState(true);
   const [isAddSheetOpen, setAddSheetOpen] = useState(false);
   const [isCountryRecipeOpen, setCountryRecipeOpen] = useState(false);
@@ -154,6 +155,11 @@ export default function Home() {
     let newCartItems: GroceryItem[];
     if (isInCart) {
       newCartItems = cartItems.filter(cartItem => cartItem.id !== item.id);
+      setPurchasedItemIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(item.id);
+        return newSet;
+      });
     } else {
       newCartItems = [...cartItems, item];
     }
@@ -176,6 +182,18 @@ export default function Home() {
       await updatePantryAndPersist(newPantry);
     }
   };
+  
+  const handleTogglePurchased = (itemId: number) => {
+    setPurchasedItemIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(itemId)) {
+        newSet.delete(itemId);
+      } else {
+        newSet.add(itemId);
+      }
+      return newSet;
+    });
+  };
 
   const handleDeleteItem = async (category: string, itemId: number) => {
     if (!pantryLists) return;
@@ -186,6 +204,11 @@ export default function Home() {
     }
 
     setCartItems(cartItems.filter(item => item.id !== itemId));
+    setPurchasedItemIds(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(itemId);
+      return newSet;
+    });
     await updatePantryAndPersist(newPantry);
   };
   
@@ -253,6 +276,7 @@ export default function Home() {
 
   const handleClearCart = async () => {
     setCartItems([]);
+    setPurchasedItemIds(new Set());
      if(pantryLists) {
       const newPantry = JSON.parse(JSON.stringify(pantryLists));
       for (const category in newPantry) {
@@ -266,10 +290,6 @@ export default function Home() {
   
   const ingredientsForRecipe = useMemo(() => {
     return cartItems.map(item => ({ name: item.name, price: item.price }));
-  }, [cartItems]);
-
-  const totalCost = useMemo(() => {
-    return cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
   }, [cartItems]);
   
   const cartItemIds = useMemo(() => new Set(cartItems.map(item => item.id)), [cartItems]);
@@ -314,9 +334,10 @@ export default function Home() {
           <aside className="space-y-8 lg:col-span-1">
             <ShoppingCart 
               items={cartItems} 
+              purchasedItemIds={purchasedItemIds}
+              onTogglePurchased={handleTogglePurchased}
               onToggleItem={handleToggleCartItem}
               onClearCart={handleClearCart}
-              totalCost={totalCost}
               budget={budget}
               onBudgetChange={handleBudgetChange}
             />
