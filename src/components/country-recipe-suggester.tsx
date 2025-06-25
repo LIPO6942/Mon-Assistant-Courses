@@ -1,10 +1,11 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   suggestCountryRecipe,
   SuggestCountryRecipeOutput,
+  SuggestCountryRecipeInput,
 } from "@/ai/flows/suggest-country-recipe";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,23 +19,42 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "./ui/scroll-area";
-import { Loader2, ChefHat, Palette } from "lucide-react";
+import { Loader2, ChefHat, Palette, Globe, RefreshCw } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
 
 type CountryRecipeSuggesterProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 };
 
+const continents = [
+  { value: "any", label: "Tous les continents" },
+  { value: "Afrique", label: "Afrique" },
+  { value: "Amérique", label: "Amérique" },
+  { value: "Asie", label: "Asie" },
+  { value: "Europe", label: "Europe" },
+  { value: "Océanie", label: "Océanie" },
+];
+
 export function CountryRecipeSuggester({ open, onOpenChange }: CountryRecipeSuggesterProps) {
   const [suggestion, setSuggestion] = useState<SuggestCountryRecipeOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedContinent, setSelectedContinent] = useState<string>("any");
   const { toast } = useToast();
 
-  const handleSuggest = async () => {
+  const handleSuggest = useCallback(async (continent: string) => {
     setIsLoading(true);
     setSuggestion(null);
     try {
-      const result = await suggestCountryRecipe();
+      const input: SuggestCountryRecipeInput = continent === "any" ? {} : { continent };
+      const result = await suggestCountryRecipe(input);
       setSuggestion(result);
     } catch (error) {
       console.error("Failed to suggest country recipe:", error);
@@ -46,14 +66,13 @@ export function CountryRecipeSuggester({ open, onOpenChange }: CountryRecipeSugg
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [toast]);
 
   useEffect(() => {
     if (open) {
-      handleSuggest();
+      handleSuggest(selectedContinent);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }, [open, selectedContinent, handleSuggest]);
 
   const handleOpenChange = (isOpen: boolean) => {
     onOpenChange(isOpen);
@@ -70,9 +89,25 @@ export function CountryRecipeSuggester({ open, onOpenChange }: CountryRecipeSugg
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Suggestion du Globe-Trotter</DialogTitle>
-          <DialogDescription>
-            Une recette choisie au hasard, juste pour vous.
-          </DialogDescription>
+           <div className="flex items-center gap-2 pt-4">
+            <Globe className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+            <Select 
+              value={selectedContinent} 
+              onValueChange={setSelectedContinent}
+              disabled={isLoading}
+            >
+              <SelectTrigger className="w-full" aria-label="Choisir un continent">
+                <SelectValue placeholder="Choisir un continent..." />
+              </SelectTrigger>
+              <SelectContent>
+                {continents.map((c) => (
+                  <SelectItem key={c.value} value={c.value}>
+                    {c.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </DialogHeader>
         <div className="py-4 min-h-[24rem] flex items-center justify-center">
           {isLoading ? (
@@ -123,12 +158,16 @@ export function CountryRecipeSuggester({ open, onOpenChange }: CountryRecipeSugg
           ) : (
             <div className="flex flex-col items-center justify-center gap-4 text-center">
               <p className="text-muted-foreground px-4">
-                  La suggestion est en cours de chargement...
+                  Une erreur est survenue. Veuillez réessayer.
               </p>
             </div>
           )}
         </div>
-        <DialogFooter>
+        <DialogFooter className="sm:justify-between gap-2">
+          <Button variant="secondary" onClick={() => handleSuggest(selectedContinent)} disabled={isLoading}>
+            <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+            Nouvelle Suggestion
+          </Button>
           <DialogClose asChild>
             <Button variant="outline" onClick={() => handleOpenChange(false)}>
               Fermer

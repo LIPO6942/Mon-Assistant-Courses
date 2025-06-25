@@ -1,14 +1,20 @@
-
 'use server';
 /**
  * @fileOverview Suggests a random recipe from a random country using creative axes.
  *
  * - suggestCountryRecipe - A function that suggests a recipe.
+ * - SuggestCountryRecipeInput - The input type for the suggestCountryRecipe function.
  * - SuggestCountryRecipeOutput - The return type for the function.
  */
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+
+const SuggestCountryRecipeInputSchema = z.object({
+  continent: z.string().optional().describe("Le continent à partir duquel choisir un pays. Ex: 'Europe', 'Asie', etc."),
+});
+export type SuggestCountryRecipeInput = z.infer<typeof SuggestCountryRecipeInputSchema>;
+
 
 const SuggestCountryRecipeOutputSchema = z.object({
   theme: z.string().describe("Le thème créatif ou l'axe de suggestion choisi. Ex: 'Par Humeur : Réconfort' ou 'Par Pays Méconnu : Arménie'."),
@@ -21,17 +27,22 @@ const SuggestCountryRecipeOutputSchema = z.object({
 
 export type SuggestCountryRecipeOutput = z.infer<typeof SuggestCountryRecipeOutputSchema>;
 
-export async function suggestCountryRecipe(): Promise<SuggestCountryRecipeOutput> {
-    return suggestCountryRecipeFlow();
+export async function suggestCountryRecipe(input: SuggestCountryRecipeInput): Promise<SuggestCountryRecipeOutput> {
+    return suggestCountryRecipeFlow(input);
 }
 
 const prompt = ai.definePrompt({
     name: 'suggestCountryRecipePrompt',
+    input: { schema: SuggestCountryRecipeInputSchema },
     output: { schema: SuggestCountryRecipeOutputSchema },
     prompt: `
     Tu es un guide culinaire globe-trotter, créatif et plein d'humour.
     
     Ta mission est de surprendre l'utilisateur avec une suggestion de recette originale. Pour cela, tu dois d'abord choisir AU HASARD UN SEUL des axes de suggestion créatifs suivants. Ta réponse entière doit être basée sur l'axe que tu as choisi.
+
+    {{#if continent}}
+    IMPORTANT : Tu dois impérativement choisir un pays qui se trouve sur le continent : {{continent}}. Si l'axe choisi est "Par Pays Méconnu", le pays doit être à la fois méconnu ET sur le continent spécifié.
+    {{/if}}
 
     Voici les axes possibles :
 
@@ -66,10 +77,11 @@ const prompt = ai.definePrompt({
 const suggestCountryRecipeFlow = ai.defineFlow(
     {
         name: 'suggestCountryRecipeFlow',
+        inputSchema: SuggestCountryRecipeInputSchema,
         outputSchema: SuggestCountryRecipeOutputSchema,
     },
-    async () => {
-        const { output } = await prompt({});
+    async (input) => {
+        const { output } = await prompt(input);
         if (!output) {
             throw new Error("Impossible de générer une suggestion de recette.");
         }
