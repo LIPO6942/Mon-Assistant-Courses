@@ -3,9 +3,10 @@
 
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Dices, Loader2, Wallet, Truck, Store } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
+import { cn } from "@/lib/utils";
 
 type LazyFoodWheelProps = {
   isQuizAnsweredCorrectly: boolean;
@@ -148,10 +149,24 @@ export function LazyFoodWheel({ isQuizAnsweredCorrectly }: LazyFoodWheelProps) {
                     <p className="text-xs text-muted-foreground mt-1">Pas envie de cuisiner ?</p>
                   </div>
                 </div>
-                <Button onClick={(e) => { e.stopPropagation(); handleSpin(); }} disabled={isSpinning} size="sm" className="shrink-0">
-                  <Dices className="mr-2 h-4 w-4" />
+                <div
+                  role="button"
+                  aria-disabled={isSpinning}
+                  onClick={(e) => {
+                    if (isSpinning) return;
+                    e.stopPropagation();
+                    handleSpin();
+                  }}
+                  className={cn(
+                    buttonVariants({ size: "sm" }),
+                    "shrink-0",
+                    "inline-flex items-center justify-center gap-2",
+                    isSpinning && "pointer-events-none opacity-50"
+                  )}
+                >
+                  <Dices className="h-4 w-4" />
                   {isSpinning ? "..." : "Lancer"}
-                </Button>
+                </div>
                </div>
             </AccordionTrigger>
             <AccordionContent className="p-4 pt-0">
