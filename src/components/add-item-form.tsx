@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -21,7 +22,6 @@ type AddItemFormProps = {
   onAddItem: (item: string, category: string, price: number, quantity: number, unit: string, isEssential: boolean) => Promise<void>;
 };
 
-const DEFAULT_CATEGORY = "Divers";
 const DEFAULT_UNIT = "pièce(s)";
 const units = ["pièce(s)", "kg", "g", "L", "mL", "bouteille", "pack", "sachet"];
 
@@ -30,44 +30,47 @@ export function AddItemForm({ categories, onAddItem }: AddItemFormProps) {
   const [itemPrice, setItemPrice] = useState("");
   const [itemQuantity, setItemQuantity] = useState("1");
   const [itemUnit, setItemUnit] = useState(DEFAULT_UNIT);
-  const [category, setCategory] = useState(categories[0] || DEFAULT_CATEGORY);
+  const [category, setCategory] = useState("");
   const [isEssential, setIsEssential] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const { toast } = useToast();
 
-  useEffect(() => {
-    if (![...categories, DEFAULT_CATEGORY].includes(category)) {
-      setCategory(categories[0] || DEFAULT_CATEGORY);
-    }
-  }, [categories, category]);
-
+  const uniqueCategories = [...new Set(categories)];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (itemName.trim() && !isAdding) {
+    if (itemName.trim() && category.trim() && !isAdding) {
       const priceAsNumber = parseFloat(itemPrice.replace(",", "."));
       const quantityAsNumber = parseFloat(itemQuantity.replace(",", "."));
 
-      if (!isNaN(priceAsNumber) && !isNaN(quantityAsNumber) && priceAsNumber > 0 && quantityAsNumber > 0) {
-        setIsAdding(true);
-        try {
-          await onAddItem(itemName.trim(), category, priceAsNumber, quantityAsNumber, itemUnit, isEssential);
-          // Reset form
-          setItemName("");
-          setItemPrice("");
-          setItemQuantity("1");
-          setItemUnit(DEFAULT_UNIT);
-          setIsEssential(false);
-        } catch (error) {
-          console.error(error);
-          toast({
-            variant: 'destructive',
-            title: 'Erreur',
-            description: "Une erreur est survenue lors de l'ajout de l'article."
-          })
-        } finally {
-          setIsAdding(false);
-        }
+      if (isNaN(priceAsNumber) || priceAsNumber <= 0) {
+        toast({ variant: 'destructive', title: 'Erreur', description: "Veuillez entrer un prix valide." });
+        return;
+      }
+      if (isNaN(quantityAsNumber) || quantityAsNumber <= 0) {
+        toast({ variant: 'destructive', title: 'Erreur', description: "Veuillez entrer une quantité valide." });
+        return;
+      }
+
+      setIsAdding(true);
+      try {
+        await onAddItem(itemName.trim(), category.trim(), priceAsNumber, quantityAsNumber, itemUnit, isEssential);
+        // Reset form
+        setItemName("");
+        setItemPrice("");
+        setItemQuantity("1");
+        setItemUnit(DEFAULT_UNIT);
+        setCategory("");
+        setIsEssential(false);
+      } catch (error) {
+        console.error(error);
+        toast({
+          variant: 'destructive',
+          title: 'Erreur',
+          description: "Une erreur est survenue lors de l'ajout de l'article."
+        })
+      } finally {
+        setIsAdding(false);
       }
     }
   };
@@ -139,18 +142,22 @@ export function AddItemForm({ categories, onAddItem }: AddItemFormProps) {
 
       <div className="grid gap-2">
         <Label htmlFor="item-category">Catégorie</Label>
-        <Select value={category} onValueChange={setCategory} disabled={isAdding}>
-            <SelectTrigger id="item-category" aria-label="Catégorie">
-            <SelectValue placeholder="Catégorie" />
-            </SelectTrigger>
-            <SelectContent>
-            {[...categories, DEFAULT_CATEGORY].filter((v, i, a) => a.indexOf(v) === i).map((cat) => (
-                <SelectItem key={cat} value={cat}>
-                {cat}
-                </SelectItem>
-            ))}
-            </SelectContent>
-        </Select>
+        <Input
+          id="item-category"
+          type="text"
+          placeholder="Ex: Fruits et Légumes, ou nouvelle..."
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          list="category-suggestions"
+          aria-label="Catégorie"
+          required
+          disabled={isAdding}
+        />
+        <datalist id="category-suggestions">
+          {uniqueCategories.map((cat) => (
+            <option key={cat} value={cat} />
+          ))}
+        </datalist>
       </div>
 
       <div className="flex items-center space-x-2 pt-2">

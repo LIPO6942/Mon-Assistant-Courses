@@ -1,6 +1,7 @@
 
 "use client";
 
+import { useMemo } from 'react';
 import {
   Accordion,
   AccordionContent,
@@ -12,7 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Trash2, Star, Plus } from "lucide-react";
+import { Trash2, Star, Plus, ListX } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { GroceryItem, GroceryLists } from "@/app/page";
 import { DynamicIcon } from "./dynamic-icon";
@@ -24,9 +25,10 @@ type GroceryListProps = {
   onToggleEssential: (category: string, itemId: number) => void;
   onUpdateItem: (category: string, itemId: number, updates: Partial<Pick<GroceryItem, 'price' | 'quantity'>>) => void;
   onAddItemClick: () => void;
+  onDeselectAll: () => void;
 };
 
-export function GroceryList({ lists, onToggleItem, onDeleteItem, onToggleEssential, onUpdateItem, onAddItemClick }: GroceryListProps) {
+export function GroceryList({ lists, onToggleItem, onDeleteItem, onToggleEssential, onUpdateItem, onAddItemClick, onDeselectAll }: GroceryListProps) {
   const categories = Object.keys(lists);
 
   const formatPrice = (price: number) => {
@@ -41,21 +43,35 @@ export function GroceryList({ lists, onToggleItem, onDeleteItem, onToggleEssenti
     }
   }
 
+  const hasCheckedItems = useMemo(() => {
+    return Object.values(lists).flat().some(item => item.checked);
+  }, [lists]);
+
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Ma Liste de Courses</CardTitle>
-        <Button onClick={onAddItemClick}>
-            <Plus className="mr-2 h-4 w-4" />
-            Ajouter un article
-        </Button>
+      <CardHeader>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+            <CardTitle>Ma Liste de Courses</CardTitle>
+            <div className="flex items-center gap-2">
+                {hasCheckedItems && (
+                    <Button variant="outline" size="sm" onClick={onDeselectAll}>
+                        <ListX className="mr-2 h-4 w-4" />
+                        Tout Décocher
+                    </Button>
+                )}
+                <Button onClick={onAddItemClick} size="sm">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Ajouter
+                </Button>
+            </div>
+        </div>
       </CardHeader>
       <CardContent>
         {categories.length === 0 ? (
           <div className="flex flex-col items-center justify-center min-h-[400px] text-center text-muted-foreground p-4">
             <DynamicIcon name="ShoppingCart" className="h-16 w-16 mb-4 text-muted-foreground/50"/>
             <p className="text-lg font-semibold">Votre liste de courses est vide.</p>
-            <p className="mt-1">Cliquez sur le bouton "Ajouter un article" ci-dessus pour commencer.</p>
+            <p className="mt-1">Cliquez sur le bouton "Ajouter" ci-dessus pour commencer.</p>
           </div>
         ) : (
           <Accordion type="multiple" defaultValue={categories} className="w-full">

@@ -7,6 +7,7 @@ import { AddItemForm } from "@/components/add-item-form";
 import { GroceryList } from "@/components/grocery-list";
 import { WeatherSuggester } from "@/components/weather-suggester";
 import { BudgetTracker } from "@/components/budget-tracker";
+import { CountryRecipeSuggester } from "@/components/country-recipe-suggester";
 import {
   Sheet,
   SheetContent,
@@ -110,7 +111,7 @@ export default function Home() {
 
   const handleAddItem = async (item: string, category: string, price: number, quantity: number, unit: string, isEssential: boolean) => {
     if (!lists) return;
-    const oldLists = { ...lists };
+    const oldLists = JSON.parse(JSON.stringify(lists));
 
     let iconName = 'ShoppingCart';
     try {
@@ -120,7 +121,7 @@ export default function Home() {
       console.error("Failed to suggest icon:", error);
     }
 
-    const newLists = { ...lists };
+    const newLists = JSON.parse(JSON.stringify(lists));
     const newItem: GroceryItem = { id: Date.now(), name: item, checked: false, price, quantity, unit, isEssential, icon: iconName };
     if (newLists[category]) {
       newLists[category] = [...newLists[category], newItem];
@@ -134,8 +135,8 @@ export default function Home() {
 
   const handleToggleItem = async (category: string, itemId: number) => {
     if (!lists) return;
-    const oldLists = { ...lists };
-    const newLists = { ...lists };
+    const oldLists = JSON.parse(JSON.stringify(lists));
+    const newLists = JSON.parse(JSON.stringify(lists));
     newLists[category] = newLists[category].map((item) =>
       item.id === itemId ? { ...item, checked: !item.checked } : item
     );
@@ -144,8 +145,8 @@ export default function Home() {
 
   const handleDeleteItem = async (category: string, itemId: number) => {
     if (!lists) return;
-    const oldLists = { ...lists };
-    const newLists = { ...lists };
+    const oldLists = JSON.parse(JSON.stringify(lists));
+    const newLists = JSON.parse(JSON.stringify(lists));
     newLists[category] = newLists[category].filter(item => item.id !== itemId);
     if (newLists[category].length === 0) {
       delete newLists[category];
@@ -155,8 +156,8 @@ export default function Home() {
 
   const handleToggleEssential = async (category: string, itemId: number) => {
     if (!lists) return;
-    const oldLists = { ...lists };
-    const newLists = { ...lists };
+    const oldLists = JSON.parse(JSON.stringify(lists));
+    const newLists = JSON.parse(JSON.stringify(lists));
     newLists[category] = newLists[category].map((item) =>
       item.id === itemId ? { ...item, isEssential: !item.isEssential } : item
     );
@@ -165,11 +166,24 @@ export default function Home() {
   
   const handleUpdateItem = async (category: string, itemId: number, updates: Partial<Pick<GroceryItem, 'price' | 'quantity'>>) => {
     if (!lists) return;
-    const oldLists = { ...lists };
-    const newLists = { ...lists };
+    const oldLists = JSON.parse(JSON.stringify(lists));
+    const newLists = JSON.parse(JSON.stringify(lists));
     newLists[category] = newLists[category].map(item =>
       item.id === itemId ? { ...item, ...updates } : item
     );
+    await handleUpdateLists(newLists, oldLists);
+  };
+
+  const handleDeselectAll = async () => {
+    if (!lists) return;
+    const oldLists = JSON.parse(JSON.stringify(lists));
+    const newLists = JSON.parse(JSON.stringify(lists));
+    Object.keys(newLists).forEach((category) => {
+      newLists[category] = newLists[category].map((item) => ({
+        ...item,
+        checked: false,
+      }));
+    });
     await handleUpdateLists(newLists, oldLists);
   };
 
@@ -218,6 +232,7 @@ export default function Home() {
                 onToggleEssential={handleToggleEssential}
                 onUpdateItem={handleUpdateItem}
                 onAddItemClick={() => setAddSheetOpen(true)}
+                onDeselectAll={handleDeselectAll}
               />
             )}
           </div>
@@ -230,6 +245,7 @@ export default function Home() {
               isLoading={isLoading}
             />
             <WeatherSuggester />
+            <CountryRecipeSuggester />
           </aside>
 
         </div>
