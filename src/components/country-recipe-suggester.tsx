@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useCallback } from "react";
@@ -66,30 +67,20 @@ export function CountryRecipeSuggester({ open, onOpenChange }: CountryRecipeSugg
   const handleSave = async () => {
     if (!suggestion) return;
     setIsSaving(true);
-    try {
-      await saveFavoriteRecipe(suggestion);
+    const result = await saveFavoriteRecipe(suggestion);
+    if (result.success) {
       toast({
         title: "Recette sauvegardée !",
         description: `${suggestion.recipeName} a été ajoutée à votre carnet.`,
       });
-    } catch (error: any) {
-      console.error("Failed to save recipe:", error);
-      if (error.code === 'firebase-not-configured') {
-          toast({
-            variant: "destructive",
-            title: "Mode local",
-            description: error.message,
-          });
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Erreur de sauvegarde",
-          description: "La recette n'a pas pu être sauvegardée.",
-        });
-      }
-    } finally {
-      setIsSaving(false);
+    } else {
+      toast({
+        variant: "destructive",
+        title: result.code === 'firebase-not-configured' ? "Mode local" : "Erreur de sauvegarde",
+        description: result.message,
+      });
     }
+    setIsSaving(false);
   };
 
 

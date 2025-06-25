@@ -31,20 +31,22 @@ export interface FavoriteRecipe {
 }
 
 type RecipeSuggestion = SuggestCountryRecipeOutput | SuggestRecipeOutput;
+type ServiceResponse = { success: true } | { success: false; code: string; message: string };
+
 
 function isCountryRecipe(recipe: RecipeSuggestion): recipe is SuggestCountryRecipeOutput {
     return 'country' in recipe;
 }
 
-const createFirebaseNotConfiguredError = () => {
-    const error = new Error("Firebase n'est pas configuré. Cette fonctionnalité est désactivée en mode local.");
-    (error as any).code = 'firebase-not-configured';
-    return error;
+const firebaseNotConfiguredResponse: ServiceResponse = {
+    success: false,
+    code: 'firebase-not-configured',
+    message: "Firebase n'est pas configuré. Cette fonctionnalité est désactivée en mode local."
 };
 
-export async function saveFavoriteRecipe(recipe: RecipeSuggestion): Promise<void> {
+export async function saveFavoriteRecipe(recipe: RecipeSuggestion): Promise<ServiceResponse> {
     if (!firebaseInitialized) {
-        throw createFirebaseNotConfiguredError();
+        return firebaseNotConfiguredResponse;
     }
     try {
         const collectionRef = collection(db, RECIPE_COLLECTION);
@@ -77,10 +79,11 @@ export async function saveFavoriteRecipe(recipe: RecipeSuggestion): Promise<void
         }
 
         await addDoc(collectionRef, newRecipe);
+        return { success: true };
 
     } catch (error) {
         console.error("Error saving recipe:", error);
-        throw error;
+        return { success: false, code: 'save-failed', message: "La recette n'a pas pu être sauvegardée." };
     }
 }
 
@@ -107,19 +110,21 @@ export async function getFavoriteRecipes(): Promise<FavoriteRecipe[]> {
         });
         return recipes;
     } catch (error) {
+        // Re-throw the original error to preserve its code (e.g., 'unavailable' for offline)
         throw error;
     }
 }
 
-export async function deleteFavoriteRecipe(recipeId: string): Promise<void> {
+export async function deleteFavoriteRecipe(recipeId: string): Promise<ServiceResponse> {
     if (!firebaseInitialized) {
-        throw createFirebaseNotConfiguredError();
+        return firebaseNotConfiguredResponse;
     }
     try {
         const docRef = doc(db, RECIPE_COLLECTION, recipeId);
         await deleteDoc(docRef);
+        return { success: true };
     } catch (error) {
         console.error("Error deleting recipe:", error);
-        throw error;
+        return { success: false, code: 'delete-failed', message: "La recette n'a pas pu être supprimée." };
     }
 }

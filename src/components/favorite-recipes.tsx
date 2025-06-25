@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -71,31 +72,21 @@ export function FavoriteRecipes({ open, onOpenChange }: FavoriteRecipesProps) {
   
   const handleDelete = async (recipeId: string) => {
       setIsDeleting(recipeId);
-      try {
-          await deleteFavoriteRecipe(recipeId);
+      const result = await deleteFavoriteRecipe(recipeId);
+      if (result.success) {
           setRecipes(prev => prev.filter(r => r.id !== recipeId));
           toast({
               title: "Recette supprimée",
               description: "La recette a bien été retirée de votre carnet.",
           });
-      } catch (error: any) {
-          console.error("Failed to delete recipe:", error);
-           if (error.code === 'firebase-not-configured') {
-            toast({
-                variant: "destructive",
-                title: "Mode local",
-                description: error.message,
-            });
-          } else {
-            toast({
-              variant: "destructive",
-              title: "Erreur",
-              description: "La recette n'a pas pu être supprimée.",
-            });
-          }
-      } finally {
-          setIsDeleting(null);
+      } else {
+        toast({
+          variant: "destructive",
+          title: result.code === 'firebase-not-configured' ? "Mode local" : "Erreur",
+          description: result.message,
+        });
       }
+      setIsDeleting(null);
   }
 
   return (
