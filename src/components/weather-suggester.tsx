@@ -17,6 +17,7 @@ import { Skeleton } from './ui/skeleton';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
 import { Separator } from './ui/separator';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
 
 const weatherIcons: Record<string, React.ElementType> = {
   sunny: Sun,
@@ -138,17 +139,9 @@ export function WeatherSuggester({ onQuizCorrect, onNewQuiz }: WeatherSuggesterP
     );
   };
 
-  return (
-    <Card>
-      <CardHeader className="p-4 md:p-6">
-        <div className="flex items-center gap-3">
-          <UtensilsCrossed className="h-5 w-5 md:h-6 md:w-6 text-primary" />
-          <CardTitle className="text-lg md:text-xl">Suggestions du Jour</CardTitle>
-        </div>
-        <CardDescription className="text-xs md:text-sm">Idées, météo et un petit quiz pour égayer votre journée.</CardDescription>
-      </CardHeader>
-      <CardContent className="p-4 md:p-6 pt-0">
-        {isLoading ? (
+  const content = (
+    <>
+      {isLoading ? (
           <div className="space-y-4">
             <Skeleton className="h-10 w-full" />
             <Separator className="my-4"/>
@@ -164,14 +157,14 @@ export function WeatherSuggester({ onQuizCorrect, onNewQuiz }: WeatherSuggesterP
         ) : (
           <>
             {mealSuggestion ? (
-              <div className="p-3 md:p-4 bg-accent/10 border border-accent/20 rounded-lg text-center">
-                <div className="flex items-center justify-center gap-2 mb-1 font-semibold text-sm">
-                  {WeatherIcon && <WeatherIcon className="h-4 w-4 md:h-5 md:w-5 text-accent" />}
+              <div className="p-3 bg-accent/10 border border-accent/20 rounded-lg text-center">
+                <div className="flex items-center justify-center gap-2 mb-1 font-semibold text-xs">
+                  {WeatherIcon && <WeatherIcon className="h-4 w-4 text-accent" />}
                   <span>
                     Météo à {DEFAULT_LOCATION}: {mealSuggestion.weather.temperature}°C, {mealSuggestion.weather.frenchCondition}
                   </span>
                 </div>
-                <p className="text-foreground text-sm md:text-base">{mealSuggestion.mealIdea}</p>
+                <p className="text-foreground text-sm">{mealSuggestion.mealIdea}</p>
               </div>
             ) : (
               <p className="text-muted-foreground text-sm text-center">
@@ -179,7 +172,7 @@ export function WeatherSuggester({ onQuizCorrect, onNewQuiz }: WeatherSuggesterP
               </p>
             )}
 
-            <Separator className="my-4 md:my-6"/>
+            <Separator className="my-4"/>
 
             {quiz ? renderQuiz() : (
                <p className="text-muted-foreground text-sm text-center">
@@ -188,7 +181,44 @@ export function WeatherSuggester({ onQuizCorrect, onNewQuiz }: WeatherSuggesterP
             )}
           </>
         )}
-      </CardContent>
-    </Card>
+    </>
+  );
+
+  return (
+    <>
+      {/* Mobile collapsible version */}
+      <div className="lg:hidden">
+        <Accordion type="single" collapsible defaultValue="suggestions" className="w-full">
+          <AccordionItem value="suggestions" className="border rounded-lg bg-card text-card-foreground shadow-sm">
+            <AccordionTrigger className="p-4 hover:no-underline [&[data-state=open]]:pb-2">
+              <div className="flex items-center gap-3">
+                <UtensilsCrossed className="h-5 w-5 text-primary" />
+                <div className="text-left">
+                  <h3 className="text-base font-semibold leading-none tracking-tight">Suggestions du Jour</h3>
+                  <p className="text-xs text-muted-foreground mt-1">Météo, repas et quiz</p>
+                </div>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="p-4 pt-2">
+              {content}
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </div>
+
+      {/* Desktop static version */}
+      <Card className="hidden lg:block">
+        <CardHeader className="p-4 md:p-6">
+          <div className="flex items-center gap-3">
+            <UtensilsCrossed className="h-5 w-5 md:h-6 md:w-6 text-primary" />
+            <CardTitle className="text-lg md:text-xl">Suggestions du Jour</CardTitle>
+          </div>
+          <CardDescription className="text-xs md:text-sm">Idées, météo et un petit quiz pour égayer votre journée.</CardDescription>
+        </CardHeader>
+        <CardContent className="p-4 md:p-6 pt-0">
+          {content}
+        </CardContent>
+      </Card>
+    </>
   );
 }

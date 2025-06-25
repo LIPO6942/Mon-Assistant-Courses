@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dices, Loader2, Wallet, Truck, Store } from "lucide-react";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 
 type LazyFoodWheelProps = {
   isQuizAnsweredCorrectly: boolean;
@@ -90,23 +91,9 @@ export function LazyFoodWheel({ isQuizAnsweredCorrectly }: LazyFoodWheelProps) {
     setLocationType(null);
     setIsSpinning(true);
   };
-
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between p-4 md:p-6 space-y-0">
-        <div className="flex items-center gap-3">
-          <Dices className="h-6 w-6 text-primary flex-shrink-0" />
-          <div>
-            <CardTitle className="text-lg md:text-xl">J’ai la flemme...</CardTitle>
-            <CardDescription className="text-xs md:text-sm">Pas envie de cuisiner ?</CardDescription>
-          </div>
-        </div>
-        <Button onClick={handleSpin} disabled={isSpinning} size="sm" className="shrink-0">
-          <Dices className="mr-2 h-4 w-4" />
-          {isSpinning ? "..." : "Lancer"}
-        </Button>
-      </CardHeader>
-      <CardContent className="p-4 pt-0 text-center min-h-[8rem] flex flex-col justify-center">
+  
+  const content = (
+    <div className="text-center min-h-[8rem] flex flex-col justify-center">
         {isSpinning ? (
           <div className="flex items-center justify-center gap-4">
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -143,7 +130,56 @@ export function LazyFoodWheel({ isQuizAnsweredCorrectly }: LazyFoodWheelProps) {
             <p className="text-muted-foreground text-sm">Cliquez sur "Lancer" pour trouver quoi manger !</p>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+  );
+
+  return (
+    <>
+       {/* Mobile collapsible version */}
+       <div className="lg:hidden">
+        <Accordion type="single" collapsible defaultValue="flemme" className="w-full">
+          <AccordionItem value="flemme" className="border rounded-lg bg-card text-card-foreground shadow-sm">
+            <AccordionTrigger className="p-4 hover:no-underline [&[data-state=open]]:pb-2">
+               <div className="flex w-full items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Dices className="h-6 w-6 text-primary flex-shrink-0" />
+                  <div className="text-left">
+                    <h3 className="text-base font-semibold leading-none tracking-tight">J’ai la flemme...</h3>
+                    <p className="text-xs text-muted-foreground mt-1">Pas envie de cuisiner ?</p>
+                  </div>
+                </div>
+                <Button onClick={(e) => { e.stopPropagation(); handleSpin(); }} disabled={isSpinning} size="sm" className="shrink-0">
+                  <Dices className="mr-2 h-4 w-4" />
+                  {isSpinning ? "..." : "Lancer"}
+                </Button>
+               </div>
+            </AccordionTrigger>
+            <AccordionContent className="p-4 pt-0">
+              {content}
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </div>
+
+      {/* Desktop static version */}
+      <Card className="hidden lg:block">
+        <CardHeader className="flex flex-row items-center justify-between p-4 md:p-6 space-y-0">
+          <div className="flex items-center gap-3">
+            <Dices className="h-6 w-6 text-primary flex-shrink-0" />
+            <div>
+              <CardTitle className="text-lg md:text-xl">J’ai la flemme...</CardTitle>
+              <CardDescription className="text-xs md:text-sm">Pas envie de cuisiner ?</CardDescription>
+            </div>
+          </div>
+          <Button onClick={handleSpin} disabled={isSpinning} size="sm" className="shrink-0">
+            <Dices className="mr-2 h-4 w-4" />
+            {isSpinning ? "..." : "Lancer"}
+          </Button>
+        </CardHeader>
+        <CardContent className="p-4 pt-0">
+          {content}
+        </CardContent>
+      </Card>
+    </>
   );
 }
