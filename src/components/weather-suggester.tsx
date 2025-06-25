@@ -12,12 +12,13 @@ import {
 } from '@/ai/flows/generate-food-quiz';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Sun, Cloud, CloudRain, UtensilsCrossed, BrainCircuit, CheckCircle, XCircle, CloudSun } from 'lucide-react';
+import { Sun, Cloud, CloudRain, UtensilsCrossed, BrainCircuit, CheckCircle, XCircle, CloudSun, AlertTriangle } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
 import { Separator } from './ui/separator';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const weatherIcons: Record<string, React.ElementType> = {
   sunny: Sun,
@@ -39,12 +40,13 @@ export function WeatherSuggester({ onQuizCorrect, onNewQuiz }: WeatherSuggesterP
   const [isLoading, setIsLoading] = useState(true);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [isAnswered, setIsAnswered] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
     const fetchSuggestions = async () => {
       setIsLoading(true);
-      // Reset quiz state for re-fetches if any
+      setError(null);
       setQuiz(null);
       setIsAnswered(false);
       setSelectedAnswer(null);
@@ -57,15 +59,25 @@ export function WeatherSuggester({ onQuizCorrect, onNewQuiz }: WeatherSuggesterP
         ]);
         setMealSuggestion(mealResult);
         setQuiz(quizResult);
-      } catch (error) {
-        // Only show toast if it's not an offline error
-        if ((error as any)?.code !== 'unavailable') {
-          console.error('Failed to fetch daily suggestions:', error);
+      } catch (e: any) {
+        let errorMessage = "Une erreur inattendue est survenue lors de la récupération des suggestions.";
+        if (e.message) {
+          if (e.message.includes('429')) {
+            errorMessage = "Vous avez dépassé votre quota d'appels à l'API pour aujourd'hui. Veuillez réessayer demain ou configurer la facturation sur votre projet Google Cloud.";
+          } else if (e.message.includes('503') || e.message.includes('overloaded')) {
+            errorMessage = "Le service d'IA est actuellement surchargé. Veuillez réessayer dans quelques instants.";
+          }
+        }
+        
+        setError(errorMessage);
+
+        // Still show a toast for other errors, but not for quota/overload and not for offline.
+        if (e.code !== 'unavailable' && !errorMessage.includes("quota") && !errorMessage.includes("surchargé")) {
+          console.error('Failed to fetch daily suggestions:', e);
           toast({
             variant: 'destructive',
             title: 'Erreur de suggestion',
-            description:
-              'Impossible de récupérer les suggestions du jour.',
+            description: 'Impossible de récupérer les suggestions du jour.',
           });
         }
       } finally {
@@ -154,6 +166,14 @@ export function WeatherSuggester({ onQuizCorrect, onNewQuiz }: WeatherSuggesterP
               <Skeleton className="h-10 w-full" />
             </div>
           </div>
+        ) : error ? (
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Oups ! Un problème est survenu</AlertTitle>
+            <AlertDescription>
+              {error}
+            </AlertDescription>
+          </Alert>
         ) : (
           <>
             {mealSuggestion ? (
