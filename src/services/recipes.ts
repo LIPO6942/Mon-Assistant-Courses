@@ -1,6 +1,6 @@
 
 import { db, firebaseInitialized } from '@/lib/firebase';
-import { collection, addDoc, getDocs, doc, deleteDoc, serverTimestamp, orderBy, query } from 'firebase/firestore';
+import { collection, addDoc, getDocs, doc, deleteDoc, serverTimestamp, orderBy, query, setDoc } from 'firebase/firestore';
 import type { SuggestCountryRecipeOutput } from '@/ai/flows/suggest-country-recipe';
 import type { SuggestRecipeOutput } from '@/ai/flows/suggest-ingredients';
 
@@ -14,7 +14,7 @@ export interface FavoriteRecipe {
     name: string;
     instructions: string[];
     ingredients: string[];
-    source: 'country' | 'pantry';
+    source: 'country' | 'pantry' | 'custom';
     createdAt: Date;
     // Country-specific fields
     country?: string;
@@ -126,5 +126,48 @@ export async function deleteFavoriteRecipe(recipeId: string): Promise<ServiceRes
     } catch (error) {
         console.error("Error deleting recipe:", error);
         return { success: false, code: 'delete-failed', message: "La recette n'a pas pu être supprimée." };
+    }
+}
+
+
+export async function addCustomRecipe(recipeData: {
+    name: string;
+    ingredients: string[];
+    instructions: string[];
+}): Promise<ServiceResponse & { id?: string }> {
+    if (!firebaseInitialized) {
+        return { ...firebaseNotConfiguredResponse, id: undefined };
+    }
+    try {
+        const collectionRef = collection(db, RECIPE_COLLECTION);
+        const newRecipe = {
+            userId: USER_ID,
+            ...recipeData,
+            source: 'custom' as const,
+            createdAt: serverTimestamp(),
+        };
+        const docRef = await addDoc(collectionRef, newRecipe);
+        return { success: true, id: docRef.id };
+    } catch (error) {
+        console.error("Error adding custom recipe:", error);
+        return { success: false, code: 'save-failed', message: "La recette n'a pas pu être ajoutée.", id: undefined };
+    }
+}
+
+export async function updateCustomRecipe(recipeId: string, recipeData: {
+    name: string;
+    ingredients: string[];
+    instructions: string[];
+}): Promise<ServiceResponse> {
+    if (!firebaseInitialized) {
+        return firebaseNotConfiguredResponse;
+    }
+    try {
+        const docRef = doc(db, RECIPE_COLLECTION, recipeId);
+        await setDoc(docRef, recipeData, { merge: true });
+        return { success: true };
+    } catch (error) {
+        console.error("Error updating recipe:", error);
+        return { success: false, code: 'update-failed', message: "La recette n'a pas pu être mise à jour." };
     }
 }
