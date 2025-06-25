@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Loader2 } from "lucide-react";
+import { Plus, Loader2, PlusCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 
@@ -31,47 +31,56 @@ export function AddItemForm({ categories, onAddItem }: AddItemFormProps) {
   const [itemQuantity, setItemQuantity] = useState("1");
   const [itemUnit, setItemUnit] = useState(DEFAULT_UNIT);
   const [category, setCategory] = useState("");
+  const [newCategoryName, setNewCategoryName] = useState("");
   const [isEssential, setIsEssential] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const { toast } = useToast();
 
-  const uniqueCategories = [...new Set(categories)];
+  const isCreatingNewCategory = category === "__NEW__";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (itemName.trim() && category.trim() && !isAdding) {
-      const priceAsNumber = parseFloat(itemPrice.replace(",", "."));
-      const quantityAsNumber = parseFloat(itemQuantity.replace(",", "."));
+    if (isAdding) return;
 
-      if (isNaN(priceAsNumber) || priceAsNumber <= 0) {
-        toast({ variant: 'destructive', title: 'Erreur', description: "Veuillez entrer un prix valide." });
-        return;
-      }
-      if (isNaN(quantityAsNumber) || quantityAsNumber <= 0) {
-        toast({ variant: 'destructive', title: 'Erreur', description: "Veuillez entrer une quantité valide." });
-        return;
-      }
+    const finalCategory = isCreatingNewCategory ? newCategoryName.trim() : category;
 
-      setIsAdding(true);
-      try {
-        await onAddItem(itemName.trim(), category.trim(), priceAsNumber, quantityAsNumber, itemUnit, isEssential);
-        // Reset form
-        setItemName("");
-        setItemPrice("");
-        setItemQuantity("1");
-        setItemUnit(DEFAULT_UNIT);
-        setCategory("");
-        setIsEssential(false);
-      } catch (error) {
-        console.error(error);
-        toast({
-          variant: 'destructive',
-          title: 'Erreur',
-          description: "Une erreur est survenue lors de l'ajout de l'article."
-        })
-      } finally {
-        setIsAdding(false);
-      }
+    if (!itemName.trim() || !finalCategory.trim()) {
+      toast({ variant: 'destructive', title: 'Champs manquants', description: "Veuillez nommer l'article et choisir ou créer une catégorie." });
+      return;
+    }
+    
+    const priceAsNumber = parseFloat(itemPrice.replace(",", "."));
+    const quantityAsNumber = parseFloat(itemQuantity.replace(",", "."));
+
+    if (isNaN(priceAsNumber) || priceAsNumber <= 0) {
+      toast({ variant: 'destructive', title: 'Erreur', description: "Veuillez entrer un prix valide." });
+      return;
+    }
+    if (isNaN(quantityAsNumber) || quantityAsNumber <= 0) {
+      toast({ variant: 'destructive', title: 'Erreur', description: "Veuillez entrer une quantité valide." });
+      return;
+    }
+
+    setIsAdding(true);
+    try {
+      await onAddItem(itemName.trim(), finalCategory, priceAsNumber, quantityAsNumber, itemUnit, isEssential);
+      // Reset form
+      setItemName("");
+      setItemPrice("");
+      setItemQuantity("1");
+      setItemUnit(DEFAULT_UNIT);
+      setCategory("");
+      setNewCategoryName("");
+      setIsEssential(false);
+    } catch (error) {
+      console.error(error);
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: "Une erreur est survenue lors de l'ajout de l'article."
+      })
+    } finally {
+      setIsAdding(false);
     }
   };
 
@@ -139,26 +148,43 @@ export function AddItemForm({ categories, onAddItem }: AddItemFormProps) {
         </Select>
       </div>
 
-
       <div className="grid gap-2">
-        <Label htmlFor="item-category">Catégorie</Label>
-        <Input
-          id="item-category"
-          type="text"
-          placeholder="Ex: Fruits et Légumes, ou nouvelle..."
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          list="category-suggestions"
-          aria-label="Catégorie"
-          required
-          disabled={isAdding}
-        />
-        <datalist id="category-suggestions">
-          {uniqueCategories.map((cat) => (
-            <option key={cat} value={cat} />
-          ))}
-        </datalist>
+        <Label htmlFor="item-category-select">Catégorie</Label>
+        <Select value={category} onValueChange={setCategory} disabled={isAdding}>
+          <SelectTrigger id="item-category-select" aria-label="Catégorie">
+            <SelectValue placeholder="Choisir une catégorie..." />
+          </SelectTrigger>
+          <SelectContent>
+            {categories.map((cat) => (
+              <SelectItem key={cat} value={cat}>
+                {cat}
+              </SelectItem>
+            ))}
+             <SelectItem value="__NEW__">
+                <span className="flex items-center gap-2 text-primary">
+                  <PlusCircle className="h-4 w-4" /> Nouvelle catégorie...
+                </span>
+              </SelectItem>
+          </SelectContent>
+        </Select>
       </div>
+
+      {isCreatingNewCategory && (
+        <div className="grid gap-2 animate-in fade-in">
+          <Label htmlFor="new-category-name">Nom de la nouvelle catégorie</Label>
+          <Input
+              id="new-category-name"
+              type="text"
+              placeholder="Ex: Surgelés"
+              value={newCategoryName}
+              onChange={(e) => setNewCategoryName(e.target.value)}
+              aria-label="Nom de la nouvelle catégorie"
+              required
+              autoFocus
+              disabled={isAdding}
+          />
+        </div>
+      )}
 
       <div className="flex items-center space-x-2 pt-2">
         <Checkbox 
