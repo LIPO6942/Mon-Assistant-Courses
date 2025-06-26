@@ -1,6 +1,8 @@
 # Settings to manage and configure a Firebase App Hosting backend.
 # https://firebase.google.com/docs/app-hosting/configure
 
+backendId: mon-assistant-de-courses-backend
+
 runConfig:
   # This setting ensures that at least one instance of your application is
   # always running. This prevents long "cold starts" when accessing the app
