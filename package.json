@@ -10,6 +10,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
+    "login": "firebase login",
     "deploy": "firebase deploy --only apphosting"
   },
   "dependencies": {
