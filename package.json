@@ -11,7 +11,7 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "login": "firebase login",
-    "deploy": "firebase deploy --only apphosting"
+    "deploy": "firebase deploy"
   },
   "dependencies": {
     "@genkit-ai/googleai": "^1.8.0",
