@@ -1,7 +1,11 @@
 {
-  "apphosting": {
-    "backends": [
-      "mon-assistant-de-courses-backend"
+  "hosting": {
+    "source": ".",
+    "rewrites": [
+      {
+        "source": "**",
+        "apphosting": "mon-assistant-de-courses-backend"
+      }
     ]
   }
 }
