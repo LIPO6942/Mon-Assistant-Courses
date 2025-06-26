@@ -11,7 +11,7 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "login": "firebase login",
-    "deploy": "firebase deploy --only hosting"
+    "deploy": "firebase experiments:enable webframeworks && firebase deploy --only hosting"
   },
   "dependencies": {
     "@genkit-ai/googleai": "^1.8.0",
