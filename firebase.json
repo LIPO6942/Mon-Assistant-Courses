@@ -1,3 +1,7 @@
 {
-  "apphosting": {}
+  "apphosting": {
+    "backends": [
+      "mon-assistant-de-courses-backend"
+    ]
+  }
 }
