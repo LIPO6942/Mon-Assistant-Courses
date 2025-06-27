@@ -495,34 +495,6 @@ video {
 [hidden]:where(:not([hidden="until-found"])) {
   display: none;
 }
-.mt-2 {
-  margin-top: 0.5rem;
-}
-.flex {
-  display: flex;
-}
-.min-h-screen {
-  min-height: 100vh;
-}
-.flex-col {
-  flex-direction: column;
-}
-.items-center {
-  align-items: center;
-}
-.justify-center {
-  justify-content: center;
-}
-.p-24 {
-  padding: 6rem;
-}
-.text-4xl {
-  font-size: 2.25rem;
-  line-height: 2.5rem;
-}
-.font-bold {
-  font-weight: 700;
-}
 
 :root {
   --foreground-rgb: 0, 0, 0;
