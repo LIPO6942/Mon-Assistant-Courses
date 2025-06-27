@@ -82,7 +82,7 @@ export default function Home() {
   });
 
   return (
-    <main className="flex justify-center items-start min-h-screen p-4 sm:p-8 md:p-12 lg:p-24 bg-background">
+    <main className="flex justify-center items-start min-h-screen p-4 sm:p-8 md:p-12 lg:p-24">
       <div className="w-full max-w-2xl">
         <header className="text-center mb-8">
           <h1 className="text-4xl font-bold tracking-tight lg:text-5xl text-primary-foreground bg-primary p-4 rounded-lg shadow-md">
