@@ -10,7 +10,6 @@ import {
   generateFoodQuiz,
   GenerateFoodQuizOutput,
 } from '@/ai/flows/generate-food-quiz';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Sun, Cloud, CloudRain, UtensilsCrossed, BrainCircuit, CheckCircle, XCircle, CloudSun, AlertTriangle, RefreshCw } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
@@ -209,40 +208,21 @@ export function WeatherSuggester({ onQuizCorrect, onNewQuiz }: WeatherSuggesterP
   };
 
   return (
-    <>
-      {/* Mobile collapsible version */}
-      <div className="lg:hidden">
-        <Accordion type="single" collapsible defaultValue="suggestions" className="w-full">
-          <AccordionItem value="suggestions" className="border rounded-lg bg-card text-card-foreground shadow-sm">
-            <AccordionTrigger className="p-4 hover:no-underline [&[data-state=open]]:pb-2">
-              <div className="flex items-center gap-3">
-                <UtensilsCrossed className="h-5 w-5 text-primary" />
-                <div className="text-left">
-                  <h3 className="text-base font-semibold leading-none tracking-tight">Suggestions du Jour</h3>
-                  <p className="text-xs text-muted-foreground mt-1">Météo, repas et quiz</p>
-                </div>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="p-4 pt-2">
-              {renderContent()}
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-      </div>
-
-      {/* Desktop static version */}
-      <Card className="hidden lg:block">
-        <CardHeader className="p-4 md:p-6">
+    <Accordion type="single" collapsible className="w-full">
+      <AccordionItem value="suggestions" className="border rounded-lg bg-card text-card-foreground shadow-sm">
+        <AccordionTrigger className="p-4 hover:no-underline [&[data-state=open]]:pb-2">
           <div className="flex items-center gap-3">
             <UtensilsCrossed className="h-5 w-5 md:h-6 md:w-6 text-primary" />
-            <CardTitle className="text-lg md:text-xl">Suggestions du Jour</CardTitle>
+            <div className="text-left">
+              <h3 className="text-base md:text-lg font-semibold leading-none tracking-tight">Suggestions du Jour</h3>
+              <p className="text-xs md:text-sm text-muted-foreground mt-1">Météo, repas et quiz</p>
+            </div>
           </div>
-          <CardDescription className="text-xs md:text-sm">Idées, météo et un petit quiz pour égayer votre journée.</CardDescription>
-        </CardHeader>
-        <CardContent className="p-4 md:p-6 pt-0">
+        </AccordionTrigger>
+        <AccordionContent className="p-4 pt-2">
           {renderContent()}
-        </CardContent>
-      </Card>
-    </>
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
   );
 }
