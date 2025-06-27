@@ -18,7 +18,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Wand2, Loader2 } from 'lucide-react';
+import { generateShoppingList } from '@/ai/flows/generate-list-flow';
 
 // Définit le type d'un article avec une catégorie
 type Item = {
@@ -46,6 +47,8 @@ export default function Home() {
     categories[0]
   );
   const [nextId, setNextId] = useState(1);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleAddItem = (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,6 +70,29 @@ export default function Home() {
     setItems(items.filter((item) => item.id !== idToRemove));
   };
 
+  const handleGenerateList = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!aiPrompt.trim()) return;
+    setIsLoading(true);
+    try {
+      const result = await generateShoppingList({ prompt: aiPrompt });
+      if (result && result.items) {
+        const newItems = result.items.map((item, index) => ({
+          ...item,
+          id: nextId + index,
+        }));
+        setItems((prevItems) => [...prevItems, ...newItems]);
+        setNextId((prevId) => prevId + newItems.length);
+        setAiPrompt('');
+      }
+    } catch (error) {
+      console.error('Erreur lors de la génération de la liste :', error);
+      // Idéalement, afficher une notification d'erreur à l'utilisateur ici
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Regroupe les articles par catégorie pour l'affichage
   const groupedItems = items.reduce(
     (acc, item) => {
@@ -83,8 +109,8 @@ export default function Home() {
 
   return (
     <main className="flex justify-center items-start min-h-screen p-4 sm:p-8 md:p-12 lg:p-24">
-      <div className="w-full max-w-2xl">
-        <header className="text-center mb-8">
+      <div className="w-full max-w-2xl space-y-8">
+        <header className="text-center">
           <h1 className="text-4xl font-bold tracking-tight lg:text-5xl text-primary-foreground bg-primary p-4 rounded-lg shadow-md">
             Mon Assistant de Courses
           </h1>
@@ -92,10 +118,41 @@ export default function Home() {
 
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle>Ajouter un article</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Wand2 className="text-accent" />
+              Générer une liste avec l'IA
+            </CardTitle>
             <CardDescription>
-              Donnez un nom et choisissez une catégorie pour votre article.
+              Décrivez un repas ou un besoin (ex: "crêpes pour 4 personnes") et
+              laissez l'IA créer votre liste.
             </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form
+              onSubmit={handleGenerateList}
+              className="flex items-center gap-4"
+            >
+              <Input
+                type="text"
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+                placeholder="Ex: Ingrédients pour une quiche lorraine"
+                disabled={isLoading}
+              />
+              <Button type="submit" size="icon" disabled={isLoading}>
+                {isLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Wand2 className="h-4 w-4" />
+                )}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-lg">
+          <CardHeader>
+            <CardTitle>Ajouter un article manuellement</CardTitle>
           </CardHeader>
           <CardContent>
             <form
