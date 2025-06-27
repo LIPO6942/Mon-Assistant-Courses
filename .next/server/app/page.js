@@ -30,24 +30,6 @@ module.exports = webpackEmptyContext;
 
 /***/ }),
 
-/***/ "(action-browser)/./node_modules/require-in-the-middle sync recursive":
-/*!**************************************************!*\
-  !*** ./node_modules/require-in-the-middle/ sync ***!
-  \**************************************************/
-/***/ ((module) => {
-
-function webpackEmptyContext(req) {
-	var e = new Error("Cannot find module '" + req + "'");
-	e.code = 'MODULE_NOT_FOUND';
-	throw e;
-}
-webpackEmptyContext.keys = () => ([]);
-webpackEmptyContext.resolve = webpackEmptyContext;
-webpackEmptyContext.id = "(action-browser)/./node_modules/require-in-the-middle sync recursive";
-module.exports = webpackEmptyContext;
-
-/***/ }),
-
 /***/ "express":
 /*!**************************!*\
   !*** external "express" ***!
@@ -144,6 +126,17 @@ module.exports = require("next/dist/compiled/next-server/app-page.runtime.dev.js
 
 "use strict";
 module.exports = require("handlebars");
+
+/***/ }),
+
+/***/ "require-in-the-middle":
+/*!****************************************!*\
+  !*** external "require-in-the-middle" ***!
+  \****************************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("require-in-the-middle");
 
 /***/ }),
 
@@ -265,17 +258,6 @@ module.exports = require("http2");
 
 "use strict";
 module.exports = require("https");
-
-/***/ }),
-
-/***/ "module":
-/*!*************************!*\
-  !*** external "module" ***!
-  \*************************/
-/***/ ((module) => {
-
-"use strict";
-module.exports = require("module");
 
 /***/ }),
 
@@ -518,17 +500,6 @@ module.exports = require("stream");
 
 "use strict";
 module.exports = require("tls");
-
-/***/ }),
-
-/***/ "tty":
-/*!**********************!*\
-  !*** external "tty" ***!
-  \**********************/
-/***/ ((module) => {
-
-"use strict";
-module.exports = require("tty");
 
 /***/ }),
 
@@ -1347,7 +1318,7 @@ eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpac
 var __webpack_require__ = require("../webpack-runtime.js");
 __webpack_require__.C(exports);
 var __webpack_exec__ = (moduleId) => (__webpack_require__(__webpack_require__.s = moduleId))
-var __webpack_exports__ = __webpack_require__.X(0, ["vendor-chunks/lucide-react","vendor-chunks/@opentelemetry","vendor-chunks/next","vendor-chunks/protobufjs","vendor-chunks/zod-to-json-schema","vendor-chunks/yaml","vendor-chunks/@grpc","vendor-chunks/@firebase","vendor-chunks/ajv","vendor-chunks/@genkit-ai","vendor-chunks/semver","vendor-chunks/@radix-ui","vendor-chunks/uuid","vendor-chunks/@protobufjs","vendor-chunks/genkit","vendor-chunks/zod","vendor-chunks/resolve","vendor-chunks/require-in-the-middle","vendor-chunks/react-remove-scroll","vendor-chunks/@swc","vendor-chunks/@floating-ui","vendor-chunks/fast-uri","vendor-chunks/react-style-singleton","vendor-chunks/react-remove-scroll-bar","vendor-chunks/ajv-formats","vendor-chunks/use-callback-ref","vendor-chunks/idb","vendor-chunks/firebase","vendor-chunks/long","vendor-chunks/partial-json","vendor-chunks/is-core-module","vendor-chunks/import-in-the-middle","vendor-chunks/function-bind","vendor-chunks/@google","vendor-chunks/use-sidecar","vendor-chunks/lodash.camelcase","vendor-chunks/json5","vendor-chunks/tslib","vendor-chunks/tailwind-merge","vendor-chunks/clsx","vendor-chunks/class-variance-authority","vendor-chunks/supports-color","vendor-chunks/shimmer","vendor-chunks/path-parse","vendor-chunks/module-details-from-path","vendor-chunks/json-schema-traverse","vendor-chunks/hasown","vendor-chunks/has-flag","vendor-chunks/get-port","vendor-chunks/fast-deep-equal","vendor-chunks/dotprompt","vendor-chunks/@js-sdsl","vendor-chunks/get-nonce","vendor-chunks/aria-hidden"], () => (__webpack_exec__("(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader.js?name=app%2Fpage&page=%2Fpage&appPaths=%2Fpage&pagePath=private-next-app-dir%2Fpage.tsx&appDir=%2Fhome%2Fuser%2Fstudio%2Fsrc%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2Fhome%2Fuser%2Fstudio&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D!")));
+var __webpack_exports__ = __webpack_require__.X(0, ["vendor-chunks/lucide-react","vendor-chunks/@opentelemetry","vendor-chunks/next","vendor-chunks/protobufjs","vendor-chunks/zod-to-json-schema","vendor-chunks/yaml","vendor-chunks/@grpc","vendor-chunks/@firebase","vendor-chunks/ajv","vendor-chunks/@genkit-ai","vendor-chunks/semver","vendor-chunks/@radix-ui","vendor-chunks/uuid","vendor-chunks/@protobufjs","vendor-chunks/genkit","vendor-chunks/zod","vendor-chunks/react-remove-scroll","vendor-chunks/@swc","vendor-chunks/@floating-ui","vendor-chunks/fast-uri","vendor-chunks/react-style-singleton","vendor-chunks/react-remove-scroll-bar","vendor-chunks/ajv-formats","vendor-chunks/use-callback-ref","vendor-chunks/idb","vendor-chunks/firebase","vendor-chunks/long","vendor-chunks/partial-json","vendor-chunks/import-in-the-middle","vendor-chunks/@google","vendor-chunks/use-sidecar","vendor-chunks/lodash.camelcase","vendor-chunks/json5","vendor-chunks/tslib","vendor-chunks/tailwind-merge","vendor-chunks/clsx","vendor-chunks/class-variance-authority","vendor-chunks/shimmer","vendor-chunks/module-details-from-path","vendor-chunks/json-schema-traverse","vendor-chunks/get-port","vendor-chunks/fast-deep-equal","vendor-chunks/dotprompt","vendor-chunks/@js-sdsl","vendor-chunks/get-nonce","vendor-chunks/aria-hidden"], () => (__webpack_exec__("(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader.js?name=app%2Fpage&page=%2Fpage&appPaths=%2Fpage&pagePath=private-next-app-dir%2Fpage.tsx&appDir=%2Fhome%2Fuser%2Fstudio%2Fsrc%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2Fhome%2Fuser%2Fstudio&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D!")));
 module.exports = __webpack_exports__;
 
 })();

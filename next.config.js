@@ -13,7 +13,12 @@ const nextConfig = {
   },
   webpack: (config, { isServer }) => {
     if (isServer) {
-      config.externals.push("handlebars");
+      // Ces modules sont utilisés par Genkit/Firebase et ne sont pas destinés à être groupés par Webpack pour le serveur.
+      // Les exclure résout les avertissements "Critical dependency".
+      config.externals.push(
+        "handlebars",
+        "require-in-the-middle"
+      );
     }
     return config;
   },
