@@ -8,9 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit",
-    "login": "firebase login",
-    "deploy": "firebase experiments:enable webframeworks && firebase deploy --only hosting"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@genkit-ai/googleai": "1.7.0",
