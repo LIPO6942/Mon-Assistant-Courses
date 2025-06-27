@@ -124,8 +124,7 @@ export default function Home() {
 
   const handleAddItem = async (item: string, category: string, price: number, quantity: number, unit: string, isEssential: boolean) => {
     if (!pantryLists) return;
-    const oldPantry = JSON.parse(JSON.stringify(pantryLists));
-
+    
     let iconName = 'ShoppingCart';
     try {
       const result = await suggestIcon({ ingredientName: item });
@@ -134,7 +133,7 @@ export default function Home() {
       console.error("Failed to suggest icon:", error);
     }
 
-    const newPantry = JSON.parse(JSON.stringify(pantryLists));
+    const newPantry: GroceryLists = JSON.parse(JSON.stringify(pantryLists));
     const newItem: GroceryItem = { id: Date.now(), name: item, checked: false, price, quantity, unit, isEssential, icon: iconName };
     if (newPantry[category]) {
       newPantry[category] = [...newPantry[category], newItem];
@@ -166,7 +165,7 @@ export default function Home() {
 
     // Update the 'checked' state in the main pantry list and persist
     if(pantryLists) {
-      const newPantry = JSON.parse(JSON.stringify(pantryLists));
+      const newPantry: GroceryLists = JSON.parse(JSON.stringify(pantryLists));
       let found = false;
       for (const category in newPantry) {
         for(let i=0; i < newPantry[category].length; i++) {
@@ -196,7 +195,7 @@ export default function Home() {
 
   const handleDeleteItem = async (category: string, itemId: number) => {
     if (!pantryLists) return;
-    const newPantry = JSON.parse(JSON.stringify(pantryLists));
+    const newPantry: GroceryLists = JSON.parse(JSON.stringify(pantryLists));
     newPantry[category] = newPantry[category].filter(item => item.id !== itemId);
     if (newPantry[category].length === 0) {
       delete newPantry[category];
@@ -213,12 +212,12 @@ export default function Home() {
   
   const handleMoveItem = async (itemId: number, oldCategory: string, newCategory: string) => {
     if (!pantryLists || oldCategory === newCategory) return;
-    const newPantry = JSON.parse(JSON.stringify(pantryLists));
+    const newPantry: GroceryLists = JSON.parse(JSON.stringify(pantryLists));
 
-    const itemToMove = newPantry[oldCategory]?.find((item: GroceryItem) => item.id === itemId);
+    const itemToMove = newPantry[oldCategory]?.find(item => item.id === itemId);
     if (!itemToMove) return;
 
-    newPantry[oldCategory] = newPantry[oldCategory].filter((item: GroceryItem) => item.id !== itemId);
+    newPantry[oldCategory] = newPantry[oldCategory].filter(item => item.id !== itemId);
     if (newPantry[oldCategory].length === 0) {
         delete newPantry[oldCategory];
     }
@@ -233,11 +232,11 @@ export default function Home() {
 
   const handleToggleEssential = async (category: string, itemId: number) => {
     if (!pantryLists) return;
-    const newPantry = JSON.parse(JSON.stringify(pantryLists));
+    const newPantry: GroceryLists = JSON.parse(JSON.stringify(pantryLists));
     let itemToUpdate: GroceryItem | undefined;
 
     for (const cat of Object.keys(newPantry)) {
-        const itemIndex = newPantry[cat].findIndex((i: GroceryItem) => i.id === itemId);
+        const itemIndex = newPantry[cat].findIndex(i => i.id === itemId);
         if (itemIndex !== -1) {
             newPantry[cat][itemIndex].isEssential = !newPantry[cat][itemIndex].isEssential;
             itemToUpdate = newPantry[cat][itemIndex];
@@ -254,11 +253,11 @@ export default function Home() {
   
   const handleUpdateItem = async (category: string, itemId: number, updates: Partial<Pick<GroceryItem, 'price' | 'quantity'>>) => {
     if (!pantryLists) return;
-    const newPantry = JSON.parse(JSON.stringify(pantryLists));
+    const newPantry: GroceryLists = JSON.parse(JSON.stringify(pantryLists));
     let itemToUpdate: GroceryItem | undefined;
 
     for (const cat of Object.keys(newPantry)) {
-        const itemIndex = newPantry[cat].findIndex((i: GroceryItem) => i.id === itemId);
+        const itemIndex = newPantry[cat].findIndex(i => i.id === itemId);
         if (itemIndex !== -1) {
             newPantry[cat][itemIndex] = { ...newPantry[cat][itemIndex], ...updates };
             itemToUpdate = newPantry[cat][itemIndex];
@@ -277,7 +276,7 @@ export default function Home() {
     setCartItems([]);
     setPurchasedItemIds(new Set());
      if(pantryLists) {
-      const newPantry = JSON.parse(JSON.stringify(pantryLists));
+      const newPantry: GroceryLists = JSON.parse(JSON.stringify(pantryLists));
       for (const category in newPantry) {
         newPantry[category] = newPantry[category].map(item => ({...item, checked: false}));
       }
