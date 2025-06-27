@@ -36,7 +36,7 @@ Après avoir téléchargé le code, vous aurez besoin de Node.js (version 20 ou 
 
 L'application sera alors disponible à l'adresse `http://localhost:9002`.
 
-## Accéder à l'application depuis votre téléphone
+### Accéder à l'application depuis votre téléphone (en local)
 
 Pour tester l'application sur votre téléphone pendant qu'elle tourne sur votre ordinateur :
 
@@ -50,3 +50,24 @@ Pour tester l'application sur votre téléphone pendant qu'elle tourne sur votre
     http://ADRESSE_IP_DE_VOTRE_PC:9002
     ```
 Si cela ne fonctionne pas, il se peut que le pare-feu de votre ordinateur bloque la connexion. Vous devrez peut-être autoriser Node.js ou votre terminal à accepter les connexions entrantes.
+
+## Déployer l'application sur internet (Alternative gratuite à Firebase)
+
+Pour rendre votre application accessible depuis n'importe où sans dépendre de votre ordinateur, vous pouvez la déployer gratuitement sur des plateformes comme **Vercel** ou **Netlify**.
+
+**Étapes générales (exemple avec Vercel) :**
+
+1.  **Mettez votre projet sur GitHub :** Si ce n'est pas déjà fait, créez un dépôt sur [GitHub](https://github.com/) et poussez votre code.
+
+2.  **Créez un compte Vercel :**
+    -   Allez sur [vercel.com](https://vercel.com) et inscrivez-vous avec votre compte GitHub.
+
+3.  **Importez et déployez votre projet :**
+    -   Sur votre tableau de bord Vercel, cliquez sur "Add New..." -> "Project".
+    -   Importez votre projet depuis GitHub.
+    -   Vercel détectera automatiquement que c'est un projet Next.js.
+    -   Avant de déployer, allez dans la section "Environment Variables" (Variables d'environnement).
+    -   Ajoutez votre clé API avec le nom `GOOGLE_API_KEY` et la valeur que vous avez obtenue depuis AI Studio.
+    -   Cliquez sur **"Deploy"**.
+
+Après quelques instants, Vercel vous fournira une URL publique pour votre application (par exemple : `mon-assistant.vercel.app`), accessible depuis n'importe quel appareil connecté à internet.
