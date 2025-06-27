@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Plus, Trash2, Wand2, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Wand2, Loader2, AlertCircle } from 'lucide-react';
 import { generateShoppingList } from '@/ai/flows/generate-list-flow';
 
 // Définit le type d'un article avec une catégorie
@@ -49,6 +49,7 @@ export default function Home() {
   const [nextId, setNextId] = useState(1);
   const [aiPrompt, setAiPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
 
   const handleAddItem = (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,6 +75,7 @@ export default function Home() {
     e.preventDefault();
     if (!aiPrompt.trim()) return;
     setIsLoading(true);
+    setAiError(null);
     try {
       const result = await generateShoppingList({ prompt: aiPrompt });
       if (result && result.items) {
@@ -84,10 +86,15 @@ export default function Home() {
         setItems((prevItems) => [...prevItems, ...newItems]);
         setNextId((prevId) => prevId + newItems.length);
         setAiPrompt('');
+      } else {
+        throw new Error("La réponse de l'IA était vide ou mal formée.");
       }
     } catch (error) {
       console.error('Erreur lors de la génération de la liste :', error);
-      // Idéalement, afficher une notification d'erreur à l'utilisateur ici
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      setAiError(
+        `Une erreur est survenue. Cela est souvent dû à une clé API manquante ou invalide. (Détail: ${errorMessage})`
+      );
     } finally {
       setIsLoading(false);
     }
@@ -130,22 +137,30 @@ export default function Home() {
           <CardContent>
             <form
               onSubmit={handleGenerateList}
-              className="flex items-center gap-4"
+              className="flex flex-col gap-4"
             >
-              <Input
-                type="text"
-                value={aiPrompt}
-                onChange={(e) => setAiPrompt(e.target.value)}
-                placeholder="Ex: Ingrédients pour une quiche lorraine"
-                disabled={isLoading}
-              />
-              <Button type="submit" size="icon" disabled={isLoading}>
-                {isLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Wand2 className="h-4 w-4" />
-                )}
-              </Button>
+              <div className="flex items-center gap-4">
+                <Input
+                  type="text"
+                  value={aiPrompt}
+                  onChange={(e) => setAiPrompt(e.target.value)}
+                  placeholder="Ex: Ingrédients pour une quiche lorraine"
+                  disabled={isLoading}
+                />
+                <Button type="submit" size="icon" disabled={isLoading}>
+                  {isLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Wand2 className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+              {aiError && (
+                <div className="p-3 rounded-md border border-destructive/50 bg-destructive/10 text-destructive text-sm flex items-start gap-3">
+                  <AlertCircle className="h-5 w-5 flex-shrink-0" />
+                  <p>{aiError}</p>
+                </div>
+              )}
             </form>
           </CardContent>
         </Card>
