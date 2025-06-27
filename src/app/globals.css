@@ -3,30 +3,30 @@
 @tailwind utilities;
 
 body {
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'PT Sans', sans-serif;
 }
 
 @layer base {
   :root {
-    --background: 150 50% 98%; /* Mint Cream */
+    --background: 120 100% 97.1%; /* #F0FFF0 - Honeydew */
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 145 55% 42%; /* Calming Green */
-    --primary-foreground: 0 0% 100%;
+    --primary: 90 100% 50%; /* #7CFC00 - LawnGreen */
+    --primary-foreground: 222.2 84% 4.9%;
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 215.4 16.3% 46.9%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 45 95% 55%; /* Warm Yellow */
+    --accent: 51 100% 50%; /* #FFD700 - Gold */
     --accent-foreground: 222.2 84% 4.9%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 145 55% 42%;
+    --ring: 90 100% 50%;
     --radius: 0.7rem;
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
@@ -49,19 +49,19 @@ body {
     --card-foreground: 210 20% 98%;
     --popover: 222 47% 11%;
     --popover-foreground: 210 20% 98%;
-    --primary: 145 55% 42%;
+    --primary: 90 100% 50%;
     --primary-foreground: 222.2 84% 4.9%;
     --secondary: 217 33% 17%;
     --secondary-foreground: 210 20% 98%;
     --muted: 217 33% 17%;
     --muted-foreground: 215 20% 65%;
-    --accent: 45 95% 55%;
+    --accent: 51 100% 50%;
     --accent-foreground: 222.2 84% 4.9%;
     --destructive: 0 63% 31%;
     --destructive-foreground: 210 20% 98%;
     --border: 217 33% 17%;
     --input: 217 33% 17%;
-    --ring: 145 55% 42%;
+    --ring: 90 100% 50%;
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
