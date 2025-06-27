@@ -3,7 +3,7 @@
 /**
  * @fileOverview A tool for getting the current weather.
  */
-import { ai } from '@/ai/genkit';
+// import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 
 
@@ -33,6 +33,7 @@ const generateDynamicWeather = (location: string) => {
 };
 
 
+/* GENKIT FEATURES DISABLED
 export const getWeather = ai.defineTool(
   {
     name: 'getWeatherForLocation',
@@ -57,3 +58,7 @@ export const getWeather = ai.defineTool(
     };
   }
 );
+*/
+
+// Dummy export to prevent import errors.
+export const getWeather = () => {};
