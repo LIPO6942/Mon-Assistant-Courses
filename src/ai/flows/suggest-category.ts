@@ -8,7 +8,7 @@
  * - SuggestCategoryOutput - The output type.
  */
 
-// import {ai} from '@/ai/genkit';
+import {ai} from '@/ai/genkit';
 import {z} from 'zod';
 
 const SuggestCategoryInputSchema = z.object({
@@ -29,12 +29,9 @@ export type SuggestCategoryOutput = z.infer<typeof SuggestCategoryOutputSchema>;
 export async function suggestCategory(
   input: SuggestCategoryInput
 ): Promise<SuggestCategoryOutput> {
-  // return suggestCategoryFlow(input);
-  console.warn("Genkit is disabled. Returning default category.");
-  return Promise.resolve({ categoryName: 'Divers' });
+  return suggestCategoryFlow(input);
 }
 
-/* GENKIT FEATURES DISABLED
 const prompt = ai.definePrompt({
   name: 'suggestCategoryPrompt',
   input: {schema: SuggestCategoryInputSchema},
@@ -77,4 +74,3 @@ const suggestCategoryFlow = ai.defineFlow(
     }
   }
 );
-*/

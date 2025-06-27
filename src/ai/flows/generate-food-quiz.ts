@@ -7,7 +7,7 @@
  * - GenerateFoodQuizOutput - The return type for the function.
  */
 
-// import { ai } from '@/ai/genkit';
+import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 
 const GenerateFoodQuizOutputSchema = z.object({
@@ -18,21 +18,10 @@ const GenerateFoodQuizOutputSchema = z.object({
 });
 export type GenerateFoodQuizOutput = z.infer<typeof GenerateFoodQuizOutputSchema>;
 
-const mockQuiz: GenerateFoodQuizOutput = {
-    question: "Quelle est la couleur du cheval blanc d'Henri IV ?",
-    options: ["Blanc", "Noir", "Gris", "Marron"],
-    correctAnswerIndex: 0,
-    funFact: "C'est une question piège, la réponse est dans la question ! Les fonctionnalités d'IA sont temporairement désactivées.",
-};
-
-
 export async function generateFoodQuiz(): Promise<GenerateFoodQuizOutput> {
-  // return generateFoodQuizFlow();
-  console.warn("Genkit is disabled. Returning mock quiz data.");
-  return Promise.resolve(mockQuiz);
+  return generateFoodQuizFlow();
 }
 
-/* GENKIT FEATURES DISABLED
 const prompt = ai.definePrompt({
   name: 'generateFoodQuizPrompt',
   output: { schema: GenerateFoodQuizOutputSchema },
@@ -65,4 +54,3 @@ const generateFoodQuizFlow = ai.defineFlow(
     return output;
   }
 );
-*/

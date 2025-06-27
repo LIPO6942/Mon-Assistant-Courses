@@ -8,8 +8,8 @@
  * - SuggestMealByWeatherOutput - The return type for the function.
  */
 
-// import { ai } from '@/ai/genkit';
-// import { getWeather } from '@/ai/tools/weather';
+import { ai } from '@/ai/genkit';
+import { getWeather } from '@/ai/tools/weather';
 import { z } from 'zod';
 
 const SuggestMealByWeatherInputSchema = z.object({
@@ -27,22 +27,10 @@ const SuggestMealByWeatherOutputSchema = z.object({
 });
 export type SuggestMealByWeatherOutput = z.infer<typeof SuggestMealByWeatherOutputSchema>;
 
-const mockMealSuggestion: SuggestMealByWeatherOutput = {
-    mealIdea: "Les suggestions météo sont temporairement désactivées.",
-    weather: {
-        temperature: 20,
-        condition: "cloudy",
-        frenchCondition: "nuageux",
-    },
-};
-
 export async function suggestMealByWeather(input: SuggestMealByWeatherInput): Promise<SuggestMealByWeatherOutput> {
-  // return suggestMealByWeatherFlow(input);
-  console.warn("Genkit is disabled. Returning mock meal suggestion.");
-  return Promise.resolve(mockMealSuggestion);
+  return suggestMealByWeatherFlow(input);
 }
 
-/* GENKIT FEATURES DISABLED
 const prompt = ai.definePrompt({
   name: 'suggestMealByWeatherPrompt',
   model: 'googleai/gemini-1.5-flash',
@@ -74,4 +62,3 @@ const suggestMealByWeatherFlow = ai.defineFlow(
     return output;
   }
 );
-*/
