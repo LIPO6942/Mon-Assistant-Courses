@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import {
   suggestMealByWeather,
   SuggestMealByWeatherOutput,
@@ -12,7 +12,7 @@ import {
 } from '@/ai/flows/generate-food-quiz';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Sun, Cloud, CloudRain, UtensilsCrossed, BrainCircuit, CheckCircle, XCircle, CloudSun, AlertTriangle } from 'lucide-react';
+import { Sun, Cloud, CloudRain, UtensilsCrossed, BrainCircuit, CheckCircle, XCircle, CloudSun, AlertTriangle, RefreshCw } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
@@ -37,57 +37,53 @@ type WeatherSuggesterProps = {
 export function WeatherSuggester({ onQuizCorrect, onNewQuiz }: WeatherSuggesterProps) {
   const [mealSuggestion, setMealSuggestion] = useState<SuggestMealByWeatherOutput | null>(null);
   const [quiz, setQuiz] = useState<GenerateFoodQuizOutput | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [isAnswered, setIsAnswered] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  useEffect(() => {
-    const fetchSuggestions = async () => {
-      setIsLoading(true);
-      setError(null);
-      setQuiz(null);
-      setIsAnswered(false);
-      setSelectedAnswer(null);
-      onNewQuiz();
+  const fetchSuggestions = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    setQuiz(null);
+    setMealSuggestion(null);
+    setIsAnswered(false);
+    setSelectedAnswer(null);
+    onNewQuiz();
 
-      try {
-        const [mealResult, quizResult] = await Promise.all([
-          suggestMealByWeather({ location: DEFAULT_LOCATION }),
-          generateFoodQuiz(),
-        ]);
-        setMealSuggestion(mealResult);
-        setQuiz(quizResult);
-      } catch (e: any) {
-        let errorMessage = "Une erreur inattendue est survenue lors de la récupération des suggestions.";
-        if (e.message) {
-          if (e.message.includes('429')) {
-            errorMessage = "Vous avez dépassé votre quota d'appels à l'API pour aujourd'hui. Veuillez réessayer demain ou configurer la facturation sur votre projet Google Cloud.";
-          } else if (e.message.includes('503') || e.message.includes('overloaded')) {
-            errorMessage = "Le service d'IA est actuellement surchargé. Veuillez réessayer dans quelques instants.";
-          }
+    try {
+      const [mealResult, quizResult] = await Promise.all([
+        suggestMealByWeather({ location: DEFAULT_LOCATION }),
+        generateFoodQuiz(),
+      ]);
+      setMealSuggestion(mealResult);
+      setQuiz(quizResult);
+    } catch (e: any) {
+      let errorMessage = "Une erreur inattendue est survenue lors de la récupération des suggestions.";
+      if (e.message) {
+        if (e.message.includes('429')) {
+          errorMessage = "Vous avez dépassé votre quota d'appels à l'API pour aujourd'hui. Veuillez réessayer demain ou configurer la facturation sur votre projet Google Cloud.";
+        } else if (e.message.includes('503') || e.message.includes('overloaded')) {
+          errorMessage = "Le service d'IA est actuellement surchargé. Veuillez réessayer dans quelques instants.";
         }
-        
-        setError(errorMessage);
-
-        // Still show a toast for other errors, but not for quota/overload and not for offline.
-        if (e.code !== 'unavailable' && !errorMessage.includes("quota") && !errorMessage.includes("surchargé")) {
-          console.error('Failed to fetch daily suggestions:', e);
-          toast({
-            variant: 'destructive',
-            title: 'Erreur de suggestion',
-            description: 'Impossible de récupérer les suggestions du jour.',
-          });
-        }
-      } finally {
-        setIsLoading(false);
       }
-    };
+      
+      setError(errorMessage);
 
-    fetchSuggestions();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onNewQuiz]);
+      if (e.code !== 'unavailable' && !errorMessage.includes("quota") && !errorMessage.includes("surchargé")) {
+        console.error('Failed to fetch daily suggestions:', e);
+        toast({
+          variant: 'destructive',
+          title: 'Erreur de suggestion',
+          description: 'Impossible de récupérer les suggestions du jour.',
+        });
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  }, [onNewQuiz, toast]);
+
 
   const WeatherIcon = mealSuggestion ? weatherIcons[mealSuggestion.weather.condition.toLowerCase()] || Cloud : null;
 
@@ -151,58 +147,66 @@ export function WeatherSuggester({ onQuizCorrect, onNewQuiz }: WeatherSuggesterP
     );
   };
 
-  const content = (
-    <>
-      {isLoading ? (
-          <div className="space-y-4">
-            <Skeleton className="h-10 w-full" />
-            <Separator className="my-4"/>
-            <Skeleton className="h-8 w-1/2" />
-            <Skeleton className="h-6 w-3/4" />
-            <div className="grid grid-cols-2 gap-2">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
+  const renderContent = () => {
+      if (isLoading) {
+          return (
+            <div className="space-y-4">
+                <Skeleton className="h-10 w-full" />
+                <Separator className="my-4"/>
+                <Skeleton className="h-8 w-1/2" />
+                <Skeleton className="h-6 w-3/4" />
+                <div className="grid grid-cols-2 gap-2">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                </div>
             </div>
-          </div>
-        ) : error ? (
-          <Alert variant="destructive">
+          );
+      }
+
+      if (error) {
+        return (
+            <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Oups ! Un problème est survenu</AlertTitle>
             <AlertDescription>
-              {error}
+                {error}
+                <Button variant="link" onClick={fetchSuggestions} className="p-0 h-auto ml-1">Réessayer</Button>
             </AlertDescription>
-          </Alert>
-        ) : (
-          <>
-            {mealSuggestion ? (
-              <div className="p-3 bg-accent/10 border border-accent/20 rounded-lg text-center">
+            </Alert>
+        );
+      }
+      
+      if (mealSuggestion && quiz) {
+        return (
+            <>
+            <div className="p-3 bg-accent/10 border border-accent/20 rounded-lg text-center">
                 <div className="flex items-center justify-center gap-2 mb-1 font-semibold text-xs">
-                  {WeatherIcon && <WeatherIcon className="h-4 w-4 text-accent" />}
-                  <span>
+                {WeatherIcon && <WeatherIcon className="h-4 w-4 text-accent" />}
+                <span>
                     Météo à {DEFAULT_LOCATION}: {mealSuggestion.weather.temperature}°C, {mealSuggestion.weather.frenchCondition}
-                  </span>
+                </span>
                 </div>
                 <p className="text-foreground text-sm">{mealSuggestion.mealIdea}</p>
-              </div>
-            ) : (
-              <p className="text-muted-foreground text-sm text-center">
-                Impossible de charger la suggestion de repas du jour.
-              </p>
-            )}
-
+            </div>
             <Separator className="my-4"/>
-
-            {quiz ? renderQuiz() : (
-               <p className="text-muted-foreground text-sm text-center">
-                Impossible de charger le quiz du jour.
-              </p>
-            )}
+            {renderQuiz()}
           </>
-        )}
-    </>
-  );
+        )
+      }
+      
+      return (
+        <div className="flex flex-col items-center justify-center text-center text-muted-foreground p-4 gap-4 min-h-[200px]">
+            <UtensilsCrossed className="h-12 w-12 text-muted-foreground/50" />
+            <p className="text-sm font-medium">Cliquez pour obtenir votre suggestion du jour et un quiz amusant !</p>
+            <Button onClick={fetchSuggestions} disabled={isLoading}>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Obtenir les suggestions
+            </Button>
+        </div>
+      )
+  };
 
   return (
     <>
@@ -220,7 +224,7 @@ export function WeatherSuggester({ onQuizCorrect, onNewQuiz }: WeatherSuggesterP
               </div>
             </AccordionTrigger>
             <AccordionContent className="p-4 pt-2">
-              {content}
+              {renderContent()}
             </AccordionContent>
           </AccordionItem>
         </Accordion>
@@ -236,7 +240,7 @@ export function WeatherSuggester({ onQuizCorrect, onNewQuiz }: WeatherSuggesterP
           <CardDescription className="text-xs md:text-sm">Idées, météo et un petit quiz pour égayer votre journée.</CardDescription>
         </CardHeader>
         <CardContent className="p-4 md:p-6 pt-0">
-          {content}
+          {renderContent()}
         </CardContent>
       </Card>
     </>
