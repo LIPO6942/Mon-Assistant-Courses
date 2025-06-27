@@ -1,2 +1,1 @@
-// Ce fichier a été vidé intentionnellement pour résoudre un conflit de déploiement.
-// Un fichier next.config.ts en double peut causer des comportements inattendus.
+// This file is intentionally left empty. The main configuration file is next.config.js at the root of the project.
