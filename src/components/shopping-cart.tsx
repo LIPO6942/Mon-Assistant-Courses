@@ -15,7 +15,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { DynamicIcon } from "./dynamic-icon";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ShoppingCart as ShoppingCartIcon, X, Trash2, Pencil, AlertTriangle } from "lucide-react";
-import type { GroceryItem } from "@/app/page";
+import type { GroceryItem } from "@/types/grocery";
 import { cn } from "@/lib/utils";
 import { Separator } from "./ui/separator";
 

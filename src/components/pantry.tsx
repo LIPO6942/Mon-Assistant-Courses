@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Trash2, Star, Plus, MoreHorizontal, MoveRight, XCircle, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { GroceryItem, GroceryLists } from "@/app/page";
+import type { GroceryItem, GroceryLists } from "@/types/grocery";
 import { DynamicIcon } from "./dynamic-icon";
 
 type PantryProps = {

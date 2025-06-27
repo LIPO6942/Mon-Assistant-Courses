@@ -22,20 +22,8 @@ import { useToast } from "@/hooks/use-toast";
 import { getGroceryLists, updateGroceryLists } from "@/services/grocery";
 import { CountryRecipeSuggester } from "@/components/country-recipe-suggester";
 import { FavoriteRecipes } from "@/components/favorite-recipes";
+import type { GroceryItem, GroceryLists } from '@/types/grocery';
 
-
-export type GroceryItem = {
-  id: number;
-  name: string;
-  checked: boolean; // This will now represent if it's in the cart
-  price: number;
-  quantity: number;
-  unit: string;
-  isEssential: boolean;
-  icon?: string;
-};
-
-export type GroceryLists = Record<string, GroceryItem[]>;
 
 const initialLists: GroceryLists = {
   "Fruits et Légumes": [
