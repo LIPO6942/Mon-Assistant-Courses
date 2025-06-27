@@ -1,24 +1,2 @@
-
-import type {NextConfig} from 'next';
-
-const nextConfig: NextConfig = {
-  /* config options here */
-  images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'placehold.co',
-        port: '',
-        pathname: '/**',
-      },
-    ],
-  },
-  webpack: (config, { isServer }) => {
-    if (isServer) {
-      config.externals.push('handlebars');
-    }
-    return config;
-  },
-};
-
-export default nextConfig;
+// Ce fichier a été vidé intentionnellement pour résoudre un conflit de déploiement.
+// Un fichier next.config.ts en double peut causer des comportements inattendus.
