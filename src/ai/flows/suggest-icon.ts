@@ -8,7 +8,7 @@
  * - SuggestIconOutput - The return type for the suggestIcon function.
  */
 
-// import {ai} from '@/ai/genkit';
+import {ai} from '@/ai/genkit';
 import {z} from 'zod';
 
 const SuggestIconInputSchema = z.object({
@@ -28,12 +28,9 @@ export type SuggestIconOutput = z.infer<typeof SuggestIconOutputSchema>;
 export async function suggestIcon(
   input: SuggestIconInput
 ): Promise<SuggestIconOutput> {
-  // return suggestIconFlow(input);
-  console.warn("Genkit is disabled. Returning default icon.");
-  return Promise.resolve({ iconName: 'ShoppingCart' });
+  return suggestIconFlow(input);
 }
 
-/* GENKIT FEATURES DISABLED
 const prompt = ai.definePrompt({
   name: 'suggestIconPrompt',
   input: {schema: SuggestIconInputSchema},
@@ -65,4 +62,3 @@ const suggestIconFlow = ai.defineFlow(
     }
   }
 );
-*/
