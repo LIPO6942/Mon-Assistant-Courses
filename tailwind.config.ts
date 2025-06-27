@@ -17,7 +17,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['"PT Sans"', 'sans-serif'],
+        sans: ['var(--font-poppins)', 'sans-serif'],
         code: ['monospace'],
       },
       colors: {

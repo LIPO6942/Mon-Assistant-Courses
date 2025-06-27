@@ -2,10 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: 'PT Sans', sans-serif;
-}
-
 @layer base {
   :root {
     --background: 120 100% 97.1%; /* #F0FFF0 - Honeydew */
@@ -83,6 +79,6 @@ body {
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
   }
 }
