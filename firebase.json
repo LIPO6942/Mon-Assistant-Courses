@@ -1,18 +1,14 @@
 
 {
-  "functions": {
-    "source": ".firebase/mon-assistant-de-courses/functions"
-  },
   "hosting": {
     "source": ".",
-    "rewrites": [
-      {
-        "source": "**",
-        "function": {
-          "functionId": "ssrmonassistantdecourse",
-          "region": "us-central1"
-        }
-      }
-    ]
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "frameworksBackend": {
+      "region": "us-central1"
+    }
   }
 }
