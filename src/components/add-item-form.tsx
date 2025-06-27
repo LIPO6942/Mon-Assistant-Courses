@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -64,15 +64,6 @@ export function AddItemForm({ categories, onAddItem }: AddItemFormProps) {
           setIsSuggesting(false);
       }
   }, [categories, isAdding]);
-
-  useEffect(() => {
-    const debounce = setTimeout(() => {
-      fetchCategorySuggestion(itemName);
-    }, 500); // 500ms debounce
-    
-    return () => clearTimeout(debounce);
-  }, [itemName, fetchCategorySuggestion]);
-
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -187,7 +178,21 @@ export function AddItemForm({ categories, onAddItem }: AddItemFormProps) {
       <div className="grid gap-2">
         <div className="flex items-center justify-between">
           <Label htmlFor="item-category-select">Catégorie</Label>
-          {isSuggesting && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="text-xs h-7"
+            onClick={() => fetchCategorySuggestion(itemName)}
+            disabled={isSuggesting || itemName.trim().length < 3 || isAdding}
+          >
+            {isSuggesting ? (
+              <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+            ) : (
+              <Wand2 className="mr-2 h-3 w-3" />
+            )}
+            Suggérer
+          </Button>
         </div>
         <Select value={category} onValueChange={setCategory} disabled={isAdding}>
           <SelectTrigger id="item-category-select" aria-label="Catégorie">
