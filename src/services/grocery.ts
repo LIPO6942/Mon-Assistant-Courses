@@ -1,7 +1,7 @@
 
 import { db, firebaseInitialized } from '@/lib/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import type { GroceryLists } from '@/app/page';
+import type { GroceryLists } from '@/types/grocery';
 
 const LIST_COLLECTION = 'groceryLists';
 const LIST_DOC_ID = 'mainList'; // Using a hardcoded ID for simplicity as there is no authentication
