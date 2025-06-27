@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Suggests a random recipe from a random country using creative axes.
@@ -7,8 +8,8 @@
  * - SuggestCountryRecipeOutput - The return type for the function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+// import {ai} from '@/ai/genkit';
+import {z} from 'zod';
 
 const SuggestCountryRecipeInputSchema = z.object({
   continent: z.string().optional().describe("Le continent à partir duquel choisir un pays. Ex: 'Europe', 'Asie', etc."),
@@ -27,10 +28,22 @@ const SuggestCountryRecipeOutputSchema = z.object({
 
 export type SuggestCountryRecipeOutput = z.infer<typeof SuggestCountryRecipeOutputSchema>;
 
+const mockCountryRecipe: SuggestCountryRecipeOutput = {
+    theme: "Recette par défaut",
+    country: "Monde",
+    recipeName: "Recette non disponible",
+    ingredients: ["Fonctionnalité désactivée"],
+    instructions: ["Les suggestions de recettes sont temporairement désactivées car les fonctionnalités d'IA sont en maintenance."],
+    decorationIdea: "Patience et compréhension.",
+};
+
 export async function suggestCountryRecipe(input: SuggestCountryRecipeInput): Promise<SuggestCountryRecipeOutput> {
-    return suggestCountryRecipeFlow(input);
+    // return suggestCountryRecipeFlow(input);
+    console.warn("Genkit is disabled. Returning mock country recipe.");
+    return Promise.resolve(mockCountryRecipe);
 }
 
+/* GENKIT FEATURES DISABLED
 const prompt = ai.definePrompt({
     name: 'suggestCountryRecipePrompt',
     input: { schema: SuggestCountryRecipeInputSchema },
@@ -88,3 +101,4 @@ const suggestCountryRecipeFlow = ai.defineFlow(
         return output;
     }
 );
+*/

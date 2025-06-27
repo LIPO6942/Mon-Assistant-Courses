@@ -8,8 +8,8 @@
  * - SuggestRecipeOutput - The return type for the suggestRecipe function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+// import {ai} from '@/ai/genkit';
+import {z} from 'zod';
 
 const IngredientWithPriceSchema = z.object({
   name: z.string(),
@@ -36,10 +36,27 @@ const SuggestRecipeOutputSchema = z.object({
 });
 export type SuggestRecipeOutput = z.infer<typeof SuggestRecipeOutputSchema>;
 
+const mockRecipe: SuggestRecipeOutput = {
+    recipeName: "Recette non disponible",
+    instructions: ["Les suggestions de recettes sont temporairement désactivées car les fonctionnalités d'IA sont en maintenance."],
+    missingIngredients: [],
+    usedIngredients: [],
+    estimatedCost: 0,
+    nutritionalAnalysis: {
+        calories: "N/A",
+        protein: "N/A",
+        carbs: "N/A",
+        fat: "N/A",
+    },
+};
+
 export async function suggestRecipe(input: SuggestRecipeInput): Promise<SuggestRecipeOutput> {
-  return suggestRecipeFlow(input);
+  // return suggestRecipeFlow(input);
+  console.warn("Genkit is disabled. Returning mock recipe.");
+  return Promise.resolve(mockRecipe);
 }
 
+/* GENKIT FEATURES DISABLED
 const prompt = ai.definePrompt({
   name: 'suggestRecipePrompt',
   input: {schema: SuggestRecipeInputSchema},
@@ -78,3 +95,4 @@ const suggestRecipeFlow = ai.defineFlow(
     return output!;
   }
 );
+*/
