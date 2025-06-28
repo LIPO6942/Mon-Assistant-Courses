@@ -24,11 +24,11 @@ import {
 import {
   AlertDialog,
   AlertDialogAction,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogDescription,
+  AlertDialogFooter,
 } from "@/components/ui/alert-dialog"
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -74,8 +74,13 @@ export default function Home() {
   const [suggestedRecipe, setSuggestedRecipe] = useState<SuggestRecipeOutput | null>(null);
   const [isRecipeLoading, setIsRecipeLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
-  const [luckyChoice, setLuckyChoice] = useState<string | null>(null);
   
+  // State for the lucky choice feature
+  const [luckyChoice, setLuckyChoice] = useState<string | null>(null);
+  const [isLuckyDialogOpen, setIsLuckyDialogOpen] = useState(false);
+  const [displayChoice, setDisplayChoice] = useState<string>('');
+  const [isSpinning, setIsSpinning] = useState(false);
+
   // New state for management
   const [searchTerm, setSearchTerm] = useState('');
   const [newCategoryName, setNewCategoryName] = useState('');
@@ -169,7 +174,6 @@ export default function Home() {
     setEditingIngredient(null);
   };
 
-
   const handleAddToCart = (ingredient: Ingredient) => {
     setCart((currentCart) => {
       const existingItem = currentCart.find((item) => item.name === ingredient.name);
@@ -194,6 +198,10 @@ export default function Home() {
 
   const handleRemoveFromCart = (name: string) => {
     setCart((currentCart) => currentCart.filter((item) => item.name !== name));
+  };
+  
+  const handleClearCart = () => {
+    setCart([]);
   };
 
   const handleSuggestRecipe = async () => {
@@ -239,9 +247,28 @@ export default function Home() {
   };
 
   const handleLuckyChoice = () => {
-    const randomIndex = Math.floor(Math.random() * lazyOptions.length);
-    setLuckyChoice(lazyOptions[randomIndex]);
+    setIsLuckyDialogOpen(true);
+    setIsSpinning(true);
+    setLuckyChoice(null);
+
+    const spinDuration = 3000; // 3 seconds for suspense
+    const spinInterval = 100;
+
+    const intervalId = setInterval(() => {
+        const randomIndex = Math.floor(Math.random() * lazyOptions.length);
+        setDisplayChoice(lazyOptions[randomIndex]);
+    }, spinInterval);
+
+    setTimeout(() => {
+        clearInterval(intervalId);
+        const finalRandomIndex = Math.floor(Math.random() * lazyOptions.length);
+        const finalChoice = lazyOptions[finalRandomIndex];
+        setLuckyChoice(finalChoice);
+        setDisplayChoice(finalChoice);
+        setIsSpinning(false);
+    }, spinDuration);
   };
+
 
   const total = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
   const cartItemCount = cart.reduce((acc, item) => acc + item.quantity, 0);
@@ -315,8 +342,14 @@ export default function Home() {
                 </Button>
               </SheetTrigger>
               <SheetContent>
-                <SheetHeader>
+                <SheetHeader className="flex-row justify-between items-center pb-4 border-b">
                   <SheetTitle>Mon Panier</SheetTitle>
+                   {cart.length > 0 && (
+                      <Button variant="destructive" size="sm" onClick={handleClearCart}>
+                        <Trash2 className="mr-1.5 h-4 w-4" />
+                        Vider
+                      </Button>
+                    )}
                 </SheetHeader>
                 <div className="py-4">
                   {cart.length === 0 ? (
@@ -433,15 +466,38 @@ export default function Home() {
         </div>
       </main>
 
-      <AlertDialog open={!!luckyChoice} onOpenChange={(open) => !open && setLuckyChoice(null)}>
+      <AlertDialog open={isLuckyDialogOpen} onOpenChange={setIsLuckyDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Le sort en est jeté !</AlertDialogTitle>
-            <AlertDialogDescription>
-              Ce soir, vous mangerez : <span className="font-bold text-lg text-primary">{luckyChoice}</span>
+            <AlertDialogTitle className="text-center text-2xl">
+              {isSpinning ? "Le destin est en marche..." : "Roulement de tambour..."}
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="text-center py-8 px-4 space-y-4">
+                <div className="text-5xl font-bold text-primary h-16 flex items-center justify-center transition-all duration-100">
+                  {displayChoice}
+                </div>
+                {!isSpinning && luckyChoice && (
+                  <p className="text-lg text-muted-foreground animate-in fade-in-50 delay-500">
+                    Ce soir, le chef, c'est le hasard ! Bon appétit !
+                  </p>
+                )}
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
-            <AlertDialogAction onClick={() => setLuckyChoice(null)}>Génial !</AlertDialogAction>
+          <AlertDialogFooter>
+            <AlertDialogAction
+              onClick={() => setIsLuckyDialogOpen(false)}
+              disabled={isSpinning}
+              className="w-full"
+            >
+              {isSpinning ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                "Génial !"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
       
@@ -511,5 +567,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
