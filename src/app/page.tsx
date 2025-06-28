@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -591,7 +592,7 @@ export default function Home() {
           <DialogHeader>
             <DialogTitle>Modifier l'ingrédient</DialogTitle>
             <DialogDescription>Changez les détails de votre ingrédient ici.</DialogDescription>
-          </DialogHeader>
+          </Header>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="edit-name" className="text-right">Nom</Label>
