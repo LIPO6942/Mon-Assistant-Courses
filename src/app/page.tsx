@@ -61,15 +61,54 @@ const initialIngredients: Ingredient[] = [
     { name: 'Pain', price: 0.3, unit: 'pièce', category: 'Boulangerie' },
     { name: 'Baguette', price: 0.25, unit: 'pièce', category: 'Boulangerie' },
 ];
+const initialCategories = [...new Set(initialIngredients.map(i => i.category))];
 
 const lazyOptions = ['Maqloub', 'Pizza', 'Burrito', 'Tacos Mexicain', 'Tacos Français', 'Baguette Farcie'];
 
 export default function Home() {
   const [ingredients, setIngredients] = useState<Ingredient[]>(initialIngredients);
-  const initialCategories = [...new Set(initialIngredients.map(i => i.category))];
   const [categories, setCategories] = useState<string[]>(initialCategories);
-
   const [cart, setCart] = useState<CartItem[]>([]);
+  
+  const [hydrated, setHydrated] = useState(false);
+
+  // Load state from localStorage on initial client-side render
+  useEffect(() => {
+    try {
+      const savedIngredients = localStorage.getItem('kitchen-ingredients');
+      const savedCategories = localStorage.getItem('kitchen-categories');
+      const savedCart = localStorage.getItem('kitchen-cart');
+      
+      if (savedIngredients) setIngredients(JSON.parse(savedIngredients));
+      if (savedCategories) setCategories(JSON.parse(savedCategories));
+      if (savedCart) setCart(JSON.parse(savedCart));
+      
+    } catch (error) {
+      console.error("Failed to load data from localStorage", error);
+    } finally {
+      setHydrated(true);
+    }
+  }, []);
+
+  // Save state to localStorage whenever it changes
+  useEffect(() => {
+    if (hydrated) {
+      localStorage.setItem('kitchen-ingredients', JSON.stringify(ingredients));
+    }
+  }, [ingredients, hydrated]);
+
+  useEffect(() => {
+    if (hydrated) {
+      localStorage.setItem('kitchen-categories', JSON.stringify(categories));
+    }
+  }, [categories, hydrated]);
+
+  useEffect(() => {
+    if (hydrated) {
+      localStorage.setItem('kitchen-cart', JSON.stringify(cart));
+    }
+  }, [cart, hydrated]);
+
   const [suggestedRecipe, setSuggestedRecipe] = useState<SuggestRecipeOutput | null>(null);
   const [isRecipeLoading, setIsRecipeLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
