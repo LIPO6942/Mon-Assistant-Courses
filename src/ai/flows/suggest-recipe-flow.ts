@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview An AI flow to suggest a world recipe.
@@ -8,7 +9,6 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'zod';
-import {googleAI} from '@genkit-ai/googleai';
 
 const SuggestRecipeOutputSchema = z.object({
   title: z.string().describe("The name of the recipe."),
@@ -28,7 +28,7 @@ export async function suggestRecipe(): Promise<SuggestRecipeOutput> {
 
 const prompt = ai.definePrompt({
   name: 'suggestRecipePrompt',
-  model: googleAI.model('gemini-1.5-flash-latest'),
+  model: 'googleai/gemini-1.5-flash-latest',
   output: {schema: SuggestRecipeOutputSchema},
   prompt: `Tu es un chef cuisinier de renommée mondiale, spécialisé dans la découverte de saveurs uniques.
   
