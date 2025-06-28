@@ -9,6 +9,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'zod';
+import {googleAI} from '@genkit-ai/googleai';
 
 const categories = [
   'Fruits et Légumes',
@@ -40,6 +41,7 @@ export async function generateShoppingList(input: GenerateShoppingListInput): Pr
 
 const prompt = ai.definePrompt({
   name: 'generateShoppingListPrompt',
+  model: googleAI.model('gemini-1.5-flash-latest'),
   input: {schema: GenerateShoppingListInputSchema},
   output: {schema: GenerateShoppingListOutputSchema},
   prompt: `Tu es un assistant de courses intelligent. Ta tâche est de créer une liste de courses détaillée à partir de la demande de l'utilisateur.
