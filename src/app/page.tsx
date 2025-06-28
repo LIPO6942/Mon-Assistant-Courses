@@ -626,7 +626,7 @@ export default function Home() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Ajouter un ingrédient à "{addingToCategory}"</DialogTitle>
-          </DialogHeader>
+          </Header>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="add-name" className="text-right">Nom</Label>
