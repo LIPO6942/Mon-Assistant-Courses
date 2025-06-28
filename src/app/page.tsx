@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import {
@@ -23,13 +24,15 @@ import {
 import {
   AlertDialog,
   AlertDialogAction,
+  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogDescription,
 } from "@/components/ui/alert-dialog"
-
-import { ChefHat, ShoppingCart, Sparkles, Trash2, Plus, Minus, Loader2, AlertCircle, UtensilsCrossed, Dices } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { ChefHat, ShoppingCart, Sparkles, Trash2, Plus, Minus, Loader2, AlertCircle, UtensilsCrossed, Dices, Pencil, Search } from 'lucide-react';
 import { suggestRecipe, type SuggestRecipeOutput } from '@/ai/flows/suggest-recipe-flow';
 
 // Data structures
@@ -37,7 +40,7 @@ type Ingredient = {
   name: string;
   price: number;
   unit: string;
-  category: 'Légumes' | 'Viandes' | 'Épicerie' | 'Produits Laitiers' | 'Boulangerie';
+  category: string;
 };
 
 type CartItem = Ingredient & {
@@ -45,40 +48,127 @@ type CartItem = Ingredient & {
 };
 
 // "Database" of available ingredients
-const availableIngredients: Ingredient[] = [
-    { name: 'Poulet', price: 1200, unit: 'kg', category: 'Viandes' },
-    { name: 'Viande hachée', price: 1800, unit: 'kg', category: 'Viandes' },
-    { name: 'Tomates', price: 150, unit: 'kg', category: 'Légumes' },
-    { name: 'Oignons', price: 80, unit: 'kg', category: 'Légumes' },
-    { name: 'Ail', price: 500, unit: 'kg', category: 'Légumes' },
-    { name: 'Riz', price: 200, unit: 'kg', category: 'Épicerie' },
-    { name: 'Pâtes', price: 120, unit: 'kg', category: 'Épicerie' },
-    { name: 'Huile d\'olive', price: 950, unit: 'litre', category: 'Épicerie' },
-    { name: 'Fromage', price: 1500, unit: 'kg', category: 'Produits Laitiers' },
-    { name: 'Yaourt', price: 50, unit: 'pièce', category: 'Produits Laitiers' },
-    { name: 'Pain', price: 20, unit: 'pièce', category: 'Boulangerie' },
-    { name: 'Baguette', price: 15, unit: 'pièce', category: 'Boulangerie' },
+const initialIngredients: Ingredient[] = [
+    { name: 'Poulet', price: 12, unit: 'kg', category: 'Viandes' },
+    { name: 'Viande hachée', price: 18, unit: 'kg', category: 'Viandes' },
+    { name: 'Tomates', price: 1.5, unit: 'kg', category: 'Légumes' },
+    { name: 'Oignons', price: 0.8, unit: 'kg', category: 'Légumes' },
+    { name: 'Ail', price: 5, unit: 'kg', category: 'Légumes' },
+    { name: 'Riz', price: 2.5, unit: 'kg', category: 'Épicerie' },
+    { name: 'Pâtes', price: 1.2, unit: 'kg', category: 'Épicerie' },
+    { name: 'Huile d\'olive', price: 15, unit: 'litre', category: 'Épicerie' },
+    { name: 'Fromage', price: 20, unit: 'kg', category: 'Produits Laitiers' },
+    { name: 'Yaourt', price: 0.5, unit: 'pièce', category: 'Produits Laitiers' },
+    { name: 'Pain', price: 0.3, unit: 'pièce', category: 'Boulangerie' },
+    { name: 'Baguette', price: 0.25, unit: 'pièce', category: 'Boulangerie' },
 ];
 
 const lazyOptions = ['Maqloub', 'Pizza', 'Burrito', 'Tacos Mexicain', 'Tacos Français', 'Baguette Farcie'];
 
-// Group ingredients by category
-const ingredientsByCategory = availableIngredients.reduce((acc, ingredient) => {
-  const { category } = ingredient;
-  if (!acc[category]) {
-    acc[category] = [];
-  }
-  acc[category].push(ingredient);
-  return acc;
-}, {} as Record<Ingredient['category'], Ingredient[]>);
-
-
 export default function Home() {
+  const [ingredients, setIngredients] = useState<Ingredient[]>(initialIngredients);
+  const initialCategories = [...new Set(initialIngredients.map(i => i.category))];
+  const [categories, setCategories] = useState<string[]>(initialCategories);
+
   const [cart, setCart] = useState<CartItem[]>([]);
   const [suggestedRecipe, setSuggestedRecipe] = useState<SuggestRecipeOutput | null>(null);
   const [isRecipeLoading, setIsRecipeLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
   const [luckyChoice, setLuckyChoice] = useState<string | null>(null);
+  
+  // New state for management
+  const [searchTerm, setSearchTerm] = useState('');
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [editingIngredient, setEditingIngredient] = useState<Ingredient | null>(null);
+  const [addingToCategory, setAddingToCategory] = useState<string | null>(null);
+  
+  // State for modal forms
+  const [editFormState, setEditFormState] = useState({ name: '', price: 0, unit: '' });
+  const [addFormState, setAddFormState] = useState({ name: '', price: 0, unit: '' });
+
+  useEffect(() => {
+    if (editingIngredient) {
+      setEditFormState({
+        name: editingIngredient.name,
+        price: editingIngredient.price,
+        unit: editingIngredient.unit,
+      });
+    }
+  }, [editingIngredient]);
+
+  const ingredientsByCategory = useMemo(() => {
+    const filtered = ingredients.filter(ingredient =>
+      ingredient.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const grouped = filtered.reduce((acc, ingredient) => {
+      const { category } = ingredient;
+      if (!acc[category]) {
+        acc[category] = [];
+      }
+      acc[category].push(ingredient);
+      return acc;
+    }, {} as Record<string, Ingredient[]>);
+
+    categories.forEach(cat => {
+      if (!grouped[cat]) {
+        grouped[cat] = [];
+      }
+    });
+    
+    // Show only categories that have results when searching
+    if (searchTerm.trim() !== '') {
+        Object.keys(grouped).forEach(cat => {
+            if(grouped[cat].length === 0) {
+                delete grouped[cat];
+            }
+        });
+    }
+
+    return grouped;
+  }, [ingredients, searchTerm, categories]);
+
+  const handleAddCategory = () => {
+    const trimmedName = newCategoryName.trim();
+    if (trimmedName && !categories.includes(trimmedName)) {
+      setCategories(prev => [...prev, trimmedName]);
+      setNewCategoryName('');
+    }
+  };
+
+  const handleSaveNewIngredient = () => {
+    if (!addingToCategory || !addFormState.name.trim()) return;
+    const newIngredient: Ingredient = {
+      ...addFormState,
+      category: addingToCategory,
+    };
+    setIngredients(prev => [...prev, newIngredient]);
+    setAddingToCategory(null);
+    setAddFormState({ name: '', price: 0, unit: '' }); // Reset form
+  };
+
+  const handleSaveEditedIngredient = () => {
+    if (!editingIngredient) return;
+
+    const updatedIngredient = {
+      ...editingIngredient,
+      ...editFormState,
+    };
+    
+    const originalName = editingIngredient.name;
+
+    setIngredients(prev => prev.map(ing => (ing.name === originalName ? updatedIngredient : ing)));
+    setCart(prev => prev.map(item => (item.name === originalName ? { ...updatedIngredient, quantity: item.quantity } : item)));
+    setEditingIngredient(null);
+  };
+  
+  const handleDeleteIngredient = () => {
+    if (!editingIngredient) return;
+    setIngredients(prev => prev.filter(ing => ing.name !== editingIngredient.name));
+    setCart(prev => prev.filter(item => item.name !== editingIngredient.name));
+    setEditingIngredient(null);
+  };
+
 
   const handleAddToCart = (ingredient: Ingredient) => {
     setCart((currentCart) => {
@@ -103,7 +193,7 @@ export default function Home() {
   };
 
   const handleRemoveFromCart = (name: string) => {
-    setCart((currentCart) => currentCart.filter((item) => item.name !== name));
+    setCart((currentCart) => currentCart.filter((item) => item.name !== ingredient.name));
   };
 
   const handleSuggestRecipe = async () => {
@@ -128,7 +218,7 @@ export default function Home() {
     setCart(currentCart => {
       let newCart = [...currentCart];
       suggestedRecipe.ingredients.forEach(recipeIngredient => {
-        const dbIngredient = availableIngredients.find(db => db.name.toLowerCase() === recipeIngredient.name.toLowerCase());
+        const dbIngredient = ingredients.find(db => db.name.toLowerCase() === recipeIngredient.name.toLowerCase());
         
         if (dbIngredient) {
           const existingCartItem = newCart.find(item => item.name === dbIngredient.name);
@@ -237,7 +327,7 @@ export default function Home() {
                         <li key={item.name} className="flex items-center justify-between gap-2">
                           <div className="flex-grow">
                             <p className="font-semibold">{item.name}</p>
-                            <p className="text-sm text-muted-foreground">{(item.price * item.quantity).toFixed(0)} DA</p>
+                            <p className="text-sm text-muted-foreground">{item.quantity} x {item.price.toFixed(2)} DT</p>
                           </div>
                           <div className="flex items-center gap-2">
                             <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleQuantityChange(item.name, item.quantity - 1)}>
@@ -248,8 +338,8 @@ export default function Home() {
                               <Plus className="h-4 w-4" />
                             </Button>
                           </div>
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleRemoveFromCart(item.name)}>
-                            <Trash2 className="h-4 w-4 text-destructive" />
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleRemoveFromCart(item.name)}>
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </li>
                       ))}
@@ -260,7 +350,7 @@ export default function Home() {
                   <SheetFooter>
                     <div className="flex justify-between items-center font-bold text-lg w-full border-t pt-4">
                       <span>Total</span>
-                      <span>{total.toFixed(0)} DA</span>
+                      <span>{total.toFixed(2)} DT</span>
                     </div>
                   </SheetFooter>
                 )}
@@ -270,42 +360,73 @@ export default function Home() {
         </div>
       </header>
       
-      <main className="container py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          <div className="md:col-span-2 lg:col-span-3">
-             <Card className="shadow-lg">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2"><Dices className="text-accent" /> La flemme de cuisiner ?</CardTitle>
-                  <CardDescription>Cliquez sur le bouton pour choisir un plat rapide au hasard.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button onClick={handleLuckyChoice} className="w-full">
-                    <Dices className="mr-2 h-4 w-4" /> Lance ta chance
-                  </Button>
-                </CardContent>
-              </Card>
-          </div>
+      <main className="container py-8 space-y-8">
+        <Card className="shadow-lg">
+          <CardHeader>
+            <CardTitle>Gérer mes produits</CardTitle>
+            <CardDescription>Recherchez, ajoutez et modifiez vos produits et catégories.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="relative flex-grow">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input placeholder="Rechercher un ingrédient..." className="pl-8" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+              </div>
+              <div className="flex gap-2">
+                <Input placeholder="Nouvelle catégorie..." value={newCategoryName} onChange={(e) => setNewCategoryName(e.target.value)} />
+                <Button onClick={handleAddCategory}><Plus className="mr-2 h-4 w-4" /> Ajouter</Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-          {Object.entries(ingredientsByCategory).map(([category, ingredients]) => (
-            <Card key={category} className="shadow-lg">
-              <CardHeader>
+        <Card className="shadow-lg">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><Dices className="text-accent" /> La flemme de cuisiner ?</CardTitle>
+            <CardDescription>Cliquez sur le bouton pour choisir un plat rapide au hasard.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button onClick={handleLuckyChoice} className="w-full">
+              <Dices className="mr-2 h-4 w-4" /> Lance ta chance
+            </Button>
+          </CardContent>
+        </Card>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {Object.entries(ingredientsByCategory).map(([category, ingredientsList]) => (
+            <Card key={category} className="shadow-lg flex flex-col">
+              <CardHeader className="flex-row items-center justify-between">
                 <CardTitle>{category}</CardTitle>
+                <Button variant="outline" size="icon" onClick={() => setAddingToCategory(category)}>
+                  <Plus className="h-4 w-4" />
+                  <span className="sr-only">Ajouter un ingrédient à {category}</span>
+                </Button>
               </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  {ingredients.map((ingredient) => (
-                    <li key={ingredient.name} className="flex items-center justify-between p-2 rounded-md bg-secondary">
-                      <div>
-                        <span className="font-medium">{ingredient.name}</span>
-                        <span className="text-sm text-muted-foreground ml-2">({ingredient.price.toFixed(0)} DA / {ingredient.unit})</span>
-                      </div>
-                      <Button size="icon" variant="outline" className="h-8 w-8" onClick={() => handleAddToCart(ingredient)}>
-                        <Plus className="h-4 w-4" />
-                        <span className="sr-only">Ajouter {ingredient.name}</span>
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
+              <CardContent className="flex-grow">
+                {ingredientsList.length > 0 ? (
+                  <ul className="space-y-2">
+                    {ingredientsList.map((ingredient) => (
+                      <li key={ingredient.name} className="flex items-center justify-between p-2 rounded-md hover:bg-secondary/50">
+                        <div>
+                          <span className="font-medium">{ingredient.name}</span>
+                          <span className="text-sm text-muted-foreground ml-2">({ingredient.price.toFixed(2)} DT / {ingredient.unit})</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setEditingIngredient(ingredient)}>
+                            <Pencil className="h-4 w-4" />
+                            <span className="sr-only">Modifier {ingredient.name}</span>
+                          </Button>
+                          <Button size="icon" variant="outline" className="h-8 w-8" onClick={() => handleAddToCart(ingredient)}>
+                            <Plus className="h-4 w-4" />
+                            <span className="sr-only">Ajouter {ingredient.name}</span>
+                          </Button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center pt-4">Aucun ingrédient dans cette catégorie.</p>
+                )}
               </CardContent>
             </Card>
           ))}
@@ -323,7 +444,72 @@ export default function Home() {
             <AlertDialogAction onClick={() => setLuckyChoice(null)}>Génial !</AlertDialogAction>
         </AlertDialogContent>
       </AlertDialog>
-
+      
+      {/* Edit Ingredient Dialog */}
+      <Dialog open={!!editingIngredient} onOpenChange={(open) => !open && setEditingIngredient(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Modifier l'ingrédient</DialogTitle>
+            <DialogDescription>Changez les détails de votre ingrédient ici.</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-name" className="text-right">Nom</Label>
+              <Input id="edit-name" value={editFormState.name} onChange={(e) => setEditFormState({...editFormState, name: e.target.value})} className="col-span-3" />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-price" className="text-right">Prix (DT)</Label>
+              <Input id="edit-price" type="number" value={editFormState.price} onChange={(e) => setEditFormState({...editFormState, price: parseFloat(e.target.value) || 0})} className="col-span-3" />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-unit" className="text-right">Unité</Label>
+              <Input id="edit-unit" value={editFormState.unit} onChange={(e) => setEditFormState({...editFormState, unit: e.target.value})} className="col-span-3" />
+            </div>
+          </div>
+          <DialogFooter className="sm:justify-between">
+            <Button type="button" variant="destructive" onClick={handleDeleteIngredient}>
+                <Trash2 className="mr-2 h-4 w-4" /> Supprimer
+            </Button>
+            <div className="flex gap-2">
+              <DialogClose asChild>
+                <Button type="button" variant="secondary">Annuler</Button>
+              </DialogClose>
+              <Button type="button" onClick={handleSaveEditedIngredient}>Enregistrer</Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Add Ingredient Dialog */}
+      <Dialog open={!!addingToCategory} onOpenChange={(open) => !open && setAddingToCategory(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Ajouter un ingrédient à "{addingToCategory}"</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="add-name" className="text-right">Nom</Label>
+              <Input id="add-name" value={addFormState.name} onChange={(e) => setAddFormState({...addFormState, name: e.target.value})} className="col-span-3" />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="add-price" className="text-right">Prix (DT)</Label>
+              <Input id="add-price" type="number" value={addFormState.price} onChange={(e) => setAddFormState({...addFormState, price: parseFloat(e.target.value) || 0})} className="col-span-3" />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="add-unit" className="text-right">Unité</Label>
+              <Input id="add-unit" value={addFormState.unit} onChange={(e) => setAddFormState({...addFormState, unit: e.target.value})} className="col-span-3" />
+            </div>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" variant="secondary">Annuler</Button>
+            </DialogClose>
+            <Button type="button" onClick={handleSaveNewIngredient}>Ajouter</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
+    
