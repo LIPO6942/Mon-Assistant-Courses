@@ -4,23 +4,14 @@
  * @fileOverview An AI flow to suggest a world recipe.
  *
  * - suggestRecipe - A function that suggests a recipe.
- * - SuggestRecipeOutput - The return type for the suggestRecipe function.
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'zod';
+import { 
+  SuggestRecipeOutputSchema,
+  type SuggestRecipeOutput
+} from '@/ai/types';
 
-const SuggestRecipeOutputSchema = z.object({
-  title: z.string().describe("The name of the recipe."),
-  description: z.string().describe("A short, enticing description of the dish."),
-  country: z.string().describe("The country of origin of the recipe."),
-  ingredients: z.array(z.object({
-    name: z.string().describe("The name of the ingredient."),
-    quantity: z.number().describe("The numeric quantity of the ingredient."),
-    unit: z.string().describe("The unit of measurement (e.g., 'g', 'ml', 'pcs').")
-  })).describe("The array of ingredients for the recipe.")
-});
-export type SuggestRecipeOutput = z.infer<typeof SuggestRecipeOutputSchema>;
 
 export async function suggestRecipe(): Promise<SuggestRecipeOutput> {
   return suggestRecipeFlow();

@@ -26,8 +26,12 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { ChefHat, ShoppingCart, Sparkles, Plus, Trash2, Loader2, Minus, Tag } from 'lucide-react';
-import { generateShoppingList, GenerateShoppingListOutput } from '@/ai/flows/generate-list-flow';
-import { suggestRecipe, SuggestRecipeOutput } from '@/ai/flows/suggest-recipe-flow';
+
+import { generateShoppingList } from '@/ai/flows/generate-list-flow';
+import { suggestRecipe } from '@/ai/flows/suggest-recipe-flow';
+import { categories } from '@/ai/types';
+import type { SuggestRecipeOutput } from '@/ai/types';
+
 
 type ShoppingItem = {
   name: string;
@@ -48,18 +52,6 @@ const initialShoppingList: ShoppingItem[] = [
     { name: 'Jus d\'orange', category: 'Boissons' },
     { name: 'Liquide vaisselle', category: 'Maison' },
 ];
-
-const categories = [
-  'Fruits et Légumes',
-  'Viandes et Poissons',
-  'Produits Laitiers',
-  'Boulangerie',
-  'Épicerie',
-  'Boissons',
-  'Maison',
-  'Autre',
-] as const;
-
 
 export default function Home() {
   const [shoppingList, setShoppingList] = useState<ShoppingItem[]>([]);
