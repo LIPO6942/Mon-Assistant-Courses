@@ -68,78 +68,62 @@ const initialCategories = [...new Set(initialIngredients.map(i => i.category))];
 const lazyOptions = ['Maqloub', 'Pizza', 'Burrito', 'Tacos Mexicain', 'Tacos Français', 'Baguette Farcie'];
 
 export default function Home() {
+  // State
   const [ingredients, setIngredients] = useState<Ingredient[]>(initialIngredients);
   const [categories, setCategories] = useState<string[]>(initialCategories);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [budget, setBudget] = useState<number>(0);
-  
+  const [newBudgetValue, setNewBudgetValue] = useState<string>('');
   const [hydrated, setHydrated] = useState(false);
-
-  // Load state from localStorage on initial client-side render
-  useEffect(() => {
-    try {
-      const savedIngredients = localStorage.getItem('kitchen-ingredients');
-      const savedCategories = localStorage.getItem('kitchen-categories');
-      const savedCart = localStorage.getItem('kitchen-cart');
-      const savedBudget = localStorage.getItem('kitchen-budget');
-      
-      if (savedIngredients) setIngredients(JSON.parse(savedIngredients));
-      if (savedCategories) setCategories(JSON.parse(savedCategories));
-      if (savedCart) setCart(JSON.parse(savedCart));
-      if (savedBudget) setBudget(JSON.parse(savedBudget));
-      
-    } catch (error) {
-      console.error("Failed to load data from localStorage", error);
-    } finally {
-      setHydrated(true);
-    }
-  }, []);
-
-  // Save state to localStorage whenever it changes
-  useEffect(() => {
-    if (hydrated) {
-      localStorage.setItem('kitchen-ingredients', JSON.stringify(ingredients));
-    }
-  }, [ingredients, hydrated]);
-
-  useEffect(() => {
-    if (hydrated) {
-      localStorage.setItem('kitchen-categories', JSON.stringify(categories));
-    }
-  }, [categories, hydrated]);
-
-  useEffect(() => {
-    if (hydrated) {
-      localStorage.setItem('kitchen-cart', JSON.stringify(cart));
-    }
-  }, [cart, hydrated]);
-
-  useEffect(() => {
-    if (hydrated) {
-      localStorage.setItem('kitchen-budget', JSON.stringify(budget));
-    }
-  }, [budget, hydrated]);
-
+  
   const [suggestedRecipe, setSuggestedRecipe] = useState<SuggestRecipeOutput | null>(null);
   const [isRecipeLoading, setIsRecipeLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
   
-  // State for the lucky choice feature
   const [luckyChoice, setLuckyChoice] = useState<string | null>(null);
   const [isLuckyDialogOpen, setIsLuckyDialogOpen] = useState(false);
   const [displayChoice, setDisplayChoice] = useState<string>('');
   const [isSpinning, setIsSpinning] = useState(false);
 
-  // New state for management
   const [searchTerm, setSearchTerm] = useState('');
   const [newCategoryName, setNewCategoryName] = useState('');
-  const [editingIngredient, setEditingIngredient] = useState<Ingredient | null>(null);
-  const [addingToCategory, setAddingToCategory] = useState<string | null>(null);
-  const [newBudgetValue, setNewBudgetValue] = useState<string>('');
   
-  // State for modal forms
+  const [editingIngredient, setEditingIngredient] = useState<Ingredient | null>(null);
   const [editFormState, setEditFormState] = useState({ name: '', price: 0, unit: '' });
+  
+  const [addingToCategory, setAddingToCategory] = useState<string | null>(null);
   const [addFormState, setAddFormState] = useState({ name: '', price: 0, unit: '' });
+
+  // Effects for LocalStorage Persistence
+  useEffect(() => {
+    try {
+      const savedIngredients = localStorage.getItem('kitchen-ingredients');
+      if (savedIngredients) setIngredients(JSON.parse(savedIngredients));
+      
+      const savedCategories = localStorage.getItem('kitchen-categories');
+      if (savedCategories) setCategories(JSON.parse(savedCategories));
+
+      const savedCart = localStorage.getItem('kitchen-cart');
+      if (savedCart) setCart(JSON.parse(savedCart));
+
+      const savedBudget = localStorage.getItem('kitchen-budget');
+      if (savedBudget) setBudget(JSON.parse(savedBudget));
+
+    } catch (error) {
+      console.error("Failed to parse data from localStorage", error);
+    } finally {
+      setHydrated(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (hydrated) {
+      localStorage.setItem('kitchen-ingredients', JSON.stringify(ingredients));
+      localStorage.setItem('kitchen-categories', JSON.stringify(categories));
+      localStorage.setItem('kitchen-cart', JSON.stringify(cart));
+      localStorage.setItem('kitchen-budget', JSON.stringify(budget));
+    }
+  }, [ingredients, categories, cart, budget, hydrated]);
 
   useEffect(() => {
     if (editingIngredient) {
@@ -151,6 +135,7 @@ export default function Home() {
     }
   }, [editingIngredient]);
 
+  // Memoized calculations
   const ingredientsByCategory = useMemo(() => {
     const filtered = ingredients.filter(ingredient =>
       ingredient.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -171,7 +156,6 @@ export default function Home() {
       }
     });
     
-    // Show only categories that have results when searching
     if (searchTerm.trim() !== '') {
         Object.keys(grouped).forEach(cat => {
             if(grouped[cat].length === 0) {
@@ -183,6 +167,7 @@ export default function Home() {
     return grouped;
   }, [ingredients, searchTerm, categories]);
 
+  // Handler Functions
   const handleAddCategory = () => {
     const trimmedName = newCategoryName.trim();
     if (trimmedName && !categories.includes(trimmedName)) {
@@ -199,19 +184,18 @@ export default function Home() {
     };
     setIngredients(prev => [...prev, newIngredient]);
     setAddingToCategory(null);
-    setAddFormState({ name: '', price: 0, unit: '' }); // Reset form
+    setAddFormState({ name: '', price: 0, unit: '' });
   };
 
   const handleSaveEditedIngredient = () => {
     if (!editingIngredient) return;
 
+    const originalName = editingIngredient.name;
     const updatedIngredient = {
       ...editingIngredient,
       ...editFormState,
     };
     
-    const originalName = editingIngredient.name;
-
     setIngredients(prev => prev.map(ing => (ing.name === originalName ? updatedIngredient : ing)));
     setCart(prev => prev.map(item => (item.name === originalName ? { ...updatedIngredient, quantity: item.quantity } : item)));
     setEditingIngredient(null);
@@ -236,18 +220,18 @@ export default function Home() {
     });
   };
 
+  const handleRemoveFromCart = (name: string) => {
+    setCart((currentCart) => currentCart.filter((item) => item.name !== name));
+  };
+
   const handleQuantityChange = (name: string, quantity: number) => {
     if (quantity <= 0) {
       handleRemoveFromCart(name);
-      return;
+    } else {
+      setCart((currentCart) =>
+        currentCart.map((item) => (item.name === name ? { ...item, quantity } : item))
+      );
     }
-    setCart((currentCart) =>
-      currentCart.map((item) => (item.name === name ? { ...item, quantity } : item))
-    );
-  };
-
-  const handleRemoveFromCart = (name: string) => {
-    setCart((currentCart) => currentCart.filter((item) => item.name !== name));
   };
   
   const handleClearCart = () => {
@@ -293,7 +277,7 @@ export default function Home() {
       });
       return newCart;
     });
-    setSuggestedRecipe(null); // Clear suggestion after adding
+    setSuggestedRecipe(null);
   };
 
   const handleLuckyChoice = () => {
@@ -301,7 +285,7 @@ export default function Home() {
     setIsSpinning(true);
     setLuckyChoice(null);
 
-    const spinDuration = 3000; // 3 seconds for suspense
+    const spinDuration = 3000;
     const spinInterval = 100;
 
     const intervalId = setInterval(() => {
@@ -320,14 +304,14 @@ export default function Home() {
   };
   
   const handleSetBudget = () => {
-    const newBudget = parseFloat(newBudgetValue);
-    if (!isNaN(newBudget) && newBudget >= 0) {
-      setBudget(newBudget);
+    const newBudgetVal = parseFloat(newBudgetValue);
+    if (!isNaN(newBudgetVal) && newBudgetVal >= 0) {
+      setBudget(newBudgetVal);
       setNewBudgetValue('');
     }
   };
 
-
+  // Render-time Calculations
   const total = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
   const cartItemCount = cart.reduce((acc, item) => acc + item.quantity, 0);
   const remainingBudget = budget - total;
@@ -457,7 +441,7 @@ export default function Home() {
                     <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                             <span className="text-muted-foreground">Budget</span>
-                            <span>{budget.toFixed(2)} DT</span>
+                            <span>{budget > 0 ? budget.toFixed(2) : '0.00'} DT</span>
                         </div>
                         <div className="flex justify-between">
                             <span className="text-muted-foreground">Dépenses</span>
@@ -586,7 +570,6 @@ export default function Home() {
         </AlertDialogContent>
       </AlertDialog>
       
-      {/* Edit Ingredient Dialog */}
       <Dialog open={!!editingIngredient} onOpenChange={(open) => !open && setEditingIngredient(null)}>
         <DialogContent>
           <DialogHeader>
@@ -621,7 +604,6 @@ export default function Home() {
         </DialogContent>
       </Dialog>
       
-      {/* Add Ingredient Dialog */}
       <Dialog open={!!addingToCategory} onOpenChange={(open) => !open && setAddingToCategory(null)}>
         <DialogContent>
           <DialogHeader>
