@@ -23,9 +23,8 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { ChefHat, ShoppingCart, Sparkles, Dices, Plus, Trash2, Loader2, Minus, Tag } from 'lucide-react';
+import { ChefHat, ShoppingCart, Sparkles, Plus, Trash2, Loader2, Minus, Tag } from 'lucide-react';
 import { generateShoppingList, GenerateShoppingListOutput } from '@/ai/flows/generate-list-flow';
 import { suggestRecipe, SuggestRecipeOutput } from '@/ai/flows/suggest-recipe-flow';
 
@@ -43,10 +42,10 @@ const initialShoppingList: ShoppingItem[] = [
     { name: 'Pommes', category: 'Fruits et Légumes' },
     { name: 'Poulet', category: 'Viandes et Poissons' },
     { name: 'Lait', category: 'Produits Laitiers' },
-    { name: 'Pain', category: 'Boulangerie' },
-    { name: 'Pâtes', category: 'Épicerie' },
+    { name: 'Pain de campagne', category: 'Boulangerie' },
+    { name: 'Pâtes complètes', category: 'Épicerie' },
     { name: 'Jus d\'orange', category: 'Boissons' },
-    { name: 'Savon', category: 'Maison' },
+    { name: 'Liquide vaisselle', category: 'Maison' },
 ];
 
 const categories = [
@@ -80,7 +79,7 @@ export default function Home() {
       if (savedCart) setCart(JSON.parse(savedCart));
       if (savedBudget) setBudget(JSON.parse(savedBudget));
     } catch (error) {
-      console.error("Failed to load from localStorage", error);
+      console.error("Échec du chargement depuis localStorage", error);
     }
   }, []);
 
@@ -88,7 +87,7 @@ export default function Home() {
     try {
       localStorage.setItem('shoppingList', JSON.stringify(shoppingList));
     } catch (error) {
-      console.error("Failed to save shoppingList to localStorage", error);
+      console.error("Échec de la sauvegarde de shoppingList dans localStorage", error);
     }
   }, [shoppingList]);
 
@@ -96,7 +95,7 @@ export default function Home() {
     try {
       localStorage.setItem('cart', JSON.stringify(cart));
     } catch (error) {
-      console.error("Failed to save cart to localStorage", error);
+      console.error("Échec de la sauvegarde du panier dans localStorage", error);
     }
   }, [cart]);
 
@@ -104,10 +103,9 @@ export default function Home() {
     try {
       localStorage.setItem('budget', JSON.stringify(budget));
     } catch (error) {
-      console.error("Failed to save budget to localStorage", error);
+      console.error("Échec de la sauvegarde du budget dans localStorage", error);
     }
   }, [budget]);
-
 
   const handleAddToCart = (item: ShoppingItem) => {
     setCart(prevCart => {
@@ -151,7 +149,7 @@ export default function Home() {
       const recipe = await suggestRecipe();
       setSuggestedRecipe(recipe);
     } catch (error) {
-      console.error("Error suggesting recipe:", error);
+      console.error("Erreur lors de la suggestion de recette :", error);
     } finally {
       setIsSuggesting(false);
     }
@@ -187,7 +185,7 @@ export default function Home() {
       });
       setPrompt('');
     } catch (error) {
-      console.error("Error generating list:", error);
+      console.error("Erreur lors de la génération de la liste :", error);
     } finally {
       setIsGenerating(false);
     }
@@ -249,11 +247,12 @@ export default function Home() {
                     <AlertDialogHeader>
                       <AlertDialogTitle>Besoin d'inspiration ?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Cliquez sur le bouton Surprends-moi pour obtenir une nouvelle suggestion de recette.
+                        Cliquez sur le bouton pour obtenir une suggestion de recette aléatoire.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Fermer</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleSuggestRecipe}>Surprends-moi</AlertDialogAction>
                     </AlertDialogFooter>
                   </>
                 )}
@@ -396,3 +395,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
