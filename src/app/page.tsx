@@ -23,6 +23,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger
 } from "@/components/ui/alert-dialog"
 import { ChefHat, ShoppingCart, Sparkles, Plus, Trash2, Loader2, Minus, Tag } from 'lucide-react';
 import { generateShoppingList, GenerateShoppingListOutput } from '@/ai/flows/generate-list-flow';
@@ -61,7 +62,7 @@ const categories = [
 
 
 export default function Home() {
-  const [shoppingList, setShoppingList] = useState<ShoppingItem[]>(initialShoppingList);
+  const [shoppingList, setShoppingList] = useState<ShoppingItem[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [budget, setBudget] = useState<number>(100);
   const [prompt, setPrompt] = useState('');
@@ -75,11 +76,16 @@ export default function Home() {
       const savedCart = localStorage.getItem('cart');
       const savedBudget = localStorage.getItem('budget');
 
-      if (savedList) setShoppingList(JSON.parse(savedList));
+      if (savedList) {
+        setShoppingList(JSON.parse(savedList));
+      } else {
+        setShoppingList(initialShoppingList);
+      }
       if (savedCart) setCart(JSON.parse(savedCart));
       if (savedBudget) setBudget(JSON.parse(savedBudget));
     } catch (error) {
       console.error("Échec du chargement depuis localStorage", error);
+      setShoppingList(initialShoppingList);
     }
   }, []);
 
@@ -395,5 +401,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
