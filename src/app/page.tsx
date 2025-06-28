@@ -31,8 +31,9 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ChefHat, ShoppingCart, Sparkles, Trash2, Plus, Minus, Loader2, AlertCircle, UtensilsCrossed, Dices, Pencil, Search } from 'lucide-react';
+import { ChefHat, ShoppingCart, Sparkles, Trash2, Plus, Minus, Loader2, AlertCircle, UtensilsCrossed, Dices, Pencil, Search, Wallet } from 'lucide-react';
 import { suggestRecipe, type SuggestRecipeOutput } from '@/ai/flows/suggest-recipe-flow';
+import { cn } from '@/lib/utils';
 
 // Data structures
 type Ingredient = {
@@ -69,6 +70,7 @@ export default function Home() {
   const [ingredients, setIngredients] = useState<Ingredient[]>(initialIngredients);
   const [categories, setCategories] = useState<string[]>(initialCategories);
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [budget, setBudget] = useState<number>(0);
   
   const [hydrated, setHydrated] = useState(false);
 
@@ -78,10 +80,12 @@ export default function Home() {
       const savedIngredients = localStorage.getItem('kitchen-ingredients');
       const savedCategories = localStorage.getItem('kitchen-categories');
       const savedCart = localStorage.getItem('kitchen-cart');
+      const savedBudget = localStorage.getItem('kitchen-budget');
       
       if (savedIngredients) setIngredients(JSON.parse(savedIngredients));
       if (savedCategories) setCategories(JSON.parse(savedCategories));
       if (savedCart) setCart(JSON.parse(savedCart));
+      if (savedBudget) setBudget(JSON.parse(savedBudget));
       
     } catch (error) {
       console.error("Failed to load data from localStorage", error);
@@ -109,6 +113,12 @@ export default function Home() {
     }
   }, [cart, hydrated]);
 
+  useEffect(() => {
+    if (hydrated) {
+      localStorage.setItem('kitchen-budget', JSON.stringify(budget));
+    }
+  }, [budget, hydrated]);
+
   const [suggestedRecipe, setSuggestedRecipe] = useState<SuggestRecipeOutput | null>(null);
   const [isRecipeLoading, setIsRecipeLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
@@ -124,6 +134,7 @@ export default function Home() {
   const [newCategoryName, setNewCategoryName] = useState('');
   const [editingIngredient, setEditingIngredient] = useState<Ingredient | null>(null);
   const [addingToCategory, setAddingToCategory] = useState<string | null>(null);
+  const [newBudgetValue, setNewBudgetValue] = useState<string>('');
   
   // State for modal forms
   const [editFormState, setEditFormState] = useState({ name: '', price: 0, unit: '' });
@@ -306,10 +317,19 @@ export default function Home() {
         setIsSpinning(false);
     }, spinDuration);
   };
+  
+  const handleSetBudget = () => {
+    const newBudget = parseFloat(newBudgetValue);
+    if (!isNaN(newBudget) && newBudget >= 0) {
+      setBudget(newBudget);
+      setNewBudgetValue('');
+    }
+  };
 
 
   const total = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
   const cartItemCount = cart.reduce((acc, item) => acc + item.quantity, 0);
+  const remainingBudget = budget - total;
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -432,6 +452,49 @@ export default function Home() {
       </header>
       
       <main className="container py-8 space-y-8">
+        <Card className="shadow-lg">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <Wallet className="text-primary" /> Mon Budget
+                </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <div className="flex flex-col sm:flex-row gap-4 items-end">
+                    <div className="flex-grow space-y-2">
+                        <Label htmlFor="budget-input">Nouveau budget (DT)</Label>
+                        <div className="flex gap-2">
+                            <Input
+                                id="budget-input"
+                                type="number"
+                                placeholder="Ex: 100"
+                                value={newBudgetValue}
+                                onChange={(e) => setNewBudgetValue(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleSetBudget()}
+                            />
+                            <Button onClick={handleSetBudget}>Définir</Button>
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-4 text-center w-full sm:w-auto pt-4 sm:pt-0">
+                        <div>
+                            <p className="text-sm text-muted-foreground">Budget</p>
+                            <p className="font-bold text-lg">{budget.toFixed(2)} DT</p>
+                        </div>
+                        <div>
+                            <p className="text-sm text-muted-foreground">Dépenses</p>
+                            <p className="font-bold text-lg">{total.toFixed(2)} DT</p>
+                        </div>
+                        <div>
+                            <p className="text-sm text-muted-foreground">Restant</p>
+                            <p className={cn(
+                                "font-bold text-lg",
+                                remainingBudget < 0 ? "text-destructive" : "text-accent"
+                            )}>{remainingBudget.toFixed(2)} DT</p>
+                        </div>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+
         <Card className="shadow-lg">
           <CardHeader>
             <CardTitle>Gérer mes produits</CardTitle>
