@@ -2,24 +2,42 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardFooter,
-} from '@/components/ui/card';
-import { ChefHat, ShoppingCart, Sparkles, Trash2, Plus, Minus, Loader2, AlertCircle, UtensilsCrossed } from 'lucide-react';
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+  SheetFooter
+} from "@/components/ui/sheet";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+} from "@/components/ui/alert-dialog"
+
+import { ChefHat, ShoppingCart, Sparkles, Trash2, Plus, Minus, Loader2, AlertCircle, UtensilsCrossed, Dices } from 'lucide-react';
 import { suggestRecipe, type SuggestRecipeOutput } from '@/ai/flows/suggest-recipe-flow';
-import type { Metadata } from 'next';
 
 // Data structures
 type Ingredient = {
   name: string;
   price: number;
   unit: string;
-  category: string;
+  category: 'Légumes' | 'Viandes' | 'Épicerie' | 'Produits Laitiers' | 'Boulangerie';
 };
 
 type CartItem = Ingredient & {
@@ -28,25 +46,39 @@ type CartItem = Ingredient & {
 
 // "Database" of available ingredients
 const availableIngredients: Ingredient[] = [
-    { name: 'Poulet', price: 9.50, unit: 'kg', category: 'Viandes' },
-    { name: 'Tomates', price: 2.50, unit: 'kg', category: 'Légumes' },
-    { name: 'Oignons', price: 1.80, unit: 'kg', category: 'Légumes' },
-    { name: 'Ail', price: 15.00, unit: 'kg', category: 'Légumes' },
-    { name: 'Riz Basmati', price: 4.00, unit: 'kg', category: 'Épicerie' },
-    { name: 'Lentilles corail', price: 3.50, unit: 'kg', category: 'Épicerie' },
-    { name: 'Lait de coco', price: 2.80, unit: 'litre', category: 'Épicerie' },
-    { name: 'Pâte de curry', price: 4.50, unit: 'pot', category: 'Épicerie' },
-    { name: 'Huile d\'olive', price: 8.00, unit: 'litre', category: 'Épicerie' },
-    { name: 'Crème fraîche', price: 2.20, unit: 'litre', category: 'Produits Laitiers' },
-    { name: 'Fromage râpé', price: 12.00, unit: 'kg', category: 'Produits Laitiers' },
-    { name: 'Pain', price: 1.10, unit: 'pièce', category: 'Boulangerie' },
+    { name: 'Poulet', price: 1200, unit: 'kg', category: 'Viandes' },
+    { name: 'Viande hachée', price: 1800, unit: 'kg', category: 'Viandes' },
+    { name: 'Tomates', price: 150, unit: 'kg', category: 'Légumes' },
+    { name: 'Oignons', price: 80, unit: 'kg', category: 'Légumes' },
+    { name: 'Ail', price: 500, unit: 'kg', category: 'Légumes' },
+    { name: 'Riz', price: 200, unit: 'kg', category: 'Épicerie' },
+    { name: 'Pâtes', price: 120, unit: 'kg', category: 'Épicerie' },
+    { name: 'Huile d\'olive', price: 950, unit: 'litre', category: 'Épicerie' },
+    { name: 'Fromage', price: 1500, unit: 'kg', category: 'Produits Laitiers' },
+    { name: 'Yaourt', price: 50, unit: 'pièce', category: 'Produits Laitiers' },
+    { name: 'Pain', price: 20, unit: 'pièce', category: 'Boulangerie' },
+    { name: 'Baguette', price: 15, unit: 'pièce', category: 'Boulangerie' },
 ];
+
+const lazyOptions = ['Maqloub', 'Pizza', 'Burrito', 'Tacos Mexicain', 'Tacos Français', 'Baguette Farcie'];
+
+// Group ingredients by category
+const ingredientsByCategory = availableIngredients.reduce((acc, ingredient) => {
+  const { category } = ingredient;
+  if (!acc[category]) {
+    acc[category] = [];
+  }
+  acc[category].push(ingredient);
+  return acc;
+}, {} as Record<Ingredient['category'], Ingredient[]>);
+
 
 export default function Home() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [suggestedRecipe, setSuggestedRecipe] = useState<SuggestRecipeOutput | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isRecipeLoading, setIsRecipeLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
+  const [luckyChoice, setLuckyChoice] = useState<string | null>(null);
 
   const handleAddToCart = (ingredient: Ingredient) => {
     setCart((currentCart) => {
@@ -75,7 +107,7 @@ export default function Home() {
   };
 
   const handleSuggestRecipe = async () => {
-    setIsLoading(true);
+    setIsRecipeLoading(true);
     setAiError(null);
     setSuggestedRecipe(null);
     try {
@@ -86,34 +118,28 @@ export default function Home() {
       const errorMessage = error instanceof Error ? error.message : String(error);
       setAiError(`Une erreur est survenue lors de la suggestion. (Détail: ${errorMessage})`);
     } finally {
-      setIsLoading(false);
+      setIsRecipeLoading(false);
     }
   };
 
   const addRecipeIngredientsToCart = () => {
     if (!suggestedRecipe) return;
     
-    // Using a functional update to ensure we have the latest cart state
     setCart(currentCart => {
       let newCart = [...currentCart];
-      
       suggestedRecipe.ingredients.forEach(recipeIngredient => {
-        // Find a matching ingredient in our "database" to get price etc.
         const dbIngredient = availableIngredients.find(db => db.name.toLowerCase() === recipeIngredient.name.toLowerCase());
         
-        // Only add if it exists in our database
         if (dbIngredient) {
           const existingCartItem = newCart.find(item => item.name === dbIngredient.name);
           if (existingCartItem) {
-            // If item exists, just increase quantity (assuming 1 unit per recipe 'quantity')
             newCart = newCart.map(item => 
               item.name === dbIngredient.name 
-                ? { ...item, quantity: item.quantity + 1 } // Simple increment
+                ? { ...item, quantity: item.quantity + 1 }
                 : item
             );
           } else {
-            // Add new item to cart
-            newCart.push({ ...dbIngredient, quantity: 1 }); // Default to 1 unit
+            newCart.push({ ...dbIngredient, quantity: 1 });
           }
         }
       });
@@ -122,120 +148,182 @@ export default function Home() {
     setSuggestedRecipe(null); // Clear suggestion after adding
   };
 
+  const handleLuckyChoice = () => {
+    const randomIndex = Math.floor(Math.random() * lazyOptions.length);
+    setLuckyChoice(lazyOptions[randomIndex]);
+  };
+
   const total = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  const cartItemCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
   return (
-    <main className="flex flex-col lg:flex-row gap-8 justify-center min-h-screen p-4 sm:p-8">
-      {/* Left Column: Ingredients & Recipe */}
-      <div className="w-full lg:w-1/2 space-y-8">
-        <header className="text-center">
-          <h1 className="text-4xl font-bold tracking-tight lg:text-5xl text-primary-foreground bg-primary p-4 rounded-lg shadow-md flex items-center justify-center gap-3">
-            <ChefHat size={40} /> Mon Assistant Cuisine
-          </h1>
-        </header>
-
-        <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Sparkles className="text-accent" /> Surprends-moi !</CardTitle>
-            <CardDescription>Cliquez sur le bouton pour obtenir une idée de recette aléatoire du monde entier.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={handleSuggestRecipe} disabled={isLoading} className="w-full">
-              {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-              Suggérer une recette
-            </Button>
-            {aiError && (
-              <div className="mt-4 p-3 rounded-md border border-destructive/50 bg-destructive/10 text-destructive text-sm flex items-start gap-3">
-                <AlertCircle className="h-5 w-5 flex-shrink-0" />
-                <p>{aiError}</p>
-              </div>
-            )}
-          </CardContent>
-          {suggestedRecipe && (
-            <CardFooter className="flex flex-col items-start gap-4 border-t pt-6">
-               <div className="w-full">
-                <h3 className="text-xl font-bold text-primary flex items-center gap-2">
-                  <UtensilsCrossed /> {suggestedRecipe.title} ({suggestedRecipe.country})
-                </h3>
-                <p className="text-muted-foreground mt-1">{suggestedRecipe.description}</p>
-              </div>
-              <div className="w-full">
-                <h4 className="font-semibold mb-2">Ingrédients :</h4>
-                <ul className="list-disc list-inside text-sm space-y-1">
-                  {suggestedRecipe.ingredients.map(ing => <li key={ing.name}>{ing.name} ({ing.quantity} {ing.unit})</li>)}
-                </ul>
-              </div>
-              <Button onClick={addRecipeIngredientsToCart} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
-                <Plus className="mr-2 h-4 w-4" /> Ajouter au panier
+    <div className="min-h-screen bg-background text-foreground">
+      <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container flex h-16 items-center space-x-4 sm:justify-between sm:space-x-0">
+          <div className="flex gap-2 items-center">
+             <ChefHat className="h-6 w-6 text-primary" />
+             <h1 className="text-2xl font-bold tracking-tight text-primary-foreground">Mon Assistant Cuisine</h1>
+          </div>
+          <div className="flex flex-1 items-center justify-end space-x-2">
+            <Dialog open={!!suggestedRecipe || isRecipeLoading} onOpenChange={(open) => !open && setSuggestedRecipe(null)}>
+              <Button variant="ghost" size="icon" onClick={handleSuggestRecipe} disabled={isRecipeLoading}>
+                <Sparkles className="h-5 w-5 text-accent" />
+                <span className="sr-only">Surprends-moi</span>
               </Button>
-            </CardFooter>
-          )}
-        </Card>
-        
-        <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle>Ingrédients disponibles</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-2">
-              {availableIngredients.map((ingredient) => (
-                <li key={ingredient.name} className="flex items-center justify-between p-2 rounded-md bg-secondary">
+              <DialogContent>
+                <DialogHeader>
+                  {isRecipeLoading ? (
+                    <div className="flex flex-col items-center justify-center p-8 gap-4">
+                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                      <DialogTitle>Recherche d'une recette...</DialogTitle>
+                      <DialogDescription>L'IA explore les saveurs du monde pour vous.</DialogDescription>
+                    </div>
+                  ) : suggestedRecipe ? (
+                    <>
+                      <DialogTitle className="flex items-center gap-2">
+                        <UtensilsCrossed /> {suggestedRecipe.title} ({suggestedRecipe.country})
+                      </DialogTitle>
+                      <DialogDescription>{suggestedRecipe.description}</DialogDescription>
+                    </>
+                  ) : null}
+                </DialogHeader>
+                {suggestedRecipe && (
                   <div>
-                    <span className="font-medium">{ingredient.name}</span>
-                    <span className="text-sm text-muted-foreground ml-2">({ingredient.price.toFixed(2)}€ / {ingredient.unit})</span>
+                    <h4 className="font-semibold mb-2">Ingrédients :</h4>
+                    <ul className="list-disc list-inside text-sm space-y-1 mb-4">
+                      {suggestedRecipe.ingredients.map(ing => <li key={ing.name}>{ing.name} ({ing.quantity} {ing.unit})</li>)}
+                    </ul>
+                    <DialogFooter>
+                      <DialogClose asChild>
+                         <Button type="button" variant="secondary">Fermer</Button>
+                      </DialogClose>
+                      <Button onClick={addRecipeIngredientsToCart} className="bg-accent hover:bg-accent/90 text-accent-foreground">
+                        <Plus className="mr-2 h-4 w-4" /> Ajouter au panier
+                      </Button>
+                    </DialogFooter>
                   </div>
-                  <Button size="sm" onClick={() => handleAddToCart(ingredient)}>
-                    <Plus className="h-4 w-4 mr-1" /> Ajouter
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-      </div>
+                )}
+                 {aiError && (
+                  <div className="mt-4 p-3 rounded-md border border-destructive/50 bg-destructive/10 text-destructive text-sm flex items-start gap-3">
+                    <AlertCircle className="h-5 w-5 flex-shrink-0" />
+                    <p>{aiError}</p>
+                  </div>
+                )}
+              </DialogContent>
+            </Dialog>
 
-      {/* Right Column: Shopping Cart */}
-      <div className="w-full lg:w-1/3">
-        <Card className="shadow-lg sticky top-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2"><ShoppingCart /> Mon Panier</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {cart.length === 0 ? (
-              <p className="text-muted-foreground text-center">Votre panier est vide.</p>
-            ) : (
-              <ul className="space-y-4">
-                {cart.map((item) => (
-                  <li key={item.name} className="flex items-center justify-between gap-2">
-                    <div className="flex-grow">
-                      <p className="font-semibold">{item.name}</p>
-                      <p className="text-sm text-muted-foreground">{(item.price * item.quantity).toFixed(2)}€</p>
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative">
+                  <ShoppingCart className="h-5 w-5" />
+                  {cartItemCount > 0 && (
+                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                      {cartItemCount}
+                    </span>
+                  )}
+                  <span className="sr-only">Ouvrir le panier</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent>
+                <SheetHeader>
+                  <SheetTitle>Mon Panier</SheetTitle>
+                </SheetHeader>
+                <div className="py-4">
+                  {cart.length === 0 ? (
+                    <p className="text-muted-foreground text-center">Votre panier est vide.</p>
+                  ) : (
+                    <ul className="space-y-4">
+                      {cart.map((item) => (
+                        <li key={item.name} className="flex items-center justify-between gap-2">
+                          <div className="flex-grow">
+                            <p className="font-semibold">{item.name}</p>
+                            <p className="text-sm text-muted-foreground">{(item.price * item.quantity).toFixed(0)} DA</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleQuantityChange(item.name, item.quantity - 1)}>
+                              <Minus className="h-4 w-4" />
+                            </Button>
+                            <span className="w-6 text-center">{item.quantity}</span>
+                            <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleQuantityChange(item.name, item.quantity + 1)}>
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleRemoveFromCart(item.name)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                {cart.length > 0 && (
+                  <SheetFooter>
+                    <div className="flex justify-between items-center font-bold text-lg w-full border-t pt-4">
+                      <span>Total</span>
+                      <span>{total.toFixed(0)} DA</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleQuantityChange(item.name, item.quantity - 1)}>
-                        <Minus className="h-4 w-4" />
-                      </Button>
-                      <span className="w-6 text-center">{item.quantity}</span>
-                       <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleQuantityChange(item.name, item.quantity + 1)}>
+                  </SheetFooter>
+                )}
+              </SheetContent>
+            </Sheet>
+          </div>
+        </div>
+      </header>
+      
+      <main className="container py-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="md:col-span-2 lg:col-span-3">
+             <Card className="shadow-lg">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2"><Dices className="text-accent" /> La flemme de cuisiner ?</CardTitle>
+                  <CardDescription>Cliquez sur le bouton pour choisir un plat rapide au hasard.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button onClick={handleLuckyChoice} className="w-full">
+                    <Dices className="mr-2 h-4 w-4" /> Lance ta chance
+                  </Button>
+                </CardContent>
+              </Card>
+          </div>
+
+          {Object.entries(ingredientsByCategory).map(([category, ingredients]) => (
+            <Card key={category} className="shadow-lg">
+              <CardHeader>
+                <CardTitle>{category}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2">
+                  {ingredients.map((ingredient) => (
+                    <li key={ingredient.name} className="flex items-center justify-between p-2 rounded-md bg-secondary">
+                      <div>
+                        <span className="font-medium">{ingredient.name}</span>
+                        <span className="text-sm text-muted-foreground ml-2">({ingredient.price.toFixed(0)} DA / {ingredient.unit})</span>
+                      </div>
+                      <Button size="icon" variant="outline" className="h-8 w-8" onClick={() => handleAddToCart(ingredient)}>
                         <Plus className="h-4 w-4" />
+                        <span className="sr-only">Ajouter {ingredient.name}</span>
                       </Button>
-                    </div>
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleRemoveFromCart(item.name)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-          {cart.length > 0 && (
-             <CardFooter className="flex justify-between items-center font-bold text-lg border-t pt-4">
-                <span>Total</span>
-                <span>{total.toFixed(2)}€</span>
-            </CardFooter>
-          )}
-        </Card>
-      </div>
-    </main>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </main>
+
+      <AlertDialog open={!!luckyChoice} onOpenChange={(open) => !open && setLuckyChoice(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Le sort en est jeté !</AlertDialogTitle>
+            <AlertDialogDescription>
+              Ce soir, vous mangerez : <span className="font-bold text-lg text-primary">{luckyChoice}</span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+            <AlertDialogAction onClick={() => setLuckyChoice(null)}>Génial !</AlertDialogAction>
+        </AlertDialogContent>
+      </AlertDialog>
+
+    </div>
   );
 }
