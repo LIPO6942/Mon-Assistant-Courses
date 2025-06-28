@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -63,6 +64,7 @@ export default function KitchenAssistantPage({ generateShoppingListAction, sugge
   const [isGenerating, setIsGenerating] = useState(false);
   const [suggestedRecipe, setSuggestedRecipe] = useState<SuggestRecipeOutput | null>(null);
   const [isSuggesting, setIsSuggesting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
   useEffect(() => {
     try {
@@ -77,8 +79,8 @@ export default function KitchenAssistantPage({ generateShoppingListAction, sugge
       }
       if (savedCart) setCart(JSON.parse(savedCart));
       if (savedBudget) setBudget(JSON.parse(savedBudget));
-    } catch (error) {
-      console.error("Échec du chargement depuis localStorage", error);
+    } catch (e) {
+      console.error("Échec du chargement depuis localStorage", e);
       setShoppingList(initialShoppingList);
     }
   }, []);
@@ -86,24 +88,24 @@ export default function KitchenAssistantPage({ generateShoppingListAction, sugge
   useEffect(() => {
     try {
       localStorage.setItem('shoppingList', JSON.stringify(shoppingList));
-    } catch (error) {
-      console.error("Échec de la sauvegarde de shoppingList dans localStorage", error);
+    } catch (e) {
+      console.error("Échec de la sauvegarde de shoppingList dans localStorage", e);
     }
   }, [shoppingList]);
 
   useEffect(() => {
     try {
       localStorage.setItem('cart', JSON.stringify(cart));
-    } catch (error) {
-      console.error("Échec de la sauvegarde du panier dans localStorage", error);
+    } catch (e) {
+      console.error("Échec de la sauvegarde du panier dans localStorage", e);
     }
   }, [cart]);
 
   useEffect(() => {
     try {
       localStorage.setItem('budget', JSON.stringify(budget));
-    } catch (error) {
-      console.error("Échec de la sauvegarde du budget dans localStorage", error);
+    } catch (e) {
+      console.error("Échec de la sauvegarde du budget dans localStorage", e);
     }
   }, [budget]);
 
@@ -145,11 +147,13 @@ export default function KitchenAssistantPage({ generateShoppingListAction, sugge
   const handleSuggestRecipe = async () => {
     setIsSuggesting(true);
     setSuggestedRecipe(null);
+    setError(null);
     try {
       const recipe = await suggestRecipeAction();
       setSuggestedRecipe(recipe);
-    } catch (error) {
-      console.error("Erreur lors de la suggestion de recette :", error);
+    } catch (e: any) {
+      console.error("Erreur lors de la suggestion de recette :", e);
+      setError(e.message || "Une erreur est survenue lors de la suggestion de recette.");
     } finally {
       setIsSuggesting(false);
     }
@@ -176,16 +180,20 @@ export default function KitchenAssistantPage({ generateShoppingListAction, sugge
   const handleGenerateList = async () => {
     if (!prompt) return;
     setIsGenerating(true);
+    setError(null);
     try {
       const result = await generateShoppingListAction({ prompt });
-      setShoppingList(prevList => {
-         const existingNames = new Set(prevList.map(item => item.name));
-         const uniqueNewItems = result.items.filter(item => !existingNames.has(item.name));
-         return [...prevList, ...uniqueNewItems];
-      });
+      if (result && result.items) {
+        setShoppingList(prevList => {
+           const existingNames = new Set(prevList.map(item => item.name));
+           const uniqueNewItems = result.items.filter(item => !existingNames.has(item.name));
+           return [...prevList, ...uniqueNewItems];
+        });
+      }
       setPrompt('');
-    } catch (error) {
-      console.error("Erreur lors de la génération de la liste :", error);
+    } catch (e: any) {
+      console.error("Erreur lors de la génération de la liste :", e);
+      setError(e.message || "Une erreur est survenue lors de la génération de la liste.");
     } finally {
       setIsGenerating(false);
     }
@@ -204,7 +212,7 @@ export default function KitchenAssistantPage({ generateShoppingListAction, sugge
           </div>
           <div className="flex flex-1 items-center justify-end space-x-2">
             
-            <AlertDialog>
+            <AlertDialog open={isSuggesting || !!suggestedRecipe || !!error} onOpenChange={(open) => { if (!open) { setSuggestedRecipe(null); setError(null); }}}>
               <AlertDialogTrigger asChild>
                 <Button variant="ghost" size="icon" onClick={handleSuggestRecipe}>
                   <Sparkles className="h-5 w-5 text-accent" />
@@ -217,6 +225,19 @@ export default function KitchenAssistantPage({ generateShoppingListAction, sugge
                      <Loader2 className="h-16 w-16 animate-spin text-primary" />
                      <p className="text-muted-foreground">Recherche d'une recette succulente...</p>
                   </div>
+                )}
+                {error && !isSuggesting && (
+                   <>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Erreur</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        {error}
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogAction onClick={() => setError(null)}>Fermer</AlertDialogAction>
+                    </AlertDialogFooter>
+                   </>
                 )}
                 {suggestedRecipe && !isSuggesting && (
                   <>
@@ -342,6 +363,7 @@ export default function KitchenAssistantPage({ generateShoppingListAction, sugge
                 onChange={(e) => setPrompt(e.target.value)}
                 placeholder="Ex: un gâteau au chocolat"
                 disabled={isGenerating}
+                onKeyDown={(e) => e.key === 'Enter' && handleGenerateList()}
               />
               <Button onClick={handleGenerateList} disabled={!prompt || isGenerating}>
                 {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
