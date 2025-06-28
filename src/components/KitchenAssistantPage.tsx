@@ -96,7 +96,8 @@ export default function KitchenAssistantPage({ generateShoppingListAction, sugge
   useEffect(() => {
     try {
       localStorage.setItem('cart', JSON.stringify(cart));
-    } catch (e) {
+    } catch (e)
+      {
       console.error("Échec de la sauvegarde du panier dans localStorage", e);
     }
   }, [cart]);
