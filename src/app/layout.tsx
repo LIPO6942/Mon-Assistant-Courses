@@ -10,8 +10,8 @@ const ptSans = PT_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Mon Assistant de Courses",
-  description: "Générez et gérez vos listes de courses facilement.",
+  title: "Mon Assistant Cuisine",
+  description: "Générez des recettes et gérez votre liste de courses.",
 };
 
 export default function RootLayout({
