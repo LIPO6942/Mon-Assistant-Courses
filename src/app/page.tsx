@@ -29,13 +29,12 @@ import { ChefHat, ShoppingCart, Sparkles, Plus, Trash2, Loader2, Minus, Tag } fr
 
 import { generateShoppingList } from '@/ai/flows/generate-list-flow';
 import { suggestRecipe } from '@/ai/flows/suggest-recipe-flow';
-import { categories } from '@/ai/types';
-import type { SuggestRecipeOutput } from '@/ai/types';
+import { categories, type SuggestRecipeOutput } from '@/ai/types';
 
 
 type ShoppingItem = {
   name: string;
-  category: string;
+  category: typeof categories[number];
 };
 
 type CartItem = ShoppingItem & {
@@ -83,9 +82,7 @@ export default function Home() {
 
   useEffect(() => {
     try {
-      if (shoppingList.length > 0) {
-        localStorage.setItem('shoppingList', JSON.stringify(shoppingList));
-      }
+      localStorage.setItem('shoppingList', JSON.stringify(shoppingList));
     } catch (error) {
       console.error("Échec de la sauvegarde de shoppingList dans localStorage", error);
     }
@@ -206,7 +203,7 @@ export default function Home() {
             
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="ghost" size="icon" onClick={handleSuggestRecipe}>
+                <Button variant="ghost" size="icon">
                   <Sparkles className="h-5 w-5 text-accent" />
                   <span className="sr-only">Surprends-moi</span>
                 </Button>
@@ -218,7 +215,7 @@ export default function Home() {
                      <p className="text-muted-foreground">Recherche d'une recette succulente...</p>
                   </div>
                 )}
-                {suggestedRecipe && (
+                {suggestedRecipe && !isSuggesting && (
                   <>
                     <AlertDialogHeader>
                       <AlertDialogTitle>{suggestedRecipe.title} ({suggestedRecipe.country})</AlertDialogTitle>
@@ -247,7 +244,7 @@ export default function Home() {
                     <AlertDialogHeader>
                       <AlertDialogTitle>Besoin d'inspiration ?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Cliquez sur le bouton pour obtenir une suggestion de recette aléatoire.
+                        Laissez notre chef IA vous proposer une recette originale du monde entier.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
