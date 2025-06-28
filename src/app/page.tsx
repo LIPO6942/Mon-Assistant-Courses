@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ChefHat, ShoppingCart, Sparkles, Trash2, Plus, Minus, Loader2, AlertCircle, UtensilsCrossed, Dices, Pencil, Search, Wallet } from 'lucide-react';
+import { ChefHat, ShoppingCart, Sparkles, Trash2, Plus, Minus, Loader2, AlertCircle, UtensilsCrossed, Dices, Pencil, Search } from 'lucide-react';
 import { suggestRecipe, type SuggestRecipeOutput } from '@/ai/flows/suggest-recipe-flow';
 import { cn } from '@/lib/utils';
 
@@ -399,7 +399,7 @@ export default function Home() {
                   <span className="sr-only">Ouvrir le panier</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent>
+              <SheetContent className="flex flex-col h-full">
                 <SheetHeader className="flex-row justify-between items-center pb-4 border-b">
                   <SheetTitle>Mon Panier</SheetTitle>
                    {cart.length > 0 && (
@@ -409,11 +409,11 @@ export default function Home() {
                       </Button>
                     )}
                 </SheetHeader>
-                <div className="py-4">
+                <div className="flex-grow overflow-y-auto py-4">
                   {cart.length === 0 ? (
-                    <p className="text-muted-foreground text-center">Votre panier est vide.</p>
+                    <p className="text-muted-foreground text-center pt-10">Votre panier est vide.</p>
                   ) : (
-                    <ul className="space-y-4">
+                    <ul className="space-y-4 pr-2">
                       {cart.map((item) => (
                         <li key={item.name} className="flex items-center justify-between gap-2">
                           <div className="flex-grow">
@@ -437,31 +437,10 @@ export default function Home() {
                     </ul>
                   )}
                 </div>
-                {cart.length > 0 && (
-                  <SheetFooter>
-                    <div className="flex justify-between items-center font-bold text-lg w-full border-t pt-4">
-                      <span>Total</span>
-                      <span>{total.toFixed(2)} DT</span>
-                    </div>
-                  </SheetFooter>
-                )}
-              </SheetContent>
-            </Sheet>
-          </div>
-        </div>
-      </header>
-      
-      <main className="container py-8 space-y-8">
-        <Card className="shadow-lg">
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                    <Wallet className="text-primary" /> Mon Budget
-                </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                <div className="flex flex-col sm:flex-row gap-4 items-end">
-                    <div className="flex-grow space-y-2">
-                        <Label htmlFor="budget-input">Nouveau budget (DT)</Label>
+                <SheetFooter className="border-t pt-4">
+                  <div className="w-full space-y-4">
+                    <div className="space-y-1.5">
+                        <Label htmlFor="budget-input">Définir un budget (DT)</Label>
                         <div className="flex gap-2">
                             <Input
                                 id="budget-input"
@@ -474,27 +453,31 @@ export default function Home() {
                             <Button onClick={handleSetBudget}>Définir</Button>
                         </div>
                     </div>
-                    <div className="grid grid-cols-3 gap-4 text-center w-full sm:w-auto pt-4 sm:pt-0">
-                        <div>
-                            <p className="text-sm text-muted-foreground">Budget</p>
-                            <p className="font-bold text-lg">{budget.toFixed(2)} DT</p>
+                    <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">Budget</span>
+                            <span>{budget.toFixed(2)} DT</span>
                         </div>
-                        <div>
-                            <p className="text-sm text-muted-foreground">Dépenses</p>
-                            <p className="font-bold text-lg">{total.toFixed(2)} DT</p>
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">Dépenses</span>
+                            <span>{total.toFixed(2)} DT</span>
                         </div>
-                        <div>
-                            <p className="text-sm text-muted-foreground">Restant</p>
-                            <p className={cn(
-                                "font-bold text-lg",
+                        <div className="flex justify-between font-semibold text-base">
+                            <span>Restant</span>
+                            <span className={cn(
                                 remainingBudget < 0 ? "text-destructive" : "text-accent"
-                            )}>{remainingBudget.toFixed(2)} DT</p>
+                            )}>{remainingBudget.toFixed(2)} DT</span>
                         </div>
                     </div>
-                </div>
-            </CardContent>
-        </Card>
-
+                  </div>
+                </SheetFooter>
+              </SheetContent>
+            </Sheet>
+          </div>
+        </div>
+      </header>
+      
+      <main className="container py-8 space-y-8">
         <Card className="shadow-lg">
           <CardHeader>
             <CardTitle>Gérer mes produits</CardTitle>
