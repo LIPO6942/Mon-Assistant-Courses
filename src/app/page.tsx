@@ -193,7 +193,7 @@ export default function Home() {
   };
 
   const handleRemoveFromCart = (name: string) => {
-    setCart((currentCart) => currentCart.filter((item) => item.name !== ingredient.name));
+    setCart((currentCart) => currentCart.filter((item) => item.name !== name));
   };
 
   const handleSuggestRecipe = async () => {
