@@ -23,7 +23,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { ChefHat, ShoppingCart, Sparkles, Plus, Trash2, Loader2, Minus, Tag } from 'lucide-react';
 import { generateShoppingList, GenerateShoppingListOutput } from '@/ai/flows/generate-list-flow';
@@ -91,7 +91,9 @@ export default function Home() {
 
   useEffect(() => {
     try {
-      localStorage.setItem('shoppingList', JSON.stringify(shoppingList));
+      if (shoppingList.length > 0) {
+        localStorage.setItem('shoppingList', JSON.stringify(shoppingList));
+      }
     } catch (error) {
       console.error("Échec de la sauvegarde de shoppingList dans localStorage", error);
     }
