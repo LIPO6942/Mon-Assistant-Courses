@@ -206,7 +206,7 @@ export default function KitchenAssistantPage({ generateShoppingListAction, sugge
             
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" onClick={handleSuggestRecipe}>
                   <Sparkles className="h-5 w-5 text-accent" />
                   <span className="sr-only">Surprends-moi</span>
                 </Button>
@@ -239,20 +239,6 @@ export default function KitchenAssistantPage({ generateShoppingListAction, sugge
                       <AlertDialogAction onClick={addRecipeIngredientsToShoppingList}>
                         <Plus className="mr-2 h-4 w-4" /> Ajouter à ma liste
                       </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </>
-                )}
-                {!isSuggesting && !suggestedRecipe && (
-                  <>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Besoin d'inspiration ?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Laissez notre chef IA vous proposer une recette originale du monde entier.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Fermer</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleSuggestRecipe}>Surprends-moi</AlertDialogAction>
                     </AlertDialogFooter>
                   </>
                 )}
