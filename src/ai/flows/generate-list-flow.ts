@@ -61,6 +61,12 @@ const generateShoppingListFlow = ai.defineFlow(
   },
   async (input) => {
     const {output} = await prompt(input);
-    return output!;
+    
+    if (!output) {
+      console.error("Erreur : La réponse de l'IA était vide.");
+      throw new Error("La réponse du service IA était vide ou mal formée.");
+    }
+
+    return output;
   }
 );
