@@ -4,36 +4,16 @@
  * @fileOverview An AI flow to generate a shopping list from a user prompt.
  *
  * - generateShoppingList - A function that handles the shopping list generation.
- * - GenerateShoppingListInput - The input type for the generateShoppingList function.
- * - GenerateShoppingListOutput - The return type for the generateShoppingList function.
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'zod';
-
-const categories = [
-  'Fruits et Légumes',
-  'Viandes et Poissons',
-  'Produits Laitiers',
-  'Boulangerie',
-  'Épicerie',
-  'Boissons',
-  'Maison',
-  'Autre',
-] as const;
-
-const GenerateShoppingListInputSchema = z.object({
-  prompt: z.string().describe('The user request, like "ingredients for a cake"'),
-});
-export type GenerateShoppingListInput = z.infer<typeof GenerateShoppingListInputSchema>;
-
-const GenerateShoppingListOutputSchema = z.object({
-    items: z.array(z.object({
-        name: z.string().describe("The name of the shopping item."),
-        category: z.enum(categories).describe("The category of the item.")
-    })).describe("The array of generated shopping list items.")
-});
-export type GenerateShoppingListOutput = z.infer<typeof GenerateShoppingListOutputSchema>;
+import { 
+  categories,
+  GenerateShoppingListInputSchema, 
+  GenerateShoppingListOutputSchema,
+  type GenerateShoppingListInput,
+  type GenerateShoppingListOutput
+} from '@/ai/types';
 
 export async function generateShoppingList(input: GenerateShoppingListInput): Promise<GenerateShoppingListOutput> {
   return generateShoppingListFlow(input);
