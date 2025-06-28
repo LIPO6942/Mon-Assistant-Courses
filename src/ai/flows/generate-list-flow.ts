@@ -64,7 +64,7 @@ const generateShoppingListFlow = ai.defineFlow(
     
     if (!output) {
       console.error("Erreur : La réponse de l'IA était vide.");
-      throw new Error("La réponse du service IA était vide ou mal formée.");
+      throw new Error("La réponse du service IA était vide ou mal formée. Cela peut être dû à un problème avec la clé API ou aux filtres de sécurité du contenu de l'IA.");
     }
 
     return output;

@@ -87,6 +87,7 @@ export default function Home() {
         setNextId((prevId) => prevId + newItems.length);
         setAiPrompt('');
       } else {
+        // This case should now be handled by the error thrown in the flow
         throw new Error("La réponse de l'IA était vide ou mal formée.");
       }
     } catch (error) {
