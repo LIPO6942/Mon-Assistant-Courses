@@ -1,15 +1,13 @@
 'use client';
 
-import type { SuggestRecipeOutput, Category, categories } from '@/ai/types';
+import type { Category, categories } from '@/ai/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { useState, useCallback, useTransition, useMemo } from 'react';
-import { ListPlus, ChefHat, ShoppingBasket, Trash2, Lightbulb, Loader2, PlusCircle, Pencil, Minus, Plus } from 'lucide-react';
-import type { generateShoppingList } from '@/ai/flows/generate-list-flow';
-import type { suggestRecipe } from '@/ai/flows/suggest-recipe-flow';
+import { useState, useMemo } from 'react';
+import { ListPlus, ChefHat, ShoppingBasket, Trash2, PlusCircle, Pencil, Minus, Plus } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription, SheetFooter } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -28,11 +26,6 @@ interface BasketItem extends Ingredient {
   quantity: number;
 }
 
-interface KitchenAssistantPageProps {
-  generateShoppingList: typeof generateShoppingList;
-  suggestRecipe: typeof suggestRecipe;
-}
-
 const initialIngredients: Ingredient[] = [
     { id: '1', name: 'Poulet (1kg)', category: 'Viandes et Poissons', price: 15.00, unit: 'kg' },
     { id: '2', name: 'Tomates (500g)', category: 'Fruits et Légumes', price: 2.50, unit: 'kg' },
@@ -41,19 +34,11 @@ const initialIngredients: Ingredient[] = [
     { id: '5', name: 'Pâtes complètes (500g)', category: 'Épicerie', price: 2.50, unit: 'paquet' },
 ];
 
-export default function KitchenAssistantPage({
-  generateShoppingList,
-  suggestRecipe,
-}: KitchenAssistantPageProps) {
+export default function KitchenAssistantPage() {
   const [ingredients, setIngredients] = useState<Ingredient[]>(initialIngredients);
   const [basket, setBasket] = useState<BasketItem[]>([]);
-  const [suggestedRecipe, setSuggestedRecipe] = useState<SuggestRecipeOutput | null>(null);
-  const [prompt, setPrompt] = useState('');
   const [budget, setBudget] = useState(100);
   const [budgetInput, setBudgetInput] = useState('100');
-
-  const [isGeneratingList, startListGeneration] = useTransition();
-  const [isSuggestingRecipe, startRecipeSuggestion] = useTransition();
 
   const [isAddEditDialogOpen, setAddEditDialogOpen] = useState(false);
   const [editingIngredient, setEditingIngredient] = useState<Ingredient | null>(null);
@@ -119,46 +104,6 @@ export default function KitchenAssistantPage({
   };
   
   const clearBasket = () => setBasket([]);
-
-  // --- AI Features ---
-  const handleGenerateList = useCallback(async () => {
-    if (!prompt) return;
-    startListGeneration(async () => {
-      const result = await generateShoppingList({ prompt });
-      const newIngredients = result.items.map(item => ({ ...item, id: self.crypto.randomUUID() }));
-      
-      // Merge results, avoiding duplicates by name
-      setIngredients(prev => {
-        const existingNames = new Set(prev.map(i => i.name.toLowerCase()));
-        const uniqueNew = newIngredients.filter(i => !existingNames.has(i.name.toLowerCase()));
-        return [...prev, ...uniqueNew];
-      });
-    });
-  }, [prompt, generateShoppingList]);
-
-  const handleSuggestRecipe = useCallback(async () => {
-    startRecipeSuggestion(async () => {
-      const recipe = await suggestRecipe();
-      setSuggestedRecipe(recipe);
-    });
-  }, [suggestRecipe]);
-  
-  const addRecipeIngredientsToDb = () => {
-    if (!suggestedRecipe) return;
-    const recipeItems: Ingredient[] = suggestedRecipe.ingredients.map(ingredient => ({
-      name: `${ingredient.name}`,
-      category: 'Épicerie', // Default category
-      id: self.crypto.randomUUID(),
-      price: 0, // Default price, user can edit
-      unit: ingredient.unit,
-    }));
-    
-    setIngredients(prev => {
-        const existingNames = new Set(prev.map(i => i.name.toLowerCase()));
-        const uniqueNew = recipeItems.filter(i => !existingNames.has(i.name.toLowerCase()));
-        return [...prev, ...uniqueNew];
-    });
-  };
 
   const groupedIngredients = ingredients.reduce((acc, item) => {
     if (!acc[item.category]) acc[item.category] = [];
@@ -244,9 +189,8 @@ export default function KitchenAssistantPage({
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto p-4 grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Colonne 1 & 2: Base de données d'ingrédients */}
-        <Card className="lg:col-span-2">
+      <main className="container mx-auto p-4">
+        <Card>
           <CardHeader>
             <div className='flex justify-between items-center'>
               <CardTitle className="flex items-center gap-2"><ListPlus/> Base d'ingrédients</CardTitle>
@@ -276,65 +220,12 @@ export default function KitchenAssistantPage({
                     </ul>
                   </div>
                 ))}
-                {ingredients.length === 0 && !isGeneratingList && (
+                {ingredients.length === 0 && (
                     <p className="text-sm text-muted-foreground text-center mt-8">Aucun ingrédient. Ajoutez-en un pour commencer.</p>
                 )}
              </ScrollArea>
           </CardContent>
         </Card>
-
-        {/* Colonne 3: Actions IA */}
-        <div className="lg:col-span-1 flex flex-col gap-6">
-          <Card>
-            <CardHeader>
-                <CardTitle>Générer avec l'IA</CardTitle>
-                <CardDescription>Décrivez un repas et laissez l'IA ajouter les ingrédients à votre base.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <div className="flex gap-2">
-                    <Input 
-                    placeholder="Ex: ingrédients pour couscous"
-                    value={prompt}
-                    onChange={(e) => setPrompt(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleGenerateList()}
-                    disabled={isGeneratingList}
-                    />
-                    <Button onClick={handleGenerateList} disabled={isGeneratingList}>
-                    {isGeneratingList ? <Loader2 className="h-4 w-4 animate-spin" /> : "Créer"}
-                    </Button>
-                </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2"><Lightbulb/> Suggestion du Chef</CardTitle>
-              <CardDescription>En manque d'inspiration ? Laissez-nous vous surprendre.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button onClick={handleSuggestRecipe} disabled={isSuggestingRecipe} className="w-full mb-4">
-                {isSuggestingRecipe ? <Loader2 className="h-4 w-4 animate-spin" /> : "Trouver une recette"}
-              </Button>
-              {suggestedRecipe && (
-                <Card className="bg-secondary/50">
-                  <CardHeader>
-                    <CardTitle>{suggestedRecipe.title}</CardTitle>
-                    <Badge variant="outline">{suggestedRecipe.country}</Badge>
-                    <CardDescription>{suggestedRecipe.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <h4 className="font-semibold mb-2">Ingrédients de la recette :</h4>
-                    <ul className="list-disc list-inside text-sm space-y-1">
-                      {suggestedRecipe.ingredients.map((ing, i) => (
-                        <li key={i}>{ing.name} - {ing.quantity} {ing.unit}</li>
-                      ))}
-                    </ul>
-                    <Button onClick={addRecipeIngredientsToDb} className="w-full mt-4">Ajouter à ma base</Button>
-                  </CardContent>
-                </Card>
-              )}
-            </CardContent>
-          </Card>
-        </div>
       </main>
 
       {/* Add/Edit Ingredient Dialog */}
