@@ -20,7 +20,12 @@ const generateShoppingListPrompt = ai.definePrompt({
   output: { schema: GenerateShoppingListOutputSchema },
   prompt: `Tu es un assistant de cuisine expert. Crée une liste de courses détaillée et catégorisée pour la requête suivante: "{{prompt}}".
 
-  Assure-toi de classer chaque article dans l'une des catégories suivantes : {{jsonSchema (array 'items') 'properties' 'category' 'enum'}}.
+  Pour chaque article, fournis :
+  - Un nom
+  - Une catégorie parmi : {{jsonSchema (array 'items') 'properties' 'category' 'enum'}}.
+  - Un prix estimé en Dinar Tunisien (DT) sous forme de nombre.
+  - Une unité de mesure (ex: "kg", "L", "pièce").
+  
   Ne renvoie que du JSON.`,
 });
 
