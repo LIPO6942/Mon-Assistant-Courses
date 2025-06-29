@@ -1,6 +1,5 @@
 'use client';
 
-import type { Category, categories } from '@/ai/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -12,6 +11,19 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescri
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+const categories = [
+  'Fruits et Légumes',
+  'Viandes et Poissons',
+  'Produits Laitiers',
+  'Boulangerie',
+  'Épicerie',
+  'Boissons',
+  'Surgelés',
+  'Maison',
+  'Autre',
+] as const;
+type Category = (typeof categories)[number];
 
 // Data Structures
 interface Ingredient {
@@ -26,16 +38,8 @@ interface BasketItem extends Ingredient {
   quantity: number;
 }
 
-const initialIngredients: Ingredient[] = [
-    { id: '1', name: 'Poulet (1kg)', category: 'Viandes et Poissons', price: 15.00, unit: 'kg' },
-    { id: '2', name: 'Tomates (500g)', category: 'Fruits et Légumes', price: 2.50, unit: 'kg' },
-    { id: '3', name: 'Lait (1L)', category: 'Produits Laitiers', price: 1.40, unit: 'L' },
-    { id: '4', name: 'Pain de campagne', category: 'Boulangerie', price: 2.00, unit: 'pièce' },
-    { id: '5', name: 'Pâtes complètes (500g)', category: 'Épicerie', price: 2.50, unit: 'paquet' },
-];
-
 export default function KitchenAssistantPage() {
-  const [ingredients, setIngredients] = useState<Ingredient[]>(initialIngredients);
+  const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [basket, setBasket] = useState<BasketItem[]>([]);
   const [budget, setBudget] = useState(100);
   const [budgetInput, setBudgetInput] = useState('100');
@@ -113,15 +117,15 @@ export default function KitchenAssistantPage() {
 
 
   return (
-    <div className="min-h-screen bg-secondary/40">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-background shadow-sm sticky top-0 z-10">
+      <header className="bg-card border-b sticky top-0 z-10">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <ChefHat className="h-8 w-8 text-primary" />
-            <h1 className="text-2xl font-bold tracking-tight hidden sm:block">Assistant Cuisine</h1>
+            <h1 className="text-2xl font-bold tracking-tight hidden sm:block">Assistant de Courses</h1>
           </div>
-          <div className="flex items-center gap-4 p-2 rounded-lg border bg-secondary/50">
+          <div className="flex items-center gap-4 p-2 rounded-lg border bg-background">
             <div className='flex items-center gap-2'>
               <Label htmlFor="budget" className='font-semibold'>Budget:</Label>
               <Input
@@ -137,7 +141,7 @@ export default function KitchenAssistantPage() {
             <div className="text-sm">
                 <span className="font-semibold">Dépenses: </span>{basketTotal.toFixed(2)} DT
             </div>
-            <div className={`text-sm font-bold ${remainingBudget < 0 ? 'text-destructive' : 'text-green-600'}`}>
+            <div className={`text-sm font-bold ${remainingBudget < 0 ? 'text-destructive' : 'text-primary'}`}>
                 <span className="font-semibold">Restant: </span>{remainingBudget.toFixed(2)} DT
             </div>
           </div>
@@ -157,7 +161,7 @@ export default function KitchenAssistantPage() {
                 {basket.length > 0 ? (
                   <ul className="space-y-3 py-4">
                     {basket.map(item => (
-                      <li key={item.id} className="flex flex-col gap-2 bg-secondary/50 p-3 rounded-md">
+                      <li key={item.id} className="flex flex-col gap-2 bg-secondary p-3 rounded-md">
                         <div className='flex justify-between items-center'>
                           <span className='font-semibold'>{item.name}</span>
                           <span className='font-bold text-primary'>{(item.price * item.quantity).toFixed(2)} DT</span>
@@ -193,19 +197,19 @@ export default function KitchenAssistantPage() {
         <Card>
           <CardHeader>
             <div className='flex justify-between items-center'>
-              <CardTitle className="flex items-center gap-2"><ListPlus/> Base d'ingrédients</CardTitle>
+              <CardTitle className="flex items-center gap-2"><ListPlus/> Base de Produits</CardTitle>
               <Button onClick={openAddDialog}><PlusCircle className="mr-2 h-4 w-4" /> Ajouter un produit</Button>
             </div>
             <CardDescription>Gérez votre liste de produits disponibles. Ajoutez-les au panier pour vos courses.</CardDescription>
           </CardHeader>
           <CardContent>
              <ScrollArea className="h-[calc(100vh-250px)]">
-               {Object.entries(groupedIngredients).map(([category, items]) => (
+               {(Object.keys(groupedIngredients) as Category[]).length > 0 ? Object.entries(groupedIngredients).map(([category, items]) => (
                   <div key={category} className="mb-4">
                     <h3 className="font-semibold mb-2 text-primary">{category}</h3>
                     <ul className="space-y-2">
                       {items.map(item => (
-                        <li key={item.id} className="flex items-center justify-between bg-secondary/50 p-2 rounded-md">
+                        <li key={item.id} className="flex items-center justify-between bg-secondary p-2 rounded-md">
                           <div>
                             <span className='font-medium'>{item.name}</span>
                             <p className='text-sm text-muted-foreground'>{item.price.toFixed(2)} DT / {item.unit}</p>
@@ -219,9 +223,18 @@ export default function KitchenAssistantPage() {
                       ))}
                     </ul>
                   </div>
-                ))}
-                {ingredients.length === 0 && (
-                    <p className="text-sm text-muted-foreground text-center mt-8">Aucun ingrédient. Ajoutez-en un pour commencer.</p>
+                )) : (
+                    <div className="text-center py-12">
+                        <ShoppingBasket className="mx-auto h-12 w-12 text-muted-foreground" />
+                        <h3 className="mt-2 text-sm font-medium text-foreground">Aucun produit</h3>
+                        <p className="mt-1 text-sm text-muted-foreground">Commencez par ajouter un produit à votre base de données.</p>
+                        <div className="mt-6">
+                            <Button onClick={openAddDialog}>
+                                <PlusCircle className="mr-2 h-4 w-4" />
+                                Ajouter un produit
+                            </Button>
+                        </div>
+                    </div>
                 )}
              </ScrollArea>
           </CardContent>
@@ -232,7 +245,7 @@ export default function KitchenAssistantPage() {
       <Dialog open={isAddEditDialogOpen} onOpenChange={setAddEditDialogOpen}>
         <DialogContent>
             <DialogHeader>
-                <DialogTitle>{editingIngredient ? "Modifier l'ingrédient" : "Ajouter un ingrédient"}</DialogTitle>
+                <DialogTitle>{editingIngredient ? "Modifier le produit" : "Ajouter un produit"}</DialogTitle>
                 <DialogDescription>
                     Remplissez les détails du produit.
                 </DialogDescription>
