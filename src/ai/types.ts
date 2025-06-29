@@ -20,7 +20,8 @@ export type GenerateShoppingListInput = z.infer<typeof GenerateShoppingListInput
 export const GenerateShoppingListOutputSchema = z.object({
     items: z.array(z.object({
         name: z.string().describe("The name of the shopping item."),
-        category: z.enum(categories).describe("The category of the item.")
+        category: z.enum(categories).describe("The category of the item."),
+        price: z.number().optional().describe("An estimated price for the item in Tunisian Dinar (DT).")
     })).describe("The array of generated shopping list items.")
 });
 export type GenerateShoppingListOutput = z.infer<typeof GenerateShoppingListOutputSchema>;

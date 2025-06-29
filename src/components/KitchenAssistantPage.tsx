@@ -34,6 +34,7 @@ import { categories } from '@/ai/types';
 type ShoppingItem = {
   name: string;
   category: typeof categories[number];
+  price?: number;
 };
 
 type CartItem = ShoppingItem & {
@@ -42,13 +43,13 @@ type CartItem = ShoppingItem & {
 };
 
 const initialShoppingList: ShoppingItem[] = [
-    { name: 'Pommes', category: 'Fruits et Légumes' },
-    { name: 'Poulet', category: 'Viandes et Poissons' },
-    { name: 'Lait', category: 'Produits Laitiers' },
-    { name: 'Pain de campagne', category: 'Boulangerie' },
-    { name: 'Pâtes complètes', category: 'Épicerie' },
-    { name: 'Jus d\'orange', category: 'Boissons' },
-    { name: 'Liquide vaisselle', category: 'Maison' },
+    { name: 'Pommes (1kg)', category: 'Fruits et Légumes', price: 4.50 },
+    { name: 'Poulet (1kg)', category: 'Viandes et Poissons', price: 15.00 },
+    { name: 'Lait (1L)', category: 'Produits Laitiers', price: 1.40 },
+    { name: 'Pain de campagne', category: 'Boulangerie', price: 2.00 },
+    { name: 'Pâtes complètes (500g)', category: 'Épicerie', price: 2.50 },
+    { name: 'Jus d\'orange (1L)', category: 'Boissons', price: 3.50 },
+    { name: 'Liquide vaisselle', category: 'Maison', price: 5.00 },
 ];
 
 interface KitchenAssistantPageProps {
@@ -118,7 +119,7 @@ export default function KitchenAssistantPage({ generateShoppingListAction, sugge
           cartItem.name === item.name ? { ...cartItem, quantity: cartItem.quantity + 1 } : cartItem
         );
       } else {
-        return [...prevCart, { ...item, quantity: 1, price: 0 }];
+        return [...prevCart, { ...item, quantity: 1, price: item.price || 0 }];
       }
     });
   };
@@ -385,10 +386,15 @@ export default function KitchenAssistantPage({ generateShoppingListAction, sugge
                     <CardTitle>{category}</CardTitle>
                   </CardHeader>
                   <CardContent className="flex-grow">
-                    <ul className="space-y-2">
+                    <ul className="space-y-3">
                       {itemsInCategory.map(item => (
                         <li key={item.name} className="flex items-center justify-between p-2 rounded-md hover:bg-secondary">
-                          <span>{item.name}</span>
+                          <div className="flex flex-col">
+                            <span className="font-medium">{item.name}</span>
+                            {item.price && (
+                              <span className="text-xs text-muted-foreground">{`~ ${item.price.toFixed(2)} DT`}</span>
+                            )}
+                          </div>
                           <Button size="sm" variant="ghost" onClick={() => handleAddToCart(item)}>
                             <Plus className="h-4 w-4 mr-1"/> Ajouter
                           </Button>
