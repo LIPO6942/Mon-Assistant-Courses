@@ -43,13 +43,51 @@ type CartItem = ShoppingItem & {
 };
 
 const initialShoppingList: ShoppingItem[] = [
-    { name: 'Pommes (1kg)', category: 'Fruits et Légumes', price: 4.50 },
-    { name: 'Poulet (1kg)', category: 'Viandes et Poissons', price: 15.00 },
-    { name: 'Lait (1L)', category: 'Produits Laitiers', price: 1.40 },
-    { name: 'Pain de campagne', category: 'Boulangerie', price: 2.00 },
-    { name: 'Pâtes complètes (500g)', category: 'Épicerie', price: 2.50 },
+    // Fruits et Légumes
+    { name: "Pommes (1kg)", category: 'Fruits et Légumes', price: 4.50 },
+    { name: "Bananes (1kg)", category: 'Fruits et Légumes', price: 5.00 },
+    { name: "Tomates (1kg)", category: 'Fruits et Légumes', price: 3.80 },
+    { name: "Laitue", category: 'Fruits et Légumes', price: 2.00 },
+    { name: "Oignons (1kg)", category: 'Fruits et Légumes', price: 2.50 },
+    { name: "Pommes de terre (1kg)", category: 'Fruits et Légumes', price: 2.20 },
+    { name: "Carottes (1kg)", category: 'Fruits et Légumes', price: 2.90 },
+
+    // Viandes et Poissons
+    { name: "Blanc de Poulet (500g)", category: 'Viandes et Poissons', price: 15.00 },
+    { name: "Viande hachée (500g)", category: 'Viandes et Poissons', price: 18.00 },
+    { name: "Filet de Saumon (200g)", category: 'Viandes et Poissons', price: 12.00 },
+    { name: "Saucisses (4 pièces)", category: 'Viandes et Poissons', price: 8.00 },
+
+    // Produits Laitiers
+    { name: "Lait entier (1L)", category: 'Produits Laitiers', price: 1.40 },
+    { name: "Yaourt nature (4 pots)", category: 'Produits Laitiers', price: 2.80 },
+    { name: "Fromage râpé (200g)", category: 'Produits Laitiers', price: 6.50 },
+    { name: "Beurre (250g)", category: 'Produits Laitiers', price: 5.50 },
+    { name: "Œufs (6 pièces)", category: 'Produits Laitiers', price: 3.00 },
+
+
+    // Boulangerie
+    { name: "Baguette tradition", category: 'Boulangerie', price: 1.20 },
+    { name: "Pain de mie complet", category: 'Boulangerie', price: 3.50 },
+
+    // Épicerie
+    { name: "Pâtes (500g)", category: 'Épicerie', price: 2.50 },
+    { name: "Riz basmati (1kg)", category: 'Épicerie', price: 7.00 },
+    { name: "Huile d'olive (1L)", category: 'Épicerie', price: 25.00 },
+    { name: "Farine T55 (1kg)", category: 'Épicerie', price: 2.00 },
+    { name: "Sucre en poudre (1kg)", category: 'Épicerie', price: 2.80 },
+    { name: "Sel fin (500g)", category: 'Épicerie', price: 1.00 },
+    { name: "Café moulu (250g)", category: 'Épicerie', price: 8.50 },
+    
+    // Boissons
+    { name: "Eau minérale (pack 6x1.5L)", category: 'Boissons', price: 4.20 },
     { name: "Jus d'orange (1L)", category: 'Boissons', price: 3.50 },
-    { name: 'Liquide vaisselle', category: 'Maison', price: 5.00 },
+    { name: "Thé vert (20 sachets)", category: 'Boissons', price: 6.00 },
+
+    // Maison
+    { name: "Liquide vaisselle", category: 'Maison', price: 5.00 },
+    { name: "Essuie-tout (2 rouleaux)", category: 'Maison', price: 4.00 },
+    { name: "Sacs poubelles (30L)", category: 'Maison', price: 3.50 },
 ];
 
 interface KitchenAssistantPageProps {
