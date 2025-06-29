@@ -352,6 +352,15 @@ export default function KitchenAssistantPage({ generateShoppingListAction, sugge
       </header>
       
       <main className="container py-8 space-y-8">
+        <Card className="bg-green-100 border-green-400 dark:bg-green-900/50 dark:border-green-700">
+          <CardHeader>
+            <CardTitle>Changement visible !</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p>Bonjour ! Ceci est une modification pour prouver que je peux changer le code. On va remettre les fonctionnalités en place juste après cette étape.</p>
+          </CardContent>
+        </Card>
+
         <Card className="shadow-lg">
           <CardHeader>
             <CardTitle>Générer une liste de courses avec l'IA</CardTitle>
