@@ -575,7 +575,7 @@ video {
   display: none;
 }
   :root {
-    --background: 120 60% 97%;
+    --background: 120 100% 97%;
     --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;
