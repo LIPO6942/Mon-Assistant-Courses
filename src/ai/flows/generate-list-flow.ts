@@ -26,7 +26,7 @@ const prompt = ai.definePrompt({
   output: {schema: GenerateShoppingListOutputSchema},
   prompt: `Tu es un assistant de courses intelligent. Ta tâche est de créer une liste de courses détaillée à partir de la demande de l'utilisateur.
 
-  Pour chaque article, tu dois déterminer son nom et le classer dans l'une des catégories suivantes :
+  Pour chaque article, tu dois déterminer son nom, le classer dans l'une des catégories suivantes, et fournir une estimation de son prix en Dinar Tunisien (DT).
   ${categories.map(c => `- ${c}`).join('\n')}
 
   Assure-toi de ne renvoyer que les articles nécessaires pour la demande. Sois concis et précis.
