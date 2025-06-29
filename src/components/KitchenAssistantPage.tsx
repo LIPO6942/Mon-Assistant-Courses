@@ -48,7 +48,7 @@ const initialShoppingList: ShoppingItem[] = [
     { name: 'Lait (1L)', category: 'Produits Laitiers', price: 1.40 },
     { name: 'Pain de campagne', category: 'Boulangerie', price: 2.00 },
     { name: 'Pâtes complètes (500g)', category: 'Épicerie', price: 2.50 },
-    { name: 'Jus d\'orange (1L)', category: 'Boissons', price: 3.50 },
+    { name: "Jus d'orange (1L)", category: 'Boissons', price: 3.50 },
     { name: 'Liquide vaisselle', category: 'Maison', price: 5.00 },
 ];
 
