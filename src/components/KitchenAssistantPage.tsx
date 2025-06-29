@@ -38,6 +38,21 @@ interface BasketItem extends Ingredient {
   quantity: number;
 }
 
+interface Recipe {
+  title: string;
+  description: string;
+  ingredients: string[];
+}
+
+const predefinedRecipes: Recipe[] = [
+    { title: 'Spaghetti Aglio e Olio', description: 'Un classique italien simple et savoureux, parfait pour un repas rapide.', ingredients: ['Spaghetti', 'Ail', 'Huile d\'olive', 'Piment rouge', 'Persil'] },
+    { title: 'Omelette aux champignons', description: 'Facile et rapide, une omelette est toujours une bonne idée pour un repas léger.', ingredients: ['Oeufs', 'Champignons', 'Beurre', 'Sel', 'Poivre'] },
+    { title: 'Salade César', description: 'Une salade iconique et gourmande avec son poulet grillé et sa sauce onctueuse.', ingredients: ['Laitue romaine', 'Poulet', 'Croûtons', 'Parmesan', 'Sauce César'] },
+    { title: 'Soupe de lentilles corail', description: 'Une soupe réconfortante et épicée, aux saveurs orientales.', ingredients: ['Lentilles corail', 'Oignon', 'Carottes', 'Lait de coco', 'Curry'] },
+    { title: 'Avocado Toast', description: 'Le petit-déjeuner ou brunch tendance, sain et délicieux.', ingredients: ['Pain de campagne', 'Avocat', 'Citron', 'Flocons de piment', 'Oeuf poché (optionnel)'] }
+];
+
+
 export default function KitchenAssistantPage() {
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [basket, setBasket] = useState<BasketItem[]>([]);
@@ -46,6 +61,9 @@ export default function KitchenAssistantPage() {
 
   const [isAddEditDialogOpen, setAddEditDialogOpen] = useState(false);
   const [editingIngredient, setEditingIngredient] = useState<Ingredient | null>(null);
+  
+  const [isRecipeDialogOpen, setIsRecipeDialogOpen] = useState(false);
+  const [suggestedRecipe, setSuggestedRecipe] = useState<Recipe | null>(null);
 
   // --- Budget & Basket Calculations ---
   const basketTotal = useMemo(() => {
@@ -115,9 +133,18 @@ export default function KitchenAssistantPage() {
     return acc;
   }, {} as Record<Category, Ingredient[]>);
 
+  // --- Recipe Suggestion ---
+  const handleSuggestRecipe = () => {
+    if (predefinedRecipes.length > 0) {
+      const randomIndex = Math.floor(Math.random() * predefinedRecipes.length);
+      setSuggestedRecipe(predefinedRecipes[randomIndex]);
+      setIsRecipeDialogOpen(true);
+    }
+  };
+
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-secondary/40">
       {/* Header */}
       <header className="bg-card border-b sticky top-0 z-10">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-4">
@@ -125,7 +152,7 @@ export default function KitchenAssistantPage() {
             <ChefHat className="h-8 w-8 text-primary" />
             <h1 className="text-2xl font-bold tracking-tight hidden sm:block">Assistant de Courses</h1>
           </div>
-          <div className="flex items-center gap-4 p-2 rounded-lg border bg-background">
+          <div className="flex items-center gap-4 p-2 rounded-lg border bg-background shadow-sm">
             <div className='flex items-center gap-2'>
               <Label htmlFor="budget" className='font-semibold'>Budget:</Label>
               <Input
@@ -139,10 +166,10 @@ export default function KitchenAssistantPage() {
             </div>
             <Button onClick={handleSetBudget} size='sm' className="h-8">Définir</Button>
             <div className="text-sm">
-                <span className="font-semibold">Dépenses: </span>{basketTotal.toFixed(2)} DT
+                <span className="font-semibold text-muted-foreground">Dépenses: </span>{basketTotal.toFixed(2)} DT
             </div>
             <div className={`text-sm font-bold ${remainingBudget < 0 ? 'text-destructive' : 'text-primary'}`}>
-                <span className="font-semibold">Restant: </span>{remainingBudget.toFixed(2)} DT
+                <span className="font-semibold text-muted-foreground">Restant: </span>{remainingBudget.toFixed(2)} DT
             </div>
           </div>
           <Sheet>
@@ -198,12 +225,18 @@ export default function KitchenAssistantPage() {
           <CardHeader>
             <div className='flex justify-between items-center'>
               <CardTitle className="flex items-center gap-2"><ListPlus/> Base de Produits</CardTitle>
-              <Button onClick={openAddDialog}><PlusCircle className="mr-2 h-4 w-4" /> Ajouter un produit</Button>
+               <div className="flex items-center gap-2">
+                    <Button variant="outline" onClick={handleSuggestRecipe}>
+                        <ChefHat className="mr-2 h-4 w-4" />
+                        Suggestion du Chef
+                    </Button>
+                    <Button onClick={openAddDialog}><PlusCircle className="mr-2 h-4 w-4" /> Ajouter un produit</Button>
+                </div>
             </div>
             <CardDescription>Gérez votre liste de produits disponibles. Ajoutez-les au panier pour vos courses.</CardDescription>
           </CardHeader>
           <CardContent>
-             <ScrollArea className="h-[calc(100vh-250px)]">
+             <ScrollArea className="h-[calc(100vh-270px)]">
                {(Object.keys(groupedIngredients) as Category[]).length > 0 ? Object.entries(groupedIngredients).map(([category, items]) => (
                   <div key={category} className="mb-4">
                     <h3 className="font-semibold mb-2 text-primary">{category}</h3>
@@ -256,6 +289,25 @@ export default function KitchenAssistantPage() {
               onSave={handleSaveIngredient} 
               onCancel={() => setAddEditDialogOpen(false)}
             />
+        </DialogContent>
+      </Dialog>
+      
+      {/* Recipe Suggestion Dialog */}
+      <Dialog open={isRecipeDialogOpen} onOpenChange={setIsRecipeDialogOpen}>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>{suggestedRecipe?.title}</DialogTitle>
+                <DialogDescription>{suggestedRecipe?.description}</DialogDescription>
+            </DialogHeader>
+            <div className="py-2">
+                <h4 className="font-semibold mb-2 text-foreground">Ingrédients suggérés :</h4>
+                <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+                    {suggestedRecipe?.ingredients.map(ing => <li key={ing}>{ing}</li>)}
+                </ul>
+            </div>
+            <DialogFooter>
+                <Button type="button" onClick={() => setIsRecipeDialogOpen(false)}>Fermer</Button>
+            </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
