@@ -632,5 +632,3 @@ function CategoryForm({ category, onSave, formId }: { category: {id?: string, na
     </form>
   )
 }
-
-    
