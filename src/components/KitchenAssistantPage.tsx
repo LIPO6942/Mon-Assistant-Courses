@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
@@ -386,8 +386,12 @@ export default function KitchenAssistantPage() {
               ingredient={editingIngredient} 
               categories={categories}
               onSave={handleSaveIngredient} 
-              onCancel={() => setAddEditDialogOpen(false)}
+              formId="ingredient-form"
             />
+            <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setAddEditDialogOpen(false)}>Annuler</Button>
+                <Button type="submit" form="ingredient-form">Sauvegarder</Button>
+            </DialogFooter>
         </DialogContent>
       </Dialog>
 
@@ -400,8 +404,12 @@ export default function KitchenAssistantPage() {
               key={editingCategory?.id || 'new-cat'}
               category={editingCategory}
               onSave={handleSaveCategory}
-              onCancel={() => setIsCategoryDialogOpen(false)}
+              formId="category-form"
             />
+            <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setIsCategoryDialogOpen(false)}>Annuler</Button>
+                <Button type="submit" form="category-form">Sauvegarder</Button>
+            </DialogFooter>
         </DialogContent>
       </Dialog>
       
@@ -476,7 +484,7 @@ export default function KitchenAssistantPage() {
   );
 }
 
-function IngredientForm({ ingredient, categories, onSave, onCancel }: { ingredient: Partial<Ingredient> | null; categories: {id: string; name: string}[]; onSave: (data: Omit<Ingredient, 'id'> & { id?: string }) => void; onCancel: () => void; }) {
+function IngredientForm({ ingredient, categories, onSave, formId }: { ingredient: Partial<Ingredient> | null; categories: {id: string; name: string}[]; onSave: (data: Omit<Ingredient, 'id'> & { id?: string }) => void; formId: string }) {
   const [formData, setFormData] = useState({
     name: ingredient?.name || '',
     category: ingredient?.category || categories[0]?.name || 'Autre',
@@ -490,7 +498,7 @@ function IngredientForm({ ingredient, categories, onSave, onCancel }: { ingredie
   };
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-4 py-4">
+    <form id={formId} onSubmit={handleSubmit} className="grid gap-4 py-4">
       <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="name" className="text-right">Nom</Label><Input id="name" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="col-span-3" required /></div>
       <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="category" className="text-right">Catégorie</Label>
         <Select value={formData.category} onValueChange={(value: string) => setFormData({...formData, category: value})}>
@@ -505,12 +513,11 @@ function IngredientForm({ ingredient, categories, onSave, onCancel }: { ingredie
             <SelectContent>{units.map(unit => <SelectItem key={unit} value={unit}>{unit}</SelectItem>)}</SelectContent>
         </Select>
       </div>
-      <DialogFooter><Button type="button" variant="outline" onClick={onCancel}>Annuler</Button><Button type="submit">Sauvegarder</Button></DialogFooter>
     </form>
   )
 }
 
-function CategoryForm({ category, onSave, onCancel }: { category: {id?: string, name: string} | null; onSave: (data: { id?: string; name: string }) => void; onCancel: () => void; }) {
+function CategoryForm({ category, onSave, formId }: { category: {id?: string, name: string} | null; onSave: (data: { id?: string; name: string }) => void; formId: string }) {
   const [name, setName] = useState(category?.name || '');
   
   const handleSubmit = (e: React.FormEvent) => {
@@ -519,15 +526,11 @@ function CategoryForm({ category, onSave, onCancel }: { category: {id?: string, 
   };
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-4 py-4">
+    <form id={formId} onSubmit={handleSubmit} className="grid gap-4 py-4">
         <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="cat-name" className="text-right">Nom</Label>
             <Input id="cat-name" value={name} onChange={e => setName(e.target.value)} className="col-span-3" required />
         </div>
-        <DialogFooter>
-            <Button type="button" variant="outline" onClick={onCancel}>Annuler</Button>
-            <Button type="submit">Sauvegarder</Button>
-        </DialogFooter>
     </form>
   )
 }
