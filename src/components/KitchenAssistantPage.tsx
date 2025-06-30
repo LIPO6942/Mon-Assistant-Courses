@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { useState, useMemo } from 'react';
-import { ChefHat, ShoppingBasket, Trash2, PlusCircle, Pencil, Minus, Plus, Dices, Flame, Sparkles, UtensilsCrossed, Paintbrush } from 'lucide-react';
+import { ChefHat, ShoppingBasket, Trash2, PlusCircle, Pencil, Minus, Plus, Dices, Flame, Sparkles, UtensilsCrossed, Paintbrush, ListSteps } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription, SheetFooter } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -68,6 +68,7 @@ interface Recipe {
   calories: number;
   ambiance: string;
   decoration: string;
+  instructions: string[];
 }
 
 const predefinedIngredients: Ingredient[] = [
@@ -94,26 +95,56 @@ const predefinedRecipes: Recipe[] = [
     { 
         title: 'Spaghetti Aglio e Olio', 
         description: 'Un classique italien simple et savoureux, parfait pour un repas rapide en semaine.', 
-        ingredients: ['Spaghetti', 'Ail', 'Huile d\'olive', 'Piment rouge', 'Persil'],
+        ingredients: ['Spaghetti', 'Ail', 'Huile d\'olive', 'Flocons de piment rouge', 'Persil'],
         calories: 450,
         ambiance: 'Lumière tamisée, une playlist de musique italienne douce, et pourquoi pas une nappe à carreaux rouges et blancs.',
-        decoration: 'Servez dans une assiette creuse. Saupoudrez généreusement de persil frais haché et d\'un filet d\'huile d\'olive extra vierge juste avant de servir.'
+        decoration: 'Servez dans une assiette creuse. Saupoudrez généreusement de persil frais haché et d\'un filet d\'huile d\'olive extra vierge juste avant de servir.',
+        instructions: [
+            "Faites cuire les spaghetti selon les instructions sur l'emballage jusqu'à ce qu'ils soient al dente.",
+            "Pendant que les pâtes cuisent, hachez finement l'ail.",
+            "Dans une grande poêle, chauffez l'huile d'olive à feu moyen. Ajoutez l'ail et les flocons de piment.",
+            "Faites revenir l'ail pendant 1-2 minutes jusqu'à ce qu'il soit légèrement doré. Attention à ne pas le brûler.",
+            "Égouttez les pâtes en réservant une petite tasse de leur eau de cuisson.",
+            "Ajoutez les pâtes égouttées dans la poêle avec l'huile et l'ail. Mélangez bien pour enrober les pâtes.",
+            "Versez un peu d'eau de cuisson des pâtes pour créer une sauce légère et crémeuse.",
+            "Incorporez le persil frais haché, salez, poivrez et servez immédiatement."
+        ]
     },
     { 
         title: 'Omelette aux champignons et épinards', 
         description: 'Facile et rapide, une omelette est toujours une bonne idée pour un repas léger et nutritif.', 
-        ingredients: ['Oeufs', 'Champignons de Paris', 'Pousses d\'épinards', 'Beurre', 'Fromage de chèvre (optionnel)'],
+        ingredients: ['Oeufs', 'Champignons de Paris', 'Pousses d\'épinards', 'Beurre', 'Fromage de chèvre'],
         calories: 350,
         ambiance: 'Ambiance de brunch du dimanche matin, même un mardi soir. Un fond de musique jazz léger et une table bien mise.',
-        decoration: 'Pliez l\'omelette en deux dans l\'assiette. Ajoutez quelques feuilles d\'épinards fraîches sur le dessus et un peu de poivre noir fraîchement moulu.'
+        decoration: 'Pliez l\'omelette en deux dans l\'assiette. Ajoutez quelques feuilles d\'épinards fraîches sur le dessus et un peu de poivre noir fraîchement moulu.',
+        instructions: [
+            "Cassez les oeufs dans un bol, salez, poivrez et battez-les vivement.",
+            "Émincez les champignons et lavez les épinards.",
+            "Dans une poêle, faites fondre une noix de beurre et faites sauter les champignons jusqu'à ce qu'ils soient dorés.",
+            "Ajoutez les épinards et laissez-les cuire 1-2 minutes jusqu'à ce qu'ils soient tombés. Réservez les légumes.",
+            "Faites fondre le reste du beurre dans la poêle chaude. Versez les oeufs battus.",
+            "Laissez cuire à feu doux, en ramenant les bords vers le centre avec une spatule.",
+            "Quand l'omelette est presque prise, répartissez les légumes et le fromage de chèvre émietté sur une moitié.",
+            "Repliez l'autre moitié de l'omelette par-dessus et servez immédiatement."
+        ]
     },
     { 
         title: 'Salade César au Poulet Grillé', 
         description: 'Une salade iconique et gourmande avec son poulet grillé et sa sauce onctueuse.', 
-        ingredients: ['Laitue romaine', 'Filet de Poulet', 'Croûtons à l\'ail', 'Parmesan en copeaux', 'Sauce César'],
+        ingredients: ['Laitue romaine', 'Filet de Poulet', 'Croûtons à l\'ail', 'Copeaux de Parmesan', 'Sauce César'],
         calories: 550,
         ambiance: 'Terrasse ensoleillée, même si c\'est dans votre salon. Mettez des lunettes de soleil pour le fun. Un verre de thé glacé complète le tableau.',
-        decoration: 'Disposez les feuilles de laitue, ajoutez le poulet coupé en lanières, parsemez de croûtons et terminez avec de larges copeaux de parmesan.'
+        decoration: 'Disposez les feuilles de laitue, ajoutez le poulet coupé en lanières, parsemez de croûtons et terminez avec de larges copeaux de parmesan.',
+        instructions: [
+            "Assaisonnez le filet de poulet avec du sel, du poivre et un filet d'huile d'olive.",
+            "Faites griller le poulet dans une poêle chaude ou sur un grill jusqu'à ce qu'il soit bien cuit. Laissez-le reposer puis coupez-le en lanières.",
+            "Lavez et essorez la laitue romaine, puis coupez-la en morceaux de la taille d'une bouchée.",
+            "Dans un grand saladier, mélangez la laitue avec une généreuse quantité de sauce César.",
+            "Ajoutez les lanières de poulet grillé et les croûtons à l'ail.",
+            "Mélangez délicatement une dernière fois.",
+            "Servez dans des assiettes et garnissez de larges copeaux de parmesan.",
+            "Ajoutez un tour de moulin à poivre avant de servir."
+        ]
     },
     { 
         title: 'Soupe de lentilles corail au lait de coco', 
@@ -121,23 +152,17 @@ const predefinedRecipes: Recipe[] = [
         ingredients: ['Lentilles corail', 'Oignon', 'Carottes', 'Lait de coco', 'Curry en poudre', 'Coriandre fraîche'],
         calories: 400,
         ambiance: 'Soirée cocooning. Plaid, bougies, et un bon livre ou un film. C\'est un plat qui réchauffe le corps et l\'esprit.',
-        decoration: 'Servez dans un bol. Ajoutez une cuillère de lait de coco au centre et parsemez de coriandre fraîche ciselée.'
-    },
-    { 
-        title: 'Avocado Toast & Oeuf Poché', 
-        description: 'Le petit-déjeuner ou brunch tendance, sain et délicieux, qui vous donnera de l\'énergie.', 
-        ingredients: ['Pain de campagne', 'Avocat', 'Citron', 'Flocons de piment', 'Oeuf', 'Sel, Poivre'],
-        calories: 380,
-        ambiance: 'Ambiance de café branché. Mettez votre playlist "Indie Pop" préférée. Un bon café fraîchement moulu est indispensable.',
-        decoration: 'Sur une tranche de pain grillée, étalez l\'avocat écrasé avec du citron. Déposez délicatement l\'oeuf poché, puis saupoudrez de sel, poivre et flocons de piment.'
-    },
-    {
-        title: 'Risotto aux Champignons',
-        description: 'Un plat crémeux et riche en saveurs, l\'ultime comfort food italien.',
-        ingredients: ['Riz Arborio', 'Champignons de Paris', 'Oignon', 'Vin blanc sec', 'Bouillon de légumes', 'Parmesan', 'Beurre'],
-        calories: 600,
-        ambiance: 'Dîner romantique ou soirée chic. Une lumière douce, du jazz en fond sonore, et un bon verre de vin blanc.',
-        decoration: 'Servez immédiatement dans une assiette creuse. Ajoutez quelques champignons poêlés sur le dessus, des copeaux de parmesan et un tour de moulin à poivre.'
+        decoration: 'Servez dans un bol. Ajoutez une cuillère de lait de coco au centre et parsemez de coriandre fraîche ciselée.',
+        instructions: [
+            "Hachez l'oignon et coupez les carottes en petits dés.",
+            "Rincez les lentilles corail à l'eau froide.",
+            "Dans une grande casserole, faites revenir l'oignon et les carottes dans un peu d'huile jusqu'à ce qu'ils soient tendres.",
+            "Ajoutez le curry en poudre et faites-le torréfier pendant une minute.",
+            "Ajoutez les lentilles corail, puis couvrez généreusement d'eau ou de bouillon de légumes (environ 1L).",
+            "Portez à ébullition, puis baissez le feu et laissez mijoter pendant 15-20 minutes, jusqu'à ce que les lentilles soient tendres.",
+            "Incorporez le lait de coco, salez et poivrez. Laissez chauffer quelques minutes sans faire bouillir.",
+            "Servez chaud, garni de coriandre fraîche."
+        ]
     }
 ];
 
@@ -233,6 +258,22 @@ export default function KitchenAssistantPage() {
       setIsRecipeDialogOpen(true);
     }
   };
+  
+  const handleAddIngredientFromRecipe = (ingredientName: string) => {
+    const exists = ingredients.some(ing => ing.name.toLowerCase() === ingredientName.toLowerCase());
+    if (exists) return;
+
+    const newIngredient: Ingredient = {
+      id: self.crypto.randomUUID(),
+      name: ingredientName.charAt(0).toUpperCase() + ingredientName.slice(1),
+      category: 'Autre',
+      price: 0,
+      unit: 'pièce'
+    };
+    
+    setIngredients(prev => [...prev, newIngredient].sort((a,b) => a.name.localeCompare(b.name)));
+  };
+
 
   const handleSpinWheel = () => {
     setSpinning(true);
@@ -272,7 +313,7 @@ export default function KitchenAssistantPage() {
         <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3">
             <ChefHat className="h-8 w-8 text-primary" />
-            <h1 className="text-2xl font-bold tracking-tight">Assistant de Courses</h1>
+            <h1 className="text-2xl font-bold tracking-tight">Mon Garde-Manger</h1>
           </div>
            <div className="flex items-center gap-2">
               <Button variant="ghost" onClick={handleSuggestRecipe}>
@@ -401,7 +442,7 @@ export default function KitchenAssistantPage() {
       </Dialog>
       
       <Dialog open={isRecipeDialogOpen} onOpenChange={setIsRecipeDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-2xl">
             <DialogHeader>
                 <DialogTitle className="flex items-center gap-2 text-2xl">
                     <ChefHat className="h-7 w-7 text-primary" />
@@ -409,7 +450,8 @@ export default function KitchenAssistantPage() {
                 </DialogTitle>
                 <DialogDescription className="text-left pt-1">{suggestedRecipe?.description}</DialogDescription>
             </DialogHeader>
-            <div className="py-2 space-y-4">
+            <ScrollArea className="max-h-[70vh] pr-6">
+            <div className="py-2 space-y-6">
                 <div className="flex items-center justify-around bg-muted p-3 rounded-lg text-center">
                     <div>
                         <Flame className="h-6 w-6 mx-auto text-primary" />
@@ -417,11 +459,33 @@ export default function KitchenAssistantPage() {
                         <p className="text-xs text-muted-foreground">Calories (est.)</p>
                     </div>
                 </div>
-                <div>
-                    <h4 className="font-semibold mb-2 text-foreground flex items-center gap-2"><UtensilsCrossed className="h-5 w-5 text-primary"/>Ingrédients</h4>
-                    <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground pl-2">
-                        {suggestedRecipe?.ingredients.map(ing => <li key={ing}>{ing}</li>)}
-                    </ul>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                      <h4 className="font-semibold mb-2 text-foreground flex items-center gap-2"><UtensilsCrossed className="h-5 w-5 text-primary"/>Ingrédients</h4>
+                      <ul className="space-y-2 text-sm">
+                          {suggestedRecipe?.ingredients.map(ing => {
+                            const isInPantry = ingredients.some(pantryIng => pantryIng.name.toLowerCase() === ing.toLowerCase());
+                            return (
+                              <li key={ing} className="flex items-center justify-between p-1.5 rounded-md hover:bg-secondary">
+                                  <span>{ing}</span>
+                                  {isInPantry ? (
+                                      <Badge variant="secondary" className='text-xs'>Dans le garde-manger</Badge>
+                                  ) : (
+                                      <Button size="sm" variant="outline" className="h-7" onClick={() => handleAddIngredientFromRecipe(ing)}>
+                                          <PlusCircle className="mr-1.5 h-3.5 w-3.5" /> Ajouter
+                                      </Button>
+                                  )}
+                              </li>
+                            );
+                          })}
+                      </ul>
+                  </div>
+                   <div>
+                      <h4 className="font-semibold mb-2 text-foreground flex items-center gap-2"><ListSteps className="h-5 w-5 text-primary"/>Préparation</h4>
+                      <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground pl-2">
+                          {suggestedRecipe?.instructions.map((step, index) => <li key={index}>{step}</li>)}
+                      </ol>
+                  </div>
                 </div>
                 <div>
                     <h4 className="font-semibold mb-2 text-foreground flex items-center gap-2"><Sparkles className="h-5 w-5 text-primary"/>Ambiance & Déco</h4>
@@ -432,7 +496,8 @@ export default function KitchenAssistantPage() {
                     <p className="text-sm text-muted-foreground pl-2">{suggestedRecipe?.decoration}</p>
                 </div>
             </div>
-            <DialogFooter className="sm:justify-between gap-2">
+            </ScrollArea>
+            <DialogFooter className="sm:justify-between gap-2 pt-4 border-t">
                  <Button type="button" variant="secondary" onClick={handleSuggestRecipe}>
                     <Dices className="mr-2 h-4 w-4"/> Autre suggestion
                 </Button>
