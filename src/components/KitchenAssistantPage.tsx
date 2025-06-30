@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { useState, useMemo } from 'react';
-import { ChefHat, ShoppingBasket, Trash2, PlusCircle, Pencil, Minus, Plus, Dices, Flame, Sparkles, UtensilsCrossed, Paintbrush, ListSteps } from 'lucide-react';
+import { ChefHat, ShoppingBasket, Trash2, PlusCircle, Pencil, Minus, Plus, Dices, UtensilsCrossed, ListSteps } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription, SheetFooter } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
