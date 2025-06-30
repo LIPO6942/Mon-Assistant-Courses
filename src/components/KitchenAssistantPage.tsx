@@ -1,13 +1,13 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { useState, useMemo } from 'react';
-import { ChefHat, ShoppingBasket, Trash2, PlusCircle, Pencil, Minus, Plus, Dices } from 'lucide-react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription, SheetFooter } from '@/components/ui/sheet';
+import { ChefHat, ShoppingBasket, Trash2, PlusCircle, Pencil, Minus, Plus, Search } from 'lucide-react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -25,14 +25,6 @@ const initialCategories = [
 
 const units = ['pièce', 'kg', 'g', 'L', 'ml', 'boîte', 'paquet', 'botte'] as const;
 
-const fastFoodOptions = [
-    "Baguette farcie", "Ma9loub", "Tacos mexicain", "Tacos français", "Burrito", "Chapati", "Quesidilla", "Tabouna Chawarma", "Tabouna Escalope"
-];
-
-const funnyMessages = [
-    "Ce soir, on oublie la vaisselle !", "Votre estomac vous dira merci... votre balance, un peu moins.", "Parfait pour accompagner votre série préférée.", "La diète ? On verra ça demain. Ou après-demain.", "Le destin a parlé ! C'est un ordre.", "Bon appétit, et que la force du gras soit avec vous."
-];
-
 // Data Structures
 interface Ingredient {
   id: string;
@@ -46,16 +38,6 @@ interface BasketItem extends Ingredient {
   quantity: number;
 }
 
-interface Recipe {
-  title: string;
-  description: string;
-  ingredients: string[];
-  calories: number;
-  ambiance: string;
-  decoration: string;
-  instructions: string[];
-}
-
 const predefinedIngredients: Ingredient[] = [
     { id: 'f1', name: 'Pommes', category: 'Fruits et Légumes', price: 2.5, unit: 'kg' },
     { id: 'f2', name: 'Bananes', category: 'Fruits et Légumes', price: 3.0, unit: 'kg' },
@@ -67,53 +49,6 @@ const predefinedIngredients: Ingredient[] = [
     { id: 'bo1', name: 'Eau Minérale', category: 'Boissons', price: 0.5, unit: 'L' },
 ];
 
-const predefinedRecipes: Recipe[] = [
-    { 
-        title: 'Spaghetti Aglio e Olio', 
-        description: 'Un classique italien simple et savoureux, parfait pour un repas rapide en semaine.', 
-        ingredients: ['Spaghetti', 'Ail', 'Huile d\'olive', 'Flocons de piment rouge', 'Persil'],
-        calories: 450,
-        ambiance: 'Lumière tamisée, une playlist de musique italienne douce, et pourquoi pas une nappe à carreaux rouges et blancs.',
-        decoration: 'Servez dans une assiette creuse. Saupoudrez généreusement de persil frais haché et d\'un filet d\'huile d\'olive extra vierge juste avant de servir.',
-        instructions: [
-            "Faites cuire les spaghetti selon les instructions sur l'emballage jusqu'à ce qu'ils soient al dente.", "Pendant que les pâtes cuisent, hachez finement l'ail.", "Dans une grande poêle, chauffez l'huile d'olive à feu moyen. Ajoutez l'ail et les flocons de piment.", "Faites revenir l'ail pendant 1-2 minutes jusqu'à ce qu'il soit légèrement doré. Attention à ne pas le brûler.", "Égouttez les pâtes en réservant une petite tasse de leur eau de cuisson.", "Ajoutez les pâtes égouttées dans la poêle avec l'huile et l'ail. Mélangez bien pour enrober les pâtes.", "Versez un peu d'eau de cuisson des pâtes pour créer une sauce légère et crémeuse.", "Incorporez le persil frais haché, salez, poivrez et servez immédiatement."
-        ]
-    },
-    {
-        title: 'Salade César au Poulet Grillé',
-        description: 'Une salade iconique, complète et gourmande, idéale pour un déjeuner frais et satisfaisant.',
-        ingredients: ['Laitue romaine', 'Filet de Poulet', 'Croûtons', 'Parmesan', 'Huile d\'olive', 'Jaune d\'œuf', 'Moutarde de Dijon', 'Anchois', 'Ail', 'Jus de citron'],
-        calories: 550,
-        ambiance: 'Terrasse ensoleillée, déjeuner en plein air. Une ambiance décontractée et lumineuse. Parfait avec un verre de thé glacé maison.',
-        decoration: 'Servez dans un grand bol. Râpez des copeaux de parmesan frais sur le dessus. Ajoutez un filet de sauce César et quelques tours de moulin à poivre.',
-        instructions: [
-            "Assaisonnez le filet de poulet et faites-le griller jusqu'à ce qu'il soit bien cuit. Laissez-le reposer puis coupez-le en tranches.",
-            "Lavez et essorez la laitue romaine, puis coupez-la en morceaux.",
-            "Pour la sauce : émulsionnez le jaune d'œuf avec la moutarde. Ajoutez progressivement l'huile d'olive. Incorporez l'ail haché, les anchois écrasés, le jus de citron et le parmesan râpé.",
-            "Dans un grand saladier, mélangez la laitue avec une partie de la sauce.",
-            "Ajoutez les tranches de poulet grillé et les croûtons.",
-            "Garnissez de copeaux de parmesan et servez immédiatement."
-        ]
-    },
-    {
-        title: 'Tajine de Poulet aux Citrons Confits et Olives',
-        description: 'Un voyage des sens au cœur du Maroc avec ce plat mijoté, parfumé et plein de saveurs.',
-        ingredients: ['Cuisses de poulet', 'Oignons', 'Citrons confits', 'Olives vertes', 'Gingembre', 'Curcuma', 'Cumin', 'Coriandre fraîche', 'Huile d\'olive'],
-        calories: 600,
-        ambiance: 'Dîner aux chandelles, musique orientale douce en fond sonore. Des coussins colorés et des lanternes pour une atmosphère des Mille et Une Nuits.',
-        decoration: 'Servez directement dans le plat à tajine ou une assiette creuse. Parsemez de coriandre fraîche ciselée juste avant de servir. Accompagnez de pain marocain (khobz).',
-        instructions: [
-            "Faites dorer les cuisses de poulet dans une cocotte avec de l'huile d'olive.",
-            "Retirez le poulet et faites revenir les oignons émincés jusqu'à ce qu'ils soient translucides.",
-            "Ajoutez les épices (gingembre, curcuma, cumin), mélangez bien pendant une minute.",
-            "Remettez le poulet dans la cocotte. Ajoutez de l'eau à mi-hauteur, salez, poivrez.",
-            "Couvrez et laissez mijoter à feu doux pendant 45 minutes.",
-            "Ajoutez les citrons confits coupés en quartiers et les olives. Poursuivez la cuisson 15 minutes.",
-            "Vérifiez l'assaisonnement et servez chaud, garni de coriandre fraîche."
-        ]
-    }
-];
-
 export default function KitchenAssistantPage() {
   const [categories, setCategories] = useState(initialCategories);
   const [ingredients, setIngredients] = useState<Ingredient[]>(predefinedIngredients);
@@ -121,25 +56,39 @@ export default function KitchenAssistantPage() {
   const [budget, setBudget] = useState(100);
   const [budgetInput, setBudgetInput] = useState('100');
 
+  const [searchQuery, setSearchQuery] = useState('');
+
   const [isAddEditDialogOpen, setAddEditDialogOpen] = useState(false);
   const [editingIngredient, setEditingIngredient] = useState<Partial<Ingredient> | null>(null);
   
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<{ id?: string; name: string } | null>(null);
-  
-  const [isRecipeDialogOpen, setIsRecipeDialogOpen] = useState(false);
-  const [suggestedRecipe, setSuggestedRecipe] = useState<Recipe | null>(null);
-
-  const [isWheelOpen, setIsWheelOpen] = useState(false);
-  const [spinning, setSpinning] = useState(false);
-  const [wheelResult, setWheelResult] = useState<string | null>(null);
-  const [funnyMessage, setFunnyMessage] = useState<string>('');
 
   const basketTotal = useMemo(() => {
     return basket.reduce((total, item) => total + item.price * item.quantity, 0);
   }, [basket]);
 
   const remainingBudget = useMemo(() => budget - basketTotal, [budget, basketTotal]);
+
+  const filteredIngredients = useMemo(() => {
+    if (!searchQuery) return ingredients;
+    return ingredients.filter(ing =>
+      ing.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [ingredients, searchQuery]);
+
+  const groupedIngredients = useMemo(() => {
+    const acc = categories.reduce((obj, cat) => ({ ...obj, [cat.name]: [] }), {} as Record<string, Ingredient[]>);
+    filteredIngredients.forEach(item => {
+      if (acc[item.category]) acc[item.category].push(item);
+      else {
+          if (!acc['Autre']) acc['Autre'] = [];
+          acc['Autre'].push(item);
+      }
+    });
+    return acc;
+  }, [filteredIngredients, categories]);
+
 
   const handleSetBudget = () => {
     const newBudget = parseFloat(budgetInput);
@@ -160,7 +109,7 @@ export default function KitchenAssistantPage() {
   const handleDeleteIngredient = (id: string) => setIngredients(prev => prev.filter(ing => ing.id !== id));
   
   const openAddDialog = (category?: string) => {
-    setEditingIngredient({ category: category || 'Autre', unit: 'pièce', price: undefined, name: '' });
+    setEditingIngredient({ category: category || 'Autre', unit: 'pièce', price: 0, name: '' });
     setAddEditDialogOpen(true);
   };
 
@@ -215,73 +164,16 @@ export default function KitchenAssistantPage() {
   
   const clearBasket = () => setBasket([]);
 
-  const groupedIngredients = useMemo(() => {
-    const acc = categories.reduce((obj, cat) => ({ ...obj, [cat.name]: [] }), {} as Record<string, Ingredient[]>);
-    ingredients.forEach(item => {
-      if (acc[item.category]) acc[item.category].push(item);
-    });
-    return acc;
-  }, [ingredients, categories]);
-
-  const handleSuggestRecipe = () => {
-    const randomIndex = Math.floor(Math.random() * predefinedRecipes.length);
-    setSuggestedRecipe(predefinedRecipes[randomIndex]);
-    setIsRecipeDialogOpen(true);
-  };
-  
-  const handleAddIngredientFromRecipe = (ingredientName: string) => {
-    const exists = ingredients.some(ing => ing.name.toLowerCase() === ingredientName.toLowerCase());
-    if (exists) return;
-
-    const newIngredient: Ingredient = {
-      id: self.crypto.randomUUID(),
-      name: ingredientName.charAt(0).toUpperCase() + ingredientName.slice(1),
-      category: 'Autre', price: 0, unit: 'pièce'
-    };
-    setIngredients(prev => [...prev, newIngredient].sort((a,b) => a.name.localeCompare(b.name)));
-  };
-
-  const handleSpinWheel = () => {
-    setSpinning(true); setWheelResult(null); setFunnyMessage('');
-    setTimeout(() => {
-      const finalIndex = Math.floor(Math.random() * fastFoodOptions.length);
-      setWheelResult(fastFoodOptions[finalIndex]);
-      setFunnyMessage(funnyMessages[Math.floor(Math.random() * funnyMessages.length)]);
-      setSpinning(false);
-    }, 3000);
-  };
-  const openWheelDialog = () => { setWheelResult(null); setFunnyMessage(''); setIsWheelOpen(true); };
 
   return (
-    <div className="min-h-screen bg-secondary/40">
+    <div className="min-h-screen bg-background text-foreground">
       <header className="bg-card border-b sticky top-0 z-20">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-4 flex-wrap">
+        <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <ChefHat className="h-8 w-8 text-primary" />
-            <h1 className="text-2xl font-bold tracking-tight">Mon assistant de courses</h1>
+            <h1 className="text-xl md:text-2xl font-bold tracking-tight">Mon assistant de courses</h1>
           </div>
-          <div className="flex items-center gap-2 flex-wrap justify-center">
-              <Button variant="ghost" onClick={handleSuggestRecipe}>
-                  <ChefHat className="mr-2 h-4 w-4" /> Suggestion du Chef
-              </Button>
-              <Button variant="ghost" onClick={openWheelDialog}>
-                  <Dices className="mr-2 h-4 w-4" /> T'as pas envie de cuisiner ?
-              </Button>
-          </div>
-          <div className="flex items-center gap-4">
-             <div className="hidden sm:flex items-center gap-4 p-2 rounded-lg border bg-background shadow-sm">
-                <div className='flex items-center gap-2'>
-                  <Label htmlFor="budget" className='font-semibold'>Budget:</Label>
-                  <Input id="budget" type="number" value={budgetInput} onChange={e => setBudgetInput(e.target.value)} onBlur={handleSetBudget} className="w-24 h-8" />
-                  <span>DT</span>
-                </div>
-                <div className="text-sm">
-                    <span className="font-semibold text-muted-foreground">Dépenses: </span>{basketTotal.toFixed(2)} DT
-                </div>
-                <div className={`text-sm font-bold ${remainingBudget < 0 ? 'text-destructive' : 'text-primary'}`}>
-                    <span className="font-semibold text-muted-foreground">Restant: </span>{remainingBudget.toFixed(2)} DT
-                </div>
-            </div>
+          <div className="flex items-center gap-2">
             <Sheet>
               <SheetTrigger asChild>
                 <Button variant="outline" size="icon" className="relative">
@@ -292,9 +184,22 @@ export default function KitchenAssistantPage() {
               <SheetContent>
                 <SheetHeader>
                   <SheetTitle>Mon Panier</SheetTitle>
-                  <SheetDescription>Articles de votre liste de courses.</SheetDescription>
+                  <SheetDescription>Articles à acheter.</SheetDescription>
                 </SheetHeader>
-                <ScrollArea className="h-[calc(100vh-180px)] pr-4">
+                <div className='my-4 p-3 rounded-lg border bg-secondary/30 space-y-2'>
+                    <div className='flex items-center gap-2'>
+                      <Label htmlFor="budget" className='font-semibold text-sm'>Budget:</Label>
+                      <Input id="budget" type="number" value={budgetInput} onChange={e => setBudgetInput(e.target.value)} onBlur={handleSetBudget} className="w-24 h-8" />
+                      <span>DT</span>
+                    </div>
+                    <div className="text-sm">
+                        <span className="font-semibold text-muted-foreground">Dépenses: </span>{basketTotal.toFixed(2)} DT
+                    </div>
+                    <div className={`text-sm font-bold ${remainingBudget < 0 ? 'text-destructive' : 'text-primary'}`}>
+                        <span className="font-semibold text-muted-foreground">Restant: </span>{remainingBudget.toFixed(2)} DT
+                    </div>
+                </div>
+                <ScrollArea className="h-[calc(100vh-280px)] pr-4">
                   {basket.length > 0 ? (
                     <ul className="space-y-3 py-4">
                       {basket.map(item => (
@@ -329,52 +234,63 @@ export default function KitchenAssistantPage() {
         </div>
       </header>
 
-      <main className="container mx-auto p-4">
-        <h2 className="text-xl font-bold mb-4">Mon Garde-Manger</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {categories.map(category => (
-                <Card key={category.id} className="flex flex-col bg-card">
-                    <CardHeader className="flex flex-row items-center justify-between">
-                        <CardTitle className="text-primary">{category.name}</CardTitle>
-                        <div className="flex items-center">
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openCategoryDialog(category)}><Pencil className="h-4 w-4" /></Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => confirmDeleteCategory(category)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                        </div>
-                    </CardHeader>
-                    <CardContent className="flex-grow">
-                        <ScrollArea className="h-64">
-                            <ul className="space-y-2 pr-3">
-                                {(groupedIngredients[category.name] || []).map(item => (
-                                <li key={item.id} className="flex items-center justify-between p-2 rounded-md hover:bg-secondary/50 transition-colors">
-                                    <div>
-                                    <span className='font-medium'>{item.name}</span>
-                                    <p className='text-sm text-muted-foreground'>{item.price.toFixed(2)} DT / {item.unit}</p>
-                                    </div>
-                                    <div className='flex items-center gap-1'>
-                                      <Button variant="ghost" size="icon" className='h-8 w-8' onClick={() => addToBasket(item)}><Plus className="h-4 w-4" /></Button>
-                                      <Button variant="ghost" size="icon" className='h-8 w-8' onClick={() => openEditDialog(item)}><Pencil className="h-4 w-4" /></Button>
-                                      <Button variant="ghost" size="icon" className='h-8 w-8' onClick={() => handleDeleteIngredient(item.id)}><Trash2 className="h-4 w-4 text-destructive/80" /></Button>
-                                    </div>
-                                </li>
-                                ))}
-                            </ul>
-                        </ScrollArea>
-                    </CardContent>
-                    <CardFooter>
-                        <Button variant="outline" className="w-full" onClick={() => openAddDialog(category.name)}>
-                            <PlusCircle className="mr-2 h-4 w-4" /> Ajouter un produit
-                        </Button>
-                    </CardFooter>
+      <main className="container mx-auto p-4 md:p-6 lg:p-8">
+        <div className="animate-in fade-in-50">
+            <div className="relative mb-6">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <Input 
+                    type="search"
+                    placeholder="Rechercher un ingrédient..." 
+                    className="pl-11" 
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {categories.map(category => (
+                    <Card key={category.id} className="flex flex-col bg-card shadow-sm hover:shadow-md transition-shadow">
+                        <CardHeader className="flex flex-row items-center justify-between">
+                            <CardTitle className="text-primary">{category.name}</CardTitle>
+                            <div className="flex items-center">
+                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openCategoryDialog(category)}><Pencil className="h-4 w-4" /></Button>
+                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => confirmDeleteCategory(category)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="flex-grow">
+                            <ScrollArea className="h-64">
+                                <ul className="space-y-2 pr-3">
+                                    {(groupedIngredients[category.name] || []).map(item => (
+                                    <li key={item.id} className="flex items-center justify-between p-2 rounded-md hover:bg-secondary/50 transition-colors">
+                                        <div>
+                                        <span className='font-medium'>{item.name}</span>
+                                        <p className='text-sm text-muted-foreground'>{item.price.toFixed(2)} DT / {item.unit}</p>
+                                        </div>
+                                        <div className='flex items-center gap-1'>
+                                          <Button variant="ghost" size="icon" className='h-8 w-8' onClick={() => addToBasket(item)}><Plus className="h-4 w-4" /></Button>
+                                          <Button variant="ghost" size="icon" className='h-8 w-8' onClick={() => openEditDialog(item)}><Pencil className="h-4 w-4" /></Button>
+                                          <Button variant="ghost" size="icon" className='h-8 w-8' onClick={() => handleDeleteIngredient(item.id)}><Trash2 className="h-4 w-4 text-destructive/80" /></Button>
+                                        </div>
+                                    </li>
+                                    ))}
+                                </ul>
+                            </ScrollArea>
+                        </CardContent>
+                        <CardFooter>
+                            <Button variant="outline" className="w-full" onClick={() => openAddDialog(category.name)}>
+                                <PlusCircle className="mr-2 h-4 w-4" /> Ajouter un produit
+                            </Button>
+                        </CardFooter>
+                    </Card>
+                ))}
+                <Card className="flex flex-col items-center justify-center border-2 border-dashed bg-card/50 hover:border-primary hover:text-primary transition-colors cursor-pointer min-h-[300px]" onClick={() => openCategoryDialog()}>
+                  <PlusCircle className="h-10 w-10 mb-2" />
+                  <span className="font-semibold">Ajouter une catégorie</span>
                 </Card>
-            ))}
-            <Card className="flex flex-col items-center justify-center border-2 border-dashed bg-card/50 hover:border-primary hover:text-primary transition-colors cursor-pointer min-h-[300px]" onClick={() => openCategoryDialog()}>
-              <PlusCircle className="h-10 w-10 mb-2" />
-              <span className="font-semibold">Ajouter une catégorie</span>
-            </Card>
+            </div>
         </div>
       </main>
       
-      {/* Dialogs */}
+      {/* --- DIALOGS --- */}
       <Dialog open={isAddEditDialogOpen} onOpenChange={setAddEditDialogOpen}>
         <DialogContent>
             <DialogHeader>
@@ -413,73 +329,6 @@ export default function KitchenAssistantPage() {
         </DialogContent>
       </Dialog>
       
-      <Dialog open={isRecipeDialogOpen} onOpenChange={setIsRecipeDialogOpen}>
-        <DialogContent className="max-w-2xl">
-            <DialogHeader>
-                <DialogTitle className="flex items-center gap-2 text-2xl"><ChefHat className="h-7 w-7 text-primary" /><span>{suggestedRecipe?.title}</span></DialogTitle>
-                <DialogDescription className="text-left pt-1">{suggestedRecipe?.description}</DialogDescription>
-            </DialogHeader>
-            <ScrollArea className="max-h-[70vh] pr-6">
-                <div className="py-2 space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
-                        <div className="p-3 bg-secondary/50 rounded-lg">
-                            <h4 className="font-semibold mb-2 flex items-center gap-2">Calories</h4>
-                            <p className="text-muted-foreground">{suggestedRecipe?.calories} kcal</p>
-                        </div>
-                        <div className="p-3 bg-secondary/50 rounded-lg">
-                            <h4 className="font-semibold mb-2 flex items-center gap-2">Décoration</h4>
-                            <p className="text-muted-foreground">{suggestedRecipe?.decoration}</p>
-                        </div>
-                        <div className="p-3 bg-secondary/50 rounded-lg col-span-1 md:col-span-2">
-                            <h4 className="font-semibold mb-2 flex items-center gap-2">Ambiance</h4>
-                            <p className="text-muted-foreground">{suggestedRecipe?.ambiance}</p>
-                        </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                          <h4 className="font-semibold mb-2 flex items-center gap-2">Ingrédients</h4>
-                          <ul className="space-y-2 text-sm">
-                              {suggestedRecipe?.ingredients.map(ing => (
-                                <li key={ing} className="flex items-center justify-between p-1.5 rounded-md hover:bg-secondary">
-                                    <span>{ing}</span>
-                                    {!ingredients.some(pantryIng => pantryIng.name.toLowerCase() === ing.toLowerCase()) && (
-                                      <Button size="sm" variant="outline" className="h-7" onClick={() => handleAddIngredientFromRecipe(ing)}><PlusCircle className="mr-1.5 h-3.5 w-3.5" /> Ajouter</Button>
-                                    )}
-                                </li>
-                              ))}
-                          </ul>
-                      </div>
-                       <div>
-                          <h4 className="font-semibold mb-2 flex items-center gap-2">Préparation</h4>
-                          <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground pl-2">
-                              {suggestedRecipe?.instructions.map((step, index) => <li key={index}>{step}</li>)}
-                          </ol>
-                      </div>
-                    </div>
-                </div>
-            </ScrollArea>
-        </DialogContent>
-      </Dialog>
-      
-      <Dialog open={isWheelOpen} onOpenChange={setIsWheelOpen}>
-        <DialogContent className="max-w-md">
-            <DialogHeader>
-                <DialogTitle className="text-center text-2xl font-bold">La Roue de l'Indécision</DialogTitle>
-                <DialogDescription className="text-center">Laissez le destin choisir votre repas.</DialogDescription>
-            </DialogHeader>
-            <div className="flex flex-col items-center justify-center h-48 bg-muted rounded-lg my-4 overflow-hidden relative">
-                {spinning ? <p className="text-lg text-muted-foreground">Ça tourne...</p> : wheelResult ? (
-                    <div className="text-center">
-                        <p className="text-4xl font-extrabold text-primary animate-pulse">{wheelResult}</p>
-                        {funnyMessage && <p className="text-center text-lg italic text-foreground/80 mt-4 animate-in fade-in-50">"{funnyMessage}"</p>}
-                    </div>
-                ) : <p className="text-lg text-muted-foreground">Prêt à tenter votre chance ?</p>}
-            </div>
-            <DialogFooter>
-                <Button onClick={handleSpinWheel} disabled={spinning} className="w-full">{spinning ? "..." : "Lancer la roue !"}</Button>
-            </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

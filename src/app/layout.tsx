@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { PT_Sans } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 
-const inter = Inter({
+const ptSans = PT_Sans({
   subsets: ["latin"],
+  weight: ['400', '700'],
   variable: "--font-sans",
 });
 
@@ -23,7 +24,7 @@ export default function RootLayout({
       <body
         className={cn(
           "min-h-screen bg-background font-sans antialiased",
-          inter.variable
+          ptSans.variable
         )}
       >
         {children}
