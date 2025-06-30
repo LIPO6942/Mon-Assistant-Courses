@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { useState, useMemo } from 'react';
-import { ChefHat, ShoppingBasket, Trash2, PlusCircle, Pencil, Minus, Plus, Dices, UtensilsCrossed, ListSteps } from 'lucide-react';
+import { ChefHat, ShoppingBasket, Trash2, PlusCircle, Pencil, Minus, Plus, Dices, UtensilsCrossed, ListSteps, Flame, Music, PaintBrush } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription, SheetFooter } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -80,7 +80,39 @@ const predefinedRecipes: Recipe[] = [
             "Faites cuire les spaghetti selon les instructions sur l'emballage jusqu'à ce qu'ils soient al dente.", "Pendant que les pâtes cuisent, hachez finement l'ail.", "Dans une grande poêle, chauffez l'huile d'olive à feu moyen. Ajoutez l'ail et les flocons de piment.", "Faites revenir l'ail pendant 1-2 minutes jusqu'à ce qu'il soit légèrement doré. Attention à ne pas le brûler.", "Égouttez les pâtes en réservant une petite tasse de leur eau de cuisson.", "Ajoutez les pâtes égouttées dans la poêle avec l'huile et l'ail. Mélangez bien pour enrober les pâtes.", "Versez un peu d'eau de cuisson des pâtes pour créer une sauce légère et crémeuse.", "Incorporez le persil frais haché, salez, poivrez et servez immédiatement."
         ]
     },
-    // ... other recipes from before
+    {
+        title: 'Salade César au Poulet Grillé',
+        description: 'Une salade iconique, complète et gourmande, idéale pour un déjeuner frais et satisfaisant.',
+        ingredients: ['Laitue romaine', 'Filet de Poulet', 'Croûtons', 'Parmesan', 'Huile d\'olive', 'Jaune d\'œuf', 'Moutarde de Dijon', 'Anchois', 'Ail', 'Jus de citron'],
+        calories: 550,
+        ambiance: 'Terrasse ensoleillée, déjeuner en plein air. Une ambiance décontractée et lumineuse. Parfait avec un verre de thé glacé maison.',
+        decoration: 'Servez dans un grand bol. Râpez des copeaux de parmesan frais sur le dessus. Ajoutez un filet de sauce César et quelques tours de moulin à poivre.',
+        instructions: [
+            "Assaisonnez le filet de poulet et faites-le griller jusqu'à ce qu'il soit bien cuit. Laissez-le reposer puis coupez-le en tranches.",
+            "Lavez et essorez la laitue romaine, puis coupez-la en morceaux.",
+            "Pour la sauce : émulsionnez le jaune d'œuf avec la moutarde. Ajoutez progressivement l'huile d'olive. Incorporez l'ail haché, les anchois écrasés, le jus de citron et le parmesan râpé.",
+            "Dans un grand saladier, mélangez la laitue avec une partie de la sauce.",
+            "Ajoutez les tranches de poulet grillé et les croûtons.",
+            "Garnissez de copeaux de parmesan et servez immédiatement."
+        ]
+    },
+    {
+        title: 'Tajine de Poulet aux Citrons Confits et Olives',
+        description: 'Un voyage des sens au cœur du Maroc avec ce plat mijoté, parfumé et plein de saveurs.',
+        ingredients: ['Cuisses de poulet', 'Oignons', 'Citrons confits', 'Olives vertes', 'Gingembre', 'Curcuma', 'Cumin', 'Coriandre fraîche', 'Huile d\'olive'],
+        calories: 600,
+        ambiance: 'Dîner aux chandelles, musique orientale douce en fond sonore. Des coussins colorés et des lanternes pour une atmosphère des Mille et Une Nuits.',
+        decoration: 'Servez directement dans le plat à tajine ou une assiette creuse. Parsemez de coriandre fraîche ciselée juste avant de servir. Accompagnez de pain marocain (khobz).',
+        instructions: [
+            "Faites dorer les cuisses de poulet dans une cocotte avec de l'huile d'olive.",
+            "Retirez le poulet et faites revenir les oignons émincés jusqu'à ce qu'ils soient translucides.",
+            "Ajoutez les épices (gingembre, curcuma, cumin), mélangez bien pendant une minute.",
+            "Remettez le poulet dans la cocotte. Ajoutez de l'eau à mi-hauteur, salez, poivrez.",
+            "Couvrez et laissez mijoter à feu doux pendant 45 minutes.",
+            "Ajoutez les citrons confits coupés en quartiers et les olives. Poursuivez la cuisson 15 minutes.",
+            "Vérifiez l'assaisonnement et servez chaud, garni de coriandre fraîche."
+        ]
+    }
 ];
 
 export default function KitchenAssistantPage() {
@@ -394,6 +426,20 @@ export default function KitchenAssistantPage() {
             </DialogHeader>
             <ScrollArea className="max-h-[70vh] pr-6">
                 <div className="py-2 space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+                        <div className="p-3 bg-secondary/50 rounded-lg">
+                            <h4 className="font-semibold mb-2 flex items-center gap-2"><Flame className="h-5 w-5 text-primary"/>Calories</h4>
+                            <p className="text-muted-foreground">{suggestedRecipe?.calories} kcal</p>
+                        </div>
+                        <div className="p-3 bg-secondary/50 rounded-lg">
+                            <h4 className="font-semibold mb-2 flex items-center gap-2"><PaintBrush className="h-5 w-5 text-primary"/>Décoration</h4>
+                            <p className="text-muted-foreground">{suggestedRecipe?.decoration}</p>
+                        </div>
+                        <div className="p-3 bg-secondary/50 rounded-lg col-span-1 md:col-span-2">
+                            <h4 className="font-semibold mb-2 flex items-center gap-2"><Music className="h-5 w-5 text-primary"/>Ambiance</h4>
+                            <p className="text-muted-foreground">{suggestedRecipe?.ambiance}</p>
+                        </div>
+                    </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
                           <h4 className="font-semibold mb-2 flex items-center gap-2"><UtensilsCrossed className="h-5 w-5 text-primary"/>Ingrédients</h4>
