@@ -1,128 +1,22 @@
 
 'use client';
 
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
 import { useState, useMemo, useEffect } from 'react';
-import { ChefHat, ShoppingBasket, Trash2, PlusCircle, Pencil, Minus, Plus, Search, Bookmark, UtensilsCrossed, BookOpen, Dices, RotateCw } from 'lucide-react';
-import { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from '@/components/ui/sheet';
+import { ChefHat, ShoppingBasket, Bookmark, UtensilsCrossed, BookOpen, Dices, RotateCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Sheet, SheetTrigger, SheetDescription } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { cn } from '@/lib/utils';
+import { ScrollArea } from '@/components/ui/scroll-area';
+
+import { initialCategories, predefinedIngredients, chefSuggestions, streetFoodOptions } from '@/lib/data';
 import type { Ingredient, Recipe, BasketItem, CategoryDef } from '@/lib/types';
 import IngredientForm from './IngredientForm';
 import CategoryForm from './CategoryForm';
+import PantryView from './PantryView';
+import RecipesView from './RecipesView';
+import BasketSheet from './BasketSheet';
 
-
-// Initial Data
-const initialCategories: CategoryDef[] = [
-  { id: 'c1', name: 'Fruits et Légumes' },
-  { id: 'c2', name: 'Viandes et Poissons' },
-  { id: 'c3', name: 'Produits Laitiers' },
-  { id: 'c4', name: 'Boulangerie' },
-  { id: 'c5', name: 'Épicerie' },
-  { id: 'c6', name: 'Boissons' },
-];
-
-const predefinedIngredients: Ingredient[] = [
-    { id: 'f1', name: 'Pommes', category: 'Fruits et Légumes', price: 2.5, unit: 'kg' },
-    { id: 'f3', name: 'Tomates', category: 'Fruits et Légumes', price: 4.0, unit: 'kg' },
-    { id: 'v1', name: 'Filet de Poulet', category: 'Viandes et Poissons', price: 12.0, unit: 'kg' },
-    { id: 'p1', name: 'Lait Entier', category: 'Produits Laitiers', price: 1.8, unit: 'L' },
-    { id: 'b1', name: 'Baguette', category: 'Boulangerie', price: 0.4, unit: 'pièce' },
-    { id: 'e1', name: 'Pâtes Penne', category: 'Épicerie', price: 1.5, unit: 'paquet' },
-    { id: 'e2', name: 'Huile d\'olive', category: 'Épicerie', price: 15, unit: 'L' },
-    { id: 'e3', name: 'Oignon', category: 'Fruits et Légumes', price: 2, unit: 'kg' },
-];
-
-const chefSuggestions: Recipe[] = [
-  {
-    id: 'rec1',
-    title: 'Couscous Tunisien',
-    description: 'Un plat emblématique et convivial, riche en saveurs et en légumes.',
-    country: 'Tunisie',
-    ingredients: [
-      { name: 'Semoule de couscous', quantity: 500, unit: 'g' },
-      { name: 'Agneau', quantity: 750, unit: 'g' },
-      { name: 'Carottes', quantity: 4, unit: 'pièce' },
-      { name: 'Courgettes', quantity: 4, unit: 'pièce' },
-      { name: 'Pois chiches', quantity: 200, unit: 'g' },
-      { name: 'Concentré de tomate', quantity: 2, unit: 'cuillère à soupe' },
-      { name: 'Harissa', quantity: 1, unit: 'cuillère à café' },
-    ],
-    preparation: `1. Dans une marmite, faire revenir les morceaux d'agneau avec de l'huile d'olive et l'oignon haché.
-2. Ajouter le concentré de tomate, l'harissa, le sel, le poivre et les épices. Laisser mijoter 5 minutes.
-3. Couvrir d'eau et porter à ébullition. Ajouter les carottes et laisser cuire 30 minutes.
-4. Ajouter les courgettes et les pois chiches. Poursuivre la cuisson 30 minutes.
-5. Pendant ce temps, préparer la semoule en suivant les instructions sur le paquet.
-6. Servir la semoule dans un grand plat, creuser un puits au centre et y déposer la viande et les légumes. Arroser de sauce.`
-  },
-  {
-    id: 'rec2',
-    title: 'Brik à l\'œuf',
-    description: 'Une entrée croustillante et savoureuse, parfaite pour commencer le repas.',
-    country: 'Tunisie',
-    ingredients: [
-      { name: 'Feuille de brick', quantity: 8, unit: 'pièce' },
-      { name: 'Œuf', quantity: 8, unit: 'pièce' },
-      { name: 'Thon à l\'huile', quantity: 200, unit: 'g' },
-      { name: 'Câpres', quantity: 2, unit: 'cuillère à soupe' },
-      { name: 'Persil', quantity: 1, unit: 'botte' },
-    ],
-    preparation: `1. Hacher finement le persil. Égoutter le thon.
-2. Étaler une feuille de brick. Replier les bords pour former un carré.
-3. Garnir le centre avec un peu de thon, de persil et de câpres.
-4. Casser un œuf au centre de la garniture.
-5. Replier rapidement la feuille de brick en triangle pour enfermer la farce.
-6. Plonger délicatement dans une friture chaude et faire dorer des deux côtés. Le jaune d'œuf doit rester coulant.
-7. Servir immédiatement avec un quartier de citron.`
-  },
-  {
-    id: 'rec3',
-    title: 'Salade Méchouia',
-    description: 'Une salade de poivrons et tomates grillés, fraîche et relevée.',
-    country: 'Tunisie',
-    ingredients: [
-      { name: 'Poivrons verts', quantity: 4, unit: 'pièce' },
-      { name: 'Tomates', quantity: 4, unit: 'pièce' },
-      { name: 'Oignon', quantity: 1, unit: 'pièce' },
-      { name: 'Ail', quantity: 3, unit: 'g' },
-      { name: 'Huile d\'olive', quantity: 4, unit: 'cuillère à soupe' },
-    ],
-    preparation: `1. Griller les poivrons, les tomates et l'oignon au four ou sur un barbecue jusqu'à ce que la peau noircisse.
-2. Enfermer les légumes dans un sac en plastique pendant 10 minutes pour faciliter l'épluchage.
-3. Peler les légumes et les épépiner. Hacher le tout finement au couteau.
-4. Ajouter l'ail haché, l'huile d'olive, le sel et le poivre. Bien mélanger.
-5. Décorer avec du thon, des œufs durs et des olives. Servir frais.`
-  },
-  {
-    id: 'rec4',
-    title: 'Ojja aux Merguez',
-    description: 'Un plat rapide, épicé et réconfortant à base d\'œufs et de saucisses.',
-    country: 'Tunisie',
-    ingredients: [
-      { name: 'Merguez', quantity: 6, unit: 'pièce' },
-      { name: 'Œuf', quantity: 4, unit: 'pièce' },
-      { name: 'Tomates', quantity: 4, unit: 'pièce' },
-      { name: 'Poivron vert', quantity: 1, unit: 'pièce' },
-      { name: 'Concentré de tomate', quantity: 1, unit: 'cuillère à soupe' },
-      { name: 'Harissa', quantity: 1, unit: 'cuillère à café' },
-    ],
-    preparation: `1. Couper les merguez en rondelles et les faire revenir dans une poêle. Retirer et réserver.
-2. Dans la même poêle, faire revenir le poivron coupé en dés.
-3. Ajouter les tomates concassées, le concentré de tomate, l'harissa et les épices. Laisser mijoter 15 minutes.
-4. Remettre les merguez dans la sauce.
-5. Casser les œufs directement dans la poêle, sur la sauce.
-6. Couvrir et laisser cuire jusqu'à ce que les blancs d'œufs soient pris et les jaunes encore coulants.
-7. Servir chaud avec du pain frais.`
-  },
-];
-
-const streetFoodOptions = ['Quesadilla', 'Burrito', 'Fricassé', 'Tacos Mexicain', 'Tacos Maqloub', 'Pizza', 'Chapati', 'Baguette Farcie', 'Poulet prêt à porter'];
 
 export default function KitchenAssistantPage() {
   // Global State
@@ -218,7 +112,7 @@ export default function KitchenAssistantPage() {
           setCategories(prev => prev.filter(cat => cat.id !== id));
       }
   };
-  const openCategoryDialog = (category?: { id: string; name: string }) => { setEditingCategory(category || { name: '' }); setIsCategoryDialogOpen(true);};
+  const openCategoryDialog = (category?: CategoryDef) => { setEditingCategory(category || { name: '' }); setIsCategoryDialogOpen(true);};
 
   const addToBasket = (ingredient: Ingredient) => {
     setBasket(prev => {
@@ -270,7 +164,6 @@ export default function KitchenAssistantPage() {
     setActiveTab('pantry');
   };
   
-  // New feature handlers
   const handleSetBudget = () => {
     const newBudget = parseFloat(budgetInput);
     if (!isNaN(newBudget) && newBudget >= 0) {
@@ -326,6 +219,12 @@ export default function KitchenAssistantPage() {
           setIsSpinning(false);
       }, 2000); // 2 second spin
   };
+
+  const openDecisionWheel = () => {
+    setDecisionResult(null); 
+    setDecisionMessage(null);
+    setIsDecisionWheelOpen(true);
+  }
   
   const handleConfirmPurchase = () => {
     if (budget !== null) {
@@ -352,57 +251,17 @@ export default function KitchenAssistantPage() {
                 {basket.length > 0 && <Badge className="absolute -top-2 -right-2 h-6 w-6 rounded-full flex items-center justify-center bg-accent text-accent-foreground">{basket.reduce((acc, item) => acc + item.quantity, 0)}</Badge>}
               </Button>
             </SheetTrigger>
-            <SheetContent>
-              <SheetHeader>
-                <SheetTitle>Mon Panier</SheetTitle>
-                <div className="pt-2 text-left space-y-2">
-                    <Label htmlFor="budget-input">Définir un budget (DT)</Label>
-                    <div className="flex gap-2">
-                        <Input id="budget-input" type="number" placeholder="Ex: 50" value={budgetInput} onChange={(e) => setBudgetInput(e.target.value)} onBlur={handleSetBudget} onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}/>
-                        <Button onClick={handleSetBudget}>OK</Button>
-                    </div>
-                </div>
-              </SheetHeader>
-              <div className="py-4 text-left border-t mt-4">
-                    <p className="text-lg text-muted-foreground">Total du panier :</p>
-                    <p className={cn(
-                        "text-3xl font-bold",
-                        budget !== null && basketTotal > budget ? "text-destructive" : "text-primary"
-                    )}>
-                        {basketTotal.toFixed(2)} DT
-                    </p>
-                    {budget !== null && (
-                         <p className={cn("text-sm font-semibold mt-1", basketTotal > budget ? "text-destructive" : "text-muted-foreground")}>
-                            Budget : {budget.toFixed(2)} DT
-                         </p>
-                    )}
-                    {budget !== null && basketTotal > budget && (
-                        <p className="text-destructive font-semibold mt-1">Budget dépassé de {(basketTotal - budget).toFixed(2)} DT !</p>
-                    )}
-              </div>
-              <ScrollArea className="h-[calc(100vh-350px)] pr-4">
-                {basket.length > 0 ? (
-                  <ul className="space-y-3 py-4">
-                    {basket.map(item => (
-                      <li key={item.id} className="flex flex-col gap-2 bg-secondary/50 p-3 rounded-md">
-                        <div className='flex justify-between items-center'><span className='font-semibold'>{item.name}</span><span className='font-bold text-primary'>{(item.price * item.quantity).toFixed(2)} DT</span></div>
-                        <div className='flex justify-between items-center'><span className='text-sm text-muted-foreground'>{item.price.toFixed(2)} DT / {item.unit}</span>
-                          <div className='flex items-center gap-2'>
-                             <Button variant="ghost" size="icon" className='h-7 w-7 rounded-full' onClick={() => updateBasketQuantity(item.id, item.quantity - 1)}><Minus className='h-4 w-4'/></Button>
-                             <span className='font-bold w-4 text-center'>{item.quantity}</span>
-                             <Button variant="ghost" size="icon" className='h-7 w-7 rounded-full' onClick={() => updateBasketQuantity(item.id, item.quantity + 1)}><Plus className='h-4 w-4'/></Button>
-                          </div>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                ) : <p className="text-sm text-muted-foreground text-center mt-8">Votre panier est vide.</p>}
-              </ScrollArea>
-              <SheetFooter className='pt-4 border-t flex-col sm:flex-row gap-2 w-full'>
-                  <Button variant="outline" onClick={clearBasket} className="w-full" disabled={basket.length === 0}><Trash2 className="h-4 w-4 mr-2" /> Vider le panier</Button>
-                  <Button onClick={handleConfirmPurchase} className="w-full" disabled={basket.length === 0}>Valider les achats</Button>
-              </SheetFooter>
-            </SheetContent>
+            <BasketSheet 
+              basket={basket}
+              basketTotal={basketTotal}
+              budget={budget}
+              budgetInput={budgetInput}
+              setBudgetInput={setBudgetInput}
+              handleSetBudget={handleSetBudget}
+              updateBasketQuantity={updateBasketQuantity}
+              clearBasket={clearBasket}
+              handleConfirmPurchase={handleConfirmPurchase}
+            />
           </Sheet>
         </div>
         <nav className="bg-card/50 border-b">
@@ -416,76 +275,27 @@ export default function KitchenAssistantPage() {
       <main className="container mx-auto p-4 md:p-6 lg:p-8 flex-grow">
         <div className="animate-in fade-in-50">
           {activeTab === 'pantry' && (
-            <div>
-              <div className="relative mb-6">
-                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                  <Input type="search" placeholder="Rechercher un ingrédient..." className="pl-11 rounded-full" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                  {Object.entries(groupedIngredients).filter(([, items]) => items.length > 0).map(([categoryName, items]) => {
-                       const category = categories.find(c => c.name === categoryName) || {id: 'c-autre', name: 'Autre'};
-                       return (
-                        <Card key={category.id} className="flex flex-col bg-card shadow-sm hover:shadow-md transition-shadow">
-                          <CardHeader className="flex flex-row items-center justify-between">
-                              <CardTitle className="text-primary">{category.name}</CardTitle>
-                              {category.name !== 'Autre' && <div className="flex items-center">
-                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openCategoryDialog(category)}><Pencil className="h-4 w-4" /></Button>
-                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDeleteCategory(category.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                              </div>}
-                          </CardHeader>
-                          <CardContent className="flex-grow"><ScrollArea className="h-64"><ul className="space-y-2 pr-3">
-                            {items.map(item => (
-                              <li key={item.id} className="flex items-center justify-between p-2 rounded-md hover:bg-secondary/50 transition-colors">
-                                  <div><span className='font-medium'>{item.name}</span><p className='text-sm text-muted-foreground'>{item.price.toFixed(2)} DT / {item.unit}</p></div>
-                                  <div className='flex items-center gap-1'>
-                                    <Button variant="ghost" size="icon" className='h-8 w-8 rounded-full' onClick={() => addToBasket(item)}><Plus className="h-4 w-4" /></Button>
-                                    <Button variant="ghost" size="icon" className='h-8 w-8 rounded-full' onClick={() => openEditDialog(item)}><Pencil className="h-4 w-4" /></Button>
-                                    <Button variant="ghost" size="icon" className='h-8 w-8 rounded-full' onClick={() => handleDeleteIngredient(item.id)}><Trash2 className="h-4 w-4 text-destructive/80" /></Button>
-                                  </div>
-                              </li>))}
-                          </ul></ScrollArea></CardContent>
-                          <CardFooter><Button variant="outline" className="w-full" onClick={() => openAddDialog(category.name)}><PlusCircle className="mr-2 h-4 w-4" /> Ajouter un produit</Button></CardFooter>
-                        </Card>
-                       )
-                  })}
-                  <Card className="flex flex-col items-center justify-center border-2 border-dashed bg-card/50 hover:border-primary hover:text-primary transition-colors cursor-pointer min-h-[300px]" onClick={() => openCategoryDialog()}>
-                    <PlusCircle className="h-10 w-10 mb-2" />
-                    <span className="font-semibold">Ajouter une catégorie</span>
-                  </Card>
-              </div>
-            </div>
+            <PantryView 
+              groupedIngredients={groupedIngredients}
+              categories={categories}
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              addToBasket={addToBasket}
+              openAddDialog={openAddDialog}
+              openEditDialog={openEditDialog}
+              handleDeleteIngredient={handleDeleteIngredient}
+              openCategoryDialog={openCategoryDialog}
+              handleDeleteCategory={handleDeleteCategory}
+            />
           )}
           {activeTab === 'recipes' && (
-            <div className="space-y-8">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <Card className='lg:col-span-1 bg-gradient-to-br from-primary/80 to-primary text-primary-foreground text-center p-6 flex flex-col'>
-                        <CardHeader className="flex-grow"><CardTitle>À la recherche d'inspiration ?</CardTitle><CardDescription className="text-primary-foreground/80 pt-2">Laissez notre chef vous proposer un plat savoureux !</CardDescription></CardHeader>
-                        <CardContent><Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={handleShowSuggestion}>Suggestion du Chef</Button></CardContent>
-                    </Card>
-                    <Card className="lg:col-span-1 bg-gradient-to-br from-accent/80 to-accent text-accent-foreground text-center p-6 flex flex-col">
-                        <CardHeader className="flex-grow"><CardTitle>J'ai pas envie de cuisiner</CardTitle><CardDescription className="text-accent-foreground/80 pt-2">Laissez le hasard décider pour vous !</CardDescription></CardHeader>
-                        <CardContent><Button size="lg" variant="secondary" className="bg-background/20 hover:bg-background/30" onClick={() => { setIsDecisionWheelOpen(true); setDecisionResult(null); setDecisionMessage(null); }}><Dices className="mr-2 h-5 w-5"/>Roue de la Flemme</Button></CardContent>
-                    </Card>
-                </div>
-
-                <div>
-                    <h2 className='text-2xl font-bold mb-4'>Mes Recettes Sauvegardées</h2>
-                    {savedRecipes.length > 0 ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {savedRecipes.map(recipe => (
-                                <Card key={recipe.id} className="overflow-hidden flex flex-col">
-                                    <CardHeader><CardTitle>{recipe.title}</CardTitle><Badge variant="secondary" className="mt-2 w-fit">{recipe.country}</Badge></CardHeader>
-                                    <CardContent className="flex-grow"><p className="text-sm text-muted-foreground">{recipe.description}</p></CardContent>
-                                    <CardFooter className="flex justify-between mt-auto bg-secondary/30 pt-4">
-                                        <Button onClick={() => setViewingRecipe(recipe)}>Voir la recette</Button>
-                                        <Button variant="ghost" size="icon" onClick={() => setSavedRecipes(prev => prev.filter(r => r.id !== recipe.id))}><Trash2 className="h-4 w-4 text-destructive"/></Button>
-                                    </CardFooter>
-                                </Card>
-                            ))}
-                        </div>
-                    ) : <div className="text-center py-10 border-2 border-dashed rounded-lg"><BookOpen className="mx-auto h-12 w-12 text-muted-foreground" /><p className="mt-4 text-sm text-muted-foreground">Aucune recette sauvegardée pour le moment.</p><p className="mt-1 text-sm text-muted-foreground">Utilisez la "Suggestion du Chef" pour en découvrir !</p></div>}
-                </div>
-            </div>
+            <RecipesView 
+              savedRecipes={savedRecipes}
+              handleShowSuggestion={handleShowSuggestion}
+              setIsDecisionWheelOpen={openDecisionWheel}
+              setViewingRecipe={setViewingRecipe}
+              setSavedRecipes={setSavedRecipes}
+            />
           )}
         </div>
       </main>
