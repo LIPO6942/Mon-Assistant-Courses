@@ -9,7 +9,6 @@ import { useState, useMemo } from 'react';
 import { ChefHat, ShoppingBasket, Trash2, PlusCircle, Pencil, Minus, Plus, Dices, UtensilsCrossed, ListSteps, Flame, Music, PaintBrush } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription, SheetFooter } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -127,8 +126,7 @@ export default function KitchenAssistantPage() {
   
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<{ id?: string; name: string } | null>(null);
-  const [deletingCategory, setDeletingCategory] = useState<{ id: string; name: string } | null>(null);
-
+  
   const [isRecipeDialogOpen, setIsRecipeDialogOpen] = useState(false);
   const [suggestedRecipe, setSuggestedRecipe] = useState<Recipe | null>(null);
 
@@ -188,9 +186,13 @@ export default function KitchenAssistantPage() {
 
   const handleDeleteCategory = (id: string) => {
     setCategories(prev => prev.filter(cat => cat.id !== id));
-    // Optionally re-categorize ingredients under the deleted category to "Autre"
-    // setIngredients(prev => prev.map(ing => ing.category === deletingCategory?.name ? {...ing, category: 'Autre'} : ing));
-    setDeletingCategory(null);
+  };
+  
+  const confirmDeleteCategory = (category: { id: string; name: string }) => {
+    const isConfirmed = window.confirm(`Êtes-vous sûr de vouloir supprimer la catégorie "${category.name}" ?\nCette action est irréversible.`);
+    if (isConfirmed) {
+      handleDeleteCategory(category.id);
+    }
   };
 
   const addToBasket = (ingredient: Ingredient) => {
@@ -336,7 +338,7 @@ export default function KitchenAssistantPage() {
                         <CardTitle className="text-primary">{category.name}</CardTitle>
                         <div className="flex items-center">
                           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openCategoryDialog(category)}><Pencil className="h-4 w-4" /></Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setDeletingCategory(category)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => confirmDeleteCategory(category)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                         </div>
                     </CardHeader>
                     <CardContent className="flex-grow">
@@ -403,21 +405,6 @@ export default function KitchenAssistantPage() {
         </DialogContent>
       </Dialog>
       
-      <AlertDialog open={!!deletingCategory} onOpenChange={() => setDeletingCategory(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Êtes-vous sûr de vouloir supprimer cette catégorie ?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Cette action est irréversible. Tous les produits de la catégorie "{deletingCategory?.name}" ne seront plus affichés.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setDeletingCategory(null)}>Annuler</AlertDialogCancel>
-            <AlertDialogAction onClick={() => handleDeleteCategory(deletingCategory!.id)}>Supprimer</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
       <Dialog open={isRecipeDialogOpen} onOpenChange={setIsRecipeDialogOpen}>
         <DialogContent className="max-w-2xl">
             <DialogHeader>
