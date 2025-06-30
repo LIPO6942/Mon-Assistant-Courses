@@ -9,8 +9,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Mon Assistant Cuisine",
-  description: "Générez des recettes et gérez votre liste de courses.",
+  title: "Mon assistant de courses",
+  description: "Gérez votre garde-manger, planifiez vos repas et vos courses.",
 };
 
 export default function RootLayout({
