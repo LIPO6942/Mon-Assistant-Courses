@@ -792,8 +792,8 @@ video {
 .h-9 {
   height: 2.25rem;
 }
-.h-\[calc\(100vh-320px\)\] {
-  height: calc(100vh - 320px);
+.h-\[calc\(100vh-350px\)\] {
+  height: calc(100vh - 350px);
 }
 .h-\[var\(--radix-select-trigger-height\)\] {
   height: var(--radix-select-trigger-height);
@@ -803,9 +803,6 @@ video {
 }
 .h-px {
   height: 1px;
-}
-.h-\[calc\(100vh-350px\)\] {
-  height: calc(100vh - 350px);
 }
 .min-h-\[150px\] {
   min-height: 150px;
