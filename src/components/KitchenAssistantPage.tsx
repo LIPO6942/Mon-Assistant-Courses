@@ -132,7 +132,7 @@ const chefSuggestions: Recipe[] = [
   {
     id: 'rec4',
     title: 'Ojja aux Merguez',
-    description: 'Un plat rapide, épicé et réconfortant à base d\'œufs et de saucisses.',
+    description: 'Un plat rapide, épicé et réconfortant à base d\'oeufs et de saucisses.',
     country: 'Tunisie',
     ingredients: [
       { name: 'Merguez', quantity: 6, unit: 'pièce' },
@@ -180,6 +180,7 @@ export default function KitchenAssistantPage() {
   const [isDecisionWheelOpen, setIsDecisionWheelOpen] = useState(false);
   const [decisionResult, setDecisionResult] = useState<string | null>(null);
   const [isSpinning, setIsSpinning] = useState(false);
+  const [decisionMessage, setDecisionMessage] = useState<string | null>(null);
 
   // Load budget from localStorage on mount
   useEffect(() => {
@@ -187,7 +188,7 @@ export default function KitchenAssistantPage() {
     if (savedBudget && !isNaN(parseFloat(savedBudget))) {
         const parsedBudget = parseFloat(savedBudget);
         setBudget(parsedBudget);
-        setBudgetInput(String(parsedBudget));
+        setBudgetInput(String(parsedBudget.toFixed(2)));
     }
   }, []);
 
@@ -321,16 +322,49 @@ export default function KitchenAssistantPage() {
     }
     return options;
   };
+  
+  const getFunnyMessage = (result: string) => {
+    const messages = [
+        `Alors, on dirait que le destin a choisi pour vous : un bon ${result} !`,
+        `Ce soir, c'est soirée ${result} ! Régalez-vous bien.`,
+        `Plus besoin de réfléchir, l'univers vous envoie un ${result}. Bon appétit !`,
+        `Le verdict est tombé ! Ce sera ${result}. La flemme a du bon, non ?`,
+    ];
+    // Special cases
+    if (result.toLowerCase().includes('lablebi')) {
+        return `Parfait pour se réchauffer ! Le ${result} vous attend, n'oubliez pas le pain.`;
+    }
+    if (result.toLowerCase().includes('fricassé')) {
+        return `Attention à la harissa ! Un ${result} bien tunisien, ça se respecte.`;
+    }
+     if (result.toLowerCase().includes('maqloub')) {
+        return `Le Tacos Maqloub, le choix des connaisseurs. Un vrai délice !`;
+    }
+    return messages[Math.floor(Math.random() * messages.length)];
+  };
 
   const handleSpinWheel = () => {
       setIsSpinning(true);
       setDecisionResult(null);
+      setDecisionMessage(null);
       const options = getSeasonalStreetFood();
       setTimeout(() => {
           const randomIndex = Math.floor(Math.random() * options.length);
-          setDecisionResult(options[randomIndex]);
+          const result = options[randomIndex];
+          setDecisionResult(result);
+          setDecisionMessage(getFunnyMessage(result));
           setIsSpinning(false);
       }, 2000); // 2 second spin
+  };
+  
+  const handleConfirmPurchase = () => {
+    if (budget !== null) {
+      const newBudget = budget - basketTotal;
+      setBudget(newBudget);
+      setBudgetInput(newBudget.toFixed(2));
+      localStorage.setItem('shoppingBudget', String(newBudget));
+    }
+    clearBasket();
   };
 
 
@@ -377,7 +411,7 @@ export default function KitchenAssistantPage() {
                         <p className="text-destructive font-semibold mt-1">Budget dépassé de {(basketTotal - budget).toFixed(2)} DT !</p>
                     )}
               </div>
-              <ScrollArea className="h-[calc(100vh-320px)] pr-4">
+              <ScrollArea className="h-[calc(100vh-350px)] pr-4">
                 {basket.length > 0 ? (
                   <ul className="space-y-3 py-4">
                     {basket.map(item => (
@@ -395,8 +429,9 @@ export default function KitchenAssistantPage() {
                   </ul>
                 ) : <p className="text-sm text-muted-foreground text-center mt-8">Votre panier est vide.</p>}
               </ScrollArea>
-              <SheetFooter className='pt-4 border-t'>
+              <SheetFooter className='pt-4 border-t flex-col sm:flex-row gap-2 w-full'>
                   <Button variant="outline" onClick={clearBasket} className="w-full" disabled={basket.length === 0}><Trash2 className="h-4 w-4 mr-2" /> Vider le panier</Button>
+                  <Button onClick={handleConfirmPurchase} className="w-full" disabled={basket.length === 0}>Valider les achats</Button>
               </SheetFooter>
             </SheetContent>
           </Sheet>
@@ -460,7 +495,7 @@ export default function KitchenAssistantPage() {
                     </Card>
                     <Card className="lg:col-span-1 bg-gradient-to-br from-accent/80 to-accent text-accent-foreground text-center p-6 flex flex-col">
                         <CardHeader className="flex-grow"><CardTitle>J'ai pas envie de cuisiner</CardTitle><CardDescription className="text-accent-foreground/80 pt-2">Laissez le hasard décider pour vous !</CardDescription></CardHeader>
-                        <CardContent><Button size="lg" variant="secondary" className="bg-background/20 hover:bg-background/30" onClick={() => { setIsDecisionWheelOpen(true); setDecisionResult(null); }}><Dices className="mr-2 h-5 w-5"/>Roue de la Flemme</Button></CardContent>
+                        <CardContent><Button size="lg" variant="secondary" className="bg-background/20 hover:bg-background/30" onClick={() => { setIsDecisionWheelOpen(true); setDecisionResult(null); setDecisionMessage(null); }}><Dices className="mr-2 h-5 w-5"/>Roue de la Flemme</Button></CardContent>
                     </Card>
                 </div>
 
@@ -523,7 +558,7 @@ export default function KitchenAssistantPage() {
       </Dialog>
       <Dialog open={!!viewingRecipe} onOpenChange={(open) => !open && setViewingRecipe(null)}>
         {viewingRecipe && <DialogContent className="max-w-lg">
-            <DialogHeader><DialogTitle>{viewingRecipe.title}</DialogTitle><DialogDescription>{viewingRecipe.country} - {viewingRecipe.description}</DialogDescription></DialogHeader>
+            <DialogHeader><DialogTitle>{viewingRecipe.title}</DialogTitle><DialogDescription>{viewingRecipe.country} - {viewingRecipe.description}</DialogDescription></Header>
             <ScrollArea className="h-72 my-2 border rounded-md p-4">
                 <h4 className='font-semibold'>Ingrédients :</h4>
                 <ul className='list-disc pl-5 text-sm space-y-1 my-2'>
@@ -546,9 +581,8 @@ export default function KitchenAssistantPage() {
                         <RotateCw className="h-16 w-16 text-primary animate-spin" />
                     ) : decisionResult ? (
                         <div className="text-center animate-in fade-in-50 zoom-in-95">
-                            <p className="text-muted-foreground">Et le gagnant est...</p>
-                            <p className="text-3xl font-bold text-primary mt-2">{decisionResult} !</p>
-                            <p className="text-sm text-muted-foreground mt-1">Bon appétit !</p>
+                            <p className="text-3xl font-bold text-primary">{decisionResult} !</p>
+                            {decisionMessage && <p className="text-sm text-muted-foreground mt-2">{decisionMessage}</p>}
                         </div>
                     ) : (
                         <Dices className="h-16 w-16 text-muted-foreground" />
