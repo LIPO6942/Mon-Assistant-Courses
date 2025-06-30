@@ -804,6 +804,9 @@ video {
 .h-px {
   height: 1px;
 }
+.h-\[calc\(100vh-270px\)\] {
+  height: calc(100vh - 270px);
+}
 .min-h-\[150px\] {
   min-height: 150px;
 }

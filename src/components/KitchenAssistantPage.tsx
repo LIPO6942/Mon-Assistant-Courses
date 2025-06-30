@@ -1,14 +1,14 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
-import { ChefHat, ShoppingBasket, Bookmark, UtensilsCrossed, BookOpen, Dices, RotateCw } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { ChefHat, ShoppingBasket, UtensilsCrossed, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Sheet, SheetTrigger, SheetDescription } from '@/components/ui/sheet';
+import { Sheet, SheetTrigger } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
-import { initialCategories, predefinedIngredients, chefSuggestions, streetFoodOptions } from '@/lib/data';
+import { initialCategories, predefinedIngredients } from '@/lib/data';
 import type { Ingredient, Recipe, BasketItem, CategoryDef } from '@/lib/types';
 import IngredientForm from './IngredientForm';
 import CategoryForm from './CategoryForm';
@@ -33,27 +33,7 @@ export default function KitchenAssistantPage() {
   const [editingIngredient, setEditingIngredient] = useState<Partial<Ingredient> | null>(null);
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<{ id?: string; name: string } | null>(null);
-  const [isSuggestionOpen, setSuggestionOpen] = useState(false);
-  const [currentSuggestion, setCurrentSuggestion] = useState<Recipe | null>(null);
   const [viewingRecipe, setViewingRecipe] = useState<Recipe | null>(null);
-
-  // New features state
-  const [budget, setBudget] = useState<number | null>(null);
-  const [budgetInput, setBudgetInput] = useState<string>('');
-  const [isDecisionWheelOpen, setIsDecisionWheelOpen] = useState(false);
-  const [decisionResult, setDecisionResult] = useState<string | null>(null);
-  const [isSpinning, setIsSpinning] = useState(false);
-  const [decisionMessage, setDecisionMessage] = useState<string | null>(null);
-
-  // Load budget from localStorage on mount
-  useEffect(() => {
-    const savedBudget = localStorage.getItem('shoppingBudget');
-    if (savedBudget && !isNaN(parseFloat(savedBudget))) {
-        const parsedBudget = parseFloat(savedBudget);
-        setBudget(parsedBudget);
-        setBudgetInput(String(parsedBudget.toFixed(2)));
-    }
-  }, []);
 
   // Memoized Calculations
   const basketTotal = useMemo(() => basket.reduce((total, item) => total + item.price * item.quantity, 0), [basket]);
@@ -125,113 +105,9 @@ export default function KitchenAssistantPage() {
     else setBasket(prev => prev.map(item => item.id === id ? { ...item, quantity: newQuantity } : item));
   };
   const clearBasket = () => setBasket([]);
-
-  const handleShowSuggestion = () => {
-    const suggestion = chefSuggestions[Math.floor(Math.random() * chefSuggestions.length)];
-    setCurrentSuggestion(suggestion);
-    setSuggestionOpen(true);
-  };
-
-  const handleSaveRecipe = (recipe: Recipe) => {
-    if (!savedRecipes.some(r => r.id === recipe.id)) {
-      setSavedRecipes(prev => [...prev, recipe]);
-    }
-    setSuggestionOpen(false);
-    setActiveTab('recipes');
-  };
-
-  const handleAddIngredientsFromRecipe = (recipe: Recipe) => {
-    const newIngredients: Ingredient[] = [];
-    recipe.ingredients.forEach(ing => {
-        if (!pantry.some(p => p.name.toLowerCase() === ing.name.toLowerCase())) {
-            newIngredients.push({
-                id: self.crypto.randomUUID(),
-                name: ing.name,
-                category: 'Autre',
-                price: 0, // Price is unknown
-                unit: ing.unit,
-            });
-        }
-    });
-    if (newIngredients.length > 0) {
-      setPantry(prev => [...prev, ...newIngredients].sort((a,b) => a.name.localeCompare(b.name)));
-      alert(`${newIngredients.length} ingrédient(s) manquant(s) ont été ajoutés à votre garde-manger dans la catégorie "Autre". Pensez à y mettre un prix !`);
-    } else {
-      alert("Vous avez déjà tous les ingrédients pour cette recette !");
-    }
-    setSuggestionOpen(false);
-    setActiveTab('pantry');
-  };
-  
-  const handleSetBudget = () => {
-    const newBudget = parseFloat(budgetInput);
-    if (!isNaN(newBudget) && newBudget >= 0) {
-        setBudget(newBudget);
-        localStorage.setItem('shoppingBudget', String(newBudget));
-    } else {
-        setBudget(null);
-        setBudgetInput('');
-        localStorage.removeItem('shoppingBudget');
-    }
-  };
-  
-  const getSeasonalStreetFood = () => {
-    const month = new Date().getMonth(); // 0-11 (Jan-Dec)
-    const isLablebiSeason = (month >= 8 && month <= 10) || (month === 11 || month <= 1); // Sept-Feb
-    const options = [...streetFoodOptions];
-    if (isLablebiSeason) {
-        options.push('Lablebi Royal');
-    }
-    return options;
-  };
-  
-  const getFunnyMessage = (result: string) => {
-    const messages = [
-        `Alors, on dirait que le destin a choisi pour vous : un bon ${result} !`,
-        `Ce soir, c'est soirée ${result} ! Régalez-vous bien.`,
-        `Plus besoin de réfléchir, l'univers vous envoie un ${result}. Bon appétit !`,
-        `Le verdict est tombé ! Ce sera ${result}. La flemme a du bon, non ?`,
-    ];
-    // Special cases
-    if (result.toLowerCase().includes('lablebi')) {
-        return `Parfait pour se réchauffer ! Le ${result} vous attend, n'oubliez pas le pain.`;
-    }
-    if (result.toLowerCase().includes('fricassé')) {
-        return `Attention à la harissa ! Un ${result} bien tunisien, ça se respecte.`;
-    }
-     if (result.toLowerCase().includes('maqloub')) {
-        return `Le Tacos Maqloub, le choix des connaisseurs. Un vrai délice !`;
-    }
-    return messages[Math.floor(Math.random() * messages.length)];
-  };
-
-  const handleSpinWheel = () => {
-      setIsSpinning(true);
-      setDecisionResult(null);
-      setDecisionMessage(null);
-      const options = getSeasonalStreetFood();
-      setTimeout(() => {
-          const randomIndex = Math.floor(Math.random() * options.length);
-          const result = options[randomIndex];
-          setDecisionResult(result);
-          setDecisionMessage(getFunnyMessage(result));
-          setIsSpinning(false);
-      }, 2000); // 2 second spin
-  };
-
-  const openDecisionWheel = () => {
-    setDecisionResult(null); 
-    setDecisionMessage(null);
-    setIsDecisionWheelOpen(true);
-  }
   
   const handleConfirmPurchase = () => {
-    if (budget !== null) {
-      const newBudget = budget - basketTotal;
-      setBudget(newBudget);
-      setBudgetInput(newBudget.toFixed(2));
-      localStorage.setItem('shoppingBudget', String(newBudget));
-    }
+    alert("Achats validés ! Votre panier a été vidé.");
     clearBasket();
   };
 
@@ -253,10 +129,6 @@ export default function KitchenAssistantPage() {
             <BasketSheet 
               basket={basket}
               basketTotal={basketTotal}
-              budget={budget}
-              budgetInput={budgetInput}
-              setBudgetInput={setBudgetInput}
-              handleSetBudget={handleSetBudget}
               updateBasketQuantity={updateBasketQuantity}
               clearBasket={clearBasket}
               handleConfirmPurchase={handleConfirmPurchase}
@@ -290,8 +162,6 @@ export default function KitchenAssistantPage() {
           {activeTab === 'recipes' && (
             <RecipesView 
               savedRecipes={savedRecipes}
-              handleShowSuggestion={handleShowSuggestion}
-              setIsDecisionWheelOpen={openDecisionWheel}
               setViewingRecipe={setViewingRecipe}
               setSavedRecipes={setSavedRecipes}
             />
@@ -314,26 +184,6 @@ export default function KitchenAssistantPage() {
             <DialogFooter><Button variant="outline" onClick={() => setIsCategoryDialogOpen(false)}>Annuler</Button><Button type="submit" form="category-form">Sauvegarder</Button></DialogFooter>
         </DialogContent>
       </Dialog>
-      <Dialog open={isSuggestionOpen} onOpenChange={setSuggestionOpen}>
-        {currentSuggestion && <DialogContent className="max-w-lg">
-            <DialogHeader>
-                <DialogTitle>{currentSuggestion.title}</DialogTitle>
-                <DialogDescription>{currentSuggestion.country} - {currentSuggestion.description}</DialogDescription>
-            </DialogHeader>
-            <ScrollArea className="h-72 my-2 border rounded-md p-4">
-                <h4 className='font-semibold'>Ingrédients :</h4>
-                <ul className='list-disc pl-5 text-sm space-y-1 my-2'>
-                    {currentSuggestion.ingredients.map(ing => <li key={ing.name}>{ing.quantity} {ing.unit} de {ing.name}</li>)}
-                </ul>
-                 <h4 className='font-semibold mt-4'>Préparation :</h4>
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap mt-2">{currentSuggestion.preparation}</p>
-            </ScrollArea>
-            <DialogFooter className="sm:justify-between gap-2 mt-4">
-                <Button variant="secondary" onClick={() => handleAddIngredientsFromRecipe(currentSuggestion)}>Ajouter les manquants</Button>
-                <Button className="bg-primary" onClick={() => handleSaveRecipe(currentSuggestion)}><Bookmark className="mr-2 h-4 w-4"/>Sauvegarder</Button>
-            </DialogFooter>
-        </DialogContent>}
-      </Dialog>
       <Dialog open={!!viewingRecipe} onOpenChange={(open) => !open && setViewingRecipe(null)}>
         {viewingRecipe && <DialogContent className="max-w-lg">
             <DialogHeader><DialogTitle>{viewingRecipe.title}</DialogTitle><DialogDescription>{viewingRecipe.country} - {viewingRecipe.description}</DialogDescription></Header>
@@ -348,31 +198,6 @@ export default function KitchenAssistantPage() {
             <DialogFooter><DialogClose asChild><Button type="button">Fermer</Button></DialogClose></DialogFooter>
         </DialogContent>}
       </Dialog>
-       <Dialog open={isDecisionWheelOpen} onOpenChange={(open) => { if (!open) setIsDecisionWheelOpen(false); }}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>La Roue de la Flemme</DialogTitle>
-                    <DialogDescription>Que manger ce soir ? Faites tourner la roue !</DialogDescription>
-                </DialogHeader>
-                <div className="flex flex-col items-center justify-center p-8 gap-6 min-h-[150px]">
-                    {isSpinning ? (
-                        <RotateCw className="h-16 w-16 text-primary animate-spin" />
-                    ) : decisionResult ? (
-                        <div className="text-center animate-in fade-in-50 zoom-in-95">
-                            <p className="text-3xl font-bold text-primary">{decisionResult} !</p>
-                            {decisionMessage && <p className="text-sm text-muted-foreground mt-2">{decisionMessage}</p>}
-                        </div>
-                    ) : (
-                        <Dices className="h-16 w-16 text-muted-foreground" />
-                    )}
-                </div>
-                <DialogFooter>
-                    <Button onClick={handleSpinWheel} disabled={isSpinning} className="w-full">
-                        {isSpinning ? (<><RotateCw className="mr-2 h-4 w-4 animate-spin"/> Ça tourne...</>) : "Faire tourner !"}
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
     </div>
   );
 }
