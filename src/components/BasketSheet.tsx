@@ -2,22 +2,14 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
 import type { BasketItem } from '@/lib/types';
-import { cn } from '@/lib/utils';
 import { Minus, Plus, Trash2 } from 'lucide-react';
 
 interface BasketSheetProps {
   basket: BasketItem[];
   basketTotal: number;
-  budget: number | null;
-  budgetInput: string;
-  setBudgetInput: (value: string) => void;
-  handleSetBudget: () => void;
   updateBasketQuantity: (id: string, newQuantity: number) => void;
   clearBasket: () => void;
   handleConfirmPurchase: () => void;
@@ -26,10 +18,6 @@ interface BasketSheetProps {
 export default function BasketSheet({
   basket,
   basketTotal,
-  budget,
-  budgetInput,
-  setBudgetInput,
-  handleSetBudget,
   updateBasketQuantity,
   clearBasket,
   handleConfirmPurchase,
@@ -38,32 +26,14 @@ export default function BasketSheet({
     <SheetContent>
       <SheetHeader>
         <SheetTitle>Mon Panier</SheetTitle>
-        <div className="pt-2 text-left space-y-2">
-            <Label htmlFor="budget-input">Définir un budget (DT)</Label>
-            <div className="flex gap-2">
-                <Input id="budget-input" type="number" placeholder="Ex: 50" value={budgetInput} onChange={(e) => setBudgetInput(e.target.value)} onBlur={handleSetBudget} onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}/>
-                <Button onClick={handleSetBudget}>OK</Button>
-            </div>
-        </div>
       </SheetHeader>
       <div className="py-4 text-left border-t mt-4">
             <p className="text-lg text-muted-foreground">Total du panier :</p>
-            <p className={cn(
-                "text-3xl font-bold",
-                budget !== null && basketTotal > budget ? "text-destructive" : "text-primary"
-            )}>
+            <p className="text-3xl font-bold text-primary">
                 {basketTotal.toFixed(2)} DT
             </p>
-            {budget !== null && (
-                 <p className={cn("text-sm font-semibold mt-1", basketTotal > budget ? "text-destructive" : "text-muted-foreground")}>
-                    Budget : {budget.toFixed(2)} DT
-                 </p>
-            )}
-            {budget !== null && basketTotal > budget && (
-                <p className="text-destructive font-semibold mt-1">Budget dépassé de {(basketTotal - budget).toFixed(2)} DT !</p>
-            )}
       </div>
-      <ScrollArea className="h-[calc(100vh-350px)] pr-4">
+      <ScrollArea className="h-[calc(100vh-270px)] pr-4">
         {basket.length > 0 ? (
           <ul className="space-y-3 py-4">
             {basket.map(item => (
