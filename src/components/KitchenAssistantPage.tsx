@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { useState, useMemo } from 'react';
-import { ChefHat, ShoppingBasket, Trash2, PlusCircle, Pencil, Minus, Plus, Dices } from 'lucide-react';
+import { ChefHat, ShoppingBasket, Trash2, PlusCircle, Pencil, Minus, Plus, Dices, Flame, Sparkles, UtensilsCrossed, Paintbrush } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription, SheetFooter } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -65,6 +65,9 @@ interface Recipe {
   title: string;
   description: string;
   ingredients: string[];
+  calories: number;
+  ambiance: string;
+  decoration: string;
 }
 
 const predefinedIngredients: Ingredient[] = [
@@ -76,23 +79,66 @@ const predefinedIngredients: Ingredient[] = [
     { id: 'v2', name: 'Saumon Frais', category: 'Viandes et Poissons', price: 25.0, unit: 'kg' },
     { id: 'v3', name: 'Steak de boeuf', category: 'Viandes et Poissons', price: 20.0, unit: 'kg' },
     { id: 'p1', name: 'Lait Entier', category: 'Produits Laitiers', price: 1.8, unit: 'L' },
-    { id: 'p2', name: 'Yaourt nature', category: 'Produits Laitiers', price: 0.8, unit: 'pot' },
+    { id: 'p2', name: 'Yaourt nature', category: 'Produits Laitiers', price: 0.8, unit: 'pièce' },
     { id: 'p3', name: 'Fromage Emmental', category: 'Produits Laitiers', price: 15.0, unit: 'kg' },
     { id: 'b1', name: 'Baguette Tradition', category: 'Boulangerie', price: 1.2, unit: 'pièce' },
     { id: 'b2', name: 'Croissant au beurre', category: 'Boulangerie', price: 1.0, unit: 'pièce' },
-    { id: 'e1', name: 'Pâtes Penne', category: 'Épicerie', price: 1.5, unit: '500g' },
+    { id: 'e1', name: 'Pâtes Penne', category: 'Épicerie', price: 1.5, unit: 'boîte' },
     { id: 'e2', name: 'Riz Basmati', category: 'Épicerie', price: 2.0, unit: 'kg' },
     { id: 'e3', name: 'Huile d\'olive vierge', category: 'Épicerie', price: 8.0, unit: 'L' },
-    { id: 'bo1', name: 'Eau Minérale', category: 'Boissons', price: 0.5, unit: '1.5L' },
+    { id: 'bo1', name: 'Eau Minérale', category: 'Boissons', price: 0.5, unit: 'L' },
     { id: 'bo2', name: 'Jus de Pomme Bio', category: 'Boissons', price: 2.5, unit: 'L' },
 ];
 
 const predefinedRecipes: Recipe[] = [
-    { title: 'Spaghetti Aglio e Olio', description: 'Un classique italien simple et savoureux, parfait pour un repas rapide.', ingredients: ['Spaghetti', 'Ail', 'Huile d\'olive', 'Piment rouge', 'Persil'] },
-    { title: 'Omelette aux champignons', description: 'Facile et rapide, une omelette est toujours une bonne idée pour un repas léger.', ingredients: ['Oeufs', 'Champignons', 'Beurre', 'Sel', 'Poivre'] },
-    { title: 'Salade César', description: 'Une salade iconique et gourmande avec son poulet grillé et sa sauce onctueuse.', ingredients: ['Laitue romaine', 'Poulet', 'Croûtons', 'Parmesan', 'Sauce César'] },
-    { title: 'Soupe de lentilles corail', description: 'Une soupe réconfortante et épicée, aux saveurs orientales.', ingredients: ['Lentilles corail', 'Oignon', 'Carottes', 'Lait de coco', 'Curry'] },
-    { title: 'Avocado Toast', description: 'Le petit-déjeuner ou brunch tendance, sain et délicieux.', ingredients: ['Pain de campagne', 'Avocat', 'Citron', 'Flocons de piment', 'Oeuf poché (optionnel)'] }
+    { 
+        title: 'Spaghetti Aglio e Olio', 
+        description: 'Un classique italien simple et savoureux, parfait pour un repas rapide en semaine.', 
+        ingredients: ['Spaghetti', 'Ail', 'Huile d\'olive', 'Piment rouge', 'Persil'],
+        calories: 450,
+        ambiance: 'Lumière tamisée, une playlist de musique italienne douce, et pourquoi pas une nappe à carreaux rouges et blancs.',
+        decoration: 'Servez dans une assiette creuse. Saupoudrez généreusement de persil frais haché et d\'un filet d\'huile d\'olive extra vierge juste avant de servir.'
+    },
+    { 
+        title: 'Omelette aux champignons et épinards', 
+        description: 'Facile et rapide, une omelette est toujours une bonne idée pour un repas léger et nutritif.', 
+        ingredients: ['Oeufs', 'Champignons de Paris', 'Pousses d\'épinards', 'Beurre', 'Fromage de chèvre (optionnel)'],
+        calories: 350,
+        ambiance: 'Ambiance de brunch du dimanche matin, même un mardi soir. Un fond de musique jazz léger et une table bien mise.',
+        decoration: 'Pliez l\'omelette en deux dans l\'assiette. Ajoutez quelques feuilles d\'épinards fraîches sur le dessus et un peu de poivre noir fraîchement moulu.'
+    },
+    { 
+        title: 'Salade César au Poulet Grillé', 
+        description: 'Une salade iconique et gourmande avec son poulet grillé et sa sauce onctueuse.', 
+        ingredients: ['Laitue romaine', 'Filet de Poulet', 'Croûtons à l\'ail', 'Parmesan en copeaux', 'Sauce César'],
+        calories: 550,
+        ambiance: 'Terrasse ensoleillée, même si c\'est dans votre salon. Mettez des lunettes de soleil pour le fun. Un verre de thé glacé complète le tableau.',
+        decoration: 'Disposez les feuilles de laitue, ajoutez le poulet coupé en lanières, parsemez de croûtons et terminez avec de larges copeaux de parmesan.'
+    },
+    { 
+        title: 'Soupe de lentilles corail au lait de coco', 
+        description: 'Une soupe réconfortante et épicée, aux saveurs orientales, qui vous fera voyager.', 
+        ingredients: ['Lentilles corail', 'Oignon', 'Carottes', 'Lait de coco', 'Curry en poudre', 'Coriandre fraîche'],
+        calories: 400,
+        ambiance: 'Soirée cocooning. Plaid, bougies, et un bon livre ou un film. C\'est un plat qui réchauffe le corps et l\'esprit.',
+        decoration: 'Servez dans un bol. Ajoutez une cuillère de lait de coco au centre et parsemez de coriandre fraîche ciselée.'
+    },
+    { 
+        title: 'Avocado Toast & Oeuf Poché', 
+        description: 'Le petit-déjeuner ou brunch tendance, sain et délicieux, qui vous donnera de l\'énergie.', 
+        ingredients: ['Pain de campagne', 'Avocat', 'Citron', 'Flocons de piment', 'Oeuf', 'Sel, Poivre'],
+        calories: 380,
+        ambiance: 'Ambiance de café branché. Mettez votre playlist "Indie Pop" préférée. Un bon café fraîchement moulu est indispensable.',
+        decoration: 'Sur une tranche de pain grillée, étalez l\'avocat écrasé avec du citron. Déposez délicatement l\'oeuf poché, puis saupoudrez de sel, poivre et flocons de piment.'
+    },
+    {
+        title: 'Risotto aux Champignons',
+        description: 'Un plat crémeux et riche en saveurs, l\'ultime comfort food italien.',
+        ingredients: ['Riz Arborio', 'Champignons de Paris', 'Oignon', 'Vin blanc sec', 'Bouillon de légumes', 'Parmesan', 'Beurre'],
+        calories: 600,
+        ambiance: 'Dîner romantique ou soirée chic. Une lumière douce, du jazz en fond sonore, et un bon verre de vin blanc.',
+        decoration: 'Servez immédiatement dans une assiette creuse. Ajoutez quelques champignons poêlés sur le dessus, des copeaux de parmesan et un tour de moulin à poivre.'
+    }
 ];
 
 
@@ -142,7 +188,7 @@ export default function KitchenAssistantPage() {
   };
   
   const openAddDialog = (category?: Category) => {
-    setEditingIngredient({ category: category || 'Autre', unit: 'pièce' });
+    setEditingIngredient({ category: category || 'Autre', unit: 'pièce', price: undefined });
     setAddEditDialogOpen(true);
   };
 
@@ -221,7 +267,7 @@ export default function KitchenAssistantPage() {
   }
 
   return (
-    <div className="min-h-screen bg-secondary">
+    <div className="min-h-screen bg-secondary/40">
       <header className="bg-card border-b sticky top-0 z-20">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3">
@@ -268,7 +314,7 @@ export default function KitchenAssistantPage() {
                   {basket.length > 0 ? (
                     <ul className="space-y-3 py-4">
                       {basket.map(item => (
-                        <li key={item.id} className="flex flex-col gap-2 bg-secondary p-3 rounded-md">
+                        <li key={item.id} className="flex flex-col gap-2 bg-secondary/50 p-3 rounded-md">
                           <div className='flex justify-between items-center'>
                             <span className='font-semibold'>{item.name}</span>
                             <span className='font-bold text-primary'>{(item.price * item.quantity).toFixed(2)} DT</span>
@@ -276,9 +322,9 @@ export default function KitchenAssistantPage() {
                           <div className='flex justify-between items-center'>
                             <span className='text-sm text-muted-foreground'>{item.price.toFixed(2)} DT / {item.unit}</span>
                             <div className='flex items-center gap-2'>
-                               <Button variant="ghost" size="icon" className='h-7 w-7' onClick={() => updateBasketQuantity(item.id, item.quantity - 1)}><Minus className='h-4 w-4'/></Button>
+                               <Button variant="ghost" size="icon" className='h-7 w-7 rounded-full' onClick={() => updateBasketQuantity(item.id, item.quantity - 1)}><Minus className='h-4 w-4'/></Button>
                                <span className='font-bold w-4 text-center'>{item.quantity}</span>
-                               <Button variant="ghost" size="icon" className='h-7 w-7' onClick={() => updateBasketQuantity(item.id, item.quantity + 1)}><Plus className='h-4 w-4'/></Button>
+                               <Button variant="ghost" size="icon" className='h-7 w-7 rounded-full' onClick={() => updateBasketQuantity(item.id, item.quantity + 1)}><Plus className='h-4 w-4'/></Button>
                             </div>
                           </div>
                         </li>
@@ -302,7 +348,7 @@ export default function KitchenAssistantPage() {
 
       <main className="container mx-auto p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {(Object.keys(groupedIngredients) as Category[]).map(category => (
-            <Card key={category} className="flex flex-col">
+            <Card key={category} className="flex flex-col bg-card">
                 <CardHeader>
                     <CardTitle className="text-primary">{category}</CardTitle>
                 </CardHeader>
@@ -310,7 +356,7 @@ export default function KitchenAssistantPage() {
                     <ScrollArea className="h-64">
                         <ul className="space-y-2 pr-3">
                             {groupedIngredients[category].length > 0 ? groupedIngredients[category].map(item => (
-                            <li key={item.id} className="flex items-center justify-between p-2 rounded-md">
+                            <li key={item.id} className="flex items-center justify-between p-2 rounded-md hover:bg-secondary/50 transition-colors">
                                 <div>
                                 <span className='font-medium'>{item.name}</span>
                                 <p className='text-sm text-muted-foreground'>{item.price.toFixed(2)} DT / {item.unit}</p>
@@ -355,18 +401,41 @@ export default function KitchenAssistantPage() {
       </Dialog>
       
       <Dialog open={isRecipeDialogOpen} onOpenChange={setIsRecipeDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-lg">
             <DialogHeader>
-                <DialogTitle>{suggestedRecipe?.title}</DialogTitle>
-                <DialogDescription>{suggestedRecipe?.description}</DialogDescription>
+                <DialogTitle className="flex items-center gap-2 text-2xl">
+                    <ChefHat className="h-7 w-7 text-primary" />
+                    <span>{suggestedRecipe?.title}</span>
+                </DialogTitle>
+                <DialogDescription className="text-left pt-1">{suggestedRecipe?.description}</DialogDescription>
             </DialogHeader>
-            <div className="py-2">
-                <h4 className="font-semibold mb-2 text-foreground">Ingrédients suggérés :</h4>
-                <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-                    {suggestedRecipe?.ingredients.map(ing => <li key={ing}>{ing}</li>)}
-                </ul>
+            <div className="py-2 space-y-4">
+                <div className="flex items-center justify-around bg-muted p-3 rounded-lg text-center">
+                    <div>
+                        <Flame className="h-6 w-6 mx-auto text-primary" />
+                        <p className="font-bold text-lg">{suggestedRecipe?.calories}</p>
+                        <p className="text-xs text-muted-foreground">Calories (est.)</p>
+                    </div>
+                </div>
+                <div>
+                    <h4 className="font-semibold mb-2 text-foreground flex items-center gap-2"><UtensilsCrossed className="h-5 w-5 text-primary"/>Ingrédients</h4>
+                    <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground pl-2">
+                        {suggestedRecipe?.ingredients.map(ing => <li key={ing}>{ing}</li>)}
+                    </ul>
+                </div>
+                <div>
+                    <h4 className="font-semibold mb-2 text-foreground flex items-center gap-2"><Sparkles className="h-5 w-5 text-primary"/>Ambiance & Déco</h4>
+                    <p className="text-sm text-muted-foreground pl-2">{suggestedRecipe?.ambiance}</p>
+                </div>
+                 <div>
+                    <h4 className="font-semibold mb-2 text-foreground flex items-center gap-2"><Paintbrush className="h-5 w-5 text-primary"/>Présentation</h4>
+                    <p className="text-sm text-muted-foreground pl-2">{suggestedRecipe?.decoration}</p>
+                </div>
             </div>
-            <DialogFooter>
+            <DialogFooter className="sm:justify-between gap-2">
+                 <Button type="button" variant="secondary" onClick={handleSuggestRecipe}>
+                    <Dices className="mr-2 h-4 w-4"/> Autre suggestion
+                </Button>
                 <Button type="button" onClick={() => setIsRecipeDialogOpen(false)}>Fermer</Button>
             </DialogFooter>
         </DialogContent>
@@ -380,17 +449,18 @@ export default function KitchenAssistantPage() {
                     Laissez le destin (et un peu de code) choisir votre repas.
                 </DialogDescription>
             </DialogHeader>
-            <div className="flex flex-col items-center justify-center h-48 bg-muted rounded-lg my-4">
+            <div className="flex flex-col items-center justify-center h-48 bg-muted rounded-lg my-4 overflow-hidden relative">
+                 <div className="absolute inset-0 bg-gradient-to-b from-muted/50 via-transparent to-muted/50 z-10"></div>
                 {spinning || wheelResult ? (
-                    <div className="text-center">
+                    <div className="text-center transition-transform duration-300 ease-out">
                         <p className="text-4xl font-extrabold text-primary animate-pulse">{wheelResult}</p>
                     </div>
                 ) : (
                     <p className="text-lg text-muted-foreground">Prêt à tenter votre chance ?</p>
                 )}
             </div>
-            {funnyMessage && (
-                <p className="text-center text-lg italic text-foreground/80">"{funnyMessage}"</p>
+            {funnyMessage && !spinning && (
+                <p className="text-center text-lg italic text-foreground/80 animate-in fade-in-50">"{funnyMessage}"</p>
             )}
             <DialogFooter>
                 <Button onClick={handleSpinWheel} disabled={spinning} className="w-full">
@@ -415,7 +485,7 @@ function IngredientForm({
   const [formData, setFormData] = useState({
     name: ingredient?.name || '',
     category: ingredient?.category || 'Autre',
-    price: ingredient?.id ? String(ingredient.price) : '',
+    price: ingredient?.price !== undefined ? String(ingredient.price) : '',
     unit: ingredient?.unit || 'pièce',
   });
 
@@ -443,7 +513,7 @@ function IngredientForm({
       </div>
       <div className="grid grid-cols-4 items-center gap-4">
         <Label htmlFor="price" className="text-right">Prix (DT)</Label>
-        <Input id="price" type="number" step="0.1" min="0" value={formData.price} placeholder="0.00" onChange={e => setFormData({...formData, price: e.target.value})} className="col-span-3" required />
+        <Input id="price" type="number" step="0.1" min="0" value={formData.price} placeholder="ex: 3.50" onChange={e => setFormData({...formData, price: e.target.value})} className="col-span-3" required />
       </div>
       <div className="grid grid-cols-4 items-center gap-4">
         <Label htmlFor="unit" className="text-right">Unité</Label>
