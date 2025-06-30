@@ -11,7 +11,6 @@ import { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle, SheetDescri
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import Image from 'next/image';
 
 // Data Structures
 interface Ingredient {
@@ -34,15 +33,19 @@ interface Recipe {
   description: string;
   country: string;
   ingredients: RecipeIngredient[];
-  image: string;
 }
 
 interface BasketItem extends Ingredient {
   quantity: number;
 }
 
+interface CategoryDef {
+    id: string;
+    name: string;
+}
+
 // Initial Data
-const initialCategories = [
+const initialCategories: CategoryDef[] = [
   { id: 'c1', name: 'Fruits et Légumes' },
   { id: 'c2', name: 'Viandes et Poissons' },
   { id: 'c3', name: 'Produits Laitiers' },
@@ -70,7 +73,6 @@ const chefSuggestions: Recipe[] = [
     title: 'Couscous Tunisien',
     description: 'Un plat emblématique et convivial, riche en saveurs et en légumes.',
     country: 'Tunisie',
-    image: 'https://placehold.co/600x400.png',
     ingredients: [
       { name: 'Semoule de couscous', quantity: 500, unit: 'g' },
       { name: 'Agneau', quantity: 750, unit: 'g' },
@@ -86,7 +88,6 @@ const chefSuggestions: Recipe[] = [
     title: 'Brik à l\'œuf',
     description: 'Une entrée croustillante et savoureuse, parfaite pour commencer le repas.',
     country: 'Tunisie',
-    image: 'https://placehold.co/600x400.png',
     ingredients: [
       { name: 'Feuille de brick', quantity: 8, unit: 'pièce' },
       { name: 'Œuf', quantity: 8, unit: 'pièce' },
@@ -100,7 +101,6 @@ const chefSuggestions: Recipe[] = [
     title: 'Salade Méchouia',
     description: 'Une salade de poivrons et tomates grillés, fraîche et relevée.',
     country: 'Tunisie',
-    image: 'https://placehold.co/600x400.png',
     ingredients: [
       { name: 'Poivrons verts', quantity: 4, unit: 'pièce' },
       { name: 'Tomates', quantity: 4, unit: 'pièce' },
@@ -115,7 +115,7 @@ export default function KitchenAssistantPage() {
   // Global State
   const [pantry, setPantry] = useState<Ingredient[]>(predefinedIngredients);
   const [basket, setBasket] = useState<BasketItem[]>([]);
-  const [categories, setCategories] = useState(initialCategories);
+  const [categories, setCategories] = useState<CategoryDef[]>(initialCategories);
   const [savedRecipes, setSavedRecipes] = useState<Recipe[]>([]);
   const [activeTab, setActiveTab] = useState<'pantry' | 'recipes'>('pantry');
 
@@ -175,8 +175,18 @@ export default function KitchenAssistantPage() {
     setIsCategoryDialogOpen(false); setEditingCategory(null);
   };
   const handleDeleteCategory = (id: string) => {
-      const isConfirmed = window.confirm(`Êtes-vous sûr de vouloir supprimer cette catégorie ?`);
-      if (isConfirmed) setCategories(prev => prev.filter(cat => cat.id !== id));
+      const categoryToDelete = categories.find(c => c.id === id);
+      if (!categoryToDelete) return;
+
+      const isConfirmed = window.confirm(`Êtes-vous sûr de vouloir supprimer la catégorie "${categoryToDelete.name}" ? Les produits de cette catégorie seront déplacés vers "Autre".`);
+      if (isConfirmed) {
+          setPantry(prevPantry => 
+              prevPantry.map(ing => 
+                  ing.category === categoryToDelete.name ? {...ing, category: 'Autre'} : ing
+              )
+          );
+          setCategories(prev => prev.filter(cat => cat.id !== id));
+      }
   };
   const openCategoryDialog = (category?: { id: string; name: string }) => { setEditingCategory(category || { name: '' }); setIsCategoryDialogOpen(true);};
 
@@ -215,13 +225,16 @@ export default function KitchenAssistantPage() {
                 id: self.crypto.randomUUID(),
                 name: ing.name,
                 category: 'Autre',
-                price: 0,
+                price: 0, // Price is unknown
                 unit: ing.unit,
             });
         }
     });
     if (newIngredients.length > 0) {
       setPantry(prev => [...prev, ...newIngredients].sort((a,b) => a.name.localeCompare(b.name)));
+      alert(`${newIngredients.length} ingrédient(s) manquant(s) ont été ajoutés à votre garde-manger dans la catégorie "Autre". Pensez à y mettre un prix !`);
+    } else {
+      alert("Vous avez déjà tous les ingrédients pour cette recette !");
     }
     setSuggestionOpen(false);
     setActiveTab('pantry');
@@ -244,7 +257,7 @@ export default function KitchenAssistantPage() {
             </SheetTrigger>
             <SheetContent>
               <SheetHeader>
-                <SheetTitle>Mon Panier</SheetTitle>
+                <SheetTitle>Mon Panier (Budget)</SheetTitle>
                 <SheetDescription>Total: {basketTotal.toFixed(2)} DT</SheetDescription>
               </SheetHeader>
               <ScrollArea className="h-[calc(100vh-200px)] pr-4">
@@ -288,13 +301,13 @@ export default function KitchenAssistantPage() {
                   <Input type="search" placeholder="Rechercher un ingrédient..." className="pl-11 rounded-full" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                  {Object.entries(groupedIngredients).filter(([catName, items]) => items.length > 0 || catName === 'Autre' && categories.some(c => c.name === 'Autre')).map(([categoryName, items]) => {
+                  {Object.entries(groupedIngredients).filter(([, items]) => items.length > 0).map(([categoryName, items]) => {
                        const category = categories.find(c => c.name === categoryName) || {id: 'c-autre', name: 'Autre'};
                        return (
                         <Card key={category.id} className="flex flex-col bg-card shadow-sm hover:shadow-md transition-shadow">
                           <CardHeader className="flex flex-row items-center justify-between">
                               <CardTitle className="text-primary">{category.name}</CardTitle>
-                              {category.id !== 'c-autre' && <div className="flex items-center">
+                              {category.name !== 'Autre' && <div className="flex items-center">
                                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openCategoryDialog(category)}><Pencil className="h-4 w-4" /></Button>
                                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDeleteCategory(category.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                               </div>}
@@ -331,11 +344,10 @@ export default function KitchenAssistantPage() {
                 {savedRecipes.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                         {savedRecipes.map(recipe => (
-                            <Card key={recipe.id} className="overflow-hidden">
-                                <Image src={recipe.image} alt={recipe.title} width={400} height={200} className="w-full h-40 object-cover"/>
+                            <Card key={recipe.id} className="overflow-hidden flex flex-col">
                                 <CardHeader><CardTitle>{recipe.title}</CardTitle><Badge variant="secondary" className="mt-2 w-fit">{recipe.country}</Badge></CardHeader>
-                                <CardContent><p className="text-sm text-muted-foreground">{recipe.description}</p></CardContent>
-                                <CardFooter className="flex justify-between">
+                                <CardContent className="flex-grow"><p className="text-sm text-muted-foreground">{recipe.description}</p></CardContent>
+                                <CardFooter className="flex justify-between mt-auto">
                                     <Button onClick={() => setViewingRecipe(recipe)}>Voir la recette</Button>
                                     <Button variant="ghost" size="icon" onClick={() => setSavedRecipes(prev => prev.filter(r => r.id !== recipe.id))}><Trash2 className="h-4 w-4 text-destructive"/></Button>
                                 </CardFooter>
@@ -369,13 +381,12 @@ export default function KitchenAssistantPage() {
                 <DialogTitle>{currentSuggestion.title}</DialogTitle>
                 <DialogDescription>{currentSuggestion.country} - {currentSuggestion.description}</DialogDescription>
             </DialogHeader>
-            <Image src={currentSuggestion.image} alt={currentSuggestion.title} width={600} height={400} className="w-full h-48 object-cover rounded-md mt-2"/>
             <h4 className='font-semibold mt-4'>Ingrédients :</h4>
-            <ScrollArea className="h-32"><ul className='list-disc pl-5 text-sm space-y-1'>
+            <ScrollArea className="h-32 my-2 border rounded-md p-2"><ul className='list-disc pl-5 text-sm space-y-1'>
                 {currentSuggestion.ingredients.map(ing => <li key={ing.name}>{ing.quantity} {ing.unit} de {ing.name}</li>)}
             </ul></ScrollArea>
             <DialogFooter className="sm:justify-between gap-2 mt-4">
-                <Button variant="secondary" onClick={() => handleAddIngredientsFromRecipe(currentSuggestion)}>Ajouter au garde-manger</Button>
+                <Button variant="secondary" onClick={() => handleAddIngredientsFromRecipe(currentSuggestion)}>Ajouter les manquants</Button>
                 <Button className="bg-primary" onClick={() => handleSaveRecipe(currentSuggestion)}><Bookmark className="mr-2 h-4 w-4"/>Sauvegarder</Button>
             </DialogFooter>
         </DialogContent>}
@@ -383,9 +394,8 @@ export default function KitchenAssistantPage() {
       <Dialog open={!!viewingRecipe} onOpenChange={(open) => !open && setViewingRecipe(null)}>
         {viewingRecipe && <DialogContent className="max-w-md">
             <DialogHeader><DialogTitle>{viewingRecipe.title}</DialogTitle><DialogDescription>{viewingRecipe.country} - {viewingRecipe.description}</DialogDescription></DialogHeader>
-            <Image src={viewingRecipe.image} alt={viewingRecipe.title} width={600} height={400} className="w-full h-48 object-cover rounded-md mt-2"/>
             <h4 className='font-semibold mt-4'>Ingrédients :</h4>
-            <ScrollArea className="h-40"><ul className='list-disc pl-5 text-sm space-y-1'>
+            <ScrollArea className="h-40 my-2 border rounded-md p-2"><ul className='list-disc pl-5 text-sm space-y-1'>
                 {viewingRecipe.ingredients.map(ing => <li key={ing.name}>{ing.quantity} {ing.unit} de {ing.name}</li>)}
             </ul></ScrollArea>
             <DialogFooter><DialogClose asChild><Button type="button">Fermer</Button></DialogClose></DialogFooter>
@@ -405,7 +415,7 @@ function IngredientForm({ ingredient, categories, onSave, formId }: { ingredient
       <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="category" className="text-right">Catégorie</Label>
         <Select value={formData.category} onValueChange={(value) => setFormData({...formData, category: value})}>
             <SelectTrigger className="col-span-3"><SelectValue placeholder="Choisir" /></SelectTrigger>
-            <SelectContent>{categories.map(cat => <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>)}</SelectContent>
+            <SelectContent>{categories.map(cat => <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>)}<SelectItem value="Autre">Autre</SelectItem></SelectContent>
         </Select>
       </div>
       <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="price" className="text-right">Prix (DT)</Label><Input id="price" type="number" step="0.1" min="0" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} className="col-span-3" required /></div>
