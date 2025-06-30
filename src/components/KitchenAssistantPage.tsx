@@ -34,6 +34,7 @@ interface Recipe {
   description: string;
   country: string;
   ingredients: RecipeIngredient[];
+  preparation: string;
 }
 
 interface BasketItem extends Ingredient {
@@ -83,6 +84,12 @@ const chefSuggestions: Recipe[] = [
       { name: 'Concentré de tomate', quantity: 2, unit: 'cuillère à soupe' },
       { name: 'Harissa', quantity: 1, unit: 'cuillère à café' },
     ],
+    preparation: `1. Dans une marmite, faire revenir les morceaux d'agneau avec de l'huile d'olive et l'oignon haché.
+2. Ajouter le concentré de tomate, l'harissa, le sel, le poivre et les épices. Laisser mijoter 5 minutes.
+3. Couvrir d'eau et porter à ébullition. Ajouter les carottes et laisser cuire 30 minutes.
+4. Ajouter les courgettes et les pois chiches. Poursuivre la cuisson 30 minutes.
+5. Pendant ce temps, préparer la semoule en suivant les instructions sur le paquet.
+6. Servir la semoule dans un grand plat, creuser un puits au centre et y déposer la viande et les légumes. Arroser de sauce.`
   },
   {
     id: 'rec2',
@@ -96,6 +103,13 @@ const chefSuggestions: Recipe[] = [
       { name: 'Câpres', quantity: 2, unit: 'cuillère à soupe' },
       { name: 'Persil', quantity: 1, unit: 'botte' },
     ],
+    preparation: `1. Hacher finement le persil. Égoutter le thon.
+2. Étaler une feuille de brick. Replier les bords pour former un carré.
+3. Garnir le centre avec un peu de thon, de persil et de câpres.
+4. Casser un œuf au centre de la garniture.
+5. Replier rapidement la feuille de brick en triangle pour enfermer la farce.
+6. Plonger délicatement dans une friture chaude et faire dorer des deux côtés. Le jaune d'œuf doit rester coulant.
+7. Servir immédiatement avec un quartier de citron.`
   },
   {
     id: 'rec3',
@@ -109,6 +123,32 @@ const chefSuggestions: Recipe[] = [
       { name: 'Ail', quantity: 3, unit: 'g' },
       { name: 'Huile d\'olive', quantity: 4, unit: 'cuillère à soupe' },
     ],
+    preparation: `1. Griller les poivrons, les tomates et l'oignon au four ou sur un barbecue jusqu'à ce que la peau noircisse.
+2. Enfermer les légumes dans un sac en plastique pendant 10 minutes pour faciliter l'épluchage.
+3. Peler les légumes et les épépiner. Hacher le tout finement au couteau.
+4. Ajouter l'ail haché, l'huile d'olive, le sel et le poivre. Bien mélanger.
+5. Décorer avec du thon, des œufs durs et des olives. Servir frais.`
+  },
+  {
+    id: 'rec4',
+    title: 'Ojja aux Merguez',
+    description: 'Un plat rapide, épicé et réconfortant à base d\'œufs et de saucisses.',
+    country: 'Tunisie',
+    ingredients: [
+      { name: 'Merguez', quantity: 6, unit: 'pièce' },
+      { name: 'Œuf', quantity: 4, unit: 'pièce' },
+      { name: 'Tomates', quantity: 4, unit: 'pièce' },
+      { name: 'Poivron vert', quantity: 1, unit: 'pièce' },
+      { name: 'Concentré de tomate', quantity: 1, unit: 'cuillère à soupe' },
+      { name: 'Harissa', quantity: 1, unit: 'cuillère à café' },
+    ],
+    preparation: `1. Couper les merguez en rondelles et les faire revenir dans une poêle. Retirer et réserver.
+2. Dans la même poêle, faire revenir le poivron coupé en dés.
+3. Ajouter les tomates concassées, le concentré de tomate, l'harissa et les épices. Laisser mijoter 15 minutes.
+4. Remettre les merguez dans la sauce.
+5. Casser les œufs directement dans la poêle, sur la sauce.
+6. Couvrir et laisser cuire jusqu'à ce que les blancs d'œufs soient pris et les jaunes encore coulants.
+7. Servir chaud avec du pain frais.`
   },
 ];
 
@@ -312,25 +352,32 @@ export default function KitchenAssistantPage() {
             <SheetContent>
               <SheetHeader>
                 <SheetTitle>Mon Panier</SheetTitle>
-                 {budget !== null && (
-                    <SheetDescription>
-                        Budget: {budget.toFixed(2)} DT
-                    </SheetDescription>
-                )}
-                <div className="pt-2 text-left">
-                    <p className="text-lg text-muted-foreground">Total:</p>
+                <div className="pt-2 text-left space-y-2">
+                    <Label htmlFor="budget-input">Définir un budget (DT)</Label>
+                    <div className="flex gap-2">
+                        <Input id="budget-input" type="number" placeholder="Ex: 50" value={budgetInput} onChange={(e) => setBudgetInput(e.target.value)} onBlur={handleSetBudget} onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}/>
+                        <Button onClick={handleSetBudget}>OK</Button>
+                    </div>
+                </div>
+              </SheetHeader>
+              <div className="py-4 text-left border-t mt-4">
+                    <p className="text-lg text-muted-foreground">Total du panier :</p>
                     <p className={cn(
                         "text-3xl font-bold",
                         budget !== null && basketTotal > budget ? "text-destructive" : "text-primary"
                     )}>
                         {basketTotal.toFixed(2)} DT
                     </p>
-                    {budget !== null && basketTotal > budget && (
-                        <p className="text-destructive font-semibold mt-1">Budget dépassé !</p>
+                    {budget !== null && (
+                         <p className={cn("text-sm font-semibold mt-1", basketTotal > budget ? "text-destructive" : "text-muted-foreground")}>
+                            Budget : {budget.toFixed(2)} DT
+                         </p>
                     )}
-                </div>
-              </SheetHeader>
-              <ScrollArea className="h-[calc(100vh-240px)] pr-4">
+                    {budget !== null && basketTotal > budget && (
+                        <p className="text-destructive font-semibold mt-1">Budget dépassé de {(basketTotal - budget).toFixed(2)} DT !</p>
+                    )}
+              </div>
+              <ScrollArea className="h-[calc(100vh-320px)] pr-4">
                 {basket.length > 0 ? (
                   <ul className="space-y-3 py-4">
                     {basket.map(item => (
@@ -406,7 +453,7 @@ export default function KitchenAssistantPage() {
           )}
           {activeTab === 'recipes' && (
             <div className="space-y-8">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <Card className='lg:col-span-1 bg-gradient-to-br from-primary/80 to-primary text-primary-foreground text-center p-6 flex flex-col'>
                         <CardHeader className="flex-grow"><CardTitle>À la recherche d'inspiration ?</CardTitle><CardDescription className="text-primary-foreground/80 pt-2">Laissez notre chef vous proposer un plat savoureux !</CardDescription></CardHeader>
                         <CardContent><Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={handleShowSuggestion}>Suggestion du Chef</Button></CardContent>
@@ -414,19 +461,6 @@ export default function KitchenAssistantPage() {
                     <Card className="lg:col-span-1 bg-gradient-to-br from-accent/80 to-accent text-accent-foreground text-center p-6 flex flex-col">
                         <CardHeader className="flex-grow"><CardTitle>J'ai pas envie de cuisiner</CardTitle><CardDescription className="text-accent-foreground/80 pt-2">Laissez le hasard décider pour vous !</CardDescription></CardHeader>
                         <CardContent><Button size="lg" variant="secondary" className="bg-background/20 hover:bg-background/30" onClick={() => { setIsDecisionWheelOpen(true); setDecisionResult(null); }}><Dices className="mr-2 h-5 w-5"/>Roue de la Flemme</Button></CardContent>
-                    </Card>
-                    <Card className="lg:col-span-1">
-                        <CardHeader><CardTitle>Suivi du Budget</CardTitle><CardDescription>Maîtrisez vos dépenses.</CardDescription></CardHeader>
-                        <CardContent>
-                            <div className="flex gap-2"><Input type="number" placeholder="Budget (DT)" value={budgetInput} onChange={(e) => setBudgetInput(e.target.value)} onBlur={handleSetBudget} onKeyDown={(e) => e.key === 'Enter' && handleSetBudget()}/><Button onClick={handleSetBudget}>OK</Button></div>
-                            {budget !== null && (
-                                <div className="mt-4 text-sm space-y-1">
-                                    <div className="flex justify-between"><span>Budget:</span><span className="font-bold">{budget.toFixed(2)} DT</span></div>
-                                    <div className="flex justify-between"><span>Panier:</span><span className={cn("font-bold", basketTotal > budget ? "text-destructive" : "text-primary")}>{basketTotal.toFixed(2)} DT</span></div>
-                                    {basketTotal > budget && (<p className="text-destructive font-semibold pt-2 text-center">Attention : Budget dépassé !</p>)}
-                                </div>
-                            )}
-                        </CardContent>
                     </Card>
                 </div>
 
@@ -468,15 +502,19 @@ export default function KitchenAssistantPage() {
         </DialogContent>
       </Dialog>
       <Dialog open={isSuggestionOpen} onOpenChange={setSuggestionOpen}>
-        {currentSuggestion && <DialogContent className="max-w-md">
+        {currentSuggestion && <DialogContent className="max-w-lg">
             <DialogHeader>
                 <DialogTitle>{currentSuggestion.title}</DialogTitle>
                 <DialogDescription>{currentSuggestion.country} - {currentSuggestion.description}</DialogDescription>
             </DialogHeader>
-            <h4 className='font-semibold mt-4'>Ingrédients :</h4>
-            <ScrollArea className="h-32 my-2 border rounded-md p-2"><ul className='list-disc pl-5 text-sm space-y-1'>
-                {currentSuggestion.ingredients.map(ing => <li key={ing.name}>{ing.quantity} {ing.unit} de {ing.name}</li>)}
-            </ul></ScrollArea>
+            <ScrollArea className="h-72 my-2 border rounded-md p-4">
+                <h4 className='font-semibold'>Ingrédients :</h4>
+                <ul className='list-disc pl-5 text-sm space-y-1 my-2'>
+                    {currentSuggestion.ingredients.map(ing => <li key={ing.name}>{ing.quantity} {ing.unit} de {ing.name}</li>)}
+                </ul>
+                 <h4 className='font-semibold mt-4'>Préparation :</h4>
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap mt-2">{currentSuggestion.preparation}</p>
+            </ScrollArea>
             <DialogFooter className="sm:justify-between gap-2 mt-4">
                 <Button variant="secondary" onClick={() => handleAddIngredientsFromRecipe(currentSuggestion)}>Ajouter les manquants</Button>
                 <Button className="bg-primary" onClick={() => handleSaveRecipe(currentSuggestion)}><Bookmark className="mr-2 h-4 w-4"/>Sauvegarder</Button>
@@ -484,12 +522,16 @@ export default function KitchenAssistantPage() {
         </DialogContent>}
       </Dialog>
       <Dialog open={!!viewingRecipe} onOpenChange={(open) => !open && setViewingRecipe(null)}>
-        {viewingRecipe && <DialogContent className="max-w-md">
+        {viewingRecipe && <DialogContent className="max-w-lg">
             <DialogHeader><DialogTitle>{viewingRecipe.title}</DialogTitle><DialogDescription>{viewingRecipe.country} - {viewingRecipe.description}</DialogDescription></DialogHeader>
-            <h4 className='font-semibold mt-4'>Ingrédients :</h4>
-            <ScrollArea className="h-40 my-2 border rounded-md p-2"><ul className='list-disc pl-5 text-sm space-y-1'>
-                {viewingRecipe.ingredients.map(ing => <li key={ing.name}>{ing.quantity} {ing.unit} de {ing.name}</li>)}
-            </ul></ScrollArea>
+            <ScrollArea className="h-72 my-2 border rounded-md p-4">
+                <h4 className='font-semibold'>Ingrédients :</h4>
+                <ul className='list-disc pl-5 text-sm space-y-1 my-2'>
+                    {viewingRecipe.ingredients.map(ing => <li key={ing.name}>{ing.quantity} {ing.unit} de {ing.name}</li>)}
+                </ul>
+                <h4 className='font-semibold mt-4'>Préparation :</h4>
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap mt-2">{viewingRecipe.preparation}</p>
+            </ScrollArea>
             <DialogFooter><DialogClose asChild><Button type="button">Fermer</Button></DialogClose></DialogFooter>
         </DialogContent>}
       </Dialog>
