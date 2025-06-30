@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { useState, useMemo } from 'react';
-import { ChefHat, ShoppingBasket, Trash2, PlusCircle, Pencil, Minus, Plus } from 'lucide-react';
+import { ChefHat, ShoppingBasket, Trash2, PlusCircle, Pencil, Minus, Plus, Dices } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription, SheetFooter } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -24,6 +24,29 @@ const categories = [
   'Autre',
 ] as const;
 type Category = (typeof categories)[number];
+
+const units = ['pièce', 'kg', 'g', 'L', 'ml', 'boîte', 'paquet', 'botte'] as const;
+
+const fastFoodOptions = [
+    "Baguette farcie",
+    "Ma9loub",
+    "Tacos mexicain",
+    "Tacos français",
+    "Burrito",
+    "Chapati",
+    "Quesidilla",
+    "Tabouna Chawarma",
+    "Tabouna Escalope"
+];
+
+const funnyMessages = [
+    "Ce soir, on oublie la vaisselle !",
+    "Votre estomac vous dira merci... votre balance, un peu moins.",
+    "Parfait pour accompagner votre série préférée.",
+    "La diète ? On verra ça demain. Ou après-demain.",
+    "Le destin a parlé ! C'est un ordre.",
+    "Bon appétit, et que la force du gras soit avec vous."
+];
 
 // Data Structures
 interface Ingredient {
@@ -85,6 +108,11 @@ export default function KitchenAssistantPage() {
   const [isRecipeDialogOpen, setIsRecipeDialogOpen] = useState(false);
   const [suggestedRecipe, setSuggestedRecipe] = useState<Recipe | null>(null);
 
+  const [isWheelOpen, setIsWheelOpen] = useState(false);
+  const [spinning, setSpinning] = useState(false);
+  const [wheelResult, setWheelResult] = useState<string | null>(null);
+  const [funnyMessage, setFunnyMessage] = useState<string>('');
+
   const basketTotal = useMemo(() => {
     return basket.reduce((total, item) => total + item.price * item.quantity, 0);
   }, [basket]);
@@ -114,7 +142,7 @@ export default function KitchenAssistantPage() {
   };
   
   const openAddDialog = (category?: Category) => {
-    setEditingIngredient({ category: category || 'Autre', price: 0, unit: 'pièce' });
+    setEditingIngredient({ category: category || 'Autre', unit: 'pièce' });
     setAddEditDialogOpen(true);
   };
 
@@ -160,10 +188,42 @@ export default function KitchenAssistantPage() {
     }
   };
 
+  const handleSpinWheel = () => {
+    setSpinning(true);
+    setWheelResult(null);
+    setFunnyMessage('');
+
+    const spinDuration = 3000;
+    const intervalTime = 100;
+
+    const interval = setInterval(() => {
+        const randomIndex = Math.floor(Math.random() * fastFoodOptions.length);
+        setWheelResult(fastFoodOptions[randomIndex]);
+    }, intervalTime);
+
+    setTimeout(() => {
+        clearInterval(interval);
+        const finalIndex = Math.floor(Math.random() * fastFoodOptions.length);
+        const finalResult = fastFoodOptions[finalIndex];
+        setWheelResult(finalResult);
+
+        const funnyMessageIndex = Math.floor(Math.random() * funnyMessages.length);
+        setFunnyMessage(funnyMessages[funnyMessageIndex]);
+        
+        setSpinning(false);
+    }, spinDuration);
+  };
+
+  const openWheelDialog = () => {
+    setWheelResult(null);
+    setFunnyMessage('');
+    setIsWheelOpen(true);
+  }
+
   return (
-    <div className="min-h-screen bg-secondary/40">
+    <div className="min-h-screen bg-secondary">
       <header className="bg-card border-b sticky top-0 z-20">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-4">
+        <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3">
             <ChefHat className="h-8 w-8 text-primary" />
             <h1 className="text-2xl font-bold tracking-tight">Assistant de Courses</h1>
@@ -172,6 +232,10 @@ export default function KitchenAssistantPage() {
               <Button variant="ghost" onClick={handleSuggestRecipe}>
                   <ChefHat className="mr-2 h-4 w-4" />
                   Suggestion du Chef
+              </Button>
+              <Button variant="ghost" onClick={openWheelDialog}>
+                  <Dices className="mr-2 h-4 w-4" />
+                  T'as pas envie de cuisiner ?
               </Button>
           </div>
           <div className="flex items-center gap-4">
@@ -246,7 +310,7 @@ export default function KitchenAssistantPage() {
                     <ScrollArea className="h-64">
                         <ul className="space-y-2 pr-3">
                             {groupedIngredients[category].length > 0 ? groupedIngredients[category].map(item => (
-                            <li key={item.id} className="flex items-center justify-between bg-secondary/70 p-2 rounded-md">
+                            <li key={item.id} className="flex items-center justify-between p-2 rounded-md">
                                 <div>
                                 <span className='font-medium'>{item.name}</span>
                                 <p className='text-sm text-muted-foreground'>{item.price.toFixed(2)} DT / {item.unit}</p>
@@ -307,6 +371,34 @@ export default function KitchenAssistantPage() {
             </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={isWheelOpen} onOpenChange={setIsWheelOpen}>
+        <DialogContent className="max-w-md">
+            <DialogHeader>
+                <DialogTitle className="text-center text-2xl font-bold">La Roue de l'Indécision</DialogTitle>
+                <DialogDescription className="text-center">
+                    Laissez le destin (et un peu de code) choisir votre repas.
+                </DialogDescription>
+            </DialogHeader>
+            <div className="flex flex-col items-center justify-center h-48 bg-muted rounded-lg my-4">
+                {spinning || wheelResult ? (
+                    <div className="text-center">
+                        <p className="text-4xl font-extrabold text-primary animate-pulse">{wheelResult}</p>
+                    </div>
+                ) : (
+                    <p className="text-lg text-muted-foreground">Prêt à tenter votre chance ?</p>
+                )}
+            </div>
+            {funnyMessage && (
+                <p className="text-center text-lg italic text-foreground/80">"{funnyMessage}"</p>
+            )}
+            <DialogFooter>
+                <Button onClick={handleSpinWheel} disabled={spinning} className="w-full">
+                    {spinning ? "Ça tourne..." : "Lancer la roue !"}
+                </Button>
+            </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -323,13 +415,13 @@ function IngredientForm({
   const [formData, setFormData] = useState({
     name: ingredient?.name || '',
     category: ingredient?.category || 'Autre',
-    price: ingredient?.price || 0,
+    price: ingredient?.id ? String(ingredient.price) : '',
     unit: ingredient?.unit || 'pièce',
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave({ ...formData, id: ingredient?.id });
+    onSave({ ...formData, price: parseFloat(formData.price) || 0, id: ingredient?.id });
   };
 
   return (
@@ -351,11 +443,18 @@ function IngredientForm({
       </div>
       <div className="grid grid-cols-4 items-center gap-4">
         <Label htmlFor="price" className="text-right">Prix (DT)</Label>
-        <Input id="price" type="number" step="0.1" min="0" value={formData.price} onChange={e => setFormData({...formData, price: parseFloat(e.target.value) || 0})} className="col-span-3" required />
+        <Input id="price" type="number" step="0.1" min="0" value={formData.price} placeholder="0.00" onChange={e => setFormData({...formData, price: e.target.value})} className="col-span-3" required />
       </div>
       <div className="grid grid-cols-4 items-center gap-4">
         <Label htmlFor="unit" className="text-right">Unité</Label>
-        <Input id="unit" value={formData.unit} onChange={e => setFormData({...formData, unit: e.target.value})} className="col-span-3" required />
+        <Select value={formData.unit} onValueChange={(value: string) => setFormData({...formData, unit: value})}>
+            <SelectTrigger className="col-span-3">
+                <SelectValue placeholder="Choisir une unité" />
+            </SelectTrigger>
+            <SelectContent>
+                {units.map(unit => <SelectItem key={unit} value={unit}>{unit}</SelectItem>)}
+            </SelectContent>
+        </Select>
       </div>
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onCancel}>Annuler</Button>
