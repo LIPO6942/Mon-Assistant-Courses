@@ -5,12 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription }
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { useState, useMemo } from 'react';
-import { ChefHat, ShoppingBasket, Trash2, PlusCircle, Pencil, Minus, Plus, Search, Bookmark, UtensilsCrossed, BookOpen } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { ChefHat, ShoppingBasket, Trash2, PlusCircle, Pencil, Minus, Plus, Search, Bookmark, UtensilsCrossed, BookOpen, Dices, RotateCw } from 'lucide-react';
 import { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { cn } from '@/lib/utils';
 
 // Data Structures
 interface Ingredient {
@@ -111,6 +112,8 @@ const chefSuggestions: Recipe[] = [
   },
 ];
 
+const streetFoodOptions = ['Quesadilla', 'Burrito', 'Fricassé', 'Tacos Mexicain', 'Tacos Maqloub', 'Pizza', 'Chapati', 'Baguette Farcie', 'Poulet prêt à porter'];
+
 export default function KitchenAssistantPage() {
   // Global State
   const [pantry, setPantry] = useState<Ingredient[]>(predefinedIngredients);
@@ -131,6 +134,22 @@ export default function KitchenAssistantPage() {
   const [currentSuggestion, setCurrentSuggestion] = useState<Recipe | null>(null);
   const [viewingRecipe, setViewingRecipe] = useState<Recipe | null>(null);
 
+  // New features state
+  const [budget, setBudget] = useState<number | null>(null);
+  const [budgetInput, setBudgetInput] = useState<string>('');
+  const [isDecisionWheelOpen, setIsDecisionWheelOpen] = useState(false);
+  const [decisionResult, setDecisionResult] = useState<string | null>(null);
+  const [isSpinning, setIsSpinning] = useState(false);
+
+  // Load budget from localStorage on mount
+  useEffect(() => {
+    const savedBudget = localStorage.getItem('shoppingBudget');
+    if (savedBudget && !isNaN(parseFloat(savedBudget))) {
+        const parsedBudget = parseFloat(savedBudget);
+        setBudget(parsedBudget);
+        setBudgetInput(String(parsedBudget));
+    }
+  }, []);
 
   // Memoized Calculations
   const basketTotal = useMemo(() => basket.reduce((total, item) => total + item.price * item.quantity, 0), [basket]);
@@ -239,6 +258,41 @@ export default function KitchenAssistantPage() {
     setSuggestionOpen(false);
     setActiveTab('pantry');
   };
+  
+  // New feature handlers
+  const handleSetBudget = () => {
+    const newBudget = parseFloat(budgetInput);
+    if (!isNaN(newBudget) && newBudget >= 0) {
+        setBudget(newBudget);
+        localStorage.setItem('shoppingBudget', String(newBudget));
+    } else {
+        setBudget(null);
+        setBudgetInput('');
+        localStorage.removeItem('shoppingBudget');
+    }
+  };
+  
+  const getSeasonalStreetFood = () => {
+    const month = new Date().getMonth(); // 0-11 (Jan-Dec)
+    const isLablebiSeason = (month >= 8 && month <= 10) || (month === 11 || month <= 1); // Sept-Feb
+    const options = [...streetFoodOptions];
+    if (isLablebiSeason) {
+        options.push('Lablebi Royal');
+    }
+    return options;
+  };
+
+  const handleSpinWheel = () => {
+      setIsSpinning(true);
+      setDecisionResult(null);
+      const options = getSeasonalStreetFood();
+      setTimeout(() => {
+          const randomIndex = Math.floor(Math.random() * options.length);
+          setDecisionResult(options[randomIndex]);
+          setIsSpinning(false);
+      }, 2000); // 2 second spin
+  };
+
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
@@ -257,10 +311,26 @@ export default function KitchenAssistantPage() {
             </SheetTrigger>
             <SheetContent>
               <SheetHeader>
-                <SheetTitle>Mon Panier (Budget)</SheetTitle>
-                <SheetDescription>Total: {basketTotal.toFixed(2)} DT</SheetDescription>
+                <SheetTitle>Mon Panier</SheetTitle>
+                 {budget !== null && (
+                    <SheetDescription>
+                        Budget: {budget.toFixed(2)} DT
+                    </SheetDescription>
+                )}
+                <div className="pt-2 text-left">
+                    <p className="text-lg text-muted-foreground">Total:</p>
+                    <p className={cn(
+                        "text-3xl font-bold",
+                        budget !== null && basketTotal > budget ? "text-destructive" : "text-primary"
+                    )}>
+                        {basketTotal.toFixed(2)} DT
+                    </p>
+                    {budget !== null && basketTotal > budget && (
+                        <p className="text-destructive font-semibold mt-1">Budget dépassé !</p>
+                    )}
+                </div>
               </SheetHeader>
-              <ScrollArea className="h-[calc(100vh-200px)] pr-4">
+              <ScrollArea className="h-[calc(100vh-240px)] pr-4">
                 {basket.length > 0 ? (
                   <ul className="space-y-3 py-4">
                     {basket.map(item => (
@@ -287,7 +357,7 @@ export default function KitchenAssistantPage() {
         <nav className="bg-card/50 border-b">
           <div className="container mx-auto px-4 flex justify-center gap-2">
             <Button variant={activeTab === 'pantry' ? 'secondary': 'ghost'} onClick={() => setActiveTab('pantry')} className="flex-1 md:flex-none"><UtensilsCrossed className="mr-2 h-4 w-4"/>Garde-Manger</Button>
-            <Button variant={activeTab === 'recipes' ? 'secondary': 'ghost'} onClick={() => setActiveTab('recipes')} className="flex-1 md:flex-none"><BookOpen className="mr-2 h-4 w-4"/>Mes Recettes</Button>
+            <Button variant={activeTab === 'recipes' ? 'secondary': 'ghost'} onClick={() => setActiveTab('recipes')} className="flex-1 md:flex-none"><BookOpen className="mr-2 h-4 w-4"/>Recettes & Idées</Button>
           </div>
         </nav>
       </header>
@@ -335,26 +405,48 @@ export default function KitchenAssistantPage() {
             </div>
           )}
           {activeTab === 'recipes' && (
-            <div>
-                <Card className='mb-8 bg-gradient-to-br from-primary/80 to-primary text-primary-foreground text-center p-6'>
-                    <CardHeader><CardTitle>À la recherche d'inspiration ?</CardTitle><CardDescription className="text-primary-foreground/80">Laissez notre chef vous proposer un plat savoureux !</CardDescription></CardHeader>
-                    <CardContent><Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={handleShowSuggestion}>Suggestion du Chef</Button></CardContent>
-                </Card>
-                <h2 className='text-2xl font-bold mb-4'>Mes Recettes Sauvegardées</h2>
-                {savedRecipes.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {savedRecipes.map(recipe => (
-                            <Card key={recipe.id} className="overflow-hidden flex flex-col">
-                                <CardHeader><CardTitle>{recipe.title}</CardTitle><Badge variant="secondary" className="mt-2 w-fit">{recipe.country}</Badge></CardHeader>
-                                <CardContent className="flex-grow"><p className="text-sm text-muted-foreground">{recipe.description}</p></CardContent>
-                                <CardFooter className="flex justify-between mt-auto">
-                                    <Button onClick={() => setViewingRecipe(recipe)}>Voir la recette</Button>
-                                    <Button variant="ghost" size="icon" onClick={() => setSavedRecipes(prev => prev.filter(r => r.id !== recipe.id))}><Trash2 className="h-4 w-4 text-destructive"/></Button>
-                                </CardFooter>
-                            </Card>
-                        ))}
-                    </div>
-                ) : <p className="text-muted-foreground text-center py-8">Aucune recette sauvegardée pour le moment.</p>}
+            <div className="space-y-8">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <Card className='lg:col-span-1 bg-gradient-to-br from-primary/80 to-primary text-primary-foreground text-center p-6 flex flex-col'>
+                        <CardHeader className="flex-grow"><CardTitle>À la recherche d'inspiration ?</CardTitle><CardDescription className="text-primary-foreground/80 pt-2">Laissez notre chef vous proposer un plat savoureux !</CardDescription></CardHeader>
+                        <CardContent><Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={handleShowSuggestion}>Suggestion du Chef</Button></CardContent>
+                    </Card>
+                    <Card className="lg:col-span-1 bg-gradient-to-br from-accent/80 to-accent text-accent-foreground text-center p-6 flex flex-col">
+                        <CardHeader className="flex-grow"><CardTitle>J'ai pas envie de cuisiner</CardTitle><CardDescription className="text-accent-foreground/80 pt-2">Laissez le hasard décider pour vous !</CardDescription></CardHeader>
+                        <CardContent><Button size="lg" variant="secondary" className="bg-background/20 hover:bg-background/30" onClick={() => { setIsDecisionWheelOpen(true); setDecisionResult(null); }}><Dices className="mr-2 h-5 w-5"/>Roue de la Flemme</Button></CardContent>
+                    </Card>
+                    <Card className="lg:col-span-1">
+                        <CardHeader><CardTitle>Suivi du Budget</CardTitle><CardDescription>Maîtrisez vos dépenses.</CardDescription></CardHeader>
+                        <CardContent>
+                            <div className="flex gap-2"><Input type="number" placeholder="Budget (DT)" value={budgetInput} onChange={(e) => setBudgetInput(e.target.value)} onBlur={handleSetBudget} onKeyDown={(e) => e.key === 'Enter' && handleSetBudget()}/><Button onClick={handleSetBudget}>OK</Button></div>
+                            {budget !== null && (
+                                <div className="mt-4 text-sm space-y-1">
+                                    <div className="flex justify-between"><span>Budget:</span><span className="font-bold">{budget.toFixed(2)} DT</span></div>
+                                    <div className="flex justify-between"><span>Panier:</span><span className={cn("font-bold", basketTotal > budget ? "text-destructive" : "text-primary")}>{basketTotal.toFixed(2)} DT</span></div>
+                                    {basketTotal > budget && (<p className="text-destructive font-semibold pt-2 text-center">Attention : Budget dépassé !</p>)}
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                </div>
+
+                <div>
+                    <h2 className='text-2xl font-bold mb-4'>Mes Recettes Sauvegardées</h2>
+                    {savedRecipes.length > 0 ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {savedRecipes.map(recipe => (
+                                <Card key={recipe.id} className="overflow-hidden flex flex-col">
+                                    <CardHeader><CardTitle>{recipe.title}</CardTitle><Badge variant="secondary" className="mt-2 w-fit">{recipe.country}</Badge></CardHeader>
+                                    <CardContent className="flex-grow"><p className="text-sm text-muted-foreground">{recipe.description}</p></CardContent>
+                                    <CardFooter className="flex justify-between mt-auto bg-secondary/30 pt-4">
+                                        <Button onClick={() => setViewingRecipe(recipe)}>Voir la recette</Button>
+                                        <Button variant="ghost" size="icon" onClick={() => setSavedRecipes(prev => prev.filter(r => r.id !== recipe.id))}><Trash2 className="h-4 w-4 text-destructive"/></Button>
+                                    </CardFooter>
+                                </Card>
+                            ))}
+                        </div>
+                    ) : <div className="text-center py-10 border-2 border-dashed rounded-lg"><BookOpen className="mx-auto h-12 w-12 text-muted-foreground" /><p className="mt-4 text-sm text-muted-foreground">Aucune recette sauvegardée pour le moment.</p><p className="mt-1 text-sm text-muted-foreground">Utilisez la "Suggestion du Chef" pour en découvrir !</p></div>}
+                </div>
             </div>
           )}
         </div>
@@ -401,6 +493,32 @@ export default function KitchenAssistantPage() {
             <DialogFooter><DialogClose asChild><Button type="button">Fermer</Button></DialogClose></DialogFooter>
         </DialogContent>}
       </Dialog>
+       <Dialog open={isDecisionWheelOpen} onOpenChange={(open) => { if (!open) setIsDecisionWheelOpen(false); }}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>La Roue de la Flemme</DialogTitle>
+                    <DialogDescription>Que manger ce soir ? Faites tourner la roue !</DialogDescription>
+                </DialogHeader>
+                <div className="flex flex-col items-center justify-center p-8 gap-6 min-h-[150px]">
+                    {isSpinning ? (
+                        <RotateCw className="h-16 w-16 text-primary animate-spin" />
+                    ) : decisionResult ? (
+                        <div className="text-center animate-in fade-in-50 zoom-in-95">
+                            <p className="text-muted-foreground">Et le gagnant est...</p>
+                            <p className="text-3xl font-bold text-primary mt-2">{decisionResult} !</p>
+                            <p className="text-sm text-muted-foreground mt-1">Bon appétit !</p>
+                        </div>
+                    ) : (
+                        <Dices className="h-16 w-16 text-muted-foreground" />
+                    )}
+                </div>
+                <DialogFooter>
+                    <Button onClick={handleSpinWheel} disabled={isSpinning} className="w-full">
+                        {isSpinning ? (<><RotateCw className="mr-2 h-4 w-4 animate-spin"/> Ça tourne...</>) : "Faire tourner !"}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     </div>
   );
 }
