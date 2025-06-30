@@ -133,7 +133,7 @@ const chefSuggestions: Recipe[] = [
   {
     id: 'rec4',
     title: 'Ojja aux Merguez',
-    description: 'Un plat rapide, épicé et réconfortant à base d\'oeufs et de saucisses.',
+    description: 'Un plat rapide, épicé et réconfortant à base d\'œufs et de saucisses.',
     country: 'Tunisie',
     ingredients: [
       { name: 'Merguez', quantity: 6, unit: 'pièce' },
