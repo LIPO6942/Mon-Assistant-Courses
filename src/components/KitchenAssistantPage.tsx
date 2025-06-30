@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { useState, useMemo } from 'react';
-import { ChefHat, ShoppingBasket, Trash2, PlusCircle, Pencil, Minus, Plus, Dices, UtensilsCrossed, ListSteps, Flame, Music, PaintBrush } from 'lucide-react';
+import { ChefHat, ShoppingBasket, Trash2, PlusCircle, Pencil, Minus, Plus, Dices } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription, SheetFooter } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -423,21 +423,21 @@ export default function KitchenAssistantPage() {
                 <div className="py-2 space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
                         <div className="p-3 bg-secondary/50 rounded-lg">
-                            <h4 className="font-semibold mb-2 flex items-center gap-2"><Flame className="h-5 w-5 text-primary"/>Calories</h4>
+                            <h4 className="font-semibold mb-2 flex items-center gap-2">Calories</h4>
                             <p className="text-muted-foreground">{suggestedRecipe?.calories} kcal</p>
                         </div>
                         <div className="p-3 bg-secondary/50 rounded-lg">
-                            <h4 className="font-semibold mb-2 flex items-center gap-2"><PaintBrush className="h-5 w-5 text-primary"/>Décoration</h4>
+                            <h4 className="font-semibold mb-2 flex items-center gap-2">Décoration</h4>
                             <p className="text-muted-foreground">{suggestedRecipe?.decoration}</p>
                         </div>
                         <div className="p-3 bg-secondary/50 rounded-lg col-span-1 md:col-span-2">
-                            <h4 className="font-semibold mb-2 flex items-center gap-2"><Music className="h-5 w-5 text-primary"/>Ambiance</h4>
+                            <h4 className="font-semibold mb-2 flex items-center gap-2">Ambiance</h4>
                             <p className="text-muted-foreground">{suggestedRecipe?.ambiance}</p>
                         </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                          <h4 className="font-semibold mb-2 flex items-center gap-2"><UtensilsCrossed className="h-5 w-5 text-primary"/>Ingrédients</h4>
+                          <h4 className="font-semibold mb-2 flex items-center gap-2">Ingrédients</h4>
                           <ul className="space-y-2 text-sm">
                               {suggestedRecipe?.ingredients.map(ing => (
                                 <li key={ing} className="flex items-center justify-between p-1.5 rounded-md hover:bg-secondary">
@@ -450,7 +450,7 @@ export default function KitchenAssistantPage() {
                           </ul>
                       </div>
                        <div>
-                          <h4 className="font-semibold mb-2 flex items-center gap-2"><ListSteps className="h-5 w-5 text-primary"/>Préparation</h4>
+                          <h4 className="font-semibold mb-2 flex items-center gap-2">Préparation</h4>
                           <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground pl-2">
                               {suggestedRecipe?.instructions.map((step, index) => <li key={index}>{step}</li>)}
                           </ol>
