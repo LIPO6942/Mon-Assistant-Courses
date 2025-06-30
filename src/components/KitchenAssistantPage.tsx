@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -366,7 +367,6 @@ export default function KitchenAssistantPage() {
     }
     clearBasket();
   };
-
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
