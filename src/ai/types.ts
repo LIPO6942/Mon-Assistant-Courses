@@ -41,14 +41,14 @@ export const SuggestRecipeOutputSchema = z.object({
 export type SuggestRecipeOutput = z.infer<typeof SuggestRecipeOutputSchema>;
 
 export const ChandyekInputSchema = z.object({
-  ingredients: z.string().describe("A comma-separated list of ingredients the user has."),
+  ingredients: z.string().describe("Une liste d'ingrédients, séparés par des virgules, que l'utilisateur possède."),
 });
 export type ChandyekInput = z.infer<typeof ChandyekInputSchema>;
 
 export const ChandyekOutputSchema = z.object({
   suggestions: z.array(z.object({
-    title: z.string().describe("The name of the suggested recipe."),
-    description: z.string().describe("A short description of the recipe, mentioning any extra ingredients needed."),
-  })).describe("An array of recipe suggestions.")
+    title: z.string().describe("Le nom de la recette suggérée."),
+    description: z.string().describe("Une courte description de la recette, mentionnant les ingrédients supplémentaires nécessaires."),
+  })).describe("Un tableau de suggestions de recettes.")
 });
 export type ChandyekOutput = z.infer<typeof ChandyekOutputSchema>;
