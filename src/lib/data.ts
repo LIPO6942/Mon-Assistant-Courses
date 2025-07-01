@@ -106,5 +106,75 @@ export const discoverableRecipes: Recipe[] = [
         { name: 'Bouquet garni', quantity: 1, unit: 'pièce' },
     ],
     preparation: `1. Coupez le bœuf en morceaux. Faites-le mariner dans le vin rouge avec les carottes et l'oignon coupés, et le bouquet garni, pendant 12h.\n2. Égouttez la viande. Faites-la dorer dans une cocotte avec un peu d'huile.\n3. Ajoutez les légumes de la marinade, faites-les revenir. Saupoudrez de farine, mélangez bien.\n4. Versez la marinade filtrée. Complétez avec du bouillon si nécessaire pour couvrir. Laissez mijoter à feu très doux pendant 3 heures.\n5. Faites revenir les lardons et les champignons à part.\n6. Ajoutez-les à la cocotte 30 minutes avant la fin de la cuisson. Servez chaud avec des pommes de terre vapeur.`
+  },
+  {
+    id: 'r6',
+    title: 'Moussaka',
+    description: 'Un gratin grec généreux avec des aubergines, de la viande hachée et une sauce béchamel onctueuse.',
+    country: 'Grèce',
+    calories: 750,
+    ingredients: [
+        { name: 'Aubergines', quantity: 3, unit: 'pièce' },
+        { name: 'Viande d\'agneau hachée', quantity: 500, unit: 'g' },
+        { name: 'Oignon', quantity: 1, unit: 'pièce' },
+        { name: 'Tomates pelées', quantity: 400, unit: 'g' },
+        { name: 'Lait', quantity: 500, unit: 'ml' },
+        { name: 'Farine', quantity: 50, unit: 'g' },
+        { name: 'Beurre', quantity: 50, unit: 'g' },
+        { name: 'Fromage râpé', quantity: 100, unit: 'g' },
+    ],
+    preparation: `1. Coupez les aubergines en tranches, salez-les et laissez-les dégorger. Rincez-les et faites-les frire ou griller.\n2. Faites revenir l'oignon émincé, ajoutez la viande hachée et faites-la dorer. Ajoutez les tomates, salez, poivrez et laissez mijoter.\n3. Préparez une béchamel avec le beurre, la farine et le lait. Ajoutez une partie du fromage.\n4. Dans un plat à gratin, alternez couches d'aubergines et de viande. Terminez par la béchamel et le reste du fromage.\n5. Enfournez à 180°C pendant 45 minutes.`
+  },
+  {
+    id: 'r7',
+    title: 'Curry Vert Thaï au Poulet',
+    description: 'Un curry thaïlandais crémeux, épicé et plein de saveurs, servi avec du riz jasmin.',
+    country: 'Thaïlande',
+    calories: 600,
+    ingredients: [
+        { name: 'Filet de poulet', quantity: 400, unit: 'g' },
+        { name: 'Pâte de curry vert', quantity: 2, unit: 'cuillère à soupe' },
+        { name: 'Lait de coco', quantity: 400, unit: 'ml' },
+        { name: 'Pois gourmands', quantity: 100, unit: 'g' },
+        { name: 'Poivron rouge', quantity: 1, unit: 'pièce' },
+        { name: 'Feuilles de basilic thaï', quantity: 1, unit: 'botte' },
+        { name: 'Sauce poisson (nuoc-mâm)', quantity: 1, unit: 'cuillère à soupe' },
+    ],
+    preparation: `1. Coupez le poulet en morceaux et le poivron en lanières.\n2. Dans un wok, faites chauffer un peu d'huile, puis ajoutez la pâte de curry vert et faites-la revenir pendant 1 minute.\n3. Ajoutez le poulet et faites-le dorer. Versez le lait de coco et portez à frémissement.\n4. Laissez mijoter 10 minutes. Ajoutez les pois gourmands et le poivron. Poursuivez la cuisson 5 minutes.\n5. Incorporez la sauce poisson et les feuilles de basilic thaï juste avant de servir avec du riz.`
+  },
+  {
+    id: 'r8',
+    title: 'Paella Valenciana',
+    description: 'Le plat espagnol emblématique, un riz safrané garni de poulet, lapin et légumes verts.',
+    country: 'Espagne',
+    calories: 850,
+    ingredients: [
+        { name: 'Riz Bomba', quantity: 400, unit: 'g' },
+        { name: 'Poulet en morceaux', quantity: 500, unit: 'g' },
+        { name: 'Lapin en morceaux', quantity: 250, unit: 'g' },
+        { name: 'Haricots verts plats', quantity: 150, unit: 'g' },
+        { name: 'Gros haricots blancs (garrofó)', quantity: 100, unit: 'g' },
+        { name: 'Tomate mûre râpée', quantity: 1, unit: 'pièce' },
+        { name: 'Safran', quantity: 1, unit: 'pincée' },
+        { name: 'Bouillon de poulet', quantity: 1.2, unit: 'L' },
+    ],
+    preparation: `1. Dans une poêle à paella, faites dorer les viandes dans l'huile d'olive. Poussez-les sur les côtés.\n2. Au centre, faites revenir les haricots verts, puis ajoutez la tomate râpée. Mélangez tout.\n3. Versez le riz et nacrez-le pendant une minute. Ajoutez le safran.\n4. Versez le bouillon de poulet chaud, salez et ajoutez les haricots blancs. Répartissez bien les ingrédients.\n5. Laissez cuire à feu vif pendant 10 minutes, puis à feu doux pendant 8-10 minutes sans jamais remuer. Laissez reposer 5 minutes avant de servir.`
+  },
+  {
+    id: 'r9',
+    title: 'Poulet au Beurre (Butter Chicken)',
+    description: 'Un plat indien crémeux et légèrement épicé, avec des morceaux de poulet marinés dans une sauce tomate riche.',
+    country: 'Inde',
+    calories: 680,
+    ingredients: [
+        { name: 'Filet de poulet', quantity: 500, unit: 'g' },
+        { name: 'Yaourt nature', quantity: 150, unit: 'g' },
+        { name: 'Garam masala', quantity: 2, unit: 'cuillère à café' },
+        { name: 'Purée de tomates', quantity: 400, unit: 'g' },
+        { name: 'Crème liquide entière', quantity: 100, unit: 'ml' },
+        { name: 'Beurre', quantity: 50, unit: 'g' },
+        { name: 'Ail et gingembre', quantity: 1, unit: 'cuillère à soupe' },
+    ],
+    preparation: `1. Coupez le poulet en cubes. Marinez-le pendant au moins 1 heure dans le yaourt avec du garam masala, de l'ail et du gingembre.\n2. Faites griller le poulet mariné au four ou à la poêle jusqu'à ce qu'il soit cuit.\n3. Dans une casserole, faites fondre le beurre. Ajoutez la purée de tomates, le reste du garam masala, salez et laissez mijoter 10 minutes.\n4. Ajoutez la crème liquide et mélangez bien. Incorporez les morceaux de poulet grillés.\n5. Laissez réchauffer l'ensemble quelques minutes. Servez chaud avec du riz basmati ou du pain naan.`
   }
 ];
