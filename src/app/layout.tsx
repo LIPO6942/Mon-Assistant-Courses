@@ -23,7 +23,7 @@ export default function RootLayout({
   return (
     <html lang="fr" suppressHydrationWarning>
       <head>
-        <link rel="manifest" href="/manifest.json?v=2" />
+        <link rel="manifest" href="/manifest.json?v=3" />
       </head>
       <body
         className={cn(
