@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Plus, PlusCircle, Pencil, Trash2, Search } from 'lucide-react';
+import { Plus, PlusCircle, Pencil, Trash2, Search, BrainCircuit } from 'lucide-react';
 import type { Ingredient, CategoryDef } from '@/lib/types';
 import BudgetManager from './BudgetManager';
 
@@ -20,6 +20,7 @@ interface PantryViewProps {
   handleDeleteIngredient: (id: string) => void;
   openCategoryDialog: (category?: CategoryDef) => void;
   handleDeleteCategory: (id: string) => void;
+  onAddToChandyek: (ingredientName: string) => void;
   budget: number;
   setBudget: (budget: number) => void;
   basketTotal: number;
@@ -38,6 +39,7 @@ export default function PantryView({
   handleDeleteIngredient,
   openCategoryDialog,
   handleDeleteCategory,
+  onAddToChandyek,
   budget,
   setBudget,
   basketTotal,
@@ -79,9 +81,10 @@ export default function PantryView({
                           <p className='text-sm text-muted-foreground'>{item.price.toFixed(2)} DT / {item.unit}</p>
                         </div>
                         <div className='flex items-center gap-1'>
-                          <Button variant="ghost" size="icon" className='h-8 w-8 rounded-full' onClick={() => addToBasket(item)}><Plus className="h-4 w-4" /></Button>
-                          <Button variant="ghost" size="icon" className='h-8 w-8 rounded-full' onClick={() => openEditDialog(item)}><Pencil className="h-4 w-4" /></Button>
-                          <Button variant="ghost" size="icon" className='h-8 w-8 rounded-full' onClick={() => handleDeleteIngredient(item.id)}><Trash2 className="h-4 w-4 text-destructive/80" /></Button>
+                          <Button variant="ghost" size="icon" className='h-8 w-8 rounded-full' title="Ajouter au panier" onClick={() => addToBasket(item)}><Plus className="h-4 w-4" /></Button>
+                          <Button variant="ghost" size="icon" className='h-8 w-8 rounded-full' title="Utiliser pour 'Ch3andek'" onClick={() => onAddToChandyek(item.name)}><BrainCircuit className="h-4 w-4 text-accent" /></Button>
+                          <Button variant="ghost" size="icon" className='h-8 w-8 rounded-full' title="Modifier" onClick={() => openEditDialog(item)}><Pencil className="h-4 w-4" /></Button>
+                          <Button variant="ghost" size="icon" className='h-8 w-8 rounded-full' title="Supprimer" onClick={() => handleDeleteIngredient(item.id)}><Trash2 className="h-4 w-4 text-destructive/80" /></Button>
                         </div>
                       </li>
                     ))}

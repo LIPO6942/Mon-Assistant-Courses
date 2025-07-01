@@ -31,6 +31,7 @@ export default function KitchenAssistantPage() {
   // Chandyek AI State
   const [chandyekSuggestions, setChandyekSuggestions] = useState<ChandyekOutput | null>(null);
   const [isChandyekLoading, setIsChandyekLoading] = useState(false);
+  const [chandyekIngredients, setChandyekIngredients] = useState('');
   
   // Dialogs State
   const [isAddEditDialogOpen, setAddEditDialogOpen] = useState(false);
@@ -227,11 +228,24 @@ export default function KitchenAssistantPage() {
     alert(`Recette "${recipeToSave.title}" sauvegardée !`);
   };
 
-  const handleSuggestRecipes = async (ingredients: string) => {
+  const handleAddToChandyek = (ingredientName: string) => {
+    setChandyekIngredients(prev => {
+      const ingredientsList = prev ? prev.split(', ').filter(Boolean) : [];
+      if (!ingredientsList.includes(ingredientName)) {
+        ingredientsList.push(ingredientName);
+      }
+      return ingredientsList.join(', ');
+    });
+    setActiveTab('chandyek');
+  };
+
+  const handleSuggestRecipes = async () => {
+    if (!chandyekIngredients.trim()) return;
+
     setIsChandyekLoading(true);
     setChandyekSuggestions(null);
     try {
-      const result = await suggestChandyekRecipes({ ingredients });
+      const result = await suggestChandyekRecipes({ ingredients: chandyekIngredients });
       setChandyekSuggestions(result);
     } catch (error) {
       console.error("Error fetching recipe suggestions:", error);
@@ -267,6 +281,7 @@ export default function KitchenAssistantPage() {
               handleDeleteIngredient={handleDeleteIngredient}
               openCategoryDialog={openCategoryDialog}
               handleDeleteCategory={handleDeleteCategory}
+              onAddToChandyek={handleAddToChandyek}
               budget={budget}
               setBudget={setBudget}
               basketTotal={basketTotal}
@@ -288,6 +303,8 @@ export default function KitchenAssistantPage() {
               suggestions={chandyekSuggestions}
               isLoading={isChandyekLoading}
               handleSuggestRecipes={handleSuggestRecipes}
+              ingredients={chandyekIngredients}
+              setIngredients={setChandyekIngredients}
             />
           )}
         </div>
