@@ -1,12 +1,11 @@
-
 {
   "name": "Mon assistant de courses",
-  "short_name": "Courses",
+  "short_name": "Assistant Courses",
   "description": "Gérez votre garde-manger, planifiez vos repas et vos courses.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#F0FFF0",
-  "theme_color": "#7CFC00",
+  "background_color": "#ffffff",
+  "theme_color": "#3B82F6",
   "icons": [
     {
       "src": "/icons/icon-192x192.png",
