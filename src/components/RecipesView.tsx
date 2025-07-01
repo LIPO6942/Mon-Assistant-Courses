@@ -74,7 +74,7 @@ export default function RecipesView({
 
   return (
     <div className="space-y-8">
-      <div className='text-center py-8 px-4 border-2 border-dashed rounded-lg bg-card'>
+      <div className='text-center py-8 px-4 rounded-xl bg-gradient-to-br from-primary/10 via-card to-card border-2 border-primary/20 shadow-lg'>
         <h2 className='text-2xl font-bold mb-2'>À court d'idées ?</h2>
         <p className='text-muted-foreground mb-6'>Cliquez sur le bouton pour obtenir une suggestion de recette au hasard !</p>
         <Button size="lg" onClick={findRandomRecipe}>
@@ -84,7 +84,7 @@ export default function RecipesView({
 
         {suggestedRecipe && (
           <div className='mt-8 max-w-md mx-auto text-left animate-in fade-in-50'>
-              <Card key={suggestedRecipe.id} className="overflow-hidden flex flex-col">
+              <Card key={suggestedRecipe.id} className="overflow-hidden flex flex-col bg-card shadow-lg rounded-xl border border-border/50">
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <div className="pr-2">
@@ -113,7 +113,7 @@ export default function RecipesView({
         )}
       </div>
 
-      <div className='text-center py-8 px-4 border-2 border-dashed rounded-lg bg-card'>
+      <div className='text-center py-8 px-4 rounded-xl bg-gradient-to-br from-accent/10 via-card to-card border-2 border-accent/20 shadow-lg'>
         <h2 className='text-2xl font-bold mb-2'>J’ai pas envie de cuisiner</h2>
         <p className='text-muted-foreground mb-6'>Pas le courage ? Laissez le hasard décider de votre prochain plat à emporter !</p>
         <Button size="lg" onClick={handleSpin} className="bg-accent hover:bg-accent/90 text-accent-foreground" disabled={isSpinning}>
@@ -142,7 +142,7 @@ export default function RecipesView({
         {savedRecipes.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {savedRecipes.map(recipe => (
-              <Card key={recipe.id} className="overflow-hidden flex flex-col">
+              <Card key={recipe.id} className="overflow-hidden flex flex-col bg-card shadow-lg rounded-xl border border-border/50 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <div className="pr-2">
