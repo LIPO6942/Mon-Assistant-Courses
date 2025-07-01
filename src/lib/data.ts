@@ -22,22 +22,33 @@ export const predefinedIngredients: Ingredient[] = [
     { id: 'f6', name: 'Poivron', category: 'Fruits et Légumes', price: 5.0, unit: 'kg' },
     { id: 'f7', name: 'Laitue', category: 'Fruits et Légumes', price: 1.2, unit: 'pièce' },
     { id: 'f8', name: 'Concombre', category: 'Fruits et Légumes', price: 2.0, unit: 'kg' },
+    { id: 'f9', name: 'Courgette', category: 'Fruits et Légumes', price: 3.0, unit: 'kg' },
+    { id: 'f10', name: 'Citron', category: 'Fruits et Légumes', price: 0.8, unit: 'pièce' },
+    { id: 'f11', name: 'Basilic frais', category: 'Fruits et Légumes', price: 2.5, unit: 'botte' },
+    { id: 'f12', name: 'Navet', category: 'Fruits et Légumes', price: 1.8, unit: 'kg' },
+    { id: 'f13', name: 'Aubergine', category: 'Fruits et Légumes', price: 4.5, unit: 'kg' },
+
 
     // Viandes et Poissons
     { id: 'v1', name: 'Filet de Poulet', category: 'Viandes et Poissons', price: 12.0, unit: 'kg' },
     { id: 'v2', name: 'Bœuf haché', category: 'Viandes et Poissons', price: 25.0, unit: 'kg' },
     { id: 'v3', name: 'Filet de saumon', category: 'Viandes et Poissons', price: 40.0, unit: 'kg' },
     { id: 'v4', name: 'Thon en conserve', category: 'Viandes et Poissons', price: 3.5, unit: 'boîte' },
+    { id: 'v5', name: 'Gigot d\'agneau', category: 'Viandes et Poissons', price: 35.0, unit: 'kg' },
 
     // Produits Laitiers
     { id: 'p1', name: 'Lait Entier', category: 'Produits Laitiers', price: 1.8, unit: 'L' },
     { id: 'p2', name: 'Oeufs', category: 'Produits Laitiers', price: 4.0, unit: 'douzaine' },
     { id: 'p3', name: 'Yaourt nature', category: 'Produits Laitiers', price: 0.8, unit: 'pièce' },
     { id: 'p4', name: 'Fromage Gruyère', category: 'Produits Laitiers', price: 30.0, unit: 'kg' },
+    { id: 'p5', name: 'Mozzarella', category: 'Produits Laitiers', price: 25.0, unit: 'kg' },
+    { id: 'p6', name: 'Parmesan', category: 'Produits Laitiers', price: 45.0, unit: 'kg' },
 
     // Boulangerie
     { id: 'b1', name: 'Baguette', category: 'Boulangerie', price: 0.4, unit: 'pièce' },
     { id: 'b2', name: 'Pain de mie', category: 'Boulangerie', price: 2.5, unit: 'paquet' },
+    { id: 'b3', name: 'Pâte à pizza', category: 'Boulangerie', price: 3.0, unit: 'pièce' },
+    { id: 'b4', name: 'Croûtons', category: 'Boulangerie', price: 2.0, unit: 'paquet' },
 
     // Épicerie
     { id: 'e1', name: 'Pâtes Penne', category: 'Épicerie', price: 1.5, unit: 'paquet' },
@@ -47,6 +58,14 @@ export const predefinedIngredients: Ingredient[] = [
     { id: 'e6', name: 'Sucre', category: 'Épicerie', price: 1.8, unit: 'kg' },
     { id: 'e7', name: 'Sel', category: 'Épicerie', price: 1.0, unit: 'paquet' },
     { id: 'e8', name: 'Poivre noir', category: 'Épicerie', price: 4.0, unit: 'pot' },
+    { id: 'e9', name: 'Haricots rouges en conserve', category: 'Épicerie', price: 2.5, unit: 'boîte' },
+    { id: 'e10', name: 'Semoule de couscous', category: 'Épicerie', price: 3.5, unit: 'kg' },
+    { id: 'e11', name: 'Cumin en poudre', category: 'Épicerie', price: 3.0, unit: 'pot' },
+    { id: 'e12', name: 'Piment en poudre', category: 'Épicerie', price: 2.8, unit: 'pot' },
+    { id: 'e13', name: 'Vinaigre de vin', category: 'Épicerie', price: 4.0, unit: 'L' },
+    { id: 'e14', name: 'Harissa en conserve', category: 'Épicerie', price: 2.2, unit: 'boîte' },
+    { id: 'e15', name: 'Pois chiches en conserve', category: 'Épicerie', price: 2.0, unit: 'boîte' },
+    { id: 'e16', name: 'Concentré de tomate', category: 'Épicerie', price: 1.8, unit: 'boîte' },
     
     // Boissons
     { id: 'bo1', name: 'Eau minérale', category: 'Boissons', price: 0.8, unit: 'L' },
@@ -159,8 +178,8 @@ export const discoverableRecipes: Recipe[] = [
     country: 'Grèce',
     calories: 750,
     ingredients: [
-        { name: 'Aubergines', quantity: 3, unit: 'pièce' },
-        { name: 'Viande d\'agneau hachée', quantity: 500, unit: 'g' },
+        { name: 'Aubergine', quantity: 3, unit: 'pièce' },
+        { name: 'Bœuf haché', quantity: 500, unit: 'g' },
         { name: 'Oignon', quantity: 1, unit: 'pièce' },
         { name: 'Tomates pelées', quantity: 400, unit: 'g' },
         { name: 'Lait', quantity: 500, unit: 'ml' },
@@ -181,7 +200,7 @@ export const discoverableRecipes: Recipe[] = [
         { name: 'Pâte de curry vert', quantity: 2, unit: 'cuillère à soupe' },
         { name: 'Lait de coco', quantity: 400, unit: 'ml' },
         { name: 'Pois gourmands', quantity: 100, unit: 'g' },
-        { name: 'Poivron rouge', quantity: 1, unit: 'pièce' },
+        { name: 'Poivron', quantity: 1, unit: 'pièce' },
         { name: 'Feuilles de basilic thaï', quantity: 1, unit: 'botte' },
         { name: 'Sauce poisson (nuoc-mâm)', quantity: 1, unit: 'cuillère à soupe' },
     ],
@@ -291,5 +310,95 @@ export const discoverableRecipes: Recipe[] = [
         { name: 'Pains pita', quantity: 4, unit: 'pièce' },
     ],
     preparation: `1. Rincez et égouttez les pois chiches. Gardez un peu de leur eau.\n2. Dans un mixeur, mettez les pois chiches, le tahini, le jus de citron et l'ail. Mixez jusqu'à obtenir une pâte.\n3. Tout en mixant, versez un filet d'eau des pois chiches jusqu'à la consistance désirée.\n4. Servez dans un bol, créez un tourbillon avec une cuillère, arrosez d'huile d'olive et saupoudrez de paprika.\n5. Dégustez avec des pains pita tièdes.`
+  },
+  {
+    id: 'r14',
+    title: 'Salade César',
+    description: 'Une salade croquante et savoureuse, un classique indémodable.',
+    country: 'Mexique / USA',
+    calories: 550,
+    ingredients: [
+        { name: 'Filet de Poulet', quantity: 200, unit: 'g' },
+        { name: 'Laitue', quantity: 1, unit: 'pièce' },
+        { name: 'Croûtons', quantity: 50, unit: 'g' },
+        { name: 'Parmesan', quantity: 30, unit: 'g' },
+        { name: 'Oeufs', quantity: 1, unit: 'pièce' },
+        { name: 'Ail', quantity: 1, unit: 'gousse' },
+        { name: 'Huile d\'olive', quantity: 50, unit: 'ml' },
+        { name: 'Citron', quantity: 1, unit: 'pièce' },
+    ],
+    preparation: `1. Faites griller le filet de poulet, puis coupez-le en lanières.\n2. Préparez la sauce César : émulsionnez un jaune d'œuf avec l'ail haché, le jus de citron et montez à l'huile d'olive. Incorporez la moitié du parmesan râpé.\n3. Lavez et coupez la laitue. Mettez-la dans un saladier.\n4. Ajoutez le poulet, les croûtons et le reste du parmesan en copeaux.\n5. Versez la sauce, mélangez délicatement et servez immédiatement.`
+  },
+  {
+    id: 'r15',
+    title: 'Couscous Tunisien à l\'Agneau',
+    description: 'Un plat familial généreux et parfumé, emblème de la cuisine tunisienne.',
+    country: 'Tunisie',
+    calories: 900,
+    ingredients: [
+        { name: 'Gigot d\'agneau', quantity: 800, unit: 'g' },
+        { name: 'Semoule de couscous', quantity: 500, unit: 'g' },
+        { name: 'Pois chiches en conserve', quantity: 200, unit: 'g' },
+        { name: 'Carottes', quantity: 4, unit: 'pièce' },
+        { name: 'Courgettes', quantity: 2, unit: 'pièce' },
+        { name: 'Navets', quantity: 2, unit: 'pièce' },
+        { name: 'Oignon', quantity: 1, unit: 'pièce' },
+        { name: 'Concentré de tomate', quantity: 2, unit: 'cuillère à soupe' },
+        { name: 'Harissa en conserve', quantity: 1, unit: 'cuillère à soupe' },
+        { name: 'Huile d\'olive', quantity: 50, unit: 'ml' },
+    ],
+    preparation: `1. Dans le bas d'un couscoussier, faites revenir l'oignon haché et les morceaux d'agneau dans l'huile d'olive.\n2. Ajoutez le concentré de tomate, l'harissa, du sel, du poivre et couvrez d'eau. Laissez mijoter 45 minutes.\n3. Pendant ce temps, préparez la semoule en l'arrosant d'un peu d'eau salée et d'huile, et en l'égrainant à la main.\n4. Ajoutez les légumes coupés en gros morceaux (carottes, navets) dans le bouillon. Placez la semoule dans le haut du couscoussier et laissez cuire à la vapeur 20 minutes.\n5. Ajoutez les courgettes et les pois chiches au bouillon. Remélangez la semoule et remettez à cuire 15 minutes.\n6. Servez la semoule dans un grand plat, creusez un puits, disposez la viande et les légumes et arrosez de bouillon.`
+  },
+  {
+    id: 'r16',
+    title: 'Pizza Margherita',
+    description: 'La reine des pizzas, simple, aux couleurs de l\'Italie, un vrai délice.',
+    country: 'Italie',
+    calories: 750,
+    ingredients: [
+        { name: 'Pâte à pizza', quantity: 1, unit: 'pièce' },
+        { name: 'Tomates pelées', quantity: 200, unit: 'g' },
+        { name: 'Mozzarella', quantity: 150, unit: 'g' },
+        { name: 'Basilic frais', quantity: 1, unit: 'botte' },
+        { name: 'Huile d\'olive', quantity: 2, unit: 'cuillère à soupe' },
+        { name: 'Sel', quantity: 1, unit: 'pincée' },
+    ],
+    preparation: `1. Préchauffez votre four à la température maximale (250°C ou plus).\n2. Étalez la pâte à pizza sur une plaque de cuisson.\n3. Mixez les tomates pelées avec du sel et un filet d'huile d'olive pour faire la sauce. Étalez-la sur la pâte.\n4. Coupez la mozzarella en tranches et répartissez-la sur la pizza.\n5. Enfournez pour 10-12 minutes, jusqu'à ce que la croûte soit dorée et le fromage bien fondu.\n6. À la sortie du four, parsemez de feuilles de basilic frais et d'un filet d'huile d'olive.`
+  },
+  {
+    id: 'r17',
+    title: 'Chili con Carne',
+    description: 'Un plat tex-mex riche et épicé, réconfortant et parfait à partager.',
+    country: 'USA / Mexique',
+    calories: 600,
+    ingredients: [
+        { name: 'Bœuf haché', quantity: 500, unit: 'g' },
+        { name: 'Haricots rouges en conserve', quantity: 400, unit: 'g' },
+        { name: 'Tomates pelées', quantity: 400, unit: 'g' },
+        { name: 'Oignon', quantity: 1, unit: 'pièce' },
+        { name: 'Ail', quantity: 2, unit: 'gousse' },
+        { name: 'Poivron', quantity: 1, unit: 'pièce' },
+        { name: 'Piment en poudre', quantity: 2, unit: 'cuillère à café' },
+        { name: 'Cumin en poudre', quantity: 1, unit: 'cuillère à café' },
+    ],
+    preparation: `1. Hachez l'oignon, l'ail et le poivron. Faites-les revenir dans une grande cocotte avec un peu d'huile.\n2. Ajoutez le bœuf haché et faites-le dorer en l'émiettant.\n3. Incorporez les épices (piment, cumin), salez et poivrez. Mélangez bien.\n4. Ajoutez les tomates pelées (et leur jus) et les haricots rouges égouttés.\n5. Portez à ébullition, puis baissez le feu et laissez mijoter à couvert pendant au moins 1 heure.\n6. Servez chaud avec du riz, du fromage râpé ou de la crème fraîche.`
+  },
+  {
+    id: 'r18',
+    title: 'Ratatouille Niçoise',
+    description: 'Un plat d\'été provençal, plein de légumes du soleil mijotés longuement.',
+    country: 'France',
+    calories: 300,
+    ingredients: [
+        { name: 'Aubergine', quantity: 2, unit: 'pièce' },
+        { name: 'Courgette', quantity: 2, unit: 'pièce' },
+        { name: 'Poivron', quantity: 2, unit: 'pièce' },
+        { name: 'Tomates', quantity: 4, unit: 'pièce' },
+        { name: 'Oignon', quantity: 2, unit: 'pièce' },
+        { name: 'Ail', quantity: 3, unit: 'gousse' },
+        { name: 'Huile d\'olive', quantity: 4, unit: 'cuillère à soupe' },
+        { name: 'Bouquet garni', quantity: 1, unit: 'pièce' },
+    ],
+    preparation: `1. Coupez tous les légumes en morceaux de taille similaire.\n2. Faites revenir chaque légume séparément dans l'huile d'olive et réservez-les. Cela permet à chaque légume de développer sa propre saveur.\n3. Une fois tous les légumes précuits, faites revenir les oignons et l'ail hachés dans la même cocotte.\n4. Ajoutez les tomates et le bouquet garni. Laissez compoter 15 minutes.\n5. Remettez tous les légumes dans la cocotte. Salez, poivrez, et mélangez délicatement.\n6. Laissez mijoter à feu très doux et à couvert pendant au moins 45 minutes. La ratatouille est encore meilleure réchauffée.`
   }
 ];
