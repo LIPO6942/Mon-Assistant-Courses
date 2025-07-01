@@ -12,6 +12,8 @@ const poppins = Poppins({
 export const metadata: Metadata = {
   title: "Mon assistant de courses",
   description: "Gérez votre garde-manger, planifiez vos repas et vos courses.",
+  manifest: "/manifest.json",
+  themeColor: "#3B82F6",
 };
 
 export default function RootLayout({
