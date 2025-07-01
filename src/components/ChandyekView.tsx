@@ -5,17 +5,15 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sparkles, Loader2, Salad } from 'lucide-react';
-import type { ChandyekOutput } from '@/ai/types';
 
 interface ChandyekViewProps {
-  suggestions: ChandyekOutput | null;
   isLoading: boolean;
   handleSuggestRecipes: () => void;
   ingredients: string;
   setIngredients: (value: string) => void;
 }
 
-export default function ChandyekView({ suggestions, isLoading, handleSuggestRecipes, ingredients, setIngredients }: ChandyekViewProps) {
+export default function ChandyekView({ isLoading, handleSuggestRecipes, ingredients, setIngredients }: ChandyekViewProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (ingredients.trim()) {
@@ -61,22 +59,6 @@ export default function ChandyekView({ suggestions, isLoading, handleSuggestReci
           </form>
         </CardContent>
       </Card>
-
-      {suggestions && suggestions.suggestions.length > 0 && (
-        <div className="max-w-2xl mx-auto space-y-4 animate-in fade-in-50">
-          <h2 className="text-2xl font-bold text-center">Bismillah! Voici quelques idées :</h2>
-          {suggestions.suggestions.map((recipe, index) => (
-            <Card key={index} className="bg-card">
-              <CardHeader>
-                <CardTitle>{recipe.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">{recipe.description}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
     </div>
   );
 }

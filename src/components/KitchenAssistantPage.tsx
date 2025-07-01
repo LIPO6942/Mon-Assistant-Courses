@@ -32,6 +32,7 @@ export default function KitchenAssistantPage() {
   const [chandyekSuggestions, setChandyekSuggestions] = useState<ChandyekOutput | null>(null);
   const [isChandyekLoading, setIsChandyekLoading] = useState(false);
   const [chandyekIngredients, setChandyekIngredients] = useState('');
+  const [chandyekError, setChandyekError] = useState<string | null>(null);
   
   // Dialogs State
   const [isAddEditDialogOpen, setAddEditDialogOpen] = useState(false);
@@ -39,6 +40,7 @@ export default function KitchenAssistantPage() {
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<{ id?: string; name: string } | null>(null);
   const [viewingRecipe, setViewingRecipe] = useState<Recipe | null>(null);
+  const [isSuggestionsDialogOpen, setSuggestionsDialogOpen] = useState(false);
 
   // --- LOCALSTORAGE PERSISTENCE ---
 
@@ -250,16 +252,18 @@ export default function KitchenAssistantPage() {
 
     setIsChandyekLoading(true);
     setChandyekSuggestions(null);
+    setChandyekError(null);
+    setSuggestionsDialogOpen(true); // Ouvre la fenêtre pour montrer le chargement
+
     try {
       const result = await suggestChandyekRecipes({ ingredients: chandyekIngredients });
       setChandyekSuggestions(result);
     } catch (error) {
       console.error("Error fetching recipe suggestions:", error);
-      // Affiche l'erreur à l'utilisateur, y compris notre nouvelle erreur customisée
       if (error instanceof Error) {
-        alert(error.message);
+        setChandyekError(error.message);
       } else {
-        alert("Désolé, une erreur inconnue est survenue. Veuillez réessayer.");
+        setChandyekError("Désolé, une erreur inconnue est survenue. Veuillez réessayer.");
       }
     } finally {
       setIsChandyekLoading(false);
@@ -316,7 +320,6 @@ export default function KitchenAssistantPage() {
           )}
           {activeTab === 'chandyek' && (
             <ChandyekView 
-              suggestions={chandyekSuggestions}
               isLoading={isChandyekLoading}
               handleSuggestRecipes={handleSuggestRecipes}
               ingredients={chandyekIngredients}
@@ -338,6 +341,11 @@ export default function KitchenAssistantPage() {
         handleSaveCategory={handleSaveCategory}
         viewingRecipe={viewingRecipe}
         setViewingRecipe={setViewingRecipe}
+        isSuggestionsDialogOpen={isSuggestionsDialogOpen}
+        setSuggestionsDialogOpen={setSuggestionsDialogOpen}
+        suggestions={chandyekSuggestions}
+        isChandyekLoading={isChandyekLoading}
+        chandyekError={chandyekError}
       />
     </div>
   );
