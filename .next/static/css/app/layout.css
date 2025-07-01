@@ -689,6 +689,9 @@ video {
 .top-\[50\%\] {
   top: 50%;
 }
+.right-3 {
+  right: 0.75rem;
+}
 .z-20 {
   z-index: 20;
 }
@@ -804,6 +807,9 @@ video {
 .h-\[calc\(100vh-320px\)\] {
   height: calc(100vh - 320px);
 }
+.h-\[calc\(100vh-340px\)\] {
+  height: calc(100vh - 340px);
+}
 .min-h-\[300px\] {
   min-height: 300px;
 }
@@ -905,6 +911,9 @@ video {
 }
 .flex-col-reverse {
   flex-direction: column-reverse;
+}
+.items-start {
+  align-items: flex-start;
 }
 .items-center {
   align-items: center;
@@ -1135,6 +1144,9 @@ video {
 }
 .pt-4 {
   padding-top: 1rem;
+}
+.pr-10 {
+  padding-right: 2.5rem;
 }
 .text-left {
   text-align: left;

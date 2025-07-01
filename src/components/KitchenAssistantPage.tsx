@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { initialCategories, predefinedIngredients } from '@/lib/data';
+import { initialCategories, predefinedIngredients, discoverableRecipes } from '@/lib/data';
 import type { Ingredient, Recipe, BasketItem, CategoryDef } from '@/lib/types';
 
 import AppHeader from './AppHeader';
@@ -127,6 +127,15 @@ export default function KitchenAssistantPage() {
     clearBasket();
   };
 
+  const handleSaveRecipe = (recipeToSave: Recipe) => {
+    if (savedRecipes.find(r => r.id === recipeToSave.id)) {
+      alert("Cette recette est déjà dans vos favoris !");
+      return;
+    }
+    setSavedRecipes(prev => [...prev, recipeToSave]);
+    alert(`Recette "${recipeToSave.title}" sauvegardée !`);
+  };
+
   // --- RENDER ---
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
@@ -162,6 +171,8 @@ export default function KitchenAssistantPage() {
               savedRecipes={savedRecipes}
               setViewingRecipe={setViewingRecipe}
               setSavedRecipes={setSavedRecipes}
+              discoverableRecipes={discoverableRecipes}
+              handleSaveRecipe={handleSaveRecipe}
             />
           )}
         </div>

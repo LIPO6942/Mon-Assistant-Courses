@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
@@ -62,7 +63,7 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
               <>
                 <DialogHeader>
                   <DialogTitle>{viewingRecipe.title}</DialogTitle>
-                  <DialogDescription>{viewingRecipe.country} - {viewingRecipe.description}</DialogDescription>
+                  <DialogDescription>{viewingRecipe.country} - Environ {viewingRecipe.calories} kcal - {viewingRecipe.description}</DialogDescription>
                 </DialogHeader>
                 <ScrollArea className="h-72 my-2 border rounded-md p-4">
                     <h4 className='font-semibold'>Ingrédients :</h4>
