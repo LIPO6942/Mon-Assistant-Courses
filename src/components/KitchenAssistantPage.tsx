@@ -3,8 +3,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { initialCategories, predefinedIngredients, discoverableRecipes } from '@/lib/data';
-import type { Ingredient, Recipe, BasketItem, CategoryDef } from '@/lib/types';
-import { suggestChandyekRecipes, type ChandyekOutput } from '@/ai/flows/chandyek-flow';
+import type { Ingredient, Recipe, BasketItem, CategoryDef, RecipeIngredient } from '@/lib/types';
 
 import AppHeader from './AppHeader';
 import AppNav from './AppNav';
@@ -13,25 +12,26 @@ import PantryView from './PantryView';
 import RecipesView from './RecipesView';
 import ChandyekView from './ChandyekView';
 
+type SuggestedRecipe = Recipe & {
+  matchCount: number;
+  missingIngredients: RecipeIngredient[];
+};
+
 export default function KitchenAssistantPage() {
   // --- STATE MANAGEMENT ---
-  // We initialize state with default values.
-  // Then, a useEffect will run once on the client to load persisted data from localStorage.
   const [pantry, setPantry] = useState<Ingredient[]>(predefinedIngredients);
   const [basket, setBasket] = useState<BasketItem[]>([]);
   const [categories, setCategories] = useState<CategoryDef[]>(initialCategories);
   const [savedRecipes, setSavedRecipes] = useState<Recipe[]>([]);
   const [budget, setBudget] = useState(200);
   
-  // Ephemeral state, doesn't need to be saved
+  // Ephemeral state
   const [activeTab, setActiveTab] = useState<'pantry' | 'recipes' | 'chandyek'>('pantry');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Chandyek AI State
-  const [chandyekSuggestions, setChandyekSuggestions] = useState<ChandyekOutput | null>(null);
-  const [isChandyekLoading, setIsChandyekLoading] = useState(false);
+  // Chandyek (non-AI) State
   const [chandyekIngredients, setChandyekIngredients] = useState('');
-  const [chandyekError, setChandyekError] = useState<string | null>(null);
+  const [localSuggestions, setLocalSuggestions] = useState<SuggestedRecipe[]>([]);
   
   // Dialogs State
   const [isAddEditDialogOpen, setAddEditDialogOpen] = useState(false);
@@ -39,11 +39,8 @@ export default function KitchenAssistantPage() {
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<{ id?: string; name: string } | null>(null);
   const [viewingRecipe, setViewingRecipe] = useState<Recipe | null>(null);
-  const [isSuggestionsDialogOpen, setSuggestionsDialogOpen] = useState(false);
 
   // --- LOCALSTORAGE PERSISTENCE ---
-
-  // On initial client-side render, load all data from localStorage
   useEffect(() => {
     try {
       const storedPantry = localStorage.getItem('pantry-data');
@@ -62,50 +59,14 @@ export default function KitchenAssistantPage() {
       if (storedBudget) setBudget(JSON.parse(storedBudget));
     } catch (error) {
       console.error("Error loading data from localStorage", error);
-      // If there's an error (e.g., corrupted data), we'll just use the defaults.
     }
-  }, []); // The empty dependency array ensures this runs only once on mount.
+  }, []);
 
-  // The following useEffects save data to localStorage whenever it changes.
-  useEffect(() => {
-    try {
-      localStorage.setItem('pantry-data', JSON.stringify(pantry));
-    } catch (error) {
-      console.error("Error saving pantry data to localStorage", error);
-    }
-  }, [pantry]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('basket-data', JSON.stringify(basket));
-    } catch (error) {
-      console.error("Error saving basket data to localStorage", error);
-    }
-  }, [basket]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('categories-data', JSON.stringify(categories));
-    } catch (error) {
-      console.error("Error saving categories data to localStorage", error);
-    }
-  }, [categories]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('saved-recipes-data', JSON.stringify(savedRecipes));
-    } catch (error) {
-      console.error("Error saving recipes data to localStorage", error);
-    }
-  }, [savedRecipes]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('budget-data', JSON.stringify(budget));
-    } catch (error) {
-      console.error("Error saving budget data to localStorage", error);
-    }
-  }, [budget]);
+  useEffect(() => { localStorage.setItem('pantry-data', JSON.stringify(pantry)); }, [pantry]);
+  useEffect(() => { localStorage.setItem('basket-data', JSON.stringify(basket)); }, [basket]);
+  useEffect(() => { localStorage.setItem('categories-data', JSON.stringify(categories)); }, [categories]);
+  useEffect(() => { localStorage.setItem('saved-recipes-data', JSON.stringify(savedRecipes)); }, [savedRecipes]);
+  useEffect(() => { localStorage.setItem('budget-data', JSON.stringify(budget)); }, [budget]);
 
   // --- SERVICE WORKER REGISTRATION ---
   useEffect(() => {
@@ -119,7 +80,6 @@ export default function KitchenAssistantPage() {
       });
     }
   }, []);
-
 
   // --- MEMOIZED CALCULATIONS ---
   const basketTotal = useMemo(() => basket.reduce((total, item) => total + item.price * item.quantity, 0), [basket]);
@@ -143,6 +103,41 @@ export default function KitchenAssistantPage() {
   const chandyekIngredientsList = useMemo(() => {
     return chandyekIngredients.split(', ').filter(Boolean);
   }, [chandyekIngredients]);
+
+
+  // --- LOCAL RECIPE SUGGESTION LOGIC ---
+  useEffect(() => {
+    if (activeTab !== 'chandyek') return;
+
+    const selected = chandyekIngredientsList.map(s => s.toLowerCase());
+
+    if (selected.length === 0) {
+      setLocalSuggestions([]);
+      return;
+    }
+
+    const suggestions = discoverableRecipes.map(recipe => {
+      let matchCount = 0;
+      const missingIngredients: RecipeIngredient[] = [];
+
+      recipe.ingredients.forEach(ing => {
+        const ingNameLower = ing.name.toLowerCase();
+        // Check if any selected ingredient is a substring of the recipe ingredient or vice-versa
+        if (selected.some(sel => ingNameLower.includes(sel) || sel.includes(ingNameLower))) {
+          matchCount++;
+        } else {
+          missingIngredients.push(ing);
+        }
+      });
+
+      return { ...recipe, matchCount, missingIngredients };
+    })
+    .filter(recipe => recipe.matchCount > 0)
+    .sort((a, b) => b.matchCount - a.matchCount);
+
+    setLocalSuggestions(suggestions);
+
+  }, [activeTab, chandyekIngredients, chandyekIngredientsList]);
 
 
   // --- HANDLERS ---
@@ -246,32 +241,8 @@ export default function KitchenAssistantPage() {
     });
   };
 
-  const handleSuggestRecipes = async () => {
-    if (!chandyekIngredients.trim()) return;
-
-    setIsChandyekLoading(true);
-    setChandyekSuggestions(null);
-    setChandyekError(null);
-    setSuggestionsDialogOpen(true); // Ouvre la fenêtre pour montrer le chargement
-
-    try {
-      const result = await suggestChandyekRecipes({ ingredients: chandyekIngredients });
-      setChandyekSuggestions(result);
-    } catch (error) {
-      console.error("Error fetching recipe suggestions:", error);
-      // Personnalisation du message d'erreur pour l'utilisateur
-      let errorMessage = "Désolé, une erreur inconnue est survenue. Veuillez réessayer.";
-      if (error instanceof Error) {
-          if (error.message.includes("suggestions") || error.message.includes("Validation")) { // Détecte une erreur de validation Zod probable
-              errorMessage = "L'assistant IA n'a pas pu générer de suggestions valides avec ces ingrédients. Essayez d'être plus précis ou de changer les ingrédients.";
-          } else {
-              errorMessage = error.message;
-          }
-      }
-      setChandyekError(errorMessage);
-    } finally {
-      setIsChandyekLoading(false);
-    }
+  const handleClearChandyekIngredients = () => {
+    setChandyekIngredients('');
   };
 
   // --- RENDER ---
@@ -324,10 +295,11 @@ export default function KitchenAssistantPage() {
           )}
           {activeTab === 'chandyek' && (
             <ChandyekView 
-              isLoading={isChandyekLoading}
-              handleSuggestRecipes={handleSuggestRecipes}
-              ingredients={chandyekIngredients}
-              setIngredients={setChandyekIngredients}
+              selectedIngredients={chandyekIngredientsList}
+              suggestions={localSuggestions}
+              onViewRecipe={setViewingRecipe}
+              onRemoveIngredient={handleToggleChandyekIngredient}
+              onClearIngredients={handleClearChandyekIngredients}
             />
           )}
         </div>
@@ -345,11 +317,6 @@ export default function KitchenAssistantPage() {
         handleSaveCategory={handleSaveCategory}
         viewingRecipe={viewingRecipe}
         setViewingRecipe={setViewingRecipe}
-        isSuggestionsDialogOpen={isSuggestionsDialogOpen}
-        setSuggestionsDialogOpen={setSuggestionsDialogOpen}
-        suggestions={chandyekSuggestions}
-        isChandyekLoading={isChandyekLoading}
-        chandyekError={chandyekError}
       />
     </div>
   );
