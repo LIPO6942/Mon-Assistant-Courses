@@ -13,21 +13,7 @@ export const categories = [
 ] as const;
 export type Category = typeof categories[number];
 
-// Schema for Chandyek Flow
-export const ChandyekInputSchema = z.object({
-  ingredients: z.string().describe("Liste des ingrédients que l'utilisateur possède."),
-});
-export type ChandyekInput = z.infer<typeof ChandyekInputSchema>;
-
-export const ChandyekOutputSchema = z.object({
-  suggestions: z.array(z.object({
-    title: z.string().describe("Le nom de la recette."),
-    description: z.string().describe("Description courte de la recette et des ingrédients supplémentaires requis."),
-  }))
-  .min(1, "La liste de suggestions ne doit pas être vide.")
-  .describe("Un tableau d'au moins 1 suggestion de recette.")
-});
-export type ChandyekOutput = z.infer<typeof ChandyekOutputSchema>;
+// Les types pour Chandyek sont maintenant dans chandyek-flow.ts pour éviter les problèmes d'import.
 
 export const GenerateShoppingListInputSchema = z.object({
   prompt: z.string().describe('The user request, like "ingredients for a cake"'),
