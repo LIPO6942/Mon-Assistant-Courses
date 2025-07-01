@@ -51,6 +51,28 @@ Pour tester l'application sur votre téléphone pendant qu'elle tourne sur votre
     ```
 Si cela ne fonctionne pas, il se peut que le pare-feu de votre ordinateur bloque la connexion. Vous devrez peut-être autoriser Node.js ou votre terminal à accepter les connexions entrantes.
 
+## Sauvegarder et Partager votre Code (avec Git)
+
+Pour enregistrer les modifications que vous avez apportées à votre application, vous pouvez utiliser les commandes Git directement dans le terminal de Firebase Studio. C'est comme créer un point de sauvegarde.
+
+1.  **Préparer tous les fichiers modifiés :**
+    Cette commande prépare toutes vos modifications pour la sauvegarde. Le `.` signifie "tous les fichiers dans le dossier actuel".
+    ```bash
+    git add .
+    ```
+
+2.  **Créer un point de sauvegarde (commit) :**
+    Cette commande enregistre vos modifications avec un message qui décrit ce que vous avez fait. Remplacez `"votre message"` par une courte description (par ex. `"Ajout de la liste de courses"`).
+    ```bash
+    git commit -m "votre message"
+    ```
+
+3.  **Envoyer vos sauvegardes vers un dépôt distant (comme GitHub) :**
+    Si votre projet est lié à un service comme GitHub, cette commande envoie vos modifications vers ce service, les rendant accessibles depuis n'importe où.
+    ```bash
+    git push
+    ```
+
 ## Déployer l'application sur internet (Alternative gratuite à Firebase)
 
 Pour rendre votre application accessible depuis n'importe où sans dépendre de votre ordinateur, vous pouvez la déployer gratuitement sur des plateformes comme **Vercel** ou **Netlify**.
