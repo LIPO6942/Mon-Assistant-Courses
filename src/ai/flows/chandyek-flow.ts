@@ -4,27 +4,10 @@
  * @fileOverview An AI flow to suggest recipes based on available ingredients.
  *
  * - suggestChandyekRecipes - A function that handles the recipe suggestion process.
- * - ChandyekInput - The input type for the suggestChandyekRecipes function.
- * - ChandyekOutput - The return type for the suggestChandyekRecipes function.
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'zod';
-
-// Les schémas sont maintenant des constantes locales et ne sont PAS exportés.
-const ChandyekInputSchema = z.object({
-  ingredients: z.string().describe("Une liste d'ingrédients, séparés par des virgules, que l'utilisateur possède."),
-});
-export type ChandyekInput = z.infer<typeof ChandyekInputSchema>;
-
-const ChandyekOutputSchema = z.object({
-  suggestions: z.array(z.object({
-    title: z.string().describe("Le nom de la recette suggérée."),
-    description: z.string().describe("Une courte description de la recette, mentionnant les ingrédients supplémentaires nécessaires."),
-  })).describe("Un tableau de 3 suggestions de recettes. Le tableau ne doit jamais être vide.")
-});
-export type ChandyekOutput = z.infer<typeof ChandyekOutputSchema>;
-
+import { ChandyekInputSchema, ChandyekOutputSchema, type ChandyekInput, type ChandyekOutput } from '@/ai/types';
 
 export async function suggestChandyekRecipes(input: ChandyekInput): Promise<ChandyekOutput> {
   return chandyekFlow(input);
