@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Plus, PlusCircle, Pencil, Trash2, Search } from 'lucide-react';
 import type { Ingredient, CategoryDef } from '@/lib/types';
+import BudgetManager from './BudgetManager';
 
 interface PantryViewProps {
   groupedIngredients: Record<string, Ingredient[]>;
@@ -19,6 +20,9 @@ interface PantryViewProps {
   handleDeleteIngredient: (id: string) => void;
   openCategoryDialog: (category?: CategoryDef) => void;
   handleDeleteCategory: (id: string) => void;
+  budget: number;
+  setBudget: (budget: number) => void;
+  basketTotal: number;
 }
 
 export default function PantryView({
@@ -32,9 +36,13 @@ export default function PantryView({
   handleDeleteIngredient,
   openCategoryDialog,
   handleDeleteCategory,
+  budget,
+  setBudget,
+  basketTotal,
 }: PantryViewProps) {
   return (
     <div>
+      <BudgetManager budget={budget} setBudget={setBudget} basketTotal={basketTotal} />
       <div className="relative mb-6">
         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
         <Input type="search" placeholder="Rechercher un ingrédient..." className="pl-11 rounded-full h-11 text-base" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />

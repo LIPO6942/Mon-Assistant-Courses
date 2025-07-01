@@ -145,8 +145,6 @@ export default function KitchenAssistantPage() {
         updateBasketQuantity={updateBasketQuantity}
         clearBasket={clearBasket}
         handleConfirmPurchase={handleConfirmPurchase}
-        budget={budget}
-        setBudget={setBudget}
       />
       <AppNav activeTab={activeTab} setActiveTab={setActiveTab} />
 
@@ -164,6 +162,9 @@ export default function KitchenAssistantPage() {
               handleDeleteIngredient={handleDeleteIngredient}
               openCategoryDialog={openCategoryDialog}
               handleDeleteCategory={handleDeleteCategory}
+              budget={budget}
+              setBudget={setBudget}
+              basketTotal={basketTotal}
             />
           )}
           {activeTab === 'recipes' && (
