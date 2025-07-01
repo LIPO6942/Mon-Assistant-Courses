@@ -2,31 +2,22 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { ChefHat, ShoppingBasket, UtensilsCrossed, BookOpen } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Sheet, SheetTrigger } from '@/components/ui/sheet';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
-
 import { initialCategories, predefinedIngredients } from '@/lib/data';
 import type { Ingredient, Recipe, BasketItem, CategoryDef } from '@/lib/types';
-import IngredientForm from './IngredientForm';
-import CategoryForm from './CategoryForm';
+
+import AppHeader from './AppHeader';
+import AppNav from './AppNav';
+import KitchenAssistantDialogs from './KitchenAssistantDialogs';
 import PantryView from './PantryView';
 import RecipesView from './RecipesView';
-import BasketSheet from './BasketSheet';
-
 
 export default function KitchenAssistantPage() {
-  // Global State
+  // --- STATE MANAGEMENT ---
   const [pantry, setPantry] = useState<Ingredient[]>(predefinedIngredients);
   const [basket, setBasket] = useState<BasketItem[]>([]);
   const [categories, setCategories] = useState<CategoryDef[]>(initialCategories);
   const [savedRecipes, setSavedRecipes] = useState<Recipe[]>([]);
   const [activeTab, setActiveTab] = useState<'pantry' | 'recipes'>('pantry');
-
-  // Pantry State
   const [searchQuery, setSearchQuery] = useState('');
   
   // Dialogs State
@@ -36,7 +27,7 @@ export default function KitchenAssistantPage() {
   const [editingCategory, setEditingCategory] = useState<{ id?: string; name: string } | null>(null);
   const [viewingRecipe, setViewingRecipe] = useState<Recipe | null>(null);
 
-  // Memoized Calculations
+  // --- MEMOIZED CALCULATIONS ---
   const basketTotal = useMemo(() => basket.reduce((total, item) => total + item.price * item.quantity, 0), [basket]);
 
   const filteredPantry = useMemo(() => {
@@ -55,7 +46,7 @@ export default function KitchenAssistantPage() {
     return acc;
   }, [filteredPantry, categories]);
 
-  // Handlers
+  // --- HANDLERS ---
   const handleSaveIngredient = (formData: Omit<Ingredient, 'id'> & { id?: string }) => {
     if (formData.id) {
       setPantry(prev => prev.map(ing => ing.id === formData.id ? { ...ing, ...formData } as Ingredient : ing));
@@ -66,9 +57,18 @@ export default function KitchenAssistantPage() {
     setAddEditDialogOpen(false);
     setEditingIngredient(null);
   };
+
   const handleDeleteIngredient = (id: string) => setPantry(prev => prev.filter(ing => ing.id !== id));
-  const openAddDialog = (category?: string) => { setEditingIngredient({ category: category || 'Autre', unit: 'pièce', price: 0, name: '' }); setAddEditDialogOpen(true); };
-  const openEditDialog = (ingredient: Ingredient) => { setEditingIngredient(ingredient); setAddEditDialogOpen(true); };
+  
+  const openAddDialog = (category?: string) => { 
+    setEditingIngredient({ category: category || 'Autre', unit: 'pièce', price: 0, name: '' }); 
+    setAddEditDialogOpen(true); 
+  };
+  
+  const openEditDialog = (ingredient: Ingredient) => { 
+    setEditingIngredient(ingredient); 
+    setAddEditDialogOpen(true); 
+  };
 
   const handleSaveCategory = (formData: { id?: string; name: string }) => {
     if (formData.id) {
@@ -76,8 +76,10 @@ export default function KitchenAssistantPage() {
     } else {
       setCategories(prev => [...prev, { ...formData, id: self.crypto.randomUUID() }]);
     }
-    setIsCategoryDialogOpen(false); setEditingCategory(null);
+    setIsCategoryDialogOpen(false); 
+    setEditingCategory(null);
   };
+
   const handleDeleteCategory = (id: string) => {
       const categoryToDelete = categories.find(c => c.id === id);
       if (!categoryToDelete) return;
@@ -92,7 +94,11 @@ export default function KitchenAssistantPage() {
           setCategories(prev => prev.filter(cat => cat.id !== id));
       }
   };
-  const openCategoryDialog = (category?: CategoryDef) => { setEditingCategory(category || { name: '' }); setIsCategoryDialogOpen(true);};
+
+  const openCategoryDialog = (category?: CategoryDef) => { 
+    setEditingCategory(category || { name: '' }); 
+    setIsCategoryDialogOpen(true);
+  };
 
   const addToBasket = (ingredient: Ingredient) => {
     setBasket(prev => {
@@ -101,10 +107,12 @@ export default function KitchenAssistantPage() {
       return [...prev, { ...ingredient, quantity: 1 }];
     });
   };
+
   const updateBasketQuantity = (id: string, newQuantity: number) => {
     if (newQuantity <= 0) setBasket(prev => prev.filter(item => item.id !== id));
     else setBasket(prev => prev.map(item => item.id === id ? { ...item, quantity: newQuantity } : item));
   };
+
   const clearBasket = () => setBasket([]);
   
   const handleConfirmPurchase = () => {
@@ -112,37 +120,17 @@ export default function KitchenAssistantPage() {
     clearBasket();
   };
 
+  // --- RENDER ---
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
-      <header className="bg-card border-b sticky top-0 z-20">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <ChefHat className="h-8 w-8 text-primary" />
-            <h1 className="text-xl md:text-2xl font-bold tracking-tight">Mon assistant de courses</h1>
-          </div>
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="outline" size="icon" className="relative rounded-full">
-                <ShoppingBasket />
-                {basket.length > 0 && <Badge className="absolute -top-2 -right-2 h-6 w-6 rounded-full flex items-center justify-center bg-accent text-accent-foreground">{basket.reduce((acc, item) => acc + item.quantity, 0)}</Badge>}
-              </Button>
-            </SheetTrigger>
-            <BasketSheet 
-              basket={basket}
-              basketTotal={basketTotal}
-              updateBasketQuantity={updateBasketQuantity}
-              clearBasket={clearBasket}
-              handleConfirmPurchase={handleConfirmPurchase}
-            />
-          </Sheet>
-        </div>
-        <nav className="bg-card/50 border-b">
-          <div className="container mx-auto px-4 flex justify-center gap-2">
-            <Button variant={activeTab === 'pantry' ? 'secondary': 'ghost'} onClick={() => setActiveTab('pantry')} className="flex-1 md:flex-none"><UtensilsCrossed className="mr-2 h-4 w-4"/>Garde-Manger</Button>
-            <Button variant={activeTab === 'recipes' ? 'secondary': 'ghost'} onClick={() => setActiveTab('recipes')} className="flex-1 md:flex-none"><BookOpen className="mr-2 h-4 w-4"/>Recettes & Idées</Button>
-          </div>
-        </nav>
-      </header>
+      <AppHeader
+        basket={basket}
+        basketTotal={basketTotal}
+        updateBasketQuantity={updateBasketQuantity}
+        clearBasket={clearBasket}
+        handleConfirmPurchase={handleConfirmPurchase}
+      />
+      <AppNav activeTab={activeTab} setActiveTab={setActiveTab} />
 
       <main className="container mx-auto p-4 md:p-6 lg:p-8 flex-grow">
         <div className="animate-in fade-in-50">
@@ -170,35 +158,19 @@ export default function KitchenAssistantPage() {
         </div>
       </main>
 
-      {/* --- DIALOGS --- */}
-      <Dialog open={isAddEditDialogOpen} onOpenChange={setAddEditDialogOpen}>
-        <DialogContent>
-            <DialogHeader><DialogTitle>{editingIngredient?.id ? "Modifier" : "Ajouter"} un produit</DialogTitle></DialogHeader>
-            <IngredientForm key={editingIngredient?.id || 'new'} ingredient={editingIngredient} categories={categories} onSave={handleSaveIngredient} formId="ingredient-form" />
-            <DialogFooter><Button variant="outline" onClick={() => setAddEditDialogOpen(false)}>Annuler</Button><Button type="submit" form="ingredient-form">Sauvegarder</Button></DialogFooter>
-        </DialogContent>
-      </Dialog>
-      <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
-        <DialogContent>
-            <DialogHeader><DialogTitle>{editingCategory?.id ? "Modifier" : "Ajouter"} une catégorie</DialogTitle></DialogHeader>
-            <CategoryForm key={editingCategory?.id || 'new-cat'} category={editingCategory} onSave={handleSaveCategory} formId="category-form"/>
-            <DialogFooter><Button variant="outline" onClick={() => setIsCategoryDialogOpen(false)}>Annuler</Button><Button type="submit" form="category-form">Sauvegarder</Button></DialogFooter>
-        </DialogContent>
-      </Dialog>
-      <Dialog open={!!viewingRecipe} onOpenChange={(open) => !open && setViewingRecipe(null)}>
-        {viewingRecipe && <DialogContent className="max-w-lg">
-            <DialogHeader><DialogTitle>{viewingRecipe.title}</DialogTitle><DialogDescription>{viewingRecipe.country} - {viewingRecipe.description}</DialogDescription></Header>
-            <ScrollArea className="h-72 my-2 border rounded-md p-4">
-                <h4 className='font-semibold'>Ingrédients :</h4>
-                <ul className='list-disc pl-5 text-sm space-y-1 my-2'>
-                    {viewingRecipe.ingredients.map(ing => <li key={ing.name}>{ing.quantity} {ing.unit} de {ing.name}</li>)}
-                </ul>
-                <h4 className='font-semibold mt-4'>Préparation :</h4>
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap mt-2">{viewingRecipe.preparation}</p>
-            </ScrollArea>
-            <DialogFooter><DialogClose asChild><Button type="button">Fermer</Button></DialogClose></DialogFooter>
-        </DialogContent>}
-      </Dialog>
+      <KitchenAssistantDialogs
+        isAddEditDialogOpen={isAddEditDialogOpen}
+        setAddEditDialogOpen={setAddEditDialogOpen}
+        editingIngredient={editingIngredient}
+        categories={categories}
+        handleSaveIngredient={handleSaveIngredient}
+        isCategoryDialogOpen={isCategoryDialogOpen}
+        setIsCategoryDialogOpen={setIsCategoryDialogOpen}
+        editingCategory={editingCategory}
+        handleSaveCategory={handleSaveCategory}
+        viewingRecipe={viewingRecipe}
+        setViewingRecipe={setViewingRecipe}
+      />
     </div>
   );
 }
