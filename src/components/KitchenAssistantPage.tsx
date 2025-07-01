@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { initialCategories, predefinedIngredients, discoverableRecipes } from '@/lib/data';
 import type { Ingredient, Recipe, BasketItem, CategoryDef } from '@/lib/types';
 
@@ -13,13 +13,17 @@ import RecipesView from './RecipesView';
 
 export default function KitchenAssistantPage() {
   // --- STATE MANAGEMENT ---
+  // We initialize state with default values.
+  // Then, a useEffect will run once on the client to load persisted data from localStorage.
   const [pantry, setPantry] = useState<Ingredient[]>(predefinedIngredients);
   const [basket, setBasket] = useState<BasketItem[]>([]);
   const [categories, setCategories] = useState<CategoryDef[]>(initialCategories);
   const [savedRecipes, setSavedRecipes] = useState<Recipe[]>([]);
+  const [budget, setBudget] = useState(200);
+  
+  // Ephemeral state, doesn't need to be saved
   const [activeTab, setActiveTab] = useState<'pantry' | 'recipes'>('pantry');
   const [searchQuery, setSearchQuery] = useState('');
-  const [budget, setBudget] = useState(200);
   
   // Dialogs State
   const [isAddEditDialogOpen, setAddEditDialogOpen] = useState(false);
@@ -27,6 +31,73 @@ export default function KitchenAssistantPage() {
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<{ id?: string; name: string } | null>(null);
   const [viewingRecipe, setViewingRecipe] = useState<Recipe | null>(null);
+
+  // --- LOCALSTORAGE PERSISTENCE ---
+
+  // On initial client-side render, load all data from localStorage
+  useEffect(() => {
+    try {
+      const storedPantry = localStorage.getItem('pantry-data');
+      if (storedPantry) setPantry(JSON.parse(storedPantry));
+
+      const storedBasket = localStorage.getItem('basket-data');
+      if (storedBasket) setBasket(JSON.parse(storedBasket));
+
+      const storedCategories = localStorage.getItem('categories-data');
+      if (storedCategories) setCategories(JSON.parse(storedCategories));
+
+      const storedSavedRecipes = localStorage.getItem('saved-recipes-data');
+      if (storedSavedRecipes) setSavedRecipes(JSON.parse(storedSavedRecipes));
+
+      const storedBudget = localStorage.getItem('budget-data');
+      if (storedBudget) setBudget(JSON.parse(storedBudget));
+    } catch (error) {
+      console.error("Error loading data from localStorage", error);
+      // If there's an error (e.g., corrupted data), we'll just use the defaults.
+    }
+  }, []); // The empty dependency array ensures this runs only once on mount.
+
+  // The following useEffects save data to localStorage whenever it changes.
+  useEffect(() => {
+    try {
+      localStorage.setItem('pantry-data', JSON.stringify(pantry));
+    } catch (error) {
+      console.error("Error saving pantry data to localStorage", error);
+    }
+  }, [pantry]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('basket-data', JSON.stringify(basket));
+    } catch (error) {
+      console.error("Error saving basket data to localStorage", error);
+    }
+  }, [basket]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('categories-data', JSON.stringify(categories));
+    } catch (error) {
+      console.error("Error saving categories data to localStorage", error);
+    }
+  }, [categories]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('saved-recipes-data', JSON.stringify(savedRecipes));
+    } catch (error) {
+      console.error("Error saving recipes data to localStorage", error);
+    }
+  }, [savedRecipes]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('budget-data', JSON.stringify(budget));
+    } catch (error) {
+      console.error("Error saving budget data to localStorage", error);
+    }
+  }, [budget]);
+
 
   // --- MEMOIZED CALCULATIONS ---
   const basketTotal = useMemo(() => basket.reduce((total, item) => total + item.price * item.quantity, 0), [basket]);
