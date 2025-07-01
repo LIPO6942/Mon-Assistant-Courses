@@ -5,8 +5,9 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { BookOpen, Trash2, PlusCircle, Shuffle } from 'lucide-react';
+import { BookOpen, Trash2, PlusCircle, Shuffle, Dices } from 'lucide-react';
 import type { Recipe } from '@/lib/types';
+import { streetFoodOptions } from '@/lib/data';
 
 interface RecipesViewProps {
   savedRecipes: Recipe[];
@@ -24,11 +25,17 @@ export default function RecipesView({
   handleSaveRecipe,
 }: RecipesViewProps) {
   const [suggestedRecipe, setSuggestedRecipe] = useState<Recipe | null>(null);
+  const [selectedStreetFood, setSelectedStreetFood] = useState<string | null>(null);
   const savedRecipeIds = new Set(savedRecipes.map(r => r.id));
 
   const findRandomRecipe = () => {
     const randomIndex = Math.floor(Math.random() * discoverableRecipes.length);
     setSuggestedRecipe(discoverableRecipes[randomIndex]);
+  };
+
+  const findRandomStreetFood = () => {
+    const randomIndex = Math.floor(Math.random() * streetFoodOptions.length);
+    setSelectedStreetFood(streetFoodOptions[randomIndex]);
   };
 
   return (
@@ -68,6 +75,22 @@ export default function RecipesView({
                   </Button>
                 </CardFooter>
               </Card>
+          </div>
+        )}
+      </div>
+
+      <div className='text-center py-8 px-4 border-2 border-dashed rounded-lg bg-card'>
+        <h2 className='text-2xl font-bold mb-2'>J’ai pas envie de cuisiner</h2>
+        <p className='text-muted-foreground mb-6'>Pas le courage ? Laissez le hasard décider de votre prochain plat à emporter !</p>
+        <Button size="lg" onClick={findRandomStreetFood} className="bg-accent hover:bg-accent/90 text-accent-foreground">
+          <Dices className="mr-2 h-5 w-5" />
+          Lancer la roue de la flemme !
+        </Button>
+
+        {selectedStreetFood && (
+          <div className="mt-8 animate-in fade-in-50">
+            <p className="text-muted-foreground">Et le gagnant est...</p>
+            <p className="text-4xl font-bold text-primary mt-2">{selectedStreetFood}</p>
           </div>
         )}
       </div>

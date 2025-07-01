@@ -23,6 +23,20 @@ export const predefinedIngredients: Ingredient[] = [
     { id: 'e3', name: 'Oignon', category: 'Fruits et Légumes', price: 2, unit: 'kg' },
 ];
 
+export const streetFoodOptions: string[] = [
+  'Quésadilla',
+  'Burrito',
+  'Fricassé',
+  'Tacos Mexicain',
+  'Tacos',
+  'Ma9loub',
+  'Pizza',
+  'Chapati',
+  'Baguette farcie',
+  'Lablebi royal',
+  'Poulet prêt à porter',
+];
+
 export const discoverableRecipes: Recipe[] = [
   {
     id: 'r1',
