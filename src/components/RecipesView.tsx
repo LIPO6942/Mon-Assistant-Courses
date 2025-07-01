@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -26,16 +26,50 @@ export default function RecipesView({
 }: RecipesViewProps) {
   const [suggestedRecipe, setSuggestedRecipe] = useState<Recipe | null>(null);
   const [selectedStreetFood, setSelectedStreetFood] = useState<string | null>(null);
+  const [isSpinning, setIsSpinning] = useState(false);
+  const [displayedFood, setDisplayedFood] = useState<string | null>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
   const savedRecipeIds = new Set(savedRecipes.map(r => r.id));
+
+  // Cleanup interval on component unmount
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, []);
 
   const findRandomRecipe = () => {
     const randomIndex = Math.floor(Math.random() * discoverableRecipes.length);
     setSuggestedRecipe(discoverableRecipes[randomIndex]);
   };
 
-  const findRandomStreetFood = () => {
-    const randomIndex = Math.floor(Math.random() * streetFoodOptions.length);
-    setSelectedStreetFood(streetFoodOptions[randomIndex]);
+  const handleSpin = () => {
+    if (isSpinning) return;
+
+    setIsSpinning(true);
+    setSelectedStreetFood(null);
+
+    const spinDuration = 2500; // 2.5 seconds
+    const spinInterval = 100; // update every 100ms
+
+    intervalRef.current = setInterval(() => {
+      const randomIndex = Math.floor(Math.random() * streetFoodOptions.length);
+      setDisplayedFood(streetFoodOptions[randomIndex]);
+    }, spinInterval);
+
+    setTimeout(() => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      const finalChoice = streetFoodOptions[Math.floor(Math.random() * streetFoodOptions.length)];
+      setSelectedStreetFood(finalChoice);
+      setDisplayedFood(null);
+      setIsSpinning(false);
+    }, spinDuration);
   };
 
   return (
@@ -82,17 +116,25 @@ export default function RecipesView({
       <div className='text-center py-8 px-4 border-2 border-dashed rounded-lg bg-card'>
         <h2 className='text-2xl font-bold mb-2'>J’ai pas envie de cuisiner</h2>
         <p className='text-muted-foreground mb-6'>Pas le courage ? Laissez le hasard décider de votre prochain plat à emporter !</p>
-        <Button size="lg" onClick={findRandomStreetFood} className="bg-accent hover:bg-accent/90 text-accent-foreground">
-          <Dices className="mr-2 h-5 w-5" />
-          Lancer la roue de la flemme !
+        <Button size="lg" onClick={handleSpin} className="bg-accent hover:bg-accent/90 text-accent-foreground" disabled={isSpinning}>
+          <Dices className={`mr-2 h-5 w-5 ${isSpinning ? 'animate-spin' : ''}`} />
+          {isSpinning ? 'Ça tourne...' : 'Lancer la roue de la flemme !'}
         </Button>
-
-        {selectedStreetFood && (
-          <div className="mt-8 animate-in fade-in-50">
-            <p className="text-muted-foreground">Et le gagnant est...</p>
-            <p className="text-4xl font-bold text-primary mt-2">{selectedStreetFood}</p>
-          </div>
-        )}
+        
+        <div className="mt-8 h-24 flex flex-col justify-center items-center">
+            {isSpinning && (
+              <p className="text-4xl font-bold text-primary transition-opacity duration-100 animate-in fade-in">
+                {displayedFood}
+              </p>
+            )}
+            {!isSpinning && selectedStreetFood && (
+              <div className="animate-in fade-in-50 text-center">
+                <p className="text-muted-foreground">Et le gagnant est...</p>
+                <p className="text-4xl font-bold text-primary mt-2">{selectedStreetFood}</p>
+                <p className="text-sm font-semibold text-accent-foreground/80 mt-4 animate-pulse">Alors, on se régale ?</p>
+              </div>
+            )}
+        </div>
       </div>
       
       <div>
