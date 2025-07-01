@@ -19,6 +19,7 @@ export default function KitchenAssistantPage() {
   const [savedRecipes, setSavedRecipes] = useState<Recipe[]>([]);
   const [activeTab, setActiveTab] = useState<'pantry' | 'recipes'>('pantry');
   const [searchQuery, setSearchQuery] = useState('');
+  const [budget, setBudget] = useState(200);
   
   // Dialogs State
   const [isAddEditDialogOpen, setAddEditDialogOpen] = useState(false);
@@ -116,7 +117,13 @@ export default function KitchenAssistantPage() {
   const clearBasket = () => setBasket([]);
   
   const handleConfirmPurchase = () => {
-    alert("Achats validés ! Votre panier a été vidé.");
+    if (basketTotal > budget) {
+      alert("Fonds insuffisants ! Le total de votre panier dépasse votre budget.");
+      return;
+    }
+    const newBudget = budget - basketTotal;
+    setBudget(newBudget);
+    alert(`Achats validés ! Votre nouveau budget est de ${newBudget.toFixed(2)} DT.`);
     clearBasket();
   };
 
@@ -129,6 +136,7 @@ export default function KitchenAssistantPage() {
         updateBasketQuantity={updateBasketQuantity}
         clearBasket={clearBasket}
         handleConfirmPurchase={handleConfirmPurchase}
+        budget={budget}
       />
       <AppNav activeTab={activeTab} setActiveTab={setActiveTab} />
 

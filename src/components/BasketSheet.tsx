@@ -6,6 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
 import type { BasketItem } from '@/lib/types';
 import { Minus, Plus, Trash2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface BasketSheetProps {
   basket: BasketItem[];
@@ -13,6 +14,7 @@ interface BasketSheetProps {
   updateBasketQuantity: (id: string, newQuantity: number) => void;
   clearBasket: () => void;
   handleConfirmPurchase: () => void;
+  budget: number;
 }
 
 export default function BasketSheet({
@@ -21,19 +23,39 @@ export default function BasketSheet({
   updateBasketQuantity,
   clearBasket,
   handleConfirmPurchase,
+  budget,
 }: BasketSheetProps) {
+  const remainingBudget = budget - basketTotal;
+
   return (
     <SheetContent>
       <SheetHeader>
-        <SheetTitle>Mon Panier</SheetTitle>
+        <SheetTitle>Mon Panier & Budget</SheetTitle>
       </SheetHeader>
-      <div className="py-4 text-left border-t mt-4">
-            <p className="text-lg text-muted-foreground">Total du panier :</p>
-            <p className="text-3xl font-bold text-primary">
-                {basketTotal.toFixed(2)} DT
-            </p>
+      
+      <div className="py-4 border-b">
+          <div className="grid grid-cols-2 gap-4 text-center">
+                <div>
+                  <p className="text-sm text-muted-foreground">Budget Actuel</p>
+                  <p className="text-2xl font-bold">{budget.toFixed(2)} DT</p>
+              </div>
+              <div>
+                  <p className="text-sm text-muted-foreground">Total Panier</p>
+                  <p className="text-2xl font-bold">{basketTotal.toFixed(2)} DT</p>
+              </div>
+          </div>
+          <div className="mt-4 rounded-lg p-3 text-center bg-accent/20">
+              <p className="text-sm font-semibold text-accent-foreground">Budget Restant Après Achat</p>
+                <p className={cn(
+                  "text-2xl font-bold",
+                  remainingBudget < 0 ? "text-destructive" : "text-primary"
+              )}>
+                  {remainingBudget.toFixed(2)} DT
+              </p>
+          </div>
       </div>
-      <ScrollArea className="h-[calc(100vh-270px)] pr-4">
+      
+      <ScrollArea className="h-[calc(100vh-320px)] pr-4">
         {basket.length > 0 ? (
           <ul className="space-y-3 py-4">
             {basket.map(item => (

@@ -801,6 +801,9 @@ video {
 .h-px {
   height: 1px;
 }
+.h-\[calc\(100vh-320px\)\] {
+  height: calc(100vh - 320px);
+}
 .min-h-\[300px\] {
   min-height: 300px;
 }
@@ -890,6 +893,9 @@ video {
 }
 .grid-cols-4 {
   grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.grid-cols-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 .flex-row {
   flex-direction: row;
@@ -1044,6 +1050,9 @@ video {
 }
 .bg-secondary\/50 {
   background-color: hsl(var(--secondary) / 0.5);
+}
+.bg-accent\/20 {
+  background-color: hsl(var(--accent) / 0.2);
 }
 .p-1 {
   padding: 0.25rem;
