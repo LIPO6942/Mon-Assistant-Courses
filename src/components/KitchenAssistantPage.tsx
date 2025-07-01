@@ -165,6 +165,8 @@ export default function KitchenAssistantPage() {
               budget={budget}
               setBudget={setBudget}
               basketTotal={basketTotal}
+              clearBasket={clearBasket}
+              basketItemCount={basket.length}
             />
           )}
           {activeTab === 'recipes' && (
