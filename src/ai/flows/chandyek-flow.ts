@@ -26,6 +26,8 @@ const prompt = ai.definePrompt({
   Ta réponse doit être créative et utile. Propose 3 recettes. Pour chaque recette, indique clairement si des ingrédients supplémentaires sont nécessaires.
   
   Le ton doit être amical, encourageant et utiliser des expressions tunisiennes légères si approprié (comme "Bismillah!", "Saha !").
+
+  Ta réponse DOIT être un objet JSON valide qui respecte le format de sortie demandé. Ne fournis rien d'autre que l'objet JSON.
   
   Voici les ingrédients fournis par l'utilisateur : {{{ingredients}}}
   

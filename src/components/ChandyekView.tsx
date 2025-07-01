@@ -10,16 +10,16 @@ import type { ChandyekOutput } from '@/ai/types';
 interface ChandyekViewProps {
   suggestions: ChandyekOutput | null;
   isLoading: boolean;
-  handleSuggestRecipes: (ingredients: string) => void;
+  handleSuggestRecipes: () => void;
+  ingredients: string;
+  setIngredients: (value: string) => void;
 }
 
-export default function ChandyekView({ suggestions, isLoading, handleSuggestRecipes }: ChandyekViewProps) {
-  const [ingredients, setIngredients] = React.useState('');
-
+export default function ChandyekView({ suggestions, isLoading, handleSuggestRecipes, ingredients, setIngredients }: ChandyekViewProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (ingredients.trim()) {
-      handleSuggestRecipes(ingredients.trim());
+      handleSuggestRecipes();
     }
   };
 
@@ -32,7 +32,7 @@ export default function ChandyekView({ suggestions, isLoading, handleSuggestReci
             <CardTitle className="text-3xl font-bold">Ch3andek?</CardTitle>
           </div>
           <CardDescription>
-            Listez les ingrédients que vous avez sous la main, et notre assistant IA vous proposera des recettes.
+            Listez les ingrédients ou ajoutez-les depuis votre garde-manger. L'IA vous proposera des recettes !
           </CardDescription>
         </CardHeader>
         <CardContent>
