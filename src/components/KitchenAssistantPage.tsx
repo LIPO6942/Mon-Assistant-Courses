@@ -4,8 +4,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { initialCategories, predefinedIngredients, discoverableRecipes } from '@/lib/data';
 import type { Ingredient, Recipe, BasketItem, CategoryDef } from '@/lib/types';
-import type { ChandyekOutput } from '@/ai/types';
-import { suggestChandyekRecipes } from '@/ai/flows/chandyek-flow';
+import { suggestChandyekRecipes, type ChandyekOutput } from '@/ai/flows/chandyek-flow';
 
 import AppHeader from './AppHeader';
 import AppNav from './AppNav';
