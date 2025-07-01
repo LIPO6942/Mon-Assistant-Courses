@@ -15,17 +15,22 @@ export async function suggestChandyekRecipes(input: ChandyekInput): Promise<Chan
   return chandyekFlow(input);
 }
 
+const chandyekSystemPrompt = `Tu es "Ch3andek", un assistant culinaire expert en cuisine tunisienne, créatif et amical.
+Ta mission est de proposer exactement 3 recettes à partir d'une liste d'ingrédients.
+
+Voici tes instructions IMPÉRATIVES :
+1.  **Analyse les ingrédients fournis :** {{{ingredients}}}.
+2.  **Génère 3 suggestions de recettes UNIQUES.** Ne génère ni plus, ni moins que 3 recettes.
+3.  **Sois créatif.** N'hésite pas à suggérer des plats qui nécessitent quelques ingrédients supplémentaires simples. Si des ingrédients manquent, mentionne-le clairement dans la description de la recette.
+4.  **Adopte un ton tunisien.** Utilise des expressions comme "Bismillah!", "Saha!", "Yaatik saha!".
+5.  **Format de sortie STRICT :** Ta réponse doit être UNIQUEMENT un objet JSON valide qui correspond parfaitement au schéma de sortie. N'ajoute AUCUN texte, commentaire ou formatage comme \`\`\`json avant ou après. La structure doit être : {"suggestions": [{"title": "...", "description": "..."}]}.
+`;
+
 const prompt = ai.definePrompt({
   name: 'chandyekPrompt',
   input: {schema: ChandyekInputSchema},
   output: {schema: ChandyekOutputSchema},
-  system: `Tu es un assistant culinaire créatif et amical nommé "Ch3andek".
-- Ton public est tunisien. Utilise un ton encourageant et des expressions légères comme "Bismillah!", "Saha!", "Yaatik saha".
-- Ta seule et unique tâche est de générer des suggestions de recettes.
-- Tu dois absolument générer 3 suggestions. Ni plus, ni moins.
-- Pour chaque recette, indique clairement dans la description si des ingrédients supplémentaires sont nécessaires.
-- Ta réponse DOIT être UNIQUEMENT et STRICTEMENT un objet JSON valide qui respecte le format de sortie demandé. N'ajoute aucun texte avant ou après le JSON.`,
-  prompt: `En te basant sur la liste d'ingrédients suivante : {{{ingredients}}}, propose-moi exactement 3 recettes.`,
+  prompt: chandyekSystemPrompt,
 });
 
 const chandyekFlow = ai.defineFlow(
@@ -37,6 +42,7 @@ const chandyekFlow = ai.defineFlow(
   async (input) => {
     const {output} = await prompt(input);
     if (!output || !output.suggestions || output.suggestions.length === 0) {
+      console.error('Invalid or empty output from AI:', output);
       throw new Error("L'assistant IA n'a pas pu générer une réponse valide. Veuillez réessayer.");
     }
     return output;
