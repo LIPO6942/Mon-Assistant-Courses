@@ -49,6 +49,6 @@ export const ChandyekOutputSchema = z.object({
   suggestions: z.array(z.object({
     title: z.string().describe("Le nom de la recette suggérée."),
     description: z.string().describe("Une courte description de la recette, mentionnant les ingrédients supplémentaires nécessaires."),
-  })).describe("Un tableau de suggestions de recettes.")
+  })).describe("Un tableau de 3 suggestions de recettes. Le tableau ne doit jamais être vide.")
 });
 export type ChandyekOutput = z.infer<typeof ChandyekOutputSchema>;

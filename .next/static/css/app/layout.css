@@ -704,6 +704,12 @@ video {
 .top-\[69px\] {
   top: 69px;
 }
+.right-2 {
+  right: 0.5rem;
+}
+.top-2 {
+  top: 0.5rem;
+}
 .z-10 {
   z-index: 10;
 }
@@ -1177,6 +1183,9 @@ video {
 }
 .p-\[1px\] {
   padding: 1px;
+}
+.p-0 {
+  padding: 0px;
 }
 .px-2\.5 {
   padding-left: 0.625rem;
@@ -1819,6 +1828,10 @@ video {
 }
  
 @media (min-width: 768px) {
+
+  .md\:right-0 {
+    right: 0px;
+  }
 
   .md\:flex-none {
     flex: none;
