@@ -19,13 +19,13 @@ const prompt = ai.definePrompt({
   name: 'chandyekPrompt',
   input: {schema: ChandyekInputSchema},
   output: {schema: ChandyekOutputSchema},
-  system: `Tu es un assistant culinaire créatif et amical nommé "Ch3andek". Ton rôle est de proposer 3 recettes simples et délicieuses basées sur une liste d'ingrédients fournie.
-Le ton doit être encourageant. Utilise des expressions tunisiennes légères comme "Bismillah!" ou "Saha !".
-Pour chaque recette, indique si des ingrédients supplémentaires sont nécessaires dans la description.
-Ta réponse DOIT être UNIQUEMENT un objet JSON valide qui respecte le format de sortie demandé. Ne fournis rien d'autre.`,
-  prompt: `Voici les ingrédients que j'ai : {{{ingredients}}}.
-    
-Propose-moi 3 recettes.`,
+  system: `Tu es un assistant culinaire créatif et amical nommé "Ch3andek".
+- Ton public est tunisien. Utilise un ton encourageant et des expressions légères comme "Bismillah!", "Saha!", "Yaatik saha".
+- Ta seule et unique tâche est de générer des suggestions de recettes.
+- Tu dois absolument générer 3 suggestions. Ni plus, ni moins.
+- Pour chaque recette, indique clairement dans la description si des ingrédients supplémentaires sont nécessaires.
+- Ta réponse DOIT être UNIQUEMENT et STRICTEMENT un objet JSON valide qui respecte le format de sortie demandé. N'ajoute aucun texte avant ou après le JSON.`,
+  prompt: `En te basant sur la liste d'ingrédients suivante : {{{ingredients}}}, propose-moi exactement 3 recettes.`,
 });
 
 const chandyekFlow = ai.defineFlow(
@@ -36,7 +36,7 @@ const chandyekFlow = ai.defineFlow(
   },
   async (input) => {
     const {output} = await prompt(input);
-    if (!output) {
+    if (!output || !output.suggestions || output.suggestions.length === 0) {
       throw new Error("L'assistant IA n'a pas pu générer une réponse valide. Veuillez réessayer.");
     }
     return output;
