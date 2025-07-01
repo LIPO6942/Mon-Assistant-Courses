@@ -1,7 +1,7 @@
 
 'use client';
 
-import { ChefHat, ShoppingBasket } from 'lucide-react';
+import { CookingPot, ShoppingBasket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetTrigger } from '@/components/ui/sheet';
@@ -28,10 +28,10 @@ export default function AppHeader({
   setBudget,
 }: AppHeaderProps) {
   return (
-    <header className="bg-card border-b sticky top-0 z-20">
-      <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-4">
+    <header className="bg-card shadow-md sticky top-0 z-20">
+      <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-4 h-[69px]">
         <div className="flex items-center gap-3">
-          <ChefHat className="h-8 w-8 text-primary" />
+          <CookingPot className="h-8 w-8 text-primary" />
           <h1 className="text-xl md:text-2xl font-bold tracking-tight">Mon assistant de courses</h1>
         </div>
         <Sheet>

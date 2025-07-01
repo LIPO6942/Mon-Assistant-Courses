@@ -3,6 +3,7 @@
 
 import { Button } from '@/components/ui/button';
 import { UtensilsCrossed, BookOpen } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface AppNavProps {
   activeTab: 'pantry' | 'recipes';
@@ -11,10 +12,20 @@ interface AppNavProps {
 
 export default function AppNav({ activeTab, setActiveTab }: AppNavProps) {
   return (
-    <nav className="bg-card/50 border-b">
-      <div className="container mx-auto px-4 flex justify-center gap-2">
-        <Button variant={activeTab === 'pantry' ? 'secondary': 'ghost'} onClick={() => setActiveTab('pantry')} className="flex-1 md:flex-none"><UtensilsCrossed className="mr-2 h-4 w-4"/>Garde-Manger</Button>
-        <Button variant={activeTab === 'recipes' ? 'secondary': 'ghost'} onClick={() => setActiveTab('recipes')} className="flex-1 md:flex-none"><BookOpen className="mr-2 h-4 w-4"/>Recettes & Idées</Button>
+    <nav className="bg-card/95 backdrop-blur-sm border-b sticky top-[69px] z-10">
+      <div className="container mx-auto px-4 flex justify-center">
+        <Button variant="ghost" onClick={() => setActiveTab('pantry')} className={cn(
+            "flex-1 md:flex-none rounded-none h-12 border-b-2 font-semibold",
+            activeTab === 'pantry' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-primary/80'
+        )}>
+            <UtensilsCrossed className="mr-2 h-4 w-4"/>Garde-Manger
+        </Button>
+        <Button variant="ghost" onClick={() => setActiveTab('recipes')} className={cn(
+            "flex-1 md:flex-none rounded-none h-12 border-b-2 font-semibold",
+            activeTab === 'recipes' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-primary/80'
+        )}>
+            <BookOpen className="mr-2 h-4 w-4"/>Recettes & Idées
+        </Button>
       </div>
     </nav>
   );

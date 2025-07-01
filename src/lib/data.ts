@@ -13,14 +13,45 @@ export const initialCategories: CategoryDef[] = [
 ];
 
 export const predefinedIngredients: Ingredient[] = [
+    // Fruits et Légumes
     { id: 'f1', name: 'Pommes', category: 'Fruits et Légumes', price: 2.5, unit: 'kg' },
     { id: 'f3', name: 'Tomates', category: 'Fruits et Légumes', price: 4.0, unit: 'kg' },
+    { id: 'e3', name: 'Oignon', category: 'Fruits et Légumes', price: 2, unit: 'kg' },
+    { id: 'f4', name: 'Ail', category: 'Fruits et Légumes', price: 8.0, unit: 'kg' },
+    { id: 'f5', name: 'Carottes', category: 'Fruits et Légumes', price: 1.5, unit: 'kg' },
+    { id: 'f6', name: 'Poivron', category: 'Fruits et Légumes', price: 5.0, unit: 'kg' },
+    { id: 'f7', name: 'Laitue', category: 'Fruits et Légumes', price: 1.2, unit: 'pièce' },
+    { id: 'f8', name: 'Concombre', category: 'Fruits et Légumes', price: 2.0, unit: 'kg' },
+
+    // Viandes et Poissons
     { id: 'v1', name: 'Filet de Poulet', category: 'Viandes et Poissons', price: 12.0, unit: 'kg' },
+    { id: 'v2', name: 'Bœuf haché', category: 'Viandes et Poissons', price: 25.0, unit: 'kg' },
+    { id: 'v3', name: 'Filet de saumon', category: 'Viandes et Poissons', price: 40.0, unit: 'kg' },
+    { id: 'v4', name: 'Thon en conserve', category: 'Viandes et Poissons', price: 3.5, unit: 'boîte' },
+
+    // Produits Laitiers
     { id: 'p1', name: 'Lait Entier', category: 'Produits Laitiers', price: 1.8, unit: 'L' },
+    { id: 'p2', name: 'Oeufs', category: 'Produits Laitiers', price: 4.0, unit: 'douzaine' },
+    { id: 'p3', name: 'Yaourt nature', category: 'Produits Laitiers', price: 0.8, unit: 'pièce' },
+    { id: 'p4', name: 'Fromage Gruyère', category: 'Produits Laitiers', price: 30.0, unit: 'kg' },
+
+    // Boulangerie
     { id: 'b1', name: 'Baguette', category: 'Boulangerie', price: 0.4, unit: 'pièce' },
+    { id: 'b2', name: 'Pain de mie', category: 'Boulangerie', price: 2.5, unit: 'paquet' },
+
+    // Épicerie
     { id: 'e1', name: 'Pâtes Penne', category: 'Épicerie', price: 1.5, unit: 'paquet' },
     { id: 'e2', name: 'Huile d\'olive', category: 'Épicerie', price: 15, unit: 'L' },
-    { id: 'e3', name: 'Oignon', category: 'Fruits et Légumes', price: 2, unit: 'kg' },
+    { id: 'e4', name: 'Riz basmati', category: 'Épicerie', price: 5.0, unit: 'kg' },
+    { id: 'e5', name: 'Farine', category: 'Épicerie', price: 2.0, unit: 'kg' },
+    { id: 'e6', name: 'Sucre', category: 'Épicerie', price: 1.8, unit: 'kg' },
+    { id: 'e7', name: 'Sel', category: 'Épicerie', price: 1.0, unit: 'paquet' },
+    { id: 'e8', name: 'Poivre noir', category: 'Épicerie', price: 4.0, unit: 'pot' },
+    
+    // Boissons
+    { id: 'bo1', name: 'Eau minérale', category: 'Boissons', price: 0.8, unit: 'L' },
+    { id: 'bo2', name: 'Café moulu', category: 'Boissons', price: 7.0, unit: 'paquet' },
+    { id: 'bo3', name: 'Thé vert', category: 'Boissons', price: 3.0, unit: 'boîte' },
 ];
 
 export const streetFoodOptions: string[] = [
@@ -190,5 +221,75 @@ export const discoverableRecipes: Recipe[] = [
         { name: 'Ail et gingembre', quantity: 1, unit: 'cuillère à soupe' },
     ],
     preparation: `1. Coupez le poulet en cubes. Marinez-le pendant au moins 1 heure dans le yaourt avec du garam masala, de l'ail et du gingembre.\n2. Faites griller le poulet mariné au four ou à la poêle jusqu'à ce qu'il soit cuit.\n3. Dans une casserole, faites fondre le beurre. Ajoutez la purée de tomates, le reste du garam masala, salez et laissez mijoter 10 minutes.\n4. Ajoutez la crème liquide et mélangez bien. Incorporez les morceaux de poulet grillés.\n5. Laissez réchauffer l'ensemble quelques minutes. Servez chaud avec du riz basmati ou du pain naan.`
+  },
+  {
+    id: 'r10',
+    title: 'Pad Thaï',
+    description: 'Le plat de nouilles sautées le plus célèbre de Thaïlande, un mélange parfait de sucré, salé et acide.',
+    country: 'Thaïlande',
+    calories: 700,
+    ingredients: [
+        { name: 'Nouilles de riz plates', quantity: 200, unit: 'g' },
+        { name: 'Crevettes ou poulet', quantity: 200, unit: 'g' },
+        { name: 'Tofu ferme', quantity: 100, unit: 'g' },
+        { name: 'Pousses de soja', quantity: 1, unit: 'tasse' },
+        { name: 'Cacahuètes grillées', quantity: 4, unit: 'cuillère à soupe' },
+        { name: 'Sauce de poisson', quantity: 3, unit: 'cuillère à soupe' },
+        { name: 'Pâte de tamarin', quantity: 2, unit: 'cuillère à soupe' },
+        { name: 'Sucre de palme', quantity: 2, unit: 'cuillère à soupe' },
+    ],
+    preparation: `1. Faites tremper les nouilles de riz dans l'eau tiède. Préparez la sauce en mélangeant sauce de poisson, pâte de tamarin et sucre.\n2. Dans un wok, faites sauter le tofu, puis les crevettes ou le poulet. Ajoutez les nouilles égouttées et la sauce.\n3. Remuez constamment jusqu'à ce que les nouilles soient tendres. Poussez sur un côté et cassez un œuf sur l'autre côté. Brouillez-le, puis mélangez tout.\n4. Ajoutez les pousses de soja et la moitié des cacahuètes. Servez immédiatement, garni du reste de cacahuètes, de ciboulette et d'un quartier de lime.`
+  },
+  {
+    id: 'r11',
+    title: 'Pho Bo (Soupe Vietnamienne)',
+    description: 'Une soupe de nouilles vietnamienne parfumée et réconfortante avec un bouillon de bœuf riche et des herbes fraîches.',
+    country: 'Vietnam',
+    calories: 500,
+    ingredients: [
+        { name: 'Bouillon de bœuf', quantity: 1.5, unit: 'L' },
+        { name: 'Bavette de bœuf', quantity: 200, unit: 'g' },
+        { name: 'Nouilles de riz', quantity: 300, unit: 'g' },
+        { name: 'Oignon', quantity: 1, unit: 'pièce' },
+        { name: 'Gingembre', quantity: 5, unit: 'cm' },
+        { name: 'Anis étoilé', quantity: 2, unit: 'pièce' },
+        { name: 'Bâton de cannelle', quantity: 1, unit: 'pièce' },
+        { name: 'Herbes fraîches (menthe, coriandre, basilic thaï)', quantity: 1, unit: 'bouquet' },
+    ],
+    preparation: `1. Faites griller l'oignon et le gingembre. Mettez-les dans le bouillon avec l'anis et la cannelle. Laissez infuser 30 min.\n2. Coupez le bœuf en tranches très fines. Faites cuire les nouilles de riz.\n3. Répartissez les nouilles dans des bols. Disposez les tranches de bœuf cru par-dessus.\n4. Versez le bouillon très chaud sur le bœuf, ce qui le cuira instantanément.\n5. Garnissez généreusement d'herbes fraîches, de pousses de soja et de piment si désiré.`
+  },
+  {
+    id: 'r12',
+    title: 'Classic Cheeseburger',
+    description: 'L\'icône américaine. Un steak juteux, du fromage fondant, dans un pain brioché moelleux.',
+    country: 'USA',
+    calories: 750,
+    ingredients: [
+        { name: 'Bœuf haché (20% MG)', quantity: 500, unit: 'g' },
+        { name: 'Pains à burger briochés', quantity: 4, unit: 'pièce' },
+        { name: 'Cheddar en tranches', quantity: 4, unit: 'pièce' },
+        { name: 'Laitue', quantity: 4, unit: 'feuille' },
+        { name: 'Tomate', quantity: 1, unit: 'pièce' },
+        { name: 'Oignon rouge', quantity: 1, unit: 'pièce' },
+        { name: 'Cornichons', quantity: 8, unit: 'tranche' },
+    ],
+    preparation: `1. Formez 4 steaks hachés. Salez et poivrez généreusement.\n2. Faites cuire les steaks dans une poêle chaude, 3-4 minutes de chaque côté pour une cuisson à point.\n3. Pendant la dernière minute de cuisson, placez une tranche de cheddar sur chaque steak et couvrez pour faire fondre.\n4. Faites toaster légèrement les pains à burger.\n5. Assemblez : pain inférieur, sauce de votre choix, laitue, tomate, steak avec fromage, oignon, cornichons, pain supérieur.`
+  },
+  {
+    id: 'r13',
+    title: 'Houmous et Pain Pita',
+    description: 'Une trempette crémeuse de pois chiches du Moyen-Orient, parfaite en apéritif ou en repas léger.',
+    country: 'Liban',
+    calories: 400,
+    ingredients: [
+        { name: 'Pois chiches en conserve', quantity: 400, unit: 'g' },
+        { name: 'Tahini (purée de sésame)', quantity: 4, unit: 'cuillère à soupe' },
+        { name: 'Jus de citron', quantity: 1, unit: 'pièce' },
+        { name: 'Ail', quantity: 1, unit: 'gousse' },
+        { name: 'Huile d\'olive', quantity: 2, unit: 'cuillère à soupe' },
+        { name: 'Paprika', quantity: 1, unit: 'cuillère à café' },
+        { name: 'Pains pita', quantity: 4, unit: 'pièce' },
+    ],
+    preparation: `1. Rincez et égouttez les pois chiches. Gardez un peu de leur eau.\n2. Dans un mixeur, mettez les pois chiches, le tahini, le jus de citron et l'ail. Mixez jusqu'à obtenir une pâte.\n3. Tout en mixant, versez un filet d'eau des pois chiches jusqu'à la consistance désirée.\n4. Servez dans un bol, créez un tourbillon avec une cuillère, arrosez d'huile d'olive et saupoudrez de paprika.\n5. Dégustez avec des pains pita tièdes.`
   }
 ];
