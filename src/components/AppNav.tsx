@@ -2,13 +2,13 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { UtensilsCrossed, BookOpen, BrainCircuit } from 'lucide-react';
+import { UtensilsCrossed, BookOpen, BrainCircuit, HeartPulse } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from './ui/badge';
 
 interface AppNavProps {
-  activeTab: 'pantry' | 'recipes' | 'chandyek';
-  setActiveTab: (tab: 'pantry' | 'recipes' | 'chandyek') => void;
+  activeTab: 'pantry' | 'recipes' | 'chandyek' | 'guide';
+  setActiveTab: (tab: 'pantry' | 'recipes' | 'chandyek' | 'guide') => void;
   chandyekIngredientCount: number;
 }
 
@@ -36,6 +36,12 @@ export default function AppNav({ activeTab, setActiveTab, chandyekIngredientCoun
             {chandyekIngredientCount > 0 && (
                 <Badge variant="destructive" className="absolute top-2 right-2 md:right-0 h-5 w-5 justify-center p-0">{chandyekIngredientCount}</Badge>
             )}
+        </Button>
+        <Button variant="ghost" onClick={() => setActiveTab('guide')} className={cn(
+            "flex-1 md:flex-none rounded-none h-12 border-b-2 font-semibold",
+            activeTab === 'guide' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-primary/80'
+        )}>
+            <HeartPulse className="mr-2 h-4 w-4"/>Guide Santé
         </Button>
       </div>
     </nav>

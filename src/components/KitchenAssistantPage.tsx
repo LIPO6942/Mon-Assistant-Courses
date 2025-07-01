@@ -11,6 +11,7 @@ import KitchenAssistantDialogs from './KitchenAssistantDialogs';
 import PantryView from './PantryView';
 import RecipesView from './RecipesView';
 import ChandyekView from './ChandyekView';
+import NutritionalGuideView from './NutritionalGuideView';
 
 type SuggestedRecipe = Recipe & {
   matchCount: number;
@@ -26,7 +27,7 @@ export default function KitchenAssistantPage() {
   const [budget, setBudget] = useState(200);
   
   // Ephemeral state
-  const [activeTab, setActiveTab] = useState<'pantry' | 'recipes' | 'chandyek'>('pantry');
+  const [activeTab, setActiveTab] = useState<'pantry' | 'recipes' | 'chandyek' | 'guide'>('pantry');
   const [searchQuery, setSearchQuery] = useState('');
 
   // Chandyek (non-AI) State
@@ -301,6 +302,9 @@ export default function KitchenAssistantPage() {
               onRemoveIngredient={handleToggleChandyekIngredient}
               onClearIngredients={handleClearChandyekIngredients}
             />
+          )}
+          {activeTab === 'guide' && (
+            <NutritionalGuideView />
           )}
         </div>
       </main>
