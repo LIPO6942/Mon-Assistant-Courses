@@ -1,68 +1,51 @@
-// Nom du cache
-const CACHE_NAME = 'mon-assistant-courses-cache-v1';
+// A version number is used to bust the cache when you deploy new versions.
+const CACHE_NAME = 'kitchen-assistant-cache-v2';
 
-// Fichiers à mettre en cache
+// A list of files to cache when the service worker is installed.
 const urlsToCache = [
-  '/',
-  '/manifest.json'
+  '/', // The root of the app
 ];
 
-// Installation du Service Worker
+// The install event is fired when the service worker is first installed.
 self.addEventListener('install', (event) => {
+  // We wait until the cache is opened and the app shell is cached.
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => {
-        console.log('Cache ouvert');
-        return cache.addAll(urlsToCache);
-      })
+    caches.open(CACHE_NAME).then((cache) => {
+      console.log('Opened cache and caching app shell');
+      return cache.addAll(urlsToCache);
+    })
   );
 });
 
-// Interception des requêtes
-self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        // Si la ressource est dans le cache, on la retourne
-        if (response) {
-          return response;
-        }
-
-        // Sinon, on la récupère sur le réseau
-        return fetch(event.request).then(
-          (response) => {
-            // On vérifie qu'on a une réponse valide
-            if (!response || response.status !== 200 || response.type !== 'basic') {
-              return response;
-            }
-
-            // On clone la réponse pour la mettre en cache et la retourner au navigateur
-            const responseToCache = response.clone();
-
-            caches.open(CACHE_NAME)
-              .then((cache) => {
-                cache.put(event.request, responseToCache);
-              });
-
-            return response;
-          }
-        );
-      })
-  );
-});
-
-// Activation du Service Worker et nettoyage des anciens caches
+// The activate event is fired when the service worker is activated.
+// This is a good place to clean up old caches.
 self.addEventListener('activate', (event) => {
-  const cacheWhitelist = [CACHE_NAME];
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheWhitelist.indexOf(cacheName) === -1) {
+          // If a cache's name is different from our current cache name, delete it.
+          if (cacheName !== CACHE_NAME) {
+            console.log('Service worker: clearing old cache', cacheName);
             return caches.delete(cacheName);
           }
         })
       );
+    })
+  );
+});
+
+// The fetch event is fired for every request the page makes.
+self.addEventListener('fetch', (event) => {
+  // We're using a "cache-first" strategy.
+  event.respondWith(
+    caches.match(event.request).then((response) => {
+      // If we have a cached response, return it.
+      if (response) {
+        return response;
+      }
+      // Otherwise, fetch the resource from the network.
+      return fetch(event.request);
     })
   );
 });
