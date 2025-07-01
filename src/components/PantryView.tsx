@@ -23,6 +23,8 @@ interface PantryViewProps {
   budget: number;
   setBudget: (budget: number) => void;
   basketTotal: number;
+  clearBasket: () => void;
+  basketItemCount: number;
 }
 
 export default function PantryView({
@@ -39,10 +41,18 @@ export default function PantryView({
   budget,
   setBudget,
   basketTotal,
+  clearBasket,
+  basketItemCount,
 }: PantryViewProps) {
   return (
     <div>
-      <BudgetManager budget={budget} setBudget={setBudget} basketTotal={basketTotal} />
+      <BudgetManager 
+        budget={budget} 
+        setBudget={setBudget} 
+        basketTotal={basketTotal} 
+        clearBasket={clearBasket}
+        basketItemCount={basketItemCount}
+      />
       <div className="relative mb-6">
         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
         <Input type="search" placeholder="Rechercher un ingrédient..." className="pl-11 rounded-full h-11 text-base" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />

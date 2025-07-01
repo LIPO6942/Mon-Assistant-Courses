@@ -1,27 +1,40 @@
+
 'use client';
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Wallet } from 'lucide-react';
+import { Wallet, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Button } from './ui/button';
 
 interface BudgetManagerProps {
   budget: number;
   setBudget: (budget: number) => void;
   basketTotal: number;
+  clearBasket: () => void;
+  basketItemCount: number;
 }
 
-export default function BudgetManager({ budget, setBudget, basketTotal }: BudgetManagerProps) {
+export default function BudgetManager({ budget, setBudget, basketTotal, clearBasket, basketItemCount }: BudgetManagerProps) {
   const remainingBudget = budget - basketTotal;
 
   return (
     <Card className="mb-6 shadow-lg border-border/50 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="flex items-center gap-3 text-primary">
           <Wallet className="h-6 w-6" />
           <span>Gestion du Budget</span>
         </CardTitle>
+        <Button
+            variant="outline"
+            size="sm"
+            onClick={clearBasket}
+            disabled={basketItemCount === 0}
+        >
+            <Trash2 className="h-4 w-4 mr-2"/>
+            Vider le panier
+        </Button>
       </CardHeader>
       <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center items-end">
         <div>
