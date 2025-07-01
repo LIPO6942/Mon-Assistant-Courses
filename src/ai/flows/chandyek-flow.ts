@@ -1,23 +1,41 @@
 
 'use server';
 /**
- * @fileOverview An AI flow to suggest recipes based on available ingredients.
+ * @fileOverview Un assistant IA autonome pour suggérer des recettes.
+ * Ce fichier contient toute la logique pour la fonctionnalité "Ch3andek?",
+ * y compris la définition des données, le prompt et le flow Genkit.
  *
- * - suggestChandyekRecipes - A function that handles the recipe suggestion process.
+ * - suggestChandyekRecipes - La fonction serveur exportée à appeler depuis le client.
+ * - ChandyekOutput - Le type de la réponse attendue.
  */
 
 import {ai} from '@/ai/genkit';
-import { ChandyekInputSchema, ChandyekOutputSchema, type ChandyekInput, type ChandyekOutput } from '@/ai/types';
+import {z} from 'zod';
 
-export async function suggestChandyekRecipes(input: ChandyekInput): Promise<ChandyekOutput> {
-  // Le flow va maintenant lever une erreur si la validation Zod échoue (par ex, si la liste est vide)
-  // L'erreur sera attrapée par le bloc try/catch dans KitchenAssistantPage.tsx
-  return chandyekFlow(input);
-}
+// Définition des schémas et types de données LOCALEMENT.
+// Ces constantes ne sont PAS exportées pour respecter les règles de "use server".
+const ChandyekInputSchema = z.object({
+  ingredients: z.string().describe("Liste des ingrédients que l'utilisateur possède, séparés par des virgules."),
+});
 
+const ChandyekOutputSchema = z.object({
+  suggestions: z.array(z.object({
+    title: z.string().describe("Le nom de la recette suggérée."),
+    description: z.string().describe("Description courte de la recette et des ingrédients importants qui pourraient manquer."),
+  }))
+  .min(1, "La liste de suggestions DOIT contenir au moins une recette.") // Règle stricte de validation
+  .describe("Un tableau d'au moins 1 suggestion de recette."),
+});
+
+// Les types TypeScript peuvent être exportés en toute sécurité.
+export type ChandyekInput = z.infer<typeof ChandyekInputSchema>;
+export type ChandyekOutput = z.infer<typeof ChandyekOutputSchema>;
+
+
+// Le prompt est simplifié et très directif pour éviter toute confusion de l'IA.
 const chandyekSystemPrompt = `
-Tu es un assistant de cuisine efficace.
-Ta seule mission est de générer une liste de suggestions de recettes à partir d'une liste d'ingrédients.
+Tu es une API de suggestion de recettes. Tu ne parles que le format JSON.
+Ta mission est de générer une liste de suggestions de recettes à partir d'une liste d'ingrédients.
 - Ta réponse DOIT être un objet JSON valide et rien d'autre.
 - N'inclus aucun texte, commentaire ou formatage en dehors de l'objet JSON.
 - L'objet JSON doit respecter le schéma de sortie fourni.
@@ -35,7 +53,7 @@ const prompt = ai.definePrompt({
   output: {schema: ChandyekOutputSchema},
   prompt: chandyekSystemPrompt,
   config: {
-    temperature: 0.4, 
+    temperature: 0.5,
   }
 });
 
@@ -48,14 +66,22 @@ const chandyekFlow = ai.defineFlow(
   async (input) => {
     const {output} = await prompt(input);
     
-    // La validation est maintenant gérée par le schéma de sortie de Genkit/Zod.
-    // Si la sortie est invalide (par exemple, un tableau de suggestions vide),
+    // La validation par le schéma de sortie de Genkit/Zod est maintenant la principale protection.
+    // Si la sortie est invalide (par ex, un tableau de suggestions vide),
     // une erreur sera automatiquement levée ici et propagée au client.
     if (!output) {
-      // Cette erreur ne devrait se produire que si le modèle renvoie quelque chose de complètement vide ou non-JSON.
       throw new Error("L'assistant IA n'a renvoyé aucune réponse. Veuillez réessayer.");
     }
     
     return output;
   }
 );
+
+/**
+ * Fonction serveur principale à appeler depuis le code client.
+ * Elle reçoit les ingrédients et retourne les suggestions de recettes.
+ * Une erreur est levée si la réponse de l'IA est invalide ou vide.
+ */
+export async function suggestChandyekRecipes(input: ChandyekInput): Promise<ChandyekOutput> {
+  return chandyekFlow(input);
+}
