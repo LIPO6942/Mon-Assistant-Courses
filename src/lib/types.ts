@@ -22,6 +22,7 @@ export interface Recipe {
   country: string;
   ingredients: RecipeIngredient[];
   preparation: string;
+  calories: number;
 }
 
 export interface BasketItem extends Ingredient {
