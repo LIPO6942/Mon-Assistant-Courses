@@ -817,9 +817,6 @@ video {
 .h-\[69px\] {
   height: 69px;
 }
-.h-\[calc\(100vh-340px\)\] {
-  height: calc(100vh - 340px);
-}
 .h-\[var\(--radix-select-trigger-height\)\] {
   height: var(--radix-select-trigger-height);
 }
@@ -1084,9 +1081,6 @@ video {
 }
 .bg-accent {
   background-color: hsl(var(--accent));
-}
-.bg-accent\/20 {
-  background-color: hsl(var(--accent) / 0.2);
 }
 .bg-background {
   background-color: hsl(var(--background));
