@@ -9,7 +9,7 @@ import { Loader2 } from 'lucide-react';
 import IngredientForm from './IngredientForm';
 import CategoryForm from './CategoryForm';
 import type { Ingredient, Recipe, CategoryDef } from '@/lib/types';
-import type { ChandyekOutput } from '@/ai/types';
+import type { ChandyekOutput } from '@/ai/flows/chandyek-flow';
 
 interface KitchenAssistantDialogsProps {
   isAddEditDialogOpen: boolean;
