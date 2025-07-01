@@ -1344,6 +1344,9 @@ video {
 .text-secondary-foreground {
   color: hsl(var(--secondary-foreground));
 }
+.text-accent {
+  color: hsl(var(--accent));
+}
 .underline-offset-4 {
   text-underline-offset: 4px;
 }
