@@ -1,5 +1,14 @@
 {
-  "node": {},
+  "node": {
+    "73e6bf228dc234c99796a1db39ad20d141e39a28": {
+      "workers": {
+        "app/page": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2Fhome%2Fuser%2Fstudio%2Fsrc%2Fai%2Fflows%2Fchandyek-flow.ts%22%2C%5B%22suggestChandyekRecipes%22%5D%5D%5D&__client_imported__=true!"
+      },
+      "layer": {
+        "app/page": "action-browser"
+      }
+    }
+  },
   "edge": {},
   "encryptionKey": "VJePFPBJTZZmPR4pUESJzTrAszC1qgy6PjEWoeLKLew="
 }
