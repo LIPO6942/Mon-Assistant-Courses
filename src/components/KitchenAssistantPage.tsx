@@ -260,11 +260,16 @@ export default function KitchenAssistantPage() {
       setChandyekSuggestions(result);
     } catch (error) {
       console.error("Error fetching recipe suggestions:", error);
+      // Personnalisation du message d'erreur pour l'utilisateur
+      let errorMessage = "Désolé, une erreur inconnue est survenue. Veuillez réessayer.";
       if (error instanceof Error) {
-        setChandyekError(error.message);
-      } else {
-        setChandyekError("Désolé, une erreur inconnue est survenue. Veuillez réessayer.");
+          if (error.message.includes("suggestions") || error.message.includes("Validation")) { // Détecte une erreur de validation Zod probable
+              errorMessage = "L'assistant IA n'a pas pu générer de suggestions valides avec ces ingrédients. Essayez d'être plus précis ou de changer les ingrédients.";
+          } else {
+              errorMessage = error.message;
+          }
       }
+      setChandyekError(errorMessage);
     } finally {
       setIsChandyekLoading(false);
     }

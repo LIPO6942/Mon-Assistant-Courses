@@ -10,19 +10,23 @@ import {ai} from '@/ai/genkit';
 import { ChandyekInputSchema, ChandyekOutputSchema, type ChandyekInput, type ChandyekOutput } from '@/ai/types';
 
 export async function suggestChandyekRecipes(input: ChandyekInput): Promise<ChandyekOutput> {
+  // Le flow va maintenant lever une erreur si la validation Zod échoue (par ex, si la liste est vide)
+  // L'erreur sera attrapée par le bloc try/catch dans KitchenAssistantPage.tsx
   return chandyekFlow(input);
 }
 
 const chandyekSystemPrompt = `
-Tu es un moteur de suggestion de recettes.
-Ta mission est de générer 3 suggestions de recettes basées sur la liste d'ingrédients fournie.
-Ta réponse DOIT être un objet JSON valide, et RIEN D'AUTRE.
-N'inclus AUCUN texte, commentaire ou formatage en dehors de l'objet JSON.
-L'objet JSON doit respecter le schéma de sortie fourni.
-Le tableau 'suggestions' NE DOIT JAMAIS être vide.
-Pour chaque suggestion, fournis un 'title' et une 'description'. Dans la description, mentionne les ingrédients supplémentaires nécessaires.
+Tu es un assistant de cuisine efficace.
+Ta seule mission est de générer une liste de suggestions de recettes à partir d'une liste d'ingrédients.
+- Ta réponse DOIT être un objet JSON valide et rien d'autre.
+- N'inclus aucun texte, commentaire ou formatage en dehors de l'objet JSON.
+- L'objet JSON doit respecter le schéma de sortie fourni.
+- Le tableau 'suggestions' DOIT contenir au moins 1 recette.
+- Pour chaque suggestion, fournis un 'title' et une 'description'.
+- Dans la 'description', mentionne brièvement les ingrédients importants qui pourraient manquer.
 
-Ingrédients fournis par l'utilisateur : {{{ingredients}}}
+Voici les ingrédients fournis par l'utilisateur :
+{{{ingredients}}}
 `;
 
 const prompt = ai.definePrompt({
@@ -30,6 +34,9 @@ const prompt = ai.definePrompt({
   input: {schema: ChandyekInputSchema},
   output: {schema: ChandyekOutputSchema},
   prompt: chandyekSystemPrompt,
+  config: {
+    temperature: 0.4, 
+  }
 });
 
 const chandyekFlow = ai.defineFlow(
@@ -41,10 +48,12 @@ const chandyekFlow = ai.defineFlow(
   async (input) => {
     const {output} = await prompt(input);
     
-    // VALIDATION STRICTE : Si la sortie est invalide ou si la liste des suggestions est vide, on lève une erreur.
-    if (!output || !output.suggestions || output.suggestions.length === 0) {
-      console.error('Invalid or empty output from AI:', output);
-      throw new Error("L'assistant IA n'a pas pu générer une réponse valide. Veuillez réessayer.");
+    // La validation est maintenant gérée par le schéma de sortie de Genkit/Zod.
+    // Si la sortie est invalide (par exemple, un tableau de suggestions vide),
+    // une erreur sera automatiquement levée ici et propagée au client.
+    if (!output) {
+      // Cette erreur ne devrait se produire que si le modèle renvoie quelque chose de complètement vide ou non-JSON.
+      throw new Error("L'assistant IA n'a renvoyé aucune réponse. Veuillez réessayer.");
     }
     
     return output;
