@@ -7,6 +7,8 @@ import { SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components
 import type { BasketItem } from '@/lib/types';
 import { Minus, Plus, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
 
 interface BasketSheetProps {
   basket: BasketItem[];
@@ -15,6 +17,7 @@ interface BasketSheetProps {
   clearBasket: () => void;
   handleConfirmPurchase: () => void;
   budget: number;
+  setBudget: (budget: number) => void;
 }
 
 export default function BasketSheet({
@@ -24,6 +27,7 @@ export default function BasketSheet({
   clearBasket,
   handleConfirmPurchase,
   budget,
+  setBudget,
 }: BasketSheetProps) {
   const remainingBudget = budget - basketTotal;
 
@@ -34,14 +38,23 @@ export default function BasketSheet({
       </SheetHeader>
       
       <div className="py-4 border-b">
-          <div className="grid grid-cols-2 gap-4 text-center">
+          <div className="grid grid-cols-2 gap-4 text-center items-start">
                 <div>
-                  <p className="text-sm text-muted-foreground">Budget Actuel</p>
-                  <p className="text-2xl font-bold">{budget.toFixed(2)} DT</p>
+                  <Label htmlFor="budget-input" className="text-sm text-muted-foreground">Budget Actuel</Label>
+                  <div className="relative mt-1">
+                    <Input
+                      id="budget-input"
+                      type="number"
+                      value={budget}
+                      onChange={(e) => setBudget(parseFloat(e.target.value) || 0)}
+                      className="text-2xl font-bold text-center pr-10"
+                      />
+                    <span className="absolute inset-y-0 right-3 flex items-center text-xl text-muted-foreground">DT</span>
+                  </div>
               </div>
               <div>
                   <p className="text-sm text-muted-foreground">Total Panier</p>
-                  <p className="text-2xl font-bold">{basketTotal.toFixed(2)} DT</p>
+                  <p className="text-2xl font-bold mt-1">{basketTotal.toFixed(2)} DT</p>
               </div>
           </div>
           <div className="mt-4 rounded-lg p-3 text-center bg-accent/20">
@@ -55,7 +68,7 @@ export default function BasketSheet({
           </div>
       </div>
       
-      <ScrollArea className="h-[calc(100vh-320px)] pr-4">
+      <ScrollArea className="h-[calc(100vh-340px)] pr-4">
         {basket.length > 0 ? (
           <ul className="space-y-3 py-4">
             {basket.map(item => (

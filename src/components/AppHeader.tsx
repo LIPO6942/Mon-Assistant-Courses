@@ -15,6 +15,7 @@ interface AppHeaderProps {
   clearBasket: () => void;
   handleConfirmPurchase: () => void;
   budget: number;
+  setBudget: (budget: number) => void;
 }
 
 export default function AppHeader({
@@ -24,6 +25,7 @@ export default function AppHeader({
   clearBasket,
   handleConfirmPurchase,
   budget,
+  setBudget,
 }: AppHeaderProps) {
   return (
     <header className="bg-card border-b sticky top-0 z-20">
@@ -46,6 +48,7 @@ export default function AppHeader({
             clearBasket={clearBasket}
             handleConfirmPurchase={handleConfirmPurchase}
             budget={budget}
+            setBudget={setBudget}
           />
         </Sheet>
       </div>
