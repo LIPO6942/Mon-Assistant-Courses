@@ -4,12 +4,15 @@
 import { useState, useMemo, useEffect } from 'react';
 import { initialCategories, predefinedIngredients, discoverableRecipes } from '@/lib/data';
 import type { Ingredient, Recipe, BasketItem, CategoryDef } from '@/lib/types';
+import type { ChandyekOutput } from '@/ai/types';
+import { suggestChandyekRecipes } from '@/ai/flows/chandyek-flow';
 
 import AppHeader from './AppHeader';
 import AppNav from './AppNav';
 import KitchenAssistantDialogs from './KitchenAssistantDialogs';
 import PantryView from './PantryView';
 import RecipesView from './RecipesView';
+import ChandyekView from './ChandyekView';
 
 export default function KitchenAssistantPage() {
   // --- STATE MANAGEMENT ---
@@ -22,8 +25,12 @@ export default function KitchenAssistantPage() {
   const [budget, setBudget] = useState(200);
   
   // Ephemeral state, doesn't need to be saved
-  const [activeTab, setActiveTab] = useState<'pantry' | 'recipes'>('pantry');
+  const [activeTab, setActiveTab] = useState<'pantry' | 'recipes' | 'chandyek'>('pantry');
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Chandyek AI State
+  const [chandyekSuggestions, setChandyekSuggestions] = useState<ChandyekOutput | null>(null);
+  const [isChandyekLoading, setIsChandyekLoading] = useState(false);
   
   // Dialogs State
   const [isAddEditDialogOpen, setAddEditDialogOpen] = useState(false);
@@ -220,6 +227,20 @@ export default function KitchenAssistantPage() {
     alert(`Recette "${recipeToSave.title}" sauvegardée !`);
   };
 
+  const handleSuggestRecipes = async (ingredients: string) => {
+    setIsChandyekLoading(true);
+    setChandyekSuggestions(null);
+    try {
+      const result = await suggestChandyekRecipes({ ingredients });
+      setChandyekSuggestions(result);
+    } catch (error) {
+      console.error("Error fetching recipe suggestions:", error);
+      alert("Désolé, une erreur est survenue lors de la recherche de recettes. Veuillez réessayer.");
+    } finally {
+      setIsChandyekLoading(false);
+    }
+  };
+
   // --- RENDER ---
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
@@ -260,6 +281,13 @@ export default function KitchenAssistantPage() {
               setSavedRecipes={setSavedRecipes}
               discoverableRecipes={discoverableRecipes}
               handleSaveRecipe={handleSaveRecipe}
+            />
+          )}
+          {activeTab === 'chandyek' && (
+            <ChandyekView 
+              suggestions={chandyekSuggestions}
+              isLoading={isChandyekLoading}
+              handleSuggestRecipes={handleSuggestRecipes}
             />
           )}
         </div>
