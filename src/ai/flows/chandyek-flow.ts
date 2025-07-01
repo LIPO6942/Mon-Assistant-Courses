@@ -45,10 +45,13 @@ const chandyekFlow = ai.defineFlow(
   },
   async (input) => {
     const {output} = await prompt(input);
+    
+    // VALIDATION STRICTE : Si la sortie est invalide ou si la liste des suggestions est vide, on lève une erreur.
     if (!output || !output.suggestions || output.suggestions.length === 0) {
       console.error('Invalid or empty output from AI:', output);
       throw new Error("L'assistant IA n'a pas pu générer une réponse valide. Veuillez réessayer.");
     }
+    
     return output;
   }
 );
