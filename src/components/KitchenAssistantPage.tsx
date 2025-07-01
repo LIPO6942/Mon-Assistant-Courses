@@ -137,6 +137,7 @@ export default function KitchenAssistantPage() {
         clearBasket={clearBasket}
         handleConfirmPurchase={handleConfirmPurchase}
         budget={budget}
+        setBudget={setBudget}
       />
       <AppNav activeTab={activeTab} setActiveTab={setActiveTab} />
 
