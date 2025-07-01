@@ -40,6 +40,9 @@ const chandyekFlow = ai.defineFlow(
   },
   async (input) => {
     const {output} = await prompt(input);
-    return output!;
+    if (!output) {
+      throw new Error("L'assistant IA n'a pas pu générer une réponse valide. Veuillez réessayer.");
+    }
+    return output;
   }
 );
