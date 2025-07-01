@@ -139,6 +139,11 @@ export default function KitchenAssistantPage() {
     return acc;
   }, [filteredPantry, categories]);
 
+  const chandyekIngredientsList = useMemo(() => {
+    return chandyekIngredients.split(', ').filter(Boolean);
+  }, [chandyekIngredients]);
+
+
   // --- HANDLERS ---
   const handleSaveIngredient = (formData: Omit<Ingredient, 'id'> & { id?: string }) => {
     if (formData.id) {
@@ -228,15 +233,16 @@ export default function KitchenAssistantPage() {
     alert(`Recette "${recipeToSave.title}" sauvegardée !`);
   };
 
-  const handleAddToChandyek = (ingredientName: string) => {
+  const handleToggleChandyekIngredient = (ingredientName: string) => {
     setChandyekIngredients(prev => {
       const ingredientsList = prev ? prev.split(', ').filter(Boolean) : [];
-      if (!ingredientsList.includes(ingredientName)) {
+      if (ingredientsList.includes(ingredientName)) {
+        return ingredientsList.filter(name => name !== ingredientName).join(', ');
+      } else {
         ingredientsList.push(ingredientName);
+        return ingredientsList.join(', ');
       }
-      return ingredientsList.join(', ');
     });
-    setActiveTab('chandyek');
   };
 
   const handleSuggestRecipes = async () => {
@@ -265,7 +271,11 @@ export default function KitchenAssistantPage() {
         clearBasket={clearBasket}
         handleConfirmPurchase={handleConfirmPurchase}
       />
-      <AppNav activeTab={activeTab} setActiveTab={setActiveTab} />
+      <AppNav 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab} 
+        chandyekIngredientCount={chandyekIngredientsList.length}
+      />
 
       <main className="container mx-auto p-4 md:p-6 lg:p-8 flex-grow">
         <div className="animate-in fade-in-50">
@@ -281,7 +291,8 @@ export default function KitchenAssistantPage() {
               handleDeleteIngredient={handleDeleteIngredient}
               openCategoryDialog={openCategoryDialog}
               handleDeleteCategory={handleDeleteCategory}
-              onAddToChandyek={handleAddToChandyek}
+              onToggleChandyekIngredient={handleToggleChandyekIngredient}
+              chandyekIngredientsList={chandyekIngredientsList}
               budget={budget}
               setBudget={setBudget}
               basketTotal={basketTotal}

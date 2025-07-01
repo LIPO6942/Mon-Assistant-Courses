@@ -8,6 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Plus, PlusCircle, Pencil, Trash2, Search, BrainCircuit } from 'lucide-react';
 import type { Ingredient, CategoryDef } from '@/lib/types';
 import BudgetManager from './BudgetManager';
+import { cn } from '@/lib/utils';
 
 interface PantryViewProps {
   groupedIngredients: Record<string, Ingredient[]>;
@@ -20,7 +21,8 @@ interface PantryViewProps {
   handleDeleteIngredient: (id: string) => void;
   openCategoryDialog: (category?: CategoryDef) => void;
   handleDeleteCategory: (id: string) => void;
-  onAddToChandyek: (ingredientName: string) => void;
+  onToggleChandyekIngredient: (ingredientName: string) => void;
+  chandyekIngredientsList: string[];
   budget: number;
   setBudget: (budget: number) => void;
   basketTotal: number;
@@ -39,7 +41,8 @@ export default function PantryView({
   handleDeleteIngredient,
   openCategoryDialog,
   handleDeleteCategory,
-  onAddToChandyek,
+  onToggleChandyekIngredient,
+  chandyekIngredientsList,
   budget,
   setBudget,
   basketTotal,
@@ -74,20 +77,31 @@ export default function PantryView({
               <CardContent className="flex-grow">
                 <ScrollArea className="h-64">
                   <ul className="space-y-2 pr-3">
-                    {items.map(item => (
-                      <li key={item.id} className="flex items-center justify-between p-2 rounded-md hover:bg-secondary/50 transition-colors">
-                        <div>
-                          <span className='font-medium'>{item.name}</span>
-                          <p className='text-sm text-muted-foreground'>{item.price.toFixed(2)} DT / {item.unit}</p>
-                        </div>
-                        <div className='flex items-center gap-1'>
-                          <Button variant="ghost" size="icon" className='h-8 w-8 rounded-full' title="Ajouter au panier" onClick={() => addToBasket(item)}><Plus className="h-4 w-4" /></Button>
-                          <Button variant="ghost" size="icon" className='h-8 w-8 rounded-full' title="Utiliser pour 'Ch3andek'" onClick={() => onAddToChandyek(item.name)}><BrainCircuit className="h-4 w-4 text-accent" /></Button>
-                          <Button variant="ghost" size="icon" className='h-8 w-8 rounded-full' title="Modifier" onClick={() => openEditDialog(item)}><Pencil className="h-4 w-4" /></Button>
-                          <Button variant="ghost" size="icon" className='h-8 w-8 rounded-full' title="Supprimer" onClick={() => handleDeleteIngredient(item.id)}><Trash2 className="h-4 w-4 text-destructive/80" /></Button>
-                        </div>
-                      </li>
-                    ))}
+                    {items.map(item => {
+                      const isSelectedForChandyek = chandyekIngredientsList.includes(item.name);
+                      return (
+                        <li key={item.id} className="flex items-center justify-between p-2 rounded-md hover:bg-secondary/50 transition-colors">
+                          <div>
+                            <span className='font-medium'>{item.name}</span>
+                            <p className='text-sm text-muted-foreground'>{item.price.toFixed(2)} DT / {item.unit}</p>
+                          </div>
+                          <div className='flex items-center gap-1'>
+                            <Button variant="ghost" size="icon" className='h-8 w-8 rounded-full' title="Ajouter au panier" onClick={() => addToBasket(item)}><Plus className="h-4 w-4" /></Button>
+                            <Button 
+                              variant={isSelectedForChandyek ? "secondary" : "ghost"} 
+                              size="icon" 
+                              className='h-8 w-8 rounded-full' 
+                              title="Ajouter/Retirer de 'Ch3andek'" 
+                              onClick={() => onToggleChandyekIngredient(item.name)}
+                            >
+                              <BrainCircuit className={cn("h-4 w-4", isSelectedForChandyek ? 'text-primary' : 'text-accent')} />
+                            </Button>
+                            <Button variant="ghost" size="icon" className='h-8 w-8 rounded-full' title="Modifier" onClick={() => openEditDialog(item)}><Pencil className="h-4 w-4" /></Button>
+                            <Button variant="ghost" size="icon" className='h-8 w-8 rounded-full' title="Supprimer" onClick={() => handleDeleteIngredient(item.id)}><Trash2 className="h-4 w-4 text-destructive/80" /></Button>
+                          </div>
+                        </li>
+                      );
+                    })}
                   </ul>
                 </ScrollArea>
               </CardContent>
