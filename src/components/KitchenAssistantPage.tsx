@@ -255,7 +255,12 @@ export default function KitchenAssistantPage() {
       setChandyekSuggestions(result);
     } catch (error) {
       console.error("Error fetching recipe suggestions:", error);
-      alert("Désolé, une erreur est survenue lors de la recherche de recettes. Veuillez réessayer.");
+      // Affiche l'erreur à l'utilisateur, y compris notre nouvelle erreur customisée
+      if (error instanceof Error) {
+        alert(error.message);
+      } else {
+        alert("Désolé, une erreur inconnue est survenue. Veuillez réessayer.");
+      }
     } finally {
       setIsChandyekLoading(false);
     }
