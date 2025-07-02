@@ -230,6 +230,10 @@ export default function KitchenAssistantPage() {
     setSavedRecipes(prev => [...prev, newRecipe]);
     alert(`Recette "${newRecipe.title}" sauvegardée !`);
   };
+  
+  const handleDeleteSavedRecipe = (recipeId: string) => {
+    setSavedRecipes(prev => prev.filter(r => r.id !== recipeId));
+  };
 
   const handleToggleChandyekIngredient = (ingredientName: string) => {
     setChandyekIngredients(prev => {
@@ -300,6 +304,9 @@ export default function KitchenAssistantPage() {
         updateBasketQuantity={updateBasketQuantity}
         clearBasket={clearBasket}
         handleConfirmPurchase={handleConfirmPurchase}
+        savedRecipes={savedRecipes}
+        onViewRecipe={setViewingRecipe}
+        onDeleteRecipe={handleDeleteSavedRecipe}
       />
       <AppNav 
         activeTab={activeTab} 
@@ -332,9 +339,7 @@ export default function KitchenAssistantPage() {
           )}
           {activeTab === 'recipes' && (
             <RecipesView 
-              savedRecipes={savedRecipes}
               setViewingRecipe={setViewingRecipe}
-              setSavedRecipes={setSavedRecipes}
               discoverableRecipes={discoverableRecipes}
               handleSaveRecipe={handleSaveRecipe}
             />
