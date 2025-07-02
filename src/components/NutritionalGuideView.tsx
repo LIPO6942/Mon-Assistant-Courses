@@ -5,12 +5,13 @@ import * as React from 'react';
 import { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { getNutritionalAdvice } from '@/ai/flows/nutritional-guide-flow';
-import type { NutritionalGuideOutput, HealthConditionCategory } from '@/ai/types';
+import type { NutritionalGuideOutput } from '@/ai/types';
+import type { HealthConditionCategory } from '@/lib/types';
 import { HeartPulse, Lightbulb, Loader2, Terminal, Settings } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
@@ -82,7 +83,7 @@ export default function NutritionalGuideView({ healthConditions, openHealthCondi
                 <Select value={selectedCategoryId} onValueChange={handleCategoryChange}>
                   <SelectTrigger id="condition-category-select" className="w-full h-11">
                     <SelectValue placeholder="Choisir une catégorie..." />
-                  </SelectTrigger>
+                  </Trigger>
                   <SelectContent>
                     {healthConditions.map((group) => (
                       <SelectItem key={group.id} value={group.id}>{group.name}</SelectItem>
@@ -96,7 +97,7 @@ export default function NutritionalGuideView({ healthConditions, openHealthCondi
                 <Select value={selectedCondition} onValueChange={setSelectedCondition} disabled={!selectedCategory}>
                   <SelectTrigger id="condition-select" className="w-full h-11">
                     <SelectValue placeholder="Choisir une condition..." />
-                  </SelectTrigger>
+                  </Trigger>
                   <SelectContent>
                     {selectedCategory?.conditions.map(condition => (
                       <SelectItem key={condition.id} value={condition.name}>{condition.name}</SelectItem>
