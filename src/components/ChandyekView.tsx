@@ -1,29 +1,34 @@
+
 'use client';
 
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { BrainCircuit, Salad, X } from 'lucide-react';
-import type { Recipe, RecipeIngredient } from '@/lib/types';
-
-// The recipe object will be augmented with match details
-type SuggestedRecipe = Recipe & {
-  matchCount: number;
-  missingIngredients: RecipeIngredient[];
-};
+import { BrainCircuit, Salad, X, Lightbulb, Loader2, Terminal, PlusCircle } from 'lucide-react';
+import type { Recipe } from '@/lib/types';
+import type { SuggestRecipeOutput } from '@/ai/types';
+import { Alert, AlertTitle, AlertDescription } from './ui/alert';
 
 interface ChandyekViewProps {
   selectedIngredients: string[];
-  suggestions: SuggestedRecipe[];
-  onViewRecipe: (recipe: Recipe) => void;
+  aiSuggestions: SuggestRecipeOutput[];
+  isLoading: boolean;
+  error: string | null;
+  onGenerate: () => void;
+  onSaveRecipe: (recipe: SuggestRecipeOutput) => void;
+  onViewRecipe: (recipe: SuggestRecipeOutput) => void;
   onRemoveIngredient: (ingredient: string) => void;
   onClearIngredients: () => void;
 }
 
 export default function ChandyekView({
   selectedIngredients,
-  suggestions,
+  aiSuggestions,
+  isLoading,
+  error,
+  onGenerate,
+  onSaveRecipe,
   onViewRecipe,
   onRemoveIngredient,
   onClearIngredients
@@ -38,7 +43,7 @@ export default function ChandyekView({
             <CardTitle className="text-3xl font-bold">Ch3andek?</CardTitle>
           </div>
           <CardDescription>
-            Voici des suggestions de recettes basées sur les ingrédients que vous avez sélectionnés dans votre garde-manger.
+            Sélectionnez des ingrédients dans votre garde-manger, puis laissez l'IA vous proposer des recettes créatives !
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -58,9 +63,7 @@ export default function ChandyekView({
               </div>
             ) : (
               <div className="text-center py-4 text-muted-foreground">
-                <p>
-                  Aucun ingrédient sélectionné.
-                </p>
+                <p>Aucun ingrédient sélectionné.</p>
                 <p className="text-sm mt-1">
                   Allez dans l'onglet "Garde-Manger" et cliquez sur l'icône <BrainCircuit className="inline h-4 w-4 mx-1" /> pour commencer.
                 </p>
@@ -69,42 +72,54 @@ export default function ChandyekView({
           </div>
 
           {selectedIngredients.length > 0 && (
-            <div>
-              <h3 className="font-semibold text-lg mb-3">Recettes suggérées :</h3>
-              {suggestions.length > 0 ? (
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {suggestions.map((recipe) => (
-                    <Card key={recipe.id} className="flex flex-col bg-secondary/30">
-                      <CardHeader>
-                        <CardTitle>{recipe.title}</CardTitle>
-                        <Badge variant="outline" className="w-fit bg-card">
-                          {recipe.matchCount} / {recipe.ingredients.length} ingrédients possédés
-                        </Badge>
-                      </CardHeader>
-                      <CardContent className="flex-grow space-y-3">
-                         <p className="text-sm text-muted-foreground">{recipe.description}</p>
-                         {recipe.missingIngredients.length > 0 && (
-                            <div>
-                              <p className="text-sm font-semibold">Il vous manque :</p>
-                              <ul className="text-xs text-muted-foreground list-disc list-inside">
-                                {recipe.missingIngredients.map(ing => <li key={ing.name}>{ing.name}</li>)}
-                              </ul>
-                            </div>
-                         )}
-                      </CardContent>
-                      <CardFooter>
-                        <Button onClick={() => onViewRecipe(recipe)}>Voir la recette complète</Button>
-                      </CardFooter>
-                    </Card>
-                  ))}
-                 </div>
-              ) : (
-                <div className="text-center py-10 border-2 border-dashed rounded-lg">
-                  <BrainCircuit className="mx-auto h-12 w-12 text-muted-foreground" />
-                  <p className="mt-4 text-sm text-muted-foreground">Aucune recette dans notre base de données ne correspond à votre sélection.</p>
-                  <p className="mt-1 text-sm text-muted-foreground">Essayez avec plus d'ingrédients ou des ingrédients différents.</p>
-                </div>
-              )}
+            <div className='text-center'>
+              <Button size="lg" onClick={onGenerate} disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    L'IA réfléchit...
+                  </>
+                ) : (
+                  <>
+                    <Lightbulb className="mr-2 h-5 w-5" />
+                    Générer des idées de recettes
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
+
+          {error && (
+            <Alert variant="destructive" className="mt-4">
+              <Terminal className="h-4 w-4" />
+              <AlertTitle>Erreur de Génération</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
+          {aiSuggestions.length > 0 && (
+            <div className="mt-6">
+              <h3 className="font-semibold text-lg mb-3">Recettes suggérées par l'IA :</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {aiSuggestions.map((recipe, index) => (
+                  <Card key={index} className="flex flex-col bg-secondary/30">
+                    <CardHeader>
+                      <CardTitle>{recipe.title}</CardTitle>
+                      <div className="flex justify-between items-center text-sm text-muted-foreground">
+                        <span>{recipe.country}</span>
+                        <Badge variant="outline" className="bg-card">{recipe.calories} kcal</Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="flex-grow">
+                       <p className="text-sm text-muted-foreground">{recipe.description}</p>
+                    </CardContent>
+                    <CardFooter className="flex justify-between">
+                      <Button onClick={() => onViewRecipe(recipe)}>Voir la recette</Button>
+                      <Button variant="outline" onClick={() => onSaveRecipe(recipe)}><PlusCircle className='h-4 w-4 mr-2'/> Sauvegarder</Button>
+                    </CardFooter>
+                  </Card>
+                ))}
+               </div>
             </div>
           )}
         </CardContent>

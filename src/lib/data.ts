@@ -6,10 +6,12 @@ import type { Ingredient, CategoryDef, Recipe, HealthConditionCategory } from '@
 export const initialCategories: CategoryDef[] = [
   { id: 'c1', name: 'Fruits et Légumes' },
   { id: 'c2', name: 'Viandes et Poissons' },
-  { id: 'c3', name: 'Produits Laitiers' },
-  { id: 'c4', name: 'Boulangerie' },
-  { id: 'c5', name: 'Épicerie' },
-  { id: 'c6', name: 'Boissons' },
+  { id: 'c3', name: 'Produits Laitiers & Oeufs' },
+  { id: 'c4', name: 'Boulangerie & Pâtisserie' },
+  { id: 'c5', name: 'Épicerie Salée' },
+  { id: 'c6', name: 'Épicerie Sucrée' },
+  { id: 'c7', name: 'Boissons' },
+  { id: 'c8', name: 'Surgelés' },
 ];
 
 export const initialHealthConditions: HealthConditionCategory[] = [
@@ -61,6 +63,11 @@ export const predefinedIngredients: Ingredient[] = [
     { id: 'f11', name: 'Basilic frais', category: 'Fruits et Légumes', price: 2.5, unit: 'botte' },
     { id: 'f12', name: 'Navet', category: 'Fruits et Légumes', price: 1.8, unit: 'kg' },
     { id: 'f13', name: 'Aubergine', category: 'Fruits et Légumes', price: 4.5, unit: 'kg' },
+    { id: 'f14', name: 'Pommes de terre', category: 'Fruits et Légumes', price: 2.2, unit: 'kg' },
+    { id: 'f15', name: 'Champignons de Paris', category: 'Fruits et Légumes', price: 12.0, unit: 'kg' },
+    { id: 'f16', name: 'Épinards frais', category: 'Fruits et Légumes', price: 6.0, unit: 'kg' },
+    { id: 'f17', name: 'Gingembre frais', category: 'Fruits et Légumes', price: 15.0, unit: 'kg' },
+    { id: 'f18', name: 'Coriandre fraîche', category: 'Fruits et Légumes', price: 2.0, unit: 'botte' },
 
 
     // Viandes et Poissons
@@ -69,38 +76,58 @@ export const predefinedIngredients: Ingredient[] = [
     { id: 'v3', name: 'Filet de saumon', category: 'Viandes et Poissons', price: 40.0, unit: 'kg' },
     { id: 'v4', name: 'Thon en conserve', category: 'Viandes et Poissons', price: 3.5, unit: 'boîte' },
     { id: 'v5', name: 'Gigot d\'agneau', category: 'Viandes et Poissons', price: 35.0, unit: 'kg' },
+    { id: 'v6', name: 'Crevettes', category: 'Viandes et Poissons', price: 30.0, unit: 'kg' },
+    { id: 'v7', name: 'Lardons fumés', category: 'Viandes et Poissons', price: 28.0, unit: 'kg' },
 
-    // Produits Laitiers
-    { id: 'p1', name: 'Lait Entier', category: 'Produits Laitiers', price: 1.8, unit: 'L' },
-    { id: 'p2', name: 'Oeufs', category: 'Produits Laitiers', price: 4.0, unit: 'douzaine' },
-    { id: 'p3', name: 'Yaourt nature', category: 'Produits Laitiers', price: 0.8, unit: 'pièce' },
-    { id: 'p4', name: 'Fromage Gruyère', category: 'Produits Laitiers', price: 30.0, unit: 'kg' },
-    { id: 'p5', name: 'Mozzarella', category: 'Produits Laitiers', price: 25.0, unit: 'kg' },
-    { id: 'p6', name: 'Parmesan', category: 'Produits Laitiers', price: 45.0, unit: 'kg' },
 
-    // Boulangerie
-    { id: 'b1', name: 'Baguette', category: 'Boulangerie', price: 0.4, unit: 'pièce' },
-    { id: 'b2', name: 'Pain de mie', category: 'Boulangerie', price: 2.5, unit: 'paquet' },
-    { id: 'b3', name: 'Pâte à pizza', category: 'Boulangerie', price: 3.0, unit: 'pièce' },
-    { id: 'b4', name: 'Croûtons', category: 'Boulangerie', price: 2.0, unit: 'paquet' },
+    // Produits Laitiers & Oeufs
+    { id: 'p1', name: 'Lait Entier', category: 'Produits Laitiers & Oeufs', price: 1.8, unit: 'L' },
+    { id: 'p2', name: 'Oeufs', category: 'Produits Laitiers & Oeufs', price: 4.0, unit: 'douzaine' },
+    { id: 'p3', name: 'Yaourt nature', category: 'Produits Laitiers & Oeufs', price: 0.8, unit: 'pièce' },
+    { id: 'p4', name: 'Fromage Gruyère', category: 'Produits Laitiers & Oeufs', price: 30.0, unit: 'kg' },
+    { id: 'p5', name: 'Mozzarella', category: 'Produits Laitiers & Oeufs', price: 25.0, unit: 'kg' },
+    { id: 'p6', name: 'Parmesan', category: 'Produits Laitiers & Oeufs', price: 45.0, unit: 'kg' },
+    { id: 'p7', name: 'Beurre', category: 'Produits Laitiers & Oeufs', price: 5.0, unit: '250g' },
+    { id: 'p8', name: 'Crème fraîche', category: 'Produits Laitiers & Oeufs', price: 2.5, unit: 'pot' },
+    { id: 'p9', name: 'Feta', category: 'Produits Laitiers & Oeufs', price: 15.0, unit: '200g' },
 
-    // Épicerie
-    { id: 'e1', name: 'Pâtes Penne', category: 'Épicerie', price: 1.5, unit: 'paquet' },
-    { id: 'e2', name: 'Huile d\'olive', category: 'Épicerie', price: 15, unit: 'L' },
-    { id: 'e4', name: 'Riz basmati', category: 'Épicerie', price: 5.0, unit: 'kg' },
-    { id: 'e5', name: 'Farine', category: 'Épicerie', price: 2.0, unit: 'kg' },
-    { id: 'e6', name: 'Sucre', category: 'Épicerie', price: 1.8, unit: 'kg' },
-    { id: 'e7', name: 'Sel', category: 'Épicerie', price: 1.0, unit: 'paquet' },
-    { id: 'e8', name: 'Poivre noir', category: 'Épicerie', price: 4.0, unit: 'pot' },
-    { id: 'e9', name: 'Haricots rouges en conserve', category: 'Épicerie', price: 2.5, unit: 'boîte' },
-    { id: 'e10', name: 'Semoule de couscous', category: 'Épicerie', price: 3.5, unit: 'kg' },
-    { id: 'e11', name: 'Cumin en poudre', category: 'Épicerie', price: 3.0, unit: 'pot' },
-    { id: 'e12', name: 'Piment en poudre', category: 'Épicerie', price: 2.8, unit: 'pot' },
-    { id: 'e13', name: 'Vinaigre de vin', category: 'Épicerie', price: 4.0, unit: 'L' },
-    { id: 'e14', name: 'Harissa en conserve', category: 'Épicerie', price: 2.2, unit: 'boîte' },
-    { id: 'e15', name: 'Pois chiches en conserve', category: 'Épicerie', price: 2.0, unit: 'boîte' },
-    { id: 'e16', name: 'Concentré de tomate', category: 'Épicerie', price: 1.8, unit: 'boîte' },
+    // Boulangerie & Pâtisserie
+    { id: 'b1', name: 'Baguette', category: 'Boulangerie & Pâtisserie', price: 0.4, unit: 'pièce' },
+    { id: 'b2', name: 'Pain de mie', category: 'Boulangerie & Pâtisserie', price: 2.5, unit: 'paquet' },
+    { id: 'b3', name: 'Pâte à pizza', category: 'Boulangerie & Pâtisserie', price: 3.0, unit: 'pièce' },
+    { id: 'b4', name: 'Croûtons', category: 'Boulangerie & Pâtisserie', price: 2.0, unit: 'paquet' },
+    { id: 'b5', name: 'Farine', category: 'Boulangerie & Pâtisserie', price: 2.0, unit: 'kg' },
+    { id: 'b6', name: 'Sucre', category: 'Boulangerie & Pâtisserie', price: 1.8, unit: 'kg' },
+    { id: 'b7', name: 'Levure de boulanger', category: 'Boulangerie & Pâtisserie', price: 1.0, unit: 'sachet' },
+
+
+    // Épicerie Salée
+    { id: 'e1', name: 'Pâtes Penne', category: 'Épicerie Salée', price: 1.5, unit: 'paquet' },
+    { id: 'e2', name: 'Huile d\'olive', category: 'Épicerie Salée', price: 15, unit: 'L' },
+    { id: 'e4', name: 'Riz basmati', category: 'Épicerie Salée', price: 5.0, unit: 'kg' },
+    { id: 'e7', name: 'Sel', category: 'Épicerie Salée', price: 1.0, unit: 'paquet' },
+    { id: 'e8', name: 'Poivre noir', category: 'Épicerie Salée', price: 4.0, unit: 'pot' },
+    { id: 'e9', name: 'Haricots rouges en conserve', category: 'Épicerie Salée', price: 2.5, unit: 'boîte' },
+    { id: 'e10', name: 'Semoule de couscous', category: 'Épicerie Salée', price: 3.5, unit: 'kg' },
+    { id: 'e11', name: 'Cumin en poudre', category: 'Épicerie Salée', price: 3.0, unit: 'pot' },
+    { id: 'e12', name: 'Piment en poudre (Paprika)', category: 'Épicerie Salée', price: 2.8, unit: 'pot' },
+    { id: 'e13', name: 'Vinaigre de vin', category: 'Épicerie Salée', price: 4.0, unit: 'L' },
+    { id: 'e14', name: 'Harissa en conserve', category: 'Épicerie Salée', price: 2.2, unit: 'boîte' },
+    { id: 'e15', name: 'Pois chiches en conserve', category: 'Épicerie Salée', price: 2.0, unit: 'boîte' },
+    { id: 'e16', name: 'Concentré de tomate', category: 'Épicerie Salée', price: 1.8, unit: 'boîte' },
+    { id: 'e17', name: 'Moutarde de Dijon', category: 'Épicerie Salée', price: 3.5, unit: 'pot' },
+    { id: 'e18', name: 'Lentilles corail', category: 'Épicerie Salée', price: 6.0, unit: 'kg' },
+    { id: 'e19', name: 'Lait de coco', category: 'Épicerie Salée', price: 4.5, unit: 'boîte' },
+    { id: 'e20', name: 'Sauce soja', category: 'Épicerie Salée', price: 5.0, unit: 'bouteille' },
+    { id: 'e21', name: 'Bouillon de volaille', category: 'Épicerie Salée', price: 2.0, unit: 'cube' },
+    { id: 'e22', name: 'Curcuma', category: 'Épicerie Salée', price: 3.0, unit: 'pot' },
     
+    // Épicerie Sucrée
+    { id: 'es1', name: 'Chocolat noir pâtissier', category: 'Épicerie Sucrée', price: 5.0, unit: 'tablette' },
+    { id: 'es2', name: 'Miel', category: 'Épicerie Sucrée', price: 12.0, unit: 'pot' },
+    { id: 'es3', name: 'Confiture de fraises', category: 'Épicerie Sucrée', price: 4.0, unit: 'pot' },
+    { id: 'es4', name: 'Cacao en poudre', category: 'Épicerie Sucrée', price: 6.0, unit: 'boîte' },
+
     // Boissons
     { id: 'bo1', name: 'Eau minérale', category: 'Boissons', price: 0.8, unit: 'L' },
     { id: 'bo2', name: 'Café moulu', category: 'Boissons', price: 7.0, unit: 'paquet' },

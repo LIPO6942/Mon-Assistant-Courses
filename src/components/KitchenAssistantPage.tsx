@@ -4,6 +4,8 @@
 import { useState, useMemo, useEffect } from 'react';
 import { initialCategories, predefinedIngredients, discoverableRecipes, initialHealthConditions } from '@/lib/data';
 import type { Ingredient, Recipe, BasketItem, CategoryDef, RecipeIngredient, HealthConditionCategory, HealthCondition } from '@/lib/types';
+import { suggestRecipes } from '@/ai/flows/suggest-recipe-flow';
+import type { SuggestRecipeOutput } from '@/ai/types';
 
 import AppHeader from './AppHeader';
 import AppNav from './AppNav';
@@ -12,11 +14,6 @@ import PantryView from './PantryView';
 import RecipesView from './RecipesView';
 import ChandyekView from './ChandyekView';
 import NutritionalGuideView from './NutritionalGuideView';
-
-type SuggestedRecipe = Recipe & {
-  matchCount: number;
-  missingIngredients: RecipeIngredient[];
-};
 
 export default function KitchenAssistantPage() {
   // --- STATE MANAGEMENT ---
@@ -31,16 +28,18 @@ export default function KitchenAssistantPage() {
   const [activeTab, setActiveTab] = useState<'pantry' | 'recipes' | 'chandyek' | 'guide'>('pantry');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Chandyek (non-AI) State
+  // Chandyek (AI) State
   const [chandyekIngredients, setChandyekIngredients] = useState('');
-  const [localSuggestions, setLocalSuggestions] = useState<SuggestedRecipe[]>([]);
+  const [aiSuggestions, setAiSuggestions] = useState<SuggestRecipeOutput[]>([]);
+  const [isChandyekLoading, setIsChandyekLoading] = useState(false);
+  const [chandyekError, setChandyekError] = useState<string | null>(null);
   
   // Dialogs State
   const [isAddEditDialogOpen, setAddEditDialogOpen] = useState(false);
   const [editingIngredient, setEditingIngredient] = useState<Partial<Ingredient> | null>(null);
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<{ id?: string; name: string } | null>(null);
-  const [viewingRecipe, setViewingRecipe] = useState<Recipe | null>(null);
+  const [viewingRecipe, setViewingRecipe] = useState<(Omit<Recipe, 'id'> & { id?: string }) | null>(null);
   const [isHealthConditionManagerOpen, setHealthConditionManagerOpen] = useState(false);
 
 
@@ -113,42 +112,27 @@ export default function KitchenAssistantPage() {
   }, [chandyekIngredients]);
 
 
-  // --- LOCAL RECIPE SUGGESTION LOGIC ---
-  useEffect(() => {
-    if (activeTab !== 'chandyek') return;
-
-    const selected = chandyekIngredientsList.map(s => s.toLowerCase());
-
-    if (selected.length === 0) {
-      setLocalSuggestions([]);
+  // --- HANDLERS ---
+  const handleGenerateAiRecipes = async () => {
+    if (chandyekIngredientsList.length === 0) {
+      setChandyekError("Veuillez sélectionner au moins un ingrédient.");
       return;
     }
+    setIsChandyekLoading(true);
+    setChandyekError(null);
+    setAiSuggestions([]);
+    try {
+      const results = await suggestRecipes({ ingredients: chandyekIngredientsList });
+      setAiSuggestions(results);
+    } catch (err) {
+      console.error(err);
+      const errorMessage = err instanceof Error ? err.message : "Une erreur inattendue est survenue.";
+      setChandyekError(`L'IA n'a pas pu générer de recettes. Détail: ${errorMessage}`);
+    } finally {
+      setIsChandyekLoading(false);
+    }
+  };
 
-    const suggestions = discoverableRecipes.map(recipe => {
-      let matchCount = 0;
-      const missingIngredients: RecipeIngredient[] = [];
-
-      recipe.ingredients.forEach(ing => {
-        const ingNameLower = ing.name.toLowerCase();
-        // Check if any selected ingredient is a substring of the recipe ingredient or vice-versa
-        if (selected.some(sel => ingNameLower.includes(sel) || sel.includes(ingNameLower))) {
-          matchCount++;
-        } else {
-          missingIngredients.push(ing);
-        }
-      });
-
-      return { ...recipe, matchCount, missingIngredients };
-    })
-    .filter(recipe => recipe.matchCount > 0)
-    .sort((a, b) => b.matchCount - a.matchCount);
-
-    setLocalSuggestions(suggestions);
-
-  }, [activeTab, chandyekIngredients, chandyekIngredientsList]);
-
-
-  // --- HANDLERS ---
   const handleSaveIngredient = (formData: Omit<Ingredient, 'id'> & { id?: string }) => {
     if (formData.id) {
       setPantry(prev => prev.map(ing => ing.id === formData.id ? { ...ing, ...formData } as Ingredient : ing));
@@ -228,13 +212,23 @@ export default function KitchenAssistantPage() {
     clearBasket();
   };
 
-  const handleSaveRecipe = (recipeToSave: Recipe) => {
-    if (savedRecipes.find(r => r.id === recipeToSave.id)) {
+  const handleSaveRecipe = (recipeToSave: Omit<Recipe, 'id'> & { id?: string }) => {
+    if (recipeToSave.id && savedRecipes.some(r => r.id === recipeToSave.id)) {
       alert("Cette recette est déjà dans vos favoris !");
       return;
     }
-    setSavedRecipes(prev => [...prev, recipeToSave]);
-    alert(`Recette "${recipeToSave.title}" sauvegardée !`);
+    if (savedRecipes.some(r => r.title.toLowerCase() === recipeToSave.title.toLowerCase())) {
+        alert("Une recette avec ce titre est déjà dans vos favoris !");
+        return;
+    }
+
+    const newRecipe: Recipe = {
+      ...recipeToSave,
+      id: recipeToSave.id || self.crypto.randomUUID(),
+    };
+    
+    setSavedRecipes(prev => [...prev, newRecipe]);
+    alert(`Recette "${newRecipe.title}" sauvegardée !`);
   };
 
   const handleToggleChandyekIngredient = (ingredientName: string) => {
@@ -251,6 +245,8 @@ export default function KitchenAssistantPage() {
 
   const handleClearChandyekIngredients = () => {
     setChandyekIngredients('');
+    setAiSuggestions([]);
+    setChandyekError(null);
   };
 
   // --- HEALTH CONDITION HANDLERS ---
@@ -346,7 +342,11 @@ export default function KitchenAssistantPage() {
           {activeTab === 'chandyek' && (
             <ChandyekView 
               selectedIngredients={chandyekIngredientsList}
-              suggestions={localSuggestions}
+              aiSuggestions={aiSuggestions}
+              isLoading={isChandyekLoading}
+              error={chandyekError}
+              onGenerate={handleGenerateAiRecipes}
+              onSaveRecipe={handleSaveRecipe}
               onViewRecipe={setViewingRecipe}
               onRemoveIngredient={handleToggleChandyekIngredient}
               onClearIngredients={handleClearChandyekIngredients}
