@@ -6,7 +6,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import IngredientForm from './IngredientForm';
 import CategoryForm from './CategoryForm';
-import type { Ingredient, Recipe, CategoryDef } from '@/lib/types';
+import HealthConditionManager from './HealthConditionManager';
+import type { Ingredient, Recipe, CategoryDef, HealthConditionCategory, HealthCondition } from '@/lib/types';
 
 interface KitchenAssistantDialogsProps {
   isAddEditDialogOpen: boolean;
@@ -22,6 +23,14 @@ interface KitchenAssistantDialogsProps {
 
   viewingRecipe: Recipe | null;
   setViewingRecipe: (recipe: Recipe | null) => void;
+
+  isHealthConditionManagerOpen: boolean;
+  setHealthConditionManagerOpen: (isOpen: boolean) => void;
+  healthConditions: HealthConditionCategory[];
+  onSaveHealthCategory: (id: string | null, name: string) => void;
+  onDeleteHealthCategory: (id: string) => void;
+  onSaveHealthCondition: (categoryId: string, condition: { id: string | null; name: string }) => void;
+  onDeleteHealthCondition: (categoryId: string, conditionId: string) => void;
 }
 
 export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsProps) {
@@ -37,6 +46,13 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
     handleSaveCategory,
     viewingRecipe,
     setViewingRecipe,
+    isHealthConditionManagerOpen,
+    setHealthConditionManagerOpen,
+    healthConditions,
+    onSaveHealthCategory,
+    onDeleteHealthCategory,
+    onSaveHealthCondition,
+    onDeleteHealthCondition,
   } = props;
   
   return (
@@ -78,6 +94,22 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
                 </DialogFooter>
               </>
             )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isHealthConditionManagerOpen} onOpenChange={setHealthConditionManagerOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader><DialogTitle>Gérer les Conditions de Santé</DialogTitle></DialogHeader>
+          <HealthConditionManager
+            healthConditions={healthConditions}
+            onSaveCategory={onSaveHealthCategory}
+            onDeleteCategory={onDeleteHealthCategory}
+            onSaveCondition={onSaveHealthCondition}
+            onDeleteCondition={onDeleteHealthCondition}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setHealthConditionManagerOpen(false)}>Fermer</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>

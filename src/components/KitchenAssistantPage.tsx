@@ -2,8 +2,8 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { initialCategories, predefinedIngredients, discoverableRecipes } from '@/lib/data';
-import type { Ingredient, Recipe, BasketItem, CategoryDef, RecipeIngredient } from '@/lib/types';
+import { initialCategories, predefinedIngredients, discoverableRecipes, initialHealthConditions } from '@/lib/data';
+import type { Ingredient, Recipe, BasketItem, CategoryDef, RecipeIngredient, HealthConditionCategory, HealthCondition } from '@/lib/types';
 
 import AppHeader from './AppHeader';
 import AppNav from './AppNav';
@@ -25,6 +25,7 @@ export default function KitchenAssistantPage() {
   const [categories, setCategories] = useState<CategoryDef[]>(initialCategories);
   const [savedRecipes, setSavedRecipes] = useState<Recipe[]>([]);
   const [budget, setBudget] = useState(200);
+  const [healthConditions, setHealthConditions] = useState<HealthConditionCategory[]>(initialHealthConditions);
   
   // Ephemeral state
   const [activeTab, setActiveTab] = useState<'pantry' | 'recipes' | 'chandyek' | 'guide'>('pantry');
@@ -40,6 +41,8 @@ export default function KitchenAssistantPage() {
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<{ id?: string; name: string } | null>(null);
   const [viewingRecipe, setViewingRecipe] = useState<Recipe | null>(null);
+  const [isHealthConditionManagerOpen, setHealthConditionManagerOpen] = useState(false);
+
 
   // --- LOCALSTORAGE PERSISTENCE ---
   useEffect(() => {
@@ -58,6 +61,9 @@ export default function KitchenAssistantPage() {
 
       const storedBudget = localStorage.getItem('budget-data');
       if (storedBudget) setBudget(JSON.parse(storedBudget));
+      
+      const storedHealthConditions = localStorage.getItem('health-conditions-data');
+      if (storedHealthConditions) setHealthConditions(JSON.parse(storedHealthConditions));
     } catch (error) {
       console.error("Error loading data from localStorage", error);
     }
@@ -68,6 +74,7 @@ export default function KitchenAssistantPage() {
   useEffect(() => { localStorage.setItem('categories-data', JSON.stringify(categories)); }, [categories]);
   useEffect(() => { localStorage.setItem('saved-recipes-data', JSON.stringify(savedRecipes)); }, [savedRecipes]);
   useEffect(() => { localStorage.setItem('budget-data', JSON.stringify(budget)); }, [budget]);
+  useEffect(() => { localStorage.setItem('health-conditions-data', JSON.stringify(healthConditions)); }, [healthConditions]);
 
   // --- SERVICE WORKER REGISTRATION ---
   useEffect(() => {
@@ -246,6 +253,48 @@ export default function KitchenAssistantPage() {
     setChandyekIngredients('');
   };
 
+  // --- HEALTH CONDITION HANDLERS ---
+  const handleSaveHealthCategory = (id: string | null, name: string) => {
+    if (!name.trim()) return;
+    setHealthConditions(prev => {
+      if (id) {
+        return prev.map(cat => cat.id === id ? { ...cat, name: name.trim() } : cat);
+      } else {
+        const newCategory: HealthConditionCategory = { id: self.crypto.randomUUID(), name: name.trim(), conditions: [] };
+        return [...prev, newCategory];
+      }
+    });
+  };
+
+  const handleDeleteHealthCategory = (id: string) => {
+    if (window.confirm("Êtes-vous sûr de vouloir supprimer cette catégorie et toutes ses conditions ?")) {
+      setHealthConditions(prev => prev.filter(cat => cat.id !== id));
+    }
+  };
+
+  const handleSaveHealthCondition = (categoryId: string, condition: { id: string | null; name: string }) => {
+    if (!condition.name.trim()) return;
+    setHealthConditions(prev => prev.map(cat => {
+      if (cat.id === categoryId) {
+        const updatedConditions = condition.id
+          ? cat.conditions.map(c => c.id === condition.id ? { ...c, name: condition.name.trim() } : c)
+          : [...cat.conditions, { id: self.crypto.randomUUID(), name: condition.name.trim() }];
+        return { ...cat, conditions: updatedConditions };
+      }
+      return cat;
+    }));
+  };
+
+  const handleDeleteHealthCondition = (categoryId: string, conditionId: string) => {
+    setHealthConditions(prev => prev.map(cat => {
+      if (cat.id === categoryId) {
+        return { ...cat, conditions: cat.conditions.filter(c => c.id !== conditionId) };
+      }
+      return cat;
+    }));
+  };
+
+
   // --- RENDER ---
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
@@ -304,7 +353,10 @@ export default function KitchenAssistantPage() {
             />
           )}
           {activeTab === 'guide' && (
-            <NutritionalGuideView />
+            <NutritionalGuideView 
+              healthConditions={healthConditions}
+              openHealthConditionManager={() => setHealthConditionManagerOpen(true)}
+            />
           )}
         </div>
       </main>
@@ -321,6 +373,13 @@ export default function KitchenAssistantPage() {
         handleSaveCategory={handleSaveCategory}
         viewingRecipe={viewingRecipe}
         setViewingRecipe={setViewingRecipe}
+        isHealthConditionManagerOpen={isHealthConditionManagerOpen}
+        setHealthConditionManagerOpen={setHealthConditionManagerOpen}
+        healthConditions={healthConditions}
+        onSaveHealthCategory={handleSaveHealthCategory}
+        onDeleteHealthCategory={handleDeleteHealthCategory}
+        onSaveHealthCondition={handleSaveHealthCondition}
+        onDeleteHealthCondition={handleDeleteHealthCondition}
       />
     </div>
   );
