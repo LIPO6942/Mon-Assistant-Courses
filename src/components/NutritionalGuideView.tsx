@@ -83,7 +83,7 @@ export default function NutritionalGuideView({ healthConditions, openHealthCondi
                 <Select value={selectedCategoryId} onValueChange={handleCategoryChange}>
                   <SelectTrigger id="condition-category-select" className="w-full h-11">
                     <SelectValue placeholder="Choisir une catégorie..." />
-                  </Trigger>
+                  </SelectTrigger>
                   <SelectContent>
                     {healthConditions.map((group) => (
                       <SelectItem key={group.id} value={group.id}>{group.name}</SelectItem>
