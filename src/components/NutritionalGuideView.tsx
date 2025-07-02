@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { getNutritionalAdvice, type NutritionalGuideOutput } from '@/ai/flows/nutritional-guide-flow';
+import { getNutritionalAdvice } from '@/ai/flows/nutritional-guide-flow';
+import type { NutritionalGuideOutput } from '@/ai/types';
 import { HeartPulse, Lightbulb, Loader2, Terminal } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
