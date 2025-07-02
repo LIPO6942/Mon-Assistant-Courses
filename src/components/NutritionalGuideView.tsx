@@ -1,10 +1,11 @@
+
 'use client';
 
 import * as React from 'react';
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -13,20 +14,35 @@ import type { NutritionalGuideOutput } from '@/ai/types';
 import { HeartPulse, Lightbulb, Loader2, Terminal } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
-const healthConditions = [
-  "Cholestérol élevé",
-  "Hypertension",
-  "Diabète type 1",
-  "Diabète type 2",
-  "Diabète gestationnel",
-  "Carence en Fer",
-  "Carence en Vitamine D",
-  "Intolérance au Lactose",
-  "Maladie Cœliaque (sans gluten)",
-  "Végétarien",
-  "Végétalien",
-  "Perte de poids",
-  "Prise de masse musculaire",
+const categorizedHealthConditions = [
+  {
+    category: "Maladies Chroniques",
+    conditions: [
+      "Cholestérol élevé",
+      "Hypertension",
+      "Diabète type 1",
+      "Diabète type 2",
+      "Diabète gestationnel",
+    ]
+  },
+  {
+    category: "Carences & Sensibilités",
+    conditions: [
+      "Carence en Fer",
+      "Carence en Vitamine D",
+      "Intolérance au Lactose",
+      "Maladie Cœliaque (sans gluten)",
+    ]
+  },
+  {
+    category: "Régimes & Objectifs",
+    conditions: [
+      "Végétarien",
+      "Végétalien",
+      "Perte de poids",
+      "Prise de masse musculaire",
+    ]
+  }
 ];
 
 export default function NutritionalGuideView() {
@@ -79,8 +95,13 @@ export default function NutritionalGuideView() {
                   <SelectValue placeholder="Sélectionnez une condition ou un objectif..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {healthConditions.map(condition => (
-                    <SelectItem key={condition} value={condition}>{condition}</SelectItem>
+                  {categorizedHealthConditions.map((group) => (
+                    <SelectGroup key={group.category}>
+                      <SelectLabel>{group.category}</SelectLabel>
+                      {group.conditions.map(condition => (
+                        <SelectItem key={condition} value={condition}>{condition}</SelectItem>
+                      ))}
+                    </SelectGroup>
                   ))}
                 </SelectContent>
               </Select>
