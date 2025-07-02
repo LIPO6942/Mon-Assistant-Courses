@@ -3,24 +3,15 @@
  * @fileOverview A personalized nutritional guide AI agent.
  *
  * - getNutritionalAdvice - A function that handles the nutritional advice process.
- * - NutritionalGuideInput - The input type for the getNutritionalAdvice function.
- * - NutritionalGuideOutput - The return type for the getNutritionalAdvice function.
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'zod';
-
-const NutritionalGuideInputSchema = z.object({
-  condition: z.string().describe('The health condition or dietary restriction selected by the user (e.g., "Cholestérol élevé", "Carence en Fer").'),
-  query: z.string().describe('The user\'s question about a meal, ingredient, or type of dish (e.g., "un plat de riz", "poulet", "salade").'),
-});
-export type NutritionalGuideInput = z.infer<typeof NutritionalGuideInputSchema>;
-
-const NutritionalGuideOutputSchema = z.object({
-  advice: z.string().describe("Provide detailed, personalized nutritional advice in Markdown format. The advice should be proactive and easy to understand. Structure it with headings, bold text, and lists. Include sections for 'Aliments à privilégier', 'Aliments à limiter/éviter', 'Substitutions saines', 'Associations bénéfiques', and 'Modes de cuisson' where applicable."),
-});
-export type NutritionalGuideOutput = z.infer<typeof NutritionalGuideOutputSchema>;
-
+import {
+  NutritionalGuideInputSchema,
+  NutritionalGuideOutputSchema,
+  type NutritionalGuideInput,
+  type NutritionalGuideOutput,
+} from '@/ai/types';
 
 export async function getNutritionalAdvice(input: NutritionalGuideInput): Promise<NutritionalGuideOutput> {
   return nutritionalGuideFlow(input);

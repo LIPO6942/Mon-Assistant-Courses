@@ -13,8 +13,6 @@ export const categories = [
 ] as const;
 export type Category = typeof categories[number];
 
-// Les types pour Chandyek sont maintenant dans chandyek-flow.ts pour éviter les problèmes d'import.
-
 export const GenerateShoppingListInputSchema = z.object({
   prompt: z.string().describe('The user request, like "ingredients for a cake"'),
 });
@@ -41,3 +39,15 @@ export const SuggestRecipeOutputSchema = z.object({
   })).describe("The array of ingredients for the recipe.")
 });
 export type SuggestRecipeOutput = z.infer<typeof SuggestRecipeOutputSchema>;
+
+// Types for Nutritional Guide
+export const NutritionalGuideInputSchema = z.object({
+  condition: z.string().describe('The health condition or dietary restriction selected by the user (e.g., "Cholestérol élevé", "Carence en Fer").'),
+  query: z.string().describe('The user\'s question about a meal, ingredient, or type of dish (e.g., "un plat de riz", "poulet", "salade").'),
+});
+export type NutritionalGuideInput = z.infer<typeof NutritionalGuideInputSchema>;
+
+export const NutritionalGuideOutputSchema = z.object({
+  advice: z.string().describe("Provide detailed, personalized nutritional advice in Markdown format. The advice should be proactive and easy to understand. Structure it with headings, bold text, and lists. Include sections for 'Aliments à privilégier', 'Aliments à limiter/éviter', 'Substitutions saines', 'Associations bénéfiques', and 'Modes de cuisson' where applicable."),
+});
+export type NutritionalGuideOutput = z.infer<typeof NutritionalGuideOutputSchema>;
