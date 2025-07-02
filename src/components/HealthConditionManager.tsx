@@ -113,7 +113,9 @@ export default function HealthConditionManager({
           </ScrollArea>
           <div className="flex items-center gap-2 mt-4">
             <Input placeholder="Nouvelle catégorie..." value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} />
-            <Button onClick={handleAddNewCategory} disabled={!newCategoryName.trim()}><Plus className="h-4 w-4"/></Button>
+            <Button onClick={handleAddNewCategory} disabled={!newCategoryName.trim()}>
+              <Plus className="h-4 w-4 mr-2"/>Ajouter
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -149,7 +151,9 @@ export default function HealthConditionManager({
           </ScrollArea>
            <div className="flex items-center gap-2 mt-4">
             <Input placeholder="Nouvelle condition..." value={newConditionName} onChange={e => setNewConditionName(e.target.value)} disabled={!selectedCategory} />
-            <Button onClick={handleAddNewCondition} disabled={!selectedCategory || !newConditionName.trim()}><Plus className="h-4 w-4"/></Button>
+            <Button onClick={handleAddNewCondition} disabled={!selectedCategory || !newConditionName.trim()}>
+              <Plus className="h-4 w-4 mr-2"/>Ajouter
+            </Button>
           </div>
         </CardContent>
       </Card>

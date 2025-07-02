@@ -78,7 +78,9 @@ export default function NutritionalGuideView({ healthConditions, openHealthCondi
               <div className="grid gap-2">
                 <div className='flex justify-between items-center'>
                   <Label htmlFor="condition-category-select" className='text-lg'>1. Catégorie</Label>
-                  <Button type="button" variant="ghost" size="icon" onClick={openHealthConditionManager}><Settings className="h-4 w-4"/></Button>
+                  <Button type="button" variant="outline" size="sm" onClick={openHealthConditionManager}>
+                    <Settings className="h-4 w-4 mr-2" /> Gérer
+                  </Button>
                 </div>
                 <Select value={selectedCategoryId} onValueChange={handleCategoryChange}>
                   <SelectTrigger id="condition-category-select" className="w-full h-11">
