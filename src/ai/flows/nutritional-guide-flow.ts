@@ -19,6 +19,7 @@ export async function getNutritionalAdvice(input: NutritionalGuideInput): Promis
 
 const prompt = ai.definePrompt({
   name: 'nutritionalGuidePrompt',
+  model: 'gemini-1.5-flash-latest',
   input: { schema: NutritionalGuideInputSchema },
   output: { schema: NutritionalGuideOutputSchema },
   prompt: `Tu es un assistant nutritionnel intelligent et bienveillant. Ta mission est de fournir des conseils alimentaires personnalisés basés sur la condition de santé de l'utilisateur et le plat ou l'ingrédient qu'il mentionne.
