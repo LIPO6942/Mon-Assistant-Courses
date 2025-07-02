@@ -1,7 +1,7 @@
 
 'use client';
 
-import type { Ingredient, CategoryDef, Recipe } from '@/lib/types';
+import type { Ingredient, CategoryDef, Recipe, HealthConditionCategory } from '@/lib/types';
 
 export const initialCategories: CategoryDef[] = [
   { id: 'c1', name: 'Fruits et Légumes' },
@@ -10,6 +10,40 @@ export const initialCategories: CategoryDef[] = [
   { id: 'c4', name: 'Boulangerie' },
   { id: 'c5', name: 'Épicerie' },
   { id: 'c6', name: 'Boissons' },
+];
+
+export const initialHealthConditions: HealthConditionCategory[] = [
+  {
+    id: 'hc_cat_1',
+    name: "Maladies Chroniques",
+    conditions: [
+      { id: 'hc_1_1', name: "Cholestérol élevé" },
+      { id: 'hc_1_2', name: "Hypertension" },
+      { id: 'hc_1_3', name: "Diabète type 1" },
+      { id: 'hc_1_4', name: "Diabète type 2" },
+      { id: 'hc_1_5', name: "Diabète gestationnel" },
+    ]
+  },
+  {
+    id: 'hc_cat_2',
+    name: "Carences & Sensibilités",
+    conditions: [
+      { id: 'hc_2_1', name: "Carence en Fer" },
+      { id: 'hc_2_2', name: "Carence en Vitamine D" },
+      { id: 'hc_2_3', name: "Intolérance au Lactose" },
+      { id: 'hc_2_4', name: "Maladie Cœliaque (sans gluten)" },
+    ]
+  },
+  {
+    id: 'hc_cat_3',
+    name: "Régimes & Objectifs",
+    conditions: [
+      { id: 'hc_3_1', name: "Végétarien" },
+      { id: 'hc_3_2', name: "Végétalien" },
+      { id: 'hc_3_3', name: "Perte de poids" },
+      { id: 'hc_3_4', name: "Prise de masse musculaire" },
+    ]
+  }
 ];
 
 export const predefinedIngredients: Ingredient[] = [

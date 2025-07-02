@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -10,47 +10,32 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { getNutritionalAdvice } from '@/ai/flows/nutritional-guide-flow';
-import type { NutritionalGuideOutput } from '@/ai/types';
-import { HeartPulse, Lightbulb, Loader2, Terminal } from 'lucide-react';
+import type { NutritionalGuideOutput, HealthConditionCategory } from '@/ai/types';
+import { HeartPulse, Lightbulb, Loader2, Terminal, Settings } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
-const categorizedHealthConditions = [
-  {
-    category: "Maladies Chroniques",
-    conditions: [
-      "Cholestérol élevé",
-      "Hypertension",
-      "Diabète type 1",
-      "Diabète type 2",
-      "Diabète gestationnel",
-    ]
-  },
-  {
-    category: "Carences & Sensibilités",
-    conditions: [
-      "Carence en Fer",
-      "Carence en Vitamine D",
-      "Intolérance au Lactose",
-      "Maladie Cœliaque (sans gluten)",
-    ]
-  },
-  {
-    category: "Régimes & Objectifs",
-    conditions: [
-      "Végétarien",
-      "Végétalien",
-      "Perte de poids",
-      "Prise de masse musculaire",
-    ]
-  }
-];
 
-export default function NutritionalGuideView() {
+interface NutritionalGuideViewProps {
+  healthConditions: HealthConditionCategory[];
+  openHealthConditionManager: () => void;
+}
+
+export default function NutritionalGuideView({ healthConditions, openHealthConditionManager }: NutritionalGuideViewProps) {
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
   const [selectedCondition, setSelectedCondition] = useState<string>('');
   const [query, setQuery] = useState<string>('');
   const [advice, setAdvice] = useState<NutritionalGuideOutput | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+
+  const selectedCategory = useMemo(() => {
+    return healthConditions.find(c => c.id === selectedCategoryId);
+  }, [selectedCategoryId, healthConditions]);
+
+  const handleCategoryChange = (categoryId: string) => {
+    setSelectedCategoryId(categoryId);
+    setSelectedCondition('');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,27 +73,41 @@ export default function NutritionalGuideView() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid gap-2">
-              <Label htmlFor="condition-select" className='text-lg'>1. Choisissez votre condition</Label>
-              <Select value={selectedCondition} onValueChange={setSelectedCondition}>
-                <SelectTrigger id="condition-select" className="w-full h-11">
-                  <SelectValue placeholder="Sélectionnez une condition ou un objectif..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {categorizedHealthConditions.map((group) => (
-                    <SelectGroup key={group.category}>
-                      <SelectLabel>{group.category}</SelectLabel>
-                      {group.conditions.map(condition => (
-                        <SelectItem key={condition} value={condition}>{condition}</SelectItem>
-                      ))}
-                    </SelectGroup>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <div className='flex justify-between items-center'>
+                  <Label htmlFor="condition-category-select" className='text-lg'>1. Catégorie</Label>
+                  <Button type="button" variant="ghost" size="icon" onClick={openHealthConditionManager}><Settings className="h-4 w-4"/></Button>
+                </div>
+                <Select value={selectedCategoryId} onValueChange={handleCategoryChange}>
+                  <SelectTrigger id="condition-category-select" className="w-full h-11">
+                    <SelectValue placeholder="Choisir une catégorie..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {healthConditions.map((group) => (
+                      <SelectItem key={group.id} value={group.id}>{group.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="condition-select" className='text-lg'>2. Condition</Label>
+                <Select value={selectedCondition} onValueChange={setSelectedCondition} disabled={!selectedCategory}>
+                  <SelectTrigger id="condition-select" className="w-full h-11">
+                    <SelectValue placeholder="Choisir une condition..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {selectedCategory?.conditions.map(condition => (
+                      <SelectItem key={condition.id} value={condition.name}>{condition.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="meal-query" className='text-lg'>2. Décrivez votre repas ou ingrédient</Label>
+              <Label htmlFor="meal-query" className='text-lg'>3. Décrivez votre repas ou ingrédient</Label>
               <Textarea
                 id="meal-query"
                 value={query}

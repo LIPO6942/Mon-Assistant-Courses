@@ -1467,6 +1467,9 @@ video {
 .h-px {
   height: 1px;
 }
+.max-h-\[60vh\] {
+  max-height: 60vh;
+}
 .min-h-\[300px\] {
   min-height: 300px;
 }
@@ -1533,6 +1536,9 @@ video {
 .max-w-none {
   max-width: none;
 }
+.max-w-3xl {
+  max-width: 48rem;
+}
 .flex-1 {
   flex: 1 1 0%;
 }
@@ -1571,6 +1577,9 @@ video {
 }
 .cursor-default {
   cursor: default;
+}
+.cursor-pointer {
+  cursor: pointer;
 }
 .touch-none {
   touch-action: none;
@@ -1667,6 +1676,9 @@ video {
 }
 .overflow-hidden {
   overflow: hidden;
+}
+.overflow-y-auto {
+  overflow-y: auto;
 }
 .whitespace-nowrap {
   white-space: nowrap;
@@ -1787,6 +1799,9 @@ video {
 }
 .bg-secondary\/50 {
   background-color: hsl(var(--secondary) / 0.5);
+}
+.bg-primary\/20 {
+  background-color: hsl(var(--primary) / 0.2);
 }
 .bg-gradient-to-br {
   background-image: linear-gradient(to bottom right, var(--tw-gradient-stops));
@@ -1917,6 +1932,9 @@ video {
 }
 .pt-4 {
   padding-top: 1rem;
+}
+.pt-10 {
+  padding-top: 2.5rem;
 }
 .text-left {
   text-align: left;
@@ -2454,6 +2472,10 @@ video {
  
 .hover\:bg-secondary\/80:hover {
   background-color: hsl(var(--secondary) / 0.8);
+}
+ 
+.hover\:bg-secondary:hover {
+  background-color: hsl(var(--secondary));
 }
  
 .hover\:text-accent-foreground:hover {
