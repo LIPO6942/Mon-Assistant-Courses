@@ -23,6 +23,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr" suppressHydrationWarning>
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+      </head>
       <body
         className={cn(
           "min-h-screen bg-background font-sans antialiased",
