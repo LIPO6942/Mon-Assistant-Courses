@@ -1398,6 +1398,9 @@ video {
 .mt-auto {
   margin-top: auto;
 }
+.mt-6 {
+  margin-top: 1.5rem;
+}
 .inline {
   display: inline;
 }
@@ -1524,6 +1527,9 @@ video {
 .min-w-\[var\(--radix-select-trigger-width\)\] {
   min-width: var(--radix-select-trigger-width);
 }
+.max-w-3xl {
+  max-width: 48rem;
+}
 .max-w-4xl {
   max-width: 56rem;
 }
@@ -1535,9 +1541,6 @@ video {
 }
 .max-w-none {
   max-width: none;
-}
-.max-w-3xl {
-  max-width: 48rem;
 }
 .flex-1 {
   flex: 1 1 0%;
@@ -1791,6 +1794,9 @@ video {
 .bg-primary {
   background-color: hsl(var(--primary));
 }
+.bg-primary\/20 {
+  background-color: hsl(var(--primary) / 0.2);
+}
 .bg-secondary {
   background-color: hsl(var(--secondary));
 }
@@ -1799,9 +1805,6 @@ video {
 }
 .bg-secondary\/50 {
   background-color: hsl(var(--secondary) / 0.5);
-}
-.bg-primary\/20 {
-  background-color: hsl(var(--primary) / 0.2);
 }
 .bg-gradient-to-br {
   background-image: linear-gradient(to bottom right, var(--tw-gradient-stops));
@@ -1930,11 +1933,11 @@ video {
 .pt-0 {
   padding-top: 0px;
 }
-.pt-4 {
-  padding-top: 1rem;
-}
 .pt-10 {
   padding-top: 2.5rem;
+}
+.pt-4 {
+  padding-top: 1rem;
 }
 .text-left {
   text-align: left;
@@ -2466,16 +2469,16 @@ video {
   background-color: hsl(var(--primary) / 0.9);
 }
  
+.hover\:bg-secondary:hover {
+  background-color: hsl(var(--secondary));
+}
+ 
 .hover\:bg-secondary\/50:hover {
   background-color: hsl(var(--secondary) / 0.5);
 }
  
 .hover\:bg-secondary\/80:hover {
   background-color: hsl(var(--secondary) / 0.8);
-}
- 
-.hover\:bg-secondary:hover {
-  background-color: hsl(var(--secondary));
 }
  
 .hover\:text-accent-foreground:hover {

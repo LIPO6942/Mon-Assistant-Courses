@@ -21,8 +21,8 @@ interface KitchenAssistantDialogsProps {
   editingCategory: { id?: string; name: string } | null;
   handleSaveCategory: (formData: { id?: string; name: string }) => void;
 
-  viewingRecipe: Recipe | null;
-  setViewingRecipe: (recipe: Recipe | null) => void;
+  viewingRecipe: (Omit<Recipe, 'id'> & { id?: string }) | null;
+  setViewingRecipe: (recipe: (Omit<Recipe, 'id'> & { id?: string }) | null) => void;
 
   isHealthConditionManagerOpen: boolean;
   setHealthConditionManagerOpen: (isOpen: boolean) => void;

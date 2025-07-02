@@ -3,9 +3,10 @@ import {z} from 'zod';
 export const categories = [
   'Fruits et Légumes',
   'Viandes et Poissons',
-  'Produits Laitiers',
-  'Boulangerie',
-  'Épicerie',
+  'Produits Laitiers & Oeufs',
+  'Boulangerie & Pâtisserie',
+  'Épicerie Salée',
+  'Épicerie Sucrée',
   'Boissons',
   'Surgelés',
   'Maison',
@@ -28,6 +29,12 @@ export const GenerateShoppingListOutputSchema = z.object({
 });
 export type GenerateShoppingListOutput = z.infer<typeof GenerateShoppingListOutputSchema>;
 
+
+export const SuggestRecipeInputSchema = z.object({
+  ingredients: z.array(z.string()).describe("The list of ingredients the user has."),
+});
+export type SuggestRecipeInput = z.infer<typeof SuggestRecipeInputSchema>;
+
 export const SuggestRecipeOutputSchema = z.object({
   title: z.string().describe("The name of the recipe."),
   description: z.string().describe("A short, enticing description of the dish."),
@@ -36,9 +43,17 @@ export const SuggestRecipeOutputSchema = z.object({
     name: z.string().describe("The name of the ingredient."),
     quantity: z.number().describe("The numeric quantity of the ingredient."),
     unit: z.string().describe("The unit of measurement (e.g., 'g', 'ml', 'pcs').")
-  })).describe("The array of ingredients for the recipe.")
+  })).describe("The array of ingredients for the recipe."),
+  preparation: z.string().describe("The detailed, step-by-step preparation instructions for the recipe."),
+  calories: z.number().describe("The estimated total calories for the dish."),
 });
 export type SuggestRecipeOutput = z.infer<typeof SuggestRecipeOutputSchema>;
+
+export const SuggestRecipesOutputSchema = z.object({
+  recipes: z.array(SuggestRecipeOutputSchema),
+});
+export type SuggestRecipesOutput = z.infer<typeof SuggestRecipesOutputSchema>;
+
 
 // Types for Nutritional Guide
 export const NutritionalGuideInputSchema = z.object({

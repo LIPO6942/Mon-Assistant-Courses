@@ -14,7 +14,7 @@ interface RecipesViewProps {
   setViewingRecipe: (recipe: Recipe | null) => void;
   setSavedRecipes: (recipes: Recipe[] | ((prev: Recipe[]) => Recipe[])) => void;
   discoverableRecipes: Recipe[];
-  handleSaveRecipe: (recipe: Recipe) => void;
+  handleSaveRecipe: (recipe: Omit<Recipe, 'id'> & { id?: string }) => void;
 }
 
 export default function RecipesView({
