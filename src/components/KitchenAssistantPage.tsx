@@ -75,19 +75,6 @@ export default function KitchenAssistantPage() {
   useEffect(() => { localStorage.setItem('budget-data', JSON.stringify(budget)); }, [budget]);
   useEffect(() => { localStorage.setItem('health-conditions-data', JSON.stringify(healthConditions)); }, [healthConditions]);
 
-  // --- SERVICE WORKER REGISTRATION ---
-  useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/service-worker.js').then(registration => {
-          console.log('SW registered: ', registration);
-        }).catch(registrationError => {
-          console.log('SW registration failed: ', registrationError);
-        });
-      });
-    }
-  }, []);
-
   // --- MEMOIZED CALCULATIONS ---
   const basketTotal = useMemo(() => basket.reduce((total, item) => total + item.price * item.quantity, 0), [basket]);
 
