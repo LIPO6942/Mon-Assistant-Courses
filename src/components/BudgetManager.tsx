@@ -27,13 +27,13 @@ export default function BudgetManager({ budget, setBudget, basketTotal, clearBas
           <span>Gestion du Budget</span>
         </CardTitle>
         <Button
-            variant="outline"
-            size="sm"
+            variant="destructive"
+            size="icon"
             onClick={clearBasket}
             disabled={basketItemCount === 0}
+            aria-label="Vider le panier"
         >
-            <Trash2 className="h-4 w-4 mr-2"/>
-            Vider le panier
+            <Trash2 className="h-4 w-4"/>
         </Button>
       </CardHeader>
       <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center items-end">
