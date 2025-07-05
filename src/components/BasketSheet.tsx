@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -27,7 +26,12 @@ export default function BasketSheet({
   return (
     <SheetContent className="flex flex-col">
       <SheetHeader>
-        <SheetTitle>Mon Panier</SheetTitle>
+        <div className="flex justify-between items-center">
+          <SheetTitle>Mon Panier</SheetTitle>
+          <Button variant="ghost" size="icon" onClick={onShareBasket} disabled={basket.length === 0} aria-label="Partager le panier">
+            <Share2 className="h-5 w-5 text-primary" />
+          </Button>
+        </div>
       </SheetHeader>
       
       <ScrollArea className="flex-grow my-4 pr-4">
@@ -50,16 +54,13 @@ export default function BasketSheet({
       </ScrollArea>
 
       {basket.length > 0 && (
-        <SheetFooter className='pt-4 border-t flex-col gap-2 sm:gap-4 w-full'>
+        <SheetFooter className='pt-4 border-t flex-col gap-2 w-full'>
             <div className="flex justify-between items-center w-full">
                 <span className="text-lg font-semibold text-muted-foreground">Total à Payer</span>
                 <span className="text-2xl font-bold text-primary">{basketTotal.toFixed(2)} DT</span>
             </div>
             <Button onClick={handleConfirmPurchase} className="w-full" disabled={basket.length === 0}>Valider les achats</Button>
-            <div className="grid grid-cols-2 gap-2 w-full">
-                <Button variant="secondary" onClick={onShareBasket} className="w-full" disabled={basket.length === 0}><Share2 className="h-4 w-4 mr-2" /> Partager</Button>
-                <Button variant="outline" onClick={clearBasket} className="w-full" disabled={basket.length === 0}><Trash2 className="h-4 w-4 mr-2" /> Vider</Button>
-            </div>
+            <Button variant="outline" onClick={clearBasket} className="w-full" disabled={basket.length === 0}><Trash2 className="h-4 w-4 mr-2" /> Vider le panier</Button>
         </SheetFooter>
       )}
     </SheetContent>
