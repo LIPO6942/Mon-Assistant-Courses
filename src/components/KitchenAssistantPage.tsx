@@ -199,6 +199,39 @@ export default function KitchenAssistantPage() {
     clearBasket();
   };
 
+  const handleShareBasket = async () => {
+    if (basket.length === 0) {
+      alert("Votre panier est vide.");
+      return;
+    }
+
+    const title = 'Ma liste de courses';
+    const basketText = basket
+      .map(item => `- ${item.name}: ${item.quantity} ${item.unit}`)
+      .join('\n');
+    const totalText = `\nTotal estimé: ${basketTotal.toFixed(2)} DT`;
+    const fullText = `${title}\n\n${basketText}\n${totalText}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: title,
+          text: fullText,
+        });
+      } catch (error) {
+        console.error('Erreur lors du partage:', error);
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(fullText);
+        alert('Liste de courses copiée dans le presse-papiers !');
+      } catch (error) {
+        console.error('Erreur lors de la copie:', error);
+        alert('Impossible de copier la liste.');
+      }
+    }
+  };
+
   const handleSaveRecipe = (recipeToSave: Omit<Recipe, 'id'> & { id?: string }) => {
     if (recipeToSave.id && savedRecipes.some(r => r.id === recipeToSave.id)) {
       alert("Cette recette est déjà dans vos favoris !");
@@ -291,6 +324,7 @@ export default function KitchenAssistantPage() {
         updateBasketQuantity={updateBasketQuantity}
         clearBasket={clearBasket}
         handleConfirmPurchase={handleConfirmPurchase}
+        handleShareBasket={handleShareBasket}
         savedRecipes={savedRecipes}
         onViewRecipe={setViewingRecipe}
         onDeleteRecipe={handleDeleteSavedRecipe}
