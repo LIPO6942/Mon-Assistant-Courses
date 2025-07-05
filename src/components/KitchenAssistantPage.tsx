@@ -41,6 +41,8 @@ export default function KitchenAssistantPage() {
   const [editingCategory, setEditingCategory] = useState<{ id?: string; name: string } | null>(null);
   const [viewingRecipe, setViewingRecipe] = useState<(Omit<Recipe, 'id'> & { id?: string }) | null>(null);
   const [isHealthConditionManagerOpen, setHealthConditionManagerOpen] = useState(false);
+  const [isQuantityDialogOpen, setQuantityDialogOpen] = useState(false);
+  const [ingredientForQuantity, setIngredientForQuantity] = useState<Ingredient | null>(null);
 
 
   // --- LOCALSTORAGE PERSISTENCE ---
@@ -173,12 +175,20 @@ export default function KitchenAssistantPage() {
     setIsCategoryDialogOpen(true);
   };
 
-  const addToBasket = (ingredient: Ingredient) => {
+  const addToBasket = (ingredient: Ingredient, quantity: number) => {
     setBasket(prev => {
       const existingItem = prev.find(item => item.id === ingredient.id);
-      if (existingItem) return prev.map(item => item.id === ingredient.id ? { ...item, quantity: item.quantity + 1 } : item);
-      return [...prev, { ...ingredient, quantity: 1 }];
+      if (existingItem) {
+        return prev.map(item => item.id === ingredient.id ? { ...item, quantity: item.quantity + quantity } : item);
+      }
+      return [...prev, { ...ingredient, quantity }];
     });
+    setQuantityDialogOpen(false);
+  };
+
+  const handleOpenQuantityDialog = (ingredient: Ingredient) => {
+    setIngredientForQuantity(ingredient);
+    setQuantityDialogOpen(true);
   };
 
   const updateBasketQuantity = (id: string, newQuantity: number) => {
@@ -343,7 +353,7 @@ export default function KitchenAssistantPage() {
               categories={categories}
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
-              addToBasket={addToBasket}
+              openQuantityDialog={handleOpenQuantityDialog}
               openAddDialog={openAddDialog}
               openEditDialog={openEditDialog}
               handleDeleteIngredient={handleDeleteIngredient}
@@ -406,6 +416,10 @@ export default function KitchenAssistantPage() {
         onDeleteHealthCategory={handleDeleteHealthCategory}
         onSaveHealthCondition={handleSaveHealthCondition}
         onDeleteHealthCondition={handleDeleteHealthCondition}
+        isQuantityDialogOpen={isQuantityDialogOpen}
+        setQuantityDialogOpen={setQuantityDialogOpen}
+        ingredientForQuantity={ingredientForQuantity}
+        onAddToBasket={addToBasket}
       />
     </div>
   );
