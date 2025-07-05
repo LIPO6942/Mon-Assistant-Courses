@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
 import type { BasketItem } from '@/lib/types';
-import { Minus, Plus, Trash2 } from 'lucide-react';
+import { Minus, Plus, Trash2, Share2 } from 'lucide-react';
 
 interface BasketSheetProps {
   basket: BasketItem[];
@@ -13,6 +13,7 @@ interface BasketSheetProps {
   updateBasketQuantity: (id: string, newQuantity: number) => void;
   clearBasket: () => void;
   handleConfirmPurchase: () => void;
+  onShareBasket: () => void;
 }
 
 export default function BasketSheet({
@@ -21,6 +22,7 @@ export default function BasketSheet({
   updateBasketQuantity,
   clearBasket,
   handleConfirmPurchase,
+  onShareBasket,
 }: BasketSheetProps) {
   return (
     <SheetContent className="flex flex-col">
@@ -48,14 +50,15 @@ export default function BasketSheet({
       </ScrollArea>
 
       {basket.length > 0 && (
-        <SheetFooter className='pt-4 border-t flex-col gap-4 w-full'>
+        <SheetFooter className='pt-4 border-t flex-col gap-2 sm:gap-4 w-full'>
             <div className="flex justify-between items-center w-full">
                 <span className="text-lg font-semibold text-muted-foreground">Total à Payer</span>
                 <span className="text-2xl font-bold text-primary">{basketTotal.toFixed(2)} DT</span>
             </div>
+            <Button onClick={handleConfirmPurchase} className="w-full" disabled={basket.length === 0}>Valider les achats</Button>
             <div className="grid grid-cols-2 gap-2 w-full">
+                <Button variant="secondary" onClick={onShareBasket} className="w-full" disabled={basket.length === 0}><Share2 className="h-4 w-4 mr-2" /> Partager</Button>
                 <Button variant="outline" onClick={clearBasket} className="w-full" disabled={basket.length === 0}><Trash2 className="h-4 w-4 mr-2" /> Vider</Button>
-                <Button onClick={handleConfirmPurchase} className="w-full" disabled={basket.length === 0}>Valider</Button>
             </div>
         </SheetFooter>
       )}

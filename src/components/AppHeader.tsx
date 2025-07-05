@@ -1,3 +1,4 @@
+
 'use client';
 
 import { ChefHat, ShoppingBasket, BookHeart } from 'lucide-react';
@@ -14,6 +15,7 @@ interface AppHeaderProps {
   updateBasketQuantity: (id: string, newQuantity: number) => void;
   clearBasket: () => void;
   handleConfirmPurchase: () => void;
+  handleShareBasket: () => void;
   savedRecipes: Recipe[];
   onViewRecipe: (recipe: (Omit<Recipe, 'id'> & { id?: string })) => void;
   onDeleteRecipe: (recipeId: string) => void;
@@ -25,6 +27,7 @@ export default function AppHeader({
   updateBasketQuantity,
   clearBasket,
   handleConfirmPurchase,
+  handleShareBasket,
   savedRecipes,
   onViewRecipe,
   onDeleteRecipe,
@@ -65,6 +68,7 @@ export default function AppHeader({
               updateBasketQuantity={updateBasketQuantity}
               clearBasket={clearBasket}
               handleConfirmPurchase={handleConfirmPurchase}
+              onShareBasket={handleShareBasket}
             />
           </Sheet>
         </div>
