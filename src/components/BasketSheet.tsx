@@ -59,8 +59,8 @@ export default function BasketSheet({
                 <span className="text-lg font-semibold text-muted-foreground">Total à Payer</span>
                 <span className="text-2xl font-bold text-primary">{basketTotal.toFixed(2)} DT</span>
             </div>
-            <Button onClick={handleConfirmPurchase} className="w-full" disabled={basket.length === 0}>Valider les achats</Button>
-            <Button variant="outline" onClick={clearBasket} className="w-full" disabled={basket.length === 0}><Trash2 className="h-4 w-4 mr-2" /> Vider le panier</Button>
+            <Button onClick={handleConfirmPurchase} className="w-full" disabled={basket.length === 0}>Valider</Button>
+            <Button variant="outline" onClick={clearBasket} className="w-full" disabled={basket.length === 0}><Trash2 className="h-4 w-4 mr-2" /> Vider</Button>
         </SheetFooter>
       )}
     </SheetContent>

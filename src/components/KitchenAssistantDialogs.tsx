@@ -1,9 +1,12 @@
 
 'use client';
 
+import * as React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Minus, Plus } from 'lucide-react';
 import IngredientForm from './IngredientForm';
 import CategoryForm from './CategoryForm';
 import HealthConditionManager from './HealthConditionManager';
@@ -31,6 +34,11 @@ interface KitchenAssistantDialogsProps {
   onDeleteHealthCategory: (id: string) => void;
   onSaveHealthCondition: (categoryId: string, condition: { id: string | null; name: string }) => void;
   onDeleteHealthCondition: (categoryId: string, conditionId: string) => void;
+
+  isQuantityDialogOpen: boolean;
+  setQuantityDialogOpen: (isOpen: boolean) => void;
+  ingredientForQuantity: Ingredient | null;
+  onAddToBasket: (ingredient: Ingredient, quantity: number) => void;
 }
 
 export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsProps) {
@@ -53,7 +61,26 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
     onDeleteHealthCategory,
     onSaveHealthCondition,
     onDeleteHealthCondition,
+    isQuantityDialogOpen,
+    setQuantityDialogOpen,
+    ingredientForQuantity,
+    onAddToBasket
   } = props;
+
+  const [quantityInput, setQuantityInput] = React.useState('1');
+
+  React.useEffect(() => {
+    if (isQuantityDialogOpen) {
+      setQuantityInput('1');
+    }
+  }, [isQuantityDialogOpen]);
+
+  const handleConfirmQuantity = () => {
+    const quantity = parseFloat(quantityInput);
+    if (!isNaN(quantity) && quantity > 0 && ingredientForQuantity) {
+      onAddToBasket(ingredientForQuantity, quantity);
+    }
+  };
   
   return (
     <>
@@ -110,6 +137,45 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
           <DialogFooter>
             <Button variant="outline" onClick={() => setHealthConditionManagerOpen(false)}>Fermer</Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isQuantityDialogOpen} onOpenChange={setQuantityDialogOpen}>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>Quelle quantité pour {ingredientForQuantity?.name} ?</DialogTitle>
+                <DialogDescription>
+                    Indiquez la quantité ({ingredientForQuantity?.unit}) à ajouter au panier.
+                </DialogDescription>
+            </DialogHeader>
+            <div className="flex items-center justify-center gap-4 py-4">
+                <Button variant="outline" size="icon" onClick={() => {
+                    const current = parseFloat(quantityInput) || 0;
+                    const next = Math.max(0.1, parseFloat((current - 0.1).toFixed(2)));
+                    setQuantityInput(String(next));
+                }}><Minus className="h-4 w-4"/></Button>
+                <Input 
+                    type="text"
+                    inputMode="decimal"
+                    value={quantityInput}
+                    onChange={e => {
+                      const val = e.target.value;
+                      if (val === '' || /^[0-9]*\.?[0-9]*$/.test(val)) {
+                        setQuantityInput(val);
+                      }
+                    }}
+                    className="w-20 text-center text-lg font-bold h-10"
+                />
+                <Button variant="outline" size="icon" onClick={() => {
+                  const current = parseFloat(quantityInput) || 0;
+                  const next = parseFloat((current + 0.1).toFixed(2));
+                  setQuantityInput(String(next));
+                }}><Plus className="h-4 w-4"/></Button>
+            </div>
+            <DialogFooter>
+                <Button variant="outline" onClick={() => setQuantityDialogOpen(false)}>Annuler</Button>
+                <Button onClick={handleConfirmQuantity} disabled={!(parseFloat(quantityInput) > 0)}>Ajouter au panier</Button>
+            </DialogFooter>
         </DialogContent>
       </Dialog>
     </>

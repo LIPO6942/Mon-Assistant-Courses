@@ -15,7 +15,7 @@ interface PantryViewProps {
   categories: CategoryDef[];
   searchQuery: string;
   setSearchQuery: (query: string) => void;
-  addToBasket: (ingredient: Ingredient) => void;
+  openQuantityDialog: (ingredient: Ingredient) => void;
   openAddDialog: (category?: string) => void;
   openEditDialog: (ingredient: Ingredient) => void;
   handleDeleteIngredient: (id: string) => void;
@@ -35,7 +35,7 @@ export default function PantryView({
   categories,
   searchQuery,
   setSearchQuery,
-  addToBasket,
+  openQuantityDialog,
   openAddDialog,
   openEditDialog,
   handleDeleteIngredient,
@@ -86,7 +86,7 @@ export default function PantryView({
                             <p className='text-sm text-muted-foreground'>{item.price.toFixed(2)} DT / {item.unit}</p>
                           </div>
                           <div className='flex items-center gap-1'>
-                            <Button variant="ghost" size="icon" className='h-8 w-8 rounded-full' title="Ajouter au panier" onClick={() => addToBasket(item)}><Plus className="h-4 w-4" /></Button>
+                            <Button variant="ghost" size="icon" className='h-8 w-8 rounded-full' title="Ajouter au panier" onClick={() => openQuantityDialog(item)}><Plus className="h-4 w-4" /></Button>
                             <Button 
                               variant={isSelectedForChandyek ? "secondary" : "ghost"} 
                               size="icon" 
