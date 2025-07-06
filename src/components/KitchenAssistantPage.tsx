@@ -78,7 +78,7 @@ export default function KitchenAssistantPage() {
   useEffect(() => { localStorage.setItem('health-conditions-data', JSON.stringify(healthConditions)); }, [healthConditions]);
 
   // --- MEMOIZED CALCULATIONS ---
-  const basketTotal = useMemo(() => basket.reduce((total, item) => total + item.price * item.quantity, 0), [basket]);
+  const basketTotal = useMemo(() => basket.reduce((total, item) => !item.purchased ? total + item.price * item.quantity : total, 0), [basket]);
 
   const filteredPantry = useMemo(() => {
     if (!searchQuery) return pantry;
