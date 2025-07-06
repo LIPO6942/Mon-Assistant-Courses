@@ -181,7 +181,7 @@ export default function KitchenAssistantPage() {
       if (existingItem) {
         return prev.map(item => item.id === ingredient.id ? { ...item, quantity: item.quantity + quantity } : item);
       }
-      return [...prev, { ...ingredient, quantity }];
+      return [...prev, { ...ingredient, quantity, purchased: false }];
     });
     setQuantityDialogOpen(false);
   };
@@ -194,6 +194,14 @@ export default function KitchenAssistantPage() {
   const updateBasketQuantity = (id: string, newQuantity: number) => {
     if (newQuantity <= 0) setBasket(prev => prev.filter(item => item.id !== id));
     else setBasket(prev => prev.map(item => item.id === id ? { ...item, quantity: newQuantity } : item));
+  };
+  
+  const handleTogglePurchaseStatus = (id: string) => {
+    setBasket(prevBasket =>
+      prevBasket.map(item =>
+        item.id === id ? { ...item, purchased: !item.purchased } : item
+      )
+    );
   };
 
   const clearBasket = () => setBasket([]);
@@ -338,6 +346,7 @@ export default function KitchenAssistantPage() {
         savedRecipes={savedRecipes}
         onViewRecipe={setViewingRecipe}
         onDeleteRecipe={handleDeleteSavedRecipe}
+        onTogglePurchaseStatus={handleTogglePurchaseStatus}
       />
       <AppNav 
         activeTab={activeTab} 

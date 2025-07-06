@@ -19,6 +19,7 @@ interface AppHeaderProps {
   savedRecipes: Recipe[];
   onViewRecipe: (recipe: (Omit<Recipe, 'id'> & { id?: string })) => void;
   onDeleteRecipe: (recipeId: string) => void;
+  onTogglePurchaseStatus: (id: string) => void;
 }
 
 export default function AppHeader({
@@ -31,6 +32,7 @@ export default function AppHeader({
   savedRecipes,
   onViewRecipe,
   onDeleteRecipe,
+  onTogglePurchaseStatus,
 }: AppHeaderProps) {
   return (
     <header className="bg-card shadow-md sticky top-0 z-20">
@@ -69,6 +71,7 @@ export default function AppHeader({
               clearBasket={clearBasket}
               handleConfirmPurchase={handleConfirmPurchase}
               onShareBasket={handleShareBasket}
+              onTogglePurchaseStatus={onTogglePurchaseStatus}
             />
           </Sheet>
         </div>

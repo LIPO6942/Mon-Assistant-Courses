@@ -27,6 +27,7 @@ export interface Recipe {
 
 export interface BasketItem extends Ingredient {
   quantity: number;
+  purchased?: boolean;
 }
 
 export interface CategoryDef {

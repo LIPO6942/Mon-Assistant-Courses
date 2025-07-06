@@ -5,6 +5,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
 import type { BasketItem } from '@/lib/types';
 import { Minus, Plus, Trash2, Share2 } from 'lucide-react';
+import { Checkbox } from './ui/checkbox';
+import { cn } from '@/lib/utils';
 
 interface BasketSheetProps {
   basket: BasketItem[];
@@ -13,6 +15,7 @@ interface BasketSheetProps {
   clearBasket: () => void;
   handleConfirmPurchase: () => void;
   onShareBasket: () => void;
+  onTogglePurchaseStatus: (id: string) => void;
 }
 
 export default function BasketSheet({
@@ -22,7 +25,16 @@ export default function BasketSheet({
   clearBasket,
   handleConfirmPurchase,
   onShareBasket,
+  onTogglePurchaseStatus,
 }: BasketSheetProps) {
+
+  const sortedBasket = basket.slice().sort((a, b) => {
+    const aPurchased = a.purchased ?? false;
+    const bPurchased = b.purchased ?? false;
+    if (aPurchased === bPurchased) return 0;
+    return aPurchased ? 1 : -1;
+  });
+
   return (
     <SheetContent className="flex flex-col">
       <SheetHeader>
@@ -35,16 +47,40 @@ export default function BasketSheet({
       </SheetHeader>
       
       <ScrollArea className="flex-grow my-4 pr-4">
-        {basket.length > 0 ? (
+        {sortedBasket.length > 0 ? (
           <ul className="space-y-3">
-            {basket.map(item => (
-              <li key={item.id} className="flex flex-col gap-2 bg-secondary/50 p-3 rounded-md">
-                <div className='flex justify-between items-center'><span className='font-semibold'>{item.name}</span><span className='font-bold text-primary'>{(item.price * item.quantity).toFixed(2)} DT</span></div>
-                <div className='flex justify-between items-center'><span className='text-sm text-muted-foreground'>{item.price.toFixed(2)} DT / {item.unit}</span>
+            {sortedBasket.map(item => (
+              <li key={item.id} className={cn("flex flex-col gap-2 bg-secondary/50 p-3 rounded-md transition-opacity", item.purchased && 'opacity-70')}>
+                <div className='flex justify-between items-center'>
+                    <div className="flex items-center gap-3">
+                      <Checkbox 
+                        id={`item-${item.id}`}
+                        checked={!!item.purchased}
+                        onCheckedChange={() => onTogglePurchaseStatus(item.id)}
+                        aria-label={`Marquer ${item.name} comme acheté`}
+                      />
+                      <label 
+                        htmlFor={`item-${item.id}`}
+                        className={cn(
+                          'font-semibold cursor-pointer',
+                          item.purchased && 'line-through text-muted-foreground'
+                        )}
+                      >
+                        {item.name}
+                      </label>
+                    </div>
+                  <span className={cn('font-bold text-primary', item.purchased && 'line-through text-muted-foreground')}>
+                    {(item.price * item.quantity).toFixed(2)} DT
+                  </span>
+                </div>
+                <div className='flex justify-between items-center'>
+                    <span className={cn('text-sm text-muted-foreground', item.purchased && 'line-through')}>
+                        {item.price.toFixed(2)} DT / {item.unit}
+                    </span>
                   <div className='flex items-center gap-2'>
-                     <Button variant="ghost" size="icon" className='h-7 w-7 rounded-full' onClick={() => updateBasketQuantity(item.id, item.quantity - 1)}><Minus className='h-4 w-4'/></Button>
+                     <Button variant="ghost" size="icon" className='h-7 w-7 rounded-full' onClick={() => updateBasketQuantity(item.id, item.quantity - 1)} disabled={!!item.purchased}><Minus className='h-4 w-4'/></Button>
                      <span className='font-bold w-4 text-center'>{item.quantity}</span>
-                     <Button variant="ghost" size="icon" className='h-7 w-7 rounded-full' onClick={() => updateBasketQuantity(item.id, item.quantity + 1)}><Plus className='h-4 w-4'/></Button>
+                     <Button variant="ghost" size="icon" className='h-7 w-7 rounded-full' onClick={() => updateBasketQuantity(item.id, item.quantity + 1)} disabled={!!item.purchased}><Plus className='h-4 w-4'/></Button>
                   </div>
                 </div>
               </li>
