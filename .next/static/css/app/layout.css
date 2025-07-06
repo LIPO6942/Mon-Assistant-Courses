@@ -2028,6 +2028,9 @@ video {
 .text-card-foreground {
   color: hsl(var(--card-foreground));
 }
+.text-current {
+  color: currentColor;
+}
 .text-destructive {
   color: hsl(var(--destructive));
 }
@@ -2054,6 +2057,9 @@ video {
 }
 .text-secondary-foreground {
   color: hsl(var(--secondary-foreground));
+}
+.line-through {
+  text-decoration-line: line-through;
 }
 .underline-offset-4 {
   text-underline-offset: 4px;
@@ -2619,12 +2625,20 @@ video {
   transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
 }
  
+.data-\[state\=checked\]\:bg-primary[data-state="checked"] {
+  background-color: hsl(var(--primary));
+}
+ 
 .data-\[state\=open\]\:bg-accent[data-state="open"] {
   background-color: hsl(var(--accent));
 }
  
 .data-\[state\=open\]\:bg-secondary[data-state="open"] {
   background-color: hsl(var(--secondary));
+}
+ 
+.data-\[state\=checked\]\:text-primary-foreground[data-state="checked"] {
+  color: hsl(var(--primary-foreground));
 }
  
 .data-\[state\=open\]\:text-muted-foreground[data-state="open"] {
