@@ -25,7 +25,8 @@ interface PantryViewProps {
   chandyekIngredientsList: string[];
   budget: number;
   setBudget: (budget: number) => void;
-  basketTotal: number;
+  basketTotalToPay: number;
+  totalPurchased: number;
   clearBasket: () => void;
   basketItemCount: number;
   remainingBudget: number;
@@ -46,7 +47,8 @@ export default function PantryView({
   chandyekIngredientsList,
   budget,
   setBudget,
-  basketTotal,
+  basketTotalToPay,
+  totalPurchased,
   clearBasket,
   basketItemCount,
   remainingBudget
@@ -56,7 +58,8 @@ export default function PantryView({
       <BudgetManager 
         budget={budget} 
         setBudget={setBudget} 
-        basketTotal={basketTotal} 
+        basketTotalToPay={basketTotalToPay}
+        totalPurchased={totalPurchased}
         clearBasket={clearBasket}
         basketItemCount={basketItemCount}
         remainingBudget={remainingBudget}

@@ -4,20 +4,21 @@
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Wallet, Trash2 } from 'lucide-react';
+import { Wallet, Trash2, ShoppingCart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
 
 interface BudgetManagerProps {
   budget: number;
   setBudget: (budget: number) => void;
-  basketTotal: number;
+  basketTotalToPay: number;
+  totalPurchased: number;
   remainingBudget: number;
   clearBasket: () => void;
   basketItemCount: number;
 }
 
-export default function BudgetManager({ budget, setBudget, basketTotal, remainingBudget, clearBasket, basketItemCount }: BudgetManagerProps) {
+export default function BudgetManager({ budget, setBudget, basketTotalToPay, totalPurchased, remainingBudget, clearBasket, basketItemCount }: BudgetManagerProps) {
 
   return (
     <Card className="mb-6 shadow-lg border-border/50 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
@@ -36,7 +37,7 @@ export default function BudgetManager({ budget, setBudget, basketTotal, remainin
             <Trash2 className="h-4 w-4"/>
         </Button>
       </CardHeader>
-      <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center items-end">
+      <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-center items-end">
         <div>
           <Label htmlFor="budget-input" className="text-sm font-medium text-muted-foreground">
             Mon Budget Initial
@@ -54,7 +55,11 @@ export default function BudgetManager({ budget, setBudget, basketTotal, remainin
         </div>
         <div className="flex flex-col items-center">
             <p className="text-sm font-medium text-muted-foreground">Total à Payer</p>
-            <p className="text-2xl font-bold mt-2">{basketTotal.toFixed(2)} DT</p>
+            <p className="text-2xl font-bold mt-2">{basketTotalToPay.toFixed(2)} DT</p>
+        </div>
+        <div className="flex flex-col items-center">
+            <p className="text-sm font-medium text-muted-foreground flex items-center gap-1.5"><ShoppingCart className='h-4 w-4'/> Total Acheté</p>
+            <p className="text-2xl font-bold mt-2 text-muted-foreground/90">{totalPurchased.toFixed(2)} DT</p>
         </div>
         <div className="flex flex-col items-center rounded-lg p-3 bg-secondary/50">
             <p className="text-sm font-semibold text-secondary-foreground">Budget Restant</p>
