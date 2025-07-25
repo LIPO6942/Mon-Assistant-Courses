@@ -21,7 +21,8 @@ export default function KitchenAssistantPage() {
   const [basket, setBasket] = useState<BasketItem[]>([]);
   const [categories, setCategories] = useState<CategoryDef[]>(initialCategories);
   const [savedRecipes, setSavedRecipes] = useState<Recipe[]>([]);
-  const [budget, setBudget] = useState(200);
+  const [initialBudget, setInitialBudget] = useState(200);
+  const [totalSpent, setTotalSpent] = useState(0);
   const [healthConditions, setHealthConditions] = useState<HealthConditionCategory[]>(initialHealthConditions);
   
   // Ephemeral state
@@ -100,8 +101,11 @@ export default function KitchenAssistantPage() {
       if (storedSavedRecipes) setSavedRecipes(JSON.parse(storedSavedRecipes));
 
       const storedBudget = localStorage.getItem('budget-data');
-      if (storedBudget) setBudget(JSON.parse(storedBudget));
+      if (storedBudget) setInitialBudget(JSON.parse(storedBudget));
       
+      const storedTotalSpent = localStorage.getItem('total-spent-data');
+      if (storedTotalSpent) setTotalSpent(JSON.parse(storedTotalSpent));
+
       const storedHealthConditions = localStorage.getItem('health-conditions-data');
       if (storedHealthConditions) setHealthConditions(JSON.parse(storedHealthConditions));
     } catch (error) {
@@ -113,13 +117,14 @@ export default function KitchenAssistantPage() {
   useEffect(() => { localStorage.setItem('basket-data', JSON.stringify(basket)); }, [basket]);
   useEffect(() => { localStorage.setItem('categories-data', JSON.stringify(categories)); }, [categories]);
   useEffect(() => { localStorage.setItem('saved-recipes-data', JSON.stringify(savedRecipes)); }, [savedRecipes]);
-  useEffect(() => { localStorage.setItem('budget-data', JSON.stringify(budget)); }, [budget]);
+  useEffect(() => { localStorage.setItem('budget-data', JSON.stringify(initialBudget)); }, [initialBudget]);
+  useEffect(() => { localStorage.setItem('total-spent-data', JSON.stringify(totalSpent)); }, [totalSpent]);
   useEffect(() => { localStorage.setItem('health-conditions-data', JSON.stringify(healthConditions)); }, [healthConditions]);
 
   // --- MEMOIZED CALCULATIONS ---
   const basketTotalToPay = useMemo(() => basket.reduce((total, item) => !item.purchased ? total + item.price * item.quantity : total, 0), [basket]);
-  const totalPurchased = useMemo(() => basket.reduce((total, item) => item.purchased ? total + item.price * item.quantity : total, 0), [basket]);
-  const remainingBudget = budget - totalPurchased;
+  const currentlyPurchasedInBasket = useMemo(() => basket.reduce((total, item) => item.purchased ? total + item.price * item.quantity : total, 0), [basket]);
+  const remainingBudget = initialBudget - totalSpent - currentlyPurchasedInBasket;
 
   const filteredPantry = useMemo(() => {
     if (!searchQuery) return pantry;
@@ -237,7 +242,7 @@ export default function KitchenAssistantPage() {
     else setBasket(prev => prev.map(item => item.id === id ? { ...item, quantity: newQuantity } : item));
   };
   
-  const handleTogglePurchaseStatus = (id: string, itemPrice: number, itemQuantity: number) => {
+  const handleTogglePurchaseStatus = (id: string) => {
     setBasket(prevBasket =>
       prevBasket.map(item => {
         if (item.id === id) {
@@ -251,14 +256,16 @@ export default function KitchenAssistantPage() {
   const clearBasket = () => {
     setBasket([]);
   };
+
+  const resetTotalSpent = () => {
+    setTotalSpent(0);
+  };
   
   const handleConfirmPurchase = () => {
-    const purchasedItemsCost = totalPurchased;
+    const costOfPurchasedItems = basket.reduce((total, item) => item.purchased ? total + item.price * item.quantity : total, 0);
     
-    // This now only clears the purchased items from the basket. The budget is already dynamically updated.
-    setBudget(prevBudget => prevBudget - purchasedItemsCost);
+    setTotalSpent(prev => prev + costOfPurchasedItems);
     setBasket(prevBasket => prevBasket.filter(item => !item.purchased));
-    alert("Les articles achetés ont été retirés du panier et le budget a été mis à jour.");
   };
 
   const handleShareBasket = async () => {
@@ -424,11 +431,12 @@ export default function KitchenAssistantPage() {
               handleDeleteCategory={handleDeleteCategory}
               onToggleChandyekIngredient={handleToggleChandyekIngredient}
               chandyekIngredientsList={chandyekIngredientsList}
-              budget={budget}
-              setBudget={setBudget}
+              initialBudget={initialBudget}
+              setInitialBudget={setInitialBudget}
               basketTotalToPay={basketTotalToPay}
-              totalPurchased={totalPurchased}
+              totalSpent={totalSpent + currentlyPurchasedInBasket}
               clearBasket={clearBasket}
+              resetTotalSpent={resetTotalSpent}
               basketItemCount={basket.length}
               remainingBudget={remainingBudget}
             />

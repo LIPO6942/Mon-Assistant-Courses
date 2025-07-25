@@ -23,11 +23,12 @@ interface PantryViewProps {
   handleDeleteCategory: (id: string) => void;
   onToggleChandyekIngredient: (ingredientName: string) => void;
   chandyekIngredientsList: string[];
-  budget: number;
-  setBudget: (budget: number) => void;
+  initialBudget: number;
+  setInitialBudget: (budget: number) => void;
   basketTotalToPay: number;
-  totalPurchased: number;
+  totalSpent: number;
   clearBasket: () => void;
+  resetTotalSpent: () => void;
   basketItemCount: number;
   remainingBudget: number;
 }
@@ -45,22 +46,24 @@ export default function PantryView({
   handleDeleteCategory,
   onToggleChandyekIngredient,
   chandyekIngredientsList,
-  budget,
-  setBudget,
+  initialBudget,
+  setInitialBudget,
   basketTotalToPay,
-  totalPurchased,
+  totalSpent,
   clearBasket,
+  resetTotalSpent,
   basketItemCount,
   remainingBudget
 }: PantryViewProps) {
   return (
     <div>
       <BudgetManager 
-        budget={budget} 
-        setBudget={setBudget} 
+        initialBudget={initialBudget} 
+        setInitialBudget={setInitialBudget} 
         basketTotalToPay={basketTotalToPay}
-        totalPurchased={totalPurchased}
+        totalSpent={totalSpent}
         clearBasket={clearBasket}
+        resetTotalSpent={resetTotalSpent}
         basketItemCount={basketItemCount}
         remainingBudget={remainingBudget}
       />
