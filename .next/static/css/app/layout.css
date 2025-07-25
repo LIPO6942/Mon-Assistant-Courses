@@ -1638,6 +1638,9 @@ video {
 .justify-between {
   justify-content: space-between;
 }
+.justify-around {
+  justify-content: space-around;
+}
 .gap-1 {
   gap: 0.25rem;
 }
@@ -2063,6 +2066,9 @@ video {
 }
 .text-muted-foreground\/90 {
   color: hsl(var(--muted-foreground) / 0.9);
+}
+.text-muted-foreground\/60 {
+  color: hsl(var(--muted-foreground) / 0.6);
 }
 .line-through {
   text-decoration-line: line-through;
@@ -2844,6 +2850,10 @@ video {
 
   .lg\:grid-cols-4 {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .lg\:grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .lg\:p-8 {
