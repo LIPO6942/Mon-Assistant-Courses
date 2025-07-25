@@ -45,6 +45,45 @@ export default function KitchenAssistantPage() {
   const [ingredientForQuantity, setIngredientForQuantity] = useState<Ingredient | null>(null);
 
 
+  // --- WAKE LOCK ---
+  useEffect(() => {
+    let wakeLock: WakeLockSentinel | null = null;
+
+    const requestWakeLock = async () => {
+      try {
+        if ('wakeLock' in navigator) {
+          wakeLock = await navigator.wakeLock.request('screen');
+          console.log('Screen Wake Lock is active.');
+          wakeLock.addEventListener('release', () => {
+            console.log('Screen Wake Lock was released.');
+          });
+        } else {
+           console.log('Wake Lock API not supported.');
+        }
+      } catch (err: any) {
+        console.error(`${err.name}, ${err.message}`);
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (wakeLock !== null && document.visibilityState === 'visible') {
+        requestWakeLock();
+      }
+    };
+
+    requestWakeLock();
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      if (wakeLock !== null) {
+        wakeLock.release();
+        wakeLock = null;
+      }
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
+
   // --- LOCALSTORAGE PERSISTENCE ---
   useEffect(() => {
     try {
@@ -198,7 +237,7 @@ export default function KitchenAssistantPage() {
     else setBasket(prev => prev.map(item => item.id === id ? { ...item, quantity: newQuantity } : item));
   };
   
-  const handleTogglePurchaseStatus = (id: string, itemPrice: number, itemQuantity: number) => {
+  const handleTogglePurchaseStatus = (id: string) => {
     setBasket(prevBasket =>
       prevBasket.map(item => {
         if (item.id === id) {
@@ -214,8 +253,12 @@ export default function KitchenAssistantPage() {
   };
   
   const handleConfirmPurchase = () => {
+    const purchasedItemsCost = totalPurchased;
+    
+    setBudget(prevBudget => prevBudget - purchasedItemsCost);
+
     setBasket(prevBasket => prevBasket.filter(item => !item.purchased));
-    alert("Les articles achetés ont été retirés du panier.");
+    alert("Les articles achetés ont été retirés du panier et le budget a été mis à jour.");
   };
 
   const handleShareBasket = async () => {

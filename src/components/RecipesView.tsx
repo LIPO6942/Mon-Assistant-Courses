@@ -20,7 +20,7 @@ export default function RecipesView({
   discoverableRecipes,
   handleSaveRecipe,
 }: RecipesViewProps) {
-  const [suggestedRecipe, setSuggestedRecipe] = useState<Recipe | null>(null);
+  const [suggestedRecipes, setSuggestedRecipes] = useState<Recipe[]>([]);
   const [selectedStreetFood, setSelectedStreetFood] = useState<string | null>(null);
   const [isSpinning, setIsSpinning] = useState(false);
   const [displayedFood, setDisplayedFood] = useState<string | null>(null);
@@ -35,9 +35,9 @@ export default function RecipesView({
     };
   }, []);
 
-  const findRandomRecipe = () => {
-    const randomIndex = Math.floor(Math.random() * discoverableRecipes.length);
-    setSuggestedRecipe(discoverableRecipes[randomIndex]);
+  const findRandomRecipes = () => {
+    const shuffled = [...discoverableRecipes].sort(() => 0.5 - Math.random());
+    setSuggestedRecipes(shuffled.slice(0, 2));
   };
 
   const handleSpin = () => {
@@ -70,38 +70,40 @@ export default function RecipesView({
     <div className="space-y-8">
       <div className='text-center py-8 px-4 rounded-xl bg-gradient-to-br from-primary/10 via-card to-card border-2 border-primary/20 shadow-lg'>
         <h2 className='text-2xl font-bold mb-2'>À court d'idées ?</h2>
-        <p className='text-muted-foreground mb-6'>Cliquez sur le bouton pour obtenir une suggestion de recette au hasard !</p>
-        <Button size="lg" onClick={findRandomRecipe}>
+        <p className='text-muted-foreground mb-6'>Cliquez sur le bouton pour obtenir deux suggestions de recettes au hasard !</p>
+        <Button size="lg" onClick={findRandomRecipes}>
           <Shuffle className="mr-2 h-5 w-5" />
           Trouver une idée de recette
         </Button>
 
-        {suggestedRecipe && (
-          <div className='mt-8 max-w-md mx-auto text-left animate-in fade-in-50'>
-              <Card key={suggestedRecipe.id} className="overflow-hidden flex flex-col bg-card shadow-lg rounded-xl border border-border/50">
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div className="pr-2">
-                      <CardTitle>{suggestedRecipe.title}</CardTitle>
-                      <Badge variant="secondary" className="mt-2 w-fit">{suggestedRecipe.country}</Badge>
+        {suggestedRecipes.length > 0 && (
+          <div className='mt-8 max-w-4xl mx-auto text-left animate-in fade-in-50 grid grid-cols-1 md:grid-cols-2 gap-6'>
+              {suggestedRecipes.map(recipe => (
+                <Card key={recipe.id} className="overflow-hidden flex flex-col bg-card shadow-lg rounded-xl border border-border/50">
+                  <CardHeader>
+                    <div className="flex justify-between items-start">
+                      <div className="pr-2">
+                        <CardTitle>{recipe.title}</CardTitle>
+                        <Badge variant="secondary" className="mt-2 w-fit">{recipe.country}</Badge>
+                      </div>
+                      <Badge variant="outline" className="whitespace-nowrap">{recipe.calories} kcal</Badge>
                     </div>
-                    <Badge variant="outline" className="whitespace-nowrap">{suggestedRecipe.calories} kcal</Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="flex-grow">
-                  <p className="text-sm text-muted-foreground">{suggestedRecipe.description}</p>
-                </CardContent>
-                <CardFooter className="flex justify-between mt-auto bg-secondary/30 pt-4">
-                  <Button onClick={() => setViewingRecipe(suggestedRecipe)}>Voir la recette</Button>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => handleSaveRecipe(suggestedRecipe)}
-                  >
-                    <PlusCircle className="h-4 w-4 mr-2" />
-                    Sauvegarder
-                  </Button>
-                </CardFooter>
-              </Card>
+                  </CardHeader>
+                  <CardContent className="flex-grow">
+                    <p className="text-sm text-muted-foreground">{recipe.description}</p>
+                  </CardContent>
+                  <CardFooter className="flex justify-between mt-auto bg-secondary/30 pt-4">
+                    <Button onClick={() => setViewingRecipe(recipe)}>Voir la recette</Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => handleSaveRecipe(recipe)}
+                    >
+                      <PlusCircle className="h-4 w-4 mr-2" />
+                      Sauvegarder
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))}
           </div>
         )}
       </div>
@@ -124,7 +126,7 @@ export default function RecipesView({
               <div className="animate-in fade-in-50 text-center">
                 <p className="text-muted-foreground">Et le gagnant est...</p>
                 <p className="text-4xl font-bold text-primary mt-2">{selectedStreetFood}</p>
-                <p className="text-sm font-semibold text-accent-foreground/80 mt-4 animate-pulse">Alors, on se régale ?</p>
+                <p className="text-sm font-semibold text-accent/80 mt-4 animate-pulse">Alors, on se régale ?</p>
               </div>
             )}
         </div>

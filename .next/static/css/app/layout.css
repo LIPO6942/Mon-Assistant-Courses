@@ -1252,6 +1252,9 @@ video {
   white-space: nowrap;
   border-width: 0;
 }
+.visible {
+  visibility: visible;
+}
 .fixed {
   position: fixed;
 }
@@ -2069,6 +2072,9 @@ video {
 }
 .text-muted-foreground\/60 {
   color: hsl(var(--muted-foreground) / 0.6);
+}
+.text-accent\/80 {
+  color: hsl(var(--accent) / 0.8);
 }
 .line-through {
   text-decoration-line: line-through;
