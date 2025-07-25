@@ -19,7 +19,7 @@ interface AppHeaderProps {
   savedRecipes: Recipe[];
   onViewRecipe: (recipe: (Omit<Recipe, 'id'> & { id?: string })) => void;
   onDeleteRecipe: (recipeId: string) => void;
-  onTogglePurchaseStatus: (id: string) => void;
+  onTogglePurchaseStatus: (id: string, itemPrice: number, itemQuantity: number) => void;
 }
 
 export default function AppHeader({

@@ -79,6 +79,8 @@ export default function KitchenAssistantPage() {
 
   // --- MEMOIZED CALCULATIONS ---
   const basketTotal = useMemo(() => basket.reduce((total, item) => !item.purchased ? total + item.price * item.quantity : total, 0), [basket]);
+  const totalBasketValue = useMemo(() => basket.reduce((total, item) => total + item.price * item.quantity, 0), [basket]);
+  const remainingBudget = budget - (totalBasketValue - basketTotal);
 
   const filteredPantry = useMemo(() => {
     if (!searchQuery) return pantry;
@@ -196,25 +198,42 @@ export default function KitchenAssistantPage() {
     else setBasket(prev => prev.map(item => item.id === id ? { ...item, quantity: newQuantity } : item));
   };
   
-  const handleTogglePurchaseStatus = (id: string) => {
+  const handleTogglePurchaseStatus = (id: string, itemPrice: number, itemQuantity: number) => {
+    let itemWasPurchased = false;
+    
     setBasket(prevBasket =>
-      prevBasket.map(item =>
-        item.id === id ? { ...item, purchased: !item.purchased } : item
-      )
+      prevBasket.map(item => {
+        if (item.id === id) {
+          itemWasPurchased = !!item.purchased;
+          return { ...item, purchased: !item.purchased };
+        }
+        return item;
+      })
     );
+
+    const cost = itemPrice * itemQuantity;
+    if (!itemWasPurchased) {
+      // Item has just been marked as purchased
+      setBudget(prevBudget => prevBudget - cost);
+    } else {
+      // Item has been unmarked
+      setBudget(prevBudget => prevBudget + cost);
+    }
   };
 
-  const clearBasket = () => setBasket([]);
+  const clearBasket = () => {
+    // Before clearing, refund any purchased items to the budget
+    const purchasedValue = basket
+      .filter(item => item.purchased)
+      .reduce((total, item) => total + item.price * item.quantity, 0);
+    setBudget(prevBudget => prevBudget + purchasedValue);
+    setBasket([]);
+  };
   
   const handleConfirmPurchase = () => {
-    if (basketTotal > budget) {
-      alert("Fonds insuffisants ! Le total de votre panier dépasse votre budget.");
-      return;
-    }
-    const newBudget = budget - basketTotal;
-    setBudget(newBudget);
-    alert(`Achats validés ! Votre nouveau budget est de ${newBudget.toFixed(2)} DT.`);
-    clearBasket();
+    // This function will now simply clear the purchased items from the basket
+    setBasket(prevBasket => prevBasket.filter(item => !item.purchased));
+    alert("Les articles achetés ont été retirés du panier.");
   };
 
   const handleShareBasket = async () => {
@@ -224,11 +243,21 @@ export default function KitchenAssistantPage() {
     }
 
     const title = 'Ma liste de courses';
-    const basketText = basket
+    const itemsToPayText = basket
+      .filter(item => !item.purchased)
       .map(item => `- ${item.name}: ${item.quantity} ${item.unit}`)
       .join('\n');
-    const totalText = `\nTotal estimé: ${basketTotal.toFixed(2)} DT`;
-    const fullText = `${title}\n\n${basketText}\n${totalText}`;
+    
+    const purchasedItemsText = basket
+      .filter(item => item.purchased)
+      .map(item => `- [x] ${item.name}: ${item.quantity} ${item.unit}`)
+      .join('\n');
+
+    const totalText = `\nTotal à payer: ${basketTotal.toFixed(2)} DT`;
+    let fullText = `${title}\n`;
+    if(itemsToPayText) fullText += `\nÀ acheter:\n${itemsToPayText}`;
+    if(purchasedItemsText) fullText += `\n\nDéjà acheté:\n${purchasedItemsText}`;
+    fullText += `\n${totalText}`;
 
     if (navigator.share) {
       try {
@@ -375,6 +404,7 @@ export default function KitchenAssistantPage() {
               basketTotal={basketTotal}
               clearBasket={clearBasket}
               basketItemCount={basket.length}
+              remainingBudget={remainingBudget}
             />
           )}
           {activeTab === 'recipes' && (

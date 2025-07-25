@@ -15,7 +15,7 @@ interface BasketSheetProps {
   clearBasket: () => void;
   handleConfirmPurchase: () => void;
   onShareBasket: () => void;
-  onTogglePurchaseStatus: (id: string) => void;
+  onTogglePurchaseStatus: (id: string, itemPrice: number, itemQuantity: number) => void;
 }
 
 export default function BasketSheet({
@@ -34,6 +34,8 @@ export default function BasketSheet({
     if (aPurchased === bPurchased) return 0;
     return aPurchased ? 1 : -1;
   });
+
+  const purchasedItemCount = basket.filter(item => item.purchased).length;
 
   return (
     <SheetContent className="flex flex-col">
@@ -56,7 +58,7 @@ export default function BasketSheet({
                       <Checkbox 
                         id={`item-${item.id}`}
                         checked={!!item.purchased}
-                        onCheckedChange={() => onTogglePurchaseStatus(item.id)}
+                        onCheckedChange={() => onTogglePurchaseStatus(item.id, item.price, item.quantity)}
                         aria-label={`Marquer ${item.name} comme acheté`}
                       />
                       <label 
@@ -95,7 +97,9 @@ export default function BasketSheet({
                 <span className="text-lg font-semibold text-muted-foreground">Total à Payer</span>
                 <span className="text-2xl font-bold text-primary">{basketTotal.toFixed(2)} DT</span>
             </div>
-            <Button onClick={handleConfirmPurchase} className="w-full" disabled={basket.length === 0}>Valider</Button>
+            <Button onClick={handleConfirmPurchase} className="w-full" disabled={purchasedItemCount === 0}>
+              Valider les {purchasedItemCount} articles achetés
+            </Button>
             <Button variant="outline" onClick={clearBasket} className="w-full" disabled={basket.length === 0}><Trash2 className="h-4 w-4 mr-2" /> Vider</Button>
         </SheetFooter>
       )}
