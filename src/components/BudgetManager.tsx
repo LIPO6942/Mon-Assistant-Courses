@@ -12,12 +12,12 @@ interface BudgetManagerProps {
   budget: number;
   setBudget: (budget: number) => void;
   basketTotal: number;
+  remainingBudget: number;
   clearBasket: () => void;
   basketItemCount: number;
 }
 
-export default function BudgetManager({ budget, setBudget, basketTotal, clearBasket, basketItemCount }: BudgetManagerProps) {
-  const remainingBudget = budget - basketTotal;
+export default function BudgetManager({ budget, setBudget, basketTotal, remainingBudget, clearBasket, basketItemCount }: BudgetManagerProps) {
 
   return (
     <Card className="mb-6 shadow-lg border-border/50 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
@@ -39,7 +39,7 @@ export default function BudgetManager({ budget, setBudget, basketTotal, clearBas
       <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center items-end">
         <div>
           <Label htmlFor="budget-input" className="text-sm font-medium text-muted-foreground">
-            Mon Budget Actuel
+            Mon Budget Initial
           </Label>
           <div className="relative mt-2">
             <Input
@@ -53,11 +53,11 @@ export default function BudgetManager({ budget, setBudget, basketTotal, clearBas
           </div>
         </div>
         <div className="flex flex-col items-center">
-            <p className="text-sm font-medium text-muted-foreground">Total du Panier</p>
+            <p className="text-sm font-medium text-muted-foreground">Total à Payer</p>
             <p className="text-2xl font-bold mt-2">{basketTotal.toFixed(2)} DT</p>
         </div>
         <div className="flex flex-col items-center rounded-lg p-3 bg-secondary/50">
-            <p className="text-sm font-semibold text-secondary-foreground">Solde Restant</p>
+            <p className="text-sm font-semibold text-secondary-foreground">Budget Restant</p>
               <p className={cn(
                 "text-2xl font-bold mt-2",
                 remainingBudget < 0 ? "text-destructive" : "text-primary"
