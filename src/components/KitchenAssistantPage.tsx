@@ -237,7 +237,7 @@ export default function KitchenAssistantPage() {
     else setBasket(prev => prev.map(item => item.id === id ? { ...item, quantity: newQuantity } : item));
   };
   
-  const handleTogglePurchaseStatus = (id: string) => {
+  const handleTogglePurchaseStatus = (id: string, itemPrice: number, itemQuantity: number) => {
     setBasket(prevBasket =>
       prevBasket.map(item => {
         if (item.id === id) {
@@ -255,8 +255,8 @@ export default function KitchenAssistantPage() {
   const handleConfirmPurchase = () => {
     const purchasedItemsCost = totalPurchased;
     
+    // This now only clears the purchased items from the basket. The budget is already dynamically updated.
     setBudget(prevBudget => prevBudget - purchasedItemsCost);
-
     setBasket(prevBasket => prevBasket.filter(item => !item.purchased));
     alert("Les articles achetés ont été retirés du panier et le budget a été mis à jour.");
   };
