@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Minus, Plus, Youtube } from 'lucide-react';
+import { Minus, Plus } from 'lucide-react';
 import IngredientForm from './IngredientForm';
 import CategoryForm from './CategoryForm';
 import HealthConditionManager from './HealthConditionManager';
@@ -24,8 +24,8 @@ interface KitchenAssistantDialogsProps {
   editingCategory: { id?: string; name: string } | null;
   handleSaveCategory: (formData: { id?: string; name: string }) => void;
 
-  viewingRecipe: (Omit<Recipe, 'id'> & { id?: string; youtubeUrl?: string }) | null;
-  setViewingRecipe: (recipe: (Omit<Recipe, 'id'> & { id?: string; youtubeUrl?: string }) | null) => void;
+  viewingRecipe: (Omit<Recipe, 'id'> & { id?: string; }) | null;
+  setViewingRecipe: (recipe: (Omit<Recipe, 'id'> & { id?: string; }) | null) => void;
 
   isHealthConditionManagerOpen: boolean;
   setHealthConditionManagerOpen: (isOpen: boolean) => void;
@@ -116,17 +116,7 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
                     <h4 className='font-semibold mt-4'>Préparation :</h4>
                     <p className="text-sm text-muted-foreground whitespace-pre-wrap mt-2">{viewingRecipe.preparation}</p>
                 </ScrollArea>
-                <DialogFooter className='justify-between'>
-                    <div>
-                        {viewingRecipe.youtubeUrl && (
-                            <Button asChild variant="destructive">
-                                <a href={viewingRecipe.youtubeUrl} target="_blank" rel="noopener noreferrer">
-                                    <Youtube className="mr-2 h-4 w-4" />
-                                    Voir la Vidéo
-                                </a>
-                            </Button>
-                        )}
-                   </div>
+                <DialogFooter>
                   <DialogClose asChild><Button type="button">Fermer</Button></DialogClose>
                 </DialogFooter>
               </>
