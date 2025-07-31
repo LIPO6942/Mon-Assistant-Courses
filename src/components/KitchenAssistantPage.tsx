@@ -161,8 +161,17 @@ export default function KitchenAssistantPage() {
       setAiSuggestions(results);
     } catch (err) {
       console.error(err);
-      const errorMessage = err instanceof Error ? err.message : "Une erreur inattendue est survenue.";
-      setChandyekError(`L'IA n'a pas pu générer de recettes. Détail: ${errorMessage}`);
+      let errorMessage = "Une erreur inattendue est survenue lors de la génération des recettes.";
+      if (err instanceof Error) {
+        if (err.message.includes('503')) {
+          errorMessage = "Le service est actuellement surchargé. Veuillez réessayer dans quelques instants.";
+        } else if (err.message.includes('400')) {
+          errorMessage = "La demande est invalide. Veuillez vérifier les ingrédients et réessayer.";
+        } else {
+          errorMessage = "L'IA n'a pas pu générer de recettes. Veuillez réessayer.";
+        }
+      }
+      setChandyekError(errorMessage);
     } finally {
       setIsChandyekLoading(false);
     }
