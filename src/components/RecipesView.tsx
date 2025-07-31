@@ -1,13 +1,14 @@
 
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, Shuffle, Dices } from 'lucide-react';
+import { PlusCircle, Shuffle, Dices, Clock, Coins } from 'lucide-react';
 import type { Recipe } from '@/lib/types';
 import { streetFoodOptions } from '@/lib/data';
+import { cn } from '@/lib/utils';
 
 interface RecipesViewProps {
   setViewingRecipe: (recipe: (Omit<Recipe, 'id'> & { id?: string; }) | null) => void;
@@ -26,7 +27,17 @@ export default function RecipesView({
   const [displayedFood, setDisplayedFood] = useState<string | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Cleanup interval on component unmount
+  const [filterQuick, setFilterQuick] = useState(false);
+  const [filterEconomical, setFilterEconomical] = useState(false);
+
+  const filteredRecipes = useMemo(() => {
+    return discoverableRecipes.filter(recipe => {
+      const quickMatch = !filterQuick || (recipe.preparationTime <= 15);
+      const economicalMatch = !filterEconomical || recipe.isEconomical;
+      return quickMatch && economicalMatch;
+    });
+  }, [discoverableRecipes, filterQuick, filterEconomical]);
+
   useEffect(() => {
     return () => {
       if (intervalRef.current) {
@@ -36,18 +47,21 @@ export default function RecipesView({
   }, []);
 
   const findRandomRecipes = () => {
-    const shuffled = [...discoverableRecipes].sort(() => 0.5 - Math.random());
+    if (filteredRecipes.length === 0) {
+        setSuggestedRecipes([]);
+        return;
+    }
+    const shuffled = [...filteredRecipes].sort(() => 0.5 - Math.random());
     setSuggestedRecipes(shuffled.slice(0, 2));
   };
 
   const handleSpin = () => {
     if (isSpinning) return;
-
     setIsSpinning(true);
     setSelectedStreetFood(null);
 
-    const spinDuration = 2500; // 2.5 seconds
-    const spinInterval = 100; // update every 100ms
+    const spinDuration = 2500;
+    const spinInterval = 100;
 
     intervalRef.current = setInterval(() => {
       const randomIndex = Math.floor(Math.random() * streetFoodOptions.length);
@@ -70,13 +84,31 @@ export default function RecipesView({
     <div className="space-y-8">
       <div className='text-center py-8 px-4 rounded-xl bg-gradient-to-br from-primary/10 via-card to-card border-2 border-primary/20 shadow-lg'>
         <h2 className='text-2xl font-bold mb-2'>À court d'idées ?</h2>
-        <p className='text-muted-foreground mb-6'>Cliquez sur le bouton pour obtenir deux suggestions de recettes au hasard !</p>
+        <p className='text-muted-foreground mb-4'>Utilisez les filtres pour affiner les suggestions aléatoires !</p>
+        
+        <div className="flex justify-center gap-4 mb-6">
+            <Button 
+                variant={filterQuick ? "secondary" : "outline"} 
+                onClick={() => setFilterQuick(!filterQuick)}
+                className={cn(filterQuick && 'ring-2 ring-primary')}
+            >
+                <Clock className="mr-2 h-4 w-4"/> Je suis pressé(e)
+            </Button>
+            <Button 
+                variant={filterEconomical ? "secondary" : "outline"}
+                onClick={() => setFilterEconomical(!filterEconomical)}
+                className={cn(filterEconomical && 'ring-2 ring-primary')}
+            >
+                <Coins className="mr-2 h-4 w-4"/> Économique
+            </Button>
+        </div>
+
         <Button size="lg" onClick={findRandomRecipes}>
           <Shuffle className="mr-2 h-5 w-5" />
           Trouver une idée de recette
         </Button>
 
-        {suggestedRecipes.length > 0 && (
+        {suggestedRecipes.length > 0 ? (
           <div className='mt-8 max-w-4xl mx-auto text-left animate-in fade-in-50 grid grid-cols-1 md:grid-cols-2 gap-6'>
               {suggestedRecipes.map(recipe => (
                 <Card key={recipe.id} className="overflow-hidden flex flex-col bg-card shadow-lg rounded-xl border border-border/50">
@@ -84,7 +116,11 @@ export default function RecipesView({
                     <div className="flex justify-between items-start">
                       <div className="pr-2">
                         <CardTitle>{recipe.title}</CardTitle>
-                        <Badge variant="secondary" className="mt-2 w-fit">{recipe.country}</Badge>
+                        <div className="flex items-center gap-2 mt-2">
+                           <Badge variant="secondary" className="w-fit">{recipe.country}</Badge>
+                           <Badge variant="outline" className="flex items-center gap-1"><Clock className="h-3 w-3"/>{recipe.preparationTime} min</Badge>
+                           {recipe.isEconomical && <Badge variant="outline" className="flex items-center gap-1"><Coins className="h-3 w-3"/>Éco</Badge>}
+                        </div>
                       </div>
                       <Badge variant="outline" className="whitespace-nowrap">{recipe.calories} kcal</Badge>
                     </div>
@@ -105,6 +141,8 @@ export default function RecipesView({
                 </Card>
               ))}
           </div>
+        ) : (
+            filteredRecipes.length === 0 && <p className="text-muted-foreground mt-4 text-sm">Aucune recette ne correspond à vos filtres. Essayez d'en retirer un.</p>
         )}
       </div>
 
