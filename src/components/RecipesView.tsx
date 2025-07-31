@@ -5,14 +5,14 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, Shuffle, Dices } from 'lucide-react';
+import { PlusCircle, Shuffle, Dices, Youtube } from 'lucide-react';
 import type { Recipe } from '@/lib/types';
 import { streetFoodOptions } from '@/lib/data';
 
 interface RecipesViewProps {
-  setViewingRecipe: (recipe: (Omit<Recipe, 'id'> & { id?: string }) | null) => void;
+  setViewingRecipe: (recipe: (Omit<Recipe, 'id'> & { id?: string; youtubeUrl?: string; }) | null) => void;
   discoverableRecipes: Recipe[];
-  handleSaveRecipe: (recipe: Omit<Recipe, 'id'> & { id?: string }) => void;
+  handleSaveRecipe: (recipe: Omit<Recipe, 'id'> & { id?: string; youtubeUrl?: string; }) => void;
 }
 
 export default function RecipesView({
@@ -92,15 +92,24 @@ export default function RecipesView({
                   <CardContent className="flex-grow">
                     <p className="text-sm text-muted-foreground">{recipe.description}</p>
                   </CardContent>
-                  <CardFooter className="flex justify-between mt-auto bg-secondary/30 pt-4">
+                  <CardFooter className="flex justify-between mt-auto bg-secondary/30 pt-4 gap-2">
                     <Button onClick={() => setViewingRecipe(recipe)}>Voir la recette</Button>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => handleSaveRecipe(recipe)}
-                    >
-                      <PlusCircle className="h-4 w-4 mr-2" />
-                      Sauvegarder
-                    </Button>
+                    <div className='flex items-center gap-1'>
+                        {recipe.youtubeUrl && (
+                          <Button asChild variant="ghost" size="icon" className='text-red-600 hover:text-red-700'>
+                            <a href={recipe.youtubeUrl} target="_blank" rel="noopener noreferrer" aria-label="Voir la vidéo sur YouTube">
+                              <Youtube />
+                            </a>
+                          </Button>
+                        )}
+                        <Button 
+                          variant="outline" 
+                          size="icon"
+                          onClick={() => handleSaveRecipe(recipe)}
+                        >
+                          <PlusCircle className="h-4 w-4" />
+                        </Button>
+                    </div>
                   </CardFooter>
                 </Card>
               ))}
