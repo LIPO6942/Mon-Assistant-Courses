@@ -40,6 +40,8 @@ Pour chaque recette, tu dois fournir les informations suivantes de manière stru
 4.  **ingredients** : La liste complète des ingrédients, y compris ceux que l'utilisateur n'a pas, avec leur quantité et leur unité.
 5.  **preparation** : Les instructions de préparation détaillées, étape par étape.
 6.  **calories** : Une estimation des calories pour le plat.
+7.  **preparationTime**: Une estimation du temps total de préparation en minutes (un nombre entier).
+8.  **isEconomical**: Un booléen (true/false) indiquant si la recette est considérée comme économique (utilisant des ingrédients peu coûteux et courants).
 
 Assure-toi que la sortie est un objet JSON valide qui respecte le schéma défini.`,
 });
