@@ -40,7 +40,7 @@ Pour chaque recette, tu dois fournir les informations suivantes de manière stru
 4.  **ingredients** : La liste complète des ingrédients, y compris ceux que l'utilisateur n'a pas, avec leur quantité et leur unité.
 5.  **preparation** : Les instructions de préparation détaillées, étape par étape.
 6.  **calories** : Une estimation des calories pour le plat.
-7.  **youtubeUrl** : Une URL valide vers une vidéo YouTube qui montre la préparation de cette recette spécifique. Si tu n'en trouves pas une qui correspond exactement, laisse ce champ vide. Ne mets PAS de clips musicaux ou de vidéos non pertinentes.
+7.  **youtubeUrl** : Une URL valide vers une vidéo YouTube qui montre la préparation de cette recette spécifique ou une recette très similaire. Si tu ne trouves aucune vidéo pertinente, laisse ce champ vide. Ne mets PAS de clips musicaux ou de vidéos non pertinentes.
 
 Assure-toi que la sortie est un objet JSON valide qui respecte le schéma défini.`,
 });
