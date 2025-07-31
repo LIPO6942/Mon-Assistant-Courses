@@ -40,7 +40,11 @@ Pour chaque recette, tu dois fournir les informations suivantes de manière stru
 4.  **ingredients** : La liste complète des ingrédients, y compris ceux que l'utilisateur n'a pas, avec leur quantité et leur unité.
 5.  **preparation** : Les instructions de préparation détaillées, étape par étape.
 6.  **calories** : Une estimation des calories pour le plat.
-7.  **youtubeUrl** : Une URL valide vers une vidéo YouTube qui montre la préparation de cette recette spécifique ou une recette très similaire. Si tu ne trouves aucune vidéo pertinente, laisse ce champ vide. Ne mets PAS de clips musicaux ou de vidéos non pertinentes.
+7.  **youtubeUrl** : Une URL valide vers une vidéo YouTube. **IMPORTANT :** Avant d'ajouter une URL, tu dois la vérifier mentalement en suivant ces critères stricts. Si aucun lien ne correspond, laisse ce champ vide.
+    *   **Pertinence :** La vidéo doit montrer la préparation de la recette que tu proposes. Le titre ou la description doit correspondre.
+    *   **Contenu :** La vidéo doit être une recette de cuisine, PAS un clip musical, un vlog ou tout autre contenu non pertinent.
+    *   **Spécificité :** La recette dans la vidéo ne doit pas avoir de variations majeures par rapport à celle que tu as écrite.
+    *   **Action :** Si tu ne trouves pas de vidéo qui respecte ces règles, laisse le champ 'youtubeUrl' vide.
 
 Assure-toi que la sortie est un objet JSON valide qui respecte le schéma défini.`,
 });
