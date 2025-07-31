@@ -23,6 +23,8 @@ export interface Recipe {
   ingredients: RecipeIngredient[];
   preparation: string;
   calories: number;
+  preparationTime: number; // in minutes
+  isEconomical: boolean;
 }
 
 export interface BasketItem extends Ingredient {
