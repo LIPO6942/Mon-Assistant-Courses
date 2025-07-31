@@ -5,7 +5,7 @@ import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { BrainCircuit, Salad, X, Lightbulb, Loader2, Terminal, PlusCircle } from 'lucide-react';
+import { BrainCircuit, Salad, X, Lightbulb, Loader2, Terminal, PlusCircle, Clock, Coins } from 'lucide-react';
 import type { Recipe } from '@/lib/types';
 import type { SuggestRecipeOutput } from '@/ai/types';
 import { Alert, AlertTitle, AlertDescription } from './ui/alert';
@@ -100,13 +100,15 @@ export default function ChandyekView({
           {aiSuggestions.length > 0 && (
             <div className="mt-6">
               <h3 className="font-semibold text-lg mb-3">Recettes suggérées par l'IA :</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {aiSuggestions.map((recipe, index) => (
                   <Card key={index} className="flex flex-col bg-secondary/30">
                     <CardHeader>
                       <CardTitle>{recipe.title}</CardTitle>
-                      <div className="flex justify-between items-center text-sm text-muted-foreground">
-                        <span>{recipe.country}</span>
+                      <div className="flex items-center flex-wrap gap-2 mt-2 text-sm text-muted-foreground">
+                        <Badge variant="secondary" className="w-fit">{recipe.country}</Badge>
+                        <Badge variant="outline" className="flex items-center gap-1 bg-card"><Clock className="h-3 w-3"/>{recipe.preparationTime} min</Badge>
+                        {recipe.isEconomical && <Badge variant="outline" className="flex items-center gap-1 bg-card"><Coins className="h-3 w-3"/>Éco</Badge>}
                         <Badge variant="outline" className="bg-card">{recipe.calories} kcal</Badge>
                       </div>
                     </CardHeader>
@@ -115,7 +117,7 @@ export default function ChandyekView({
                     </CardContent>
                     <CardFooter className="flex justify-between items-center gap-2">
                       <Button onClick={() => onViewRecipe(recipe)}>Voir la recette</Button>
-                      <Button variant="outline" onClick={() => onSaveRecipe(recipe)}><PlusCircle className='h-4 w-4'/></Button>
+                      <Button variant="outline" size="icon" onClick={() => onSaveRecipe(recipe)}><PlusCircle className='h-4 w-4'/></Button>
                     </CardFooter>
                   </Card>
                 ))}

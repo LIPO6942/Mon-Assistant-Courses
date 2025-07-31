@@ -46,6 +46,8 @@ export const SuggestRecipeOutputSchema = z.object({
   })).describe("The array of ingredients for the recipe."),
   preparation: z.string().describe("The detailed, step-by-step preparation instructions for the recipe."),
   calories: z.number().describe("The estimated total calories for the dish."),
+  preparationTime: z.number().int().describe("The estimated total preparation time in minutes."),
+  isEconomical: z.boolean().describe("A boolean indicating if the recipe is considered cheap to prepare."),
 });
 export type SuggestRecipeOutput = z.infer<typeof SuggestRecipeOutputSchema>;
 
