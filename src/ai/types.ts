@@ -46,6 +46,7 @@ export const SuggestRecipeOutputSchema = z.object({
   })).describe("The array of ingredients for the recipe."),
   preparation: z.string().describe("The detailed, step-by-step preparation instructions for the recipe."),
   calories: z.number().describe("The estimated total calories for the dish."),
+  youtubeUrl: z.string().url().optional().describe("A relevant YouTube URL for a video of the recipe preparation."),
 });
 export type SuggestRecipeOutput = z.infer<typeof SuggestRecipeOutputSchema>;
 

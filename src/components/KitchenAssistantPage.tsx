@@ -40,7 +40,7 @@ export default function KitchenAssistantPage() {
   const [editingIngredient, setEditingIngredient] = useState<Partial<Ingredient> | null>(null);
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<{ id?: string; name: string } | null>(null);
-  const [viewingRecipe, setViewingRecipe] = useState<(Omit<Recipe, 'id'> & { id?: string }) | null>(null);
+  const [viewingRecipe, setViewingRecipe] = useState<(Omit<Recipe, 'id'> & { id?: string; youtubeUrl?: string }) | null>(null);
   const [isHealthConditionManagerOpen, setHealthConditionManagerOpen] = useState(false);
   const [isQuantityDialogOpen, setQuantityDialogOpen] = useState(false);
   const [ingredientForQuantity, setIngredientForQuantity] = useState<Ingredient | null>(null);
@@ -124,7 +124,7 @@ export default function KitchenAssistantPage() {
   // --- MEMOIZED CALCULATIONS ---
   const basketTotalToPay = useMemo(() => basket.reduce((total, item) => !item.purchased ? total + item.price * item.quantity : total, 0), [basket]);
   const currentlyPurchasedInBasket = useMemo(() => basket.reduce((total, item) => item.purchased ? total + item.price * item.quantity : total, 0), [basket]);
-  const remainingBudget = initialBudget - totalSpent - currentlyPurchasedInBasket;
+  const remainingBudget = initialBudget - totalSpent;
 
   const filteredPantry = useMemo(() => {
     if (!searchQuery) return pantry;
@@ -242,11 +242,14 @@ export default function KitchenAssistantPage() {
     else setBasket(prev => prev.map(item => item.id === id ? { ...item, quantity: newQuantity } : item));
   };
   
-  const handleTogglePurchaseStatus = (id: string) => {
+  const handleTogglePurchaseStatus = (id: string, itemPrice: number, itemQuantity: number) => {
     setBasket(prevBasket =>
       prevBasket.map(item => {
         if (item.id === id) {
-          return { ...item, purchased: !item.purchased };
+          const isPurchased = !item.purchased;
+          // This seems complex, let's simplify. The budget manager should derive its state.
+          // Let's just toggle purchased state.
+          return { ...item, purchased: isPurchased };
         }
         return item;
       })
@@ -438,7 +441,7 @@ export default function KitchenAssistantPage() {
               clearBasket={clearBasket}
               resetTotalSpent={resetTotalSpent}
               basketItemCount={basket.length}
-              remainingBudget={remainingBudget}
+              remainingBudget={remainingBudget - currentlyPurchasedInBasket}
             />
           )}
           {activeTab === 'recipes' && (
