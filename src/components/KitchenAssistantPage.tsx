@@ -40,7 +40,7 @@ export default function KitchenAssistantPage() {
   const [editingIngredient, setEditingIngredient] = useState<Partial<Ingredient> | null>(null);
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<{ id?: string; name: string } | null>(null);
-  const [viewingRecipe, setViewingRecipe] = useState<(Omit<Recipe, 'id'> & { id?: string; youtubeUrl?: string }) | null>(null);
+  const [viewingRecipe, setViewingRecipe] = useState<(Omit<Recipe, 'id'> & { id?: string; }) | null>(null);
   const [isHealthConditionManagerOpen, setHealthConditionManagerOpen] = useState(false);
   const [isQuantityDialogOpen, setQuantityDialogOpen] = useState(false);
   const [ingredientForQuantity, setIngredientForQuantity] = useState<Ingredient | null>(null);

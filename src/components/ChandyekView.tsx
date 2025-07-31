@@ -5,7 +5,7 @@ import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { BrainCircuit, Salad, X, Lightbulb, Loader2, Terminal, PlusCircle, Youtube } from 'lucide-react';
+import { BrainCircuit, Salad, X, Lightbulb, Loader2, Terminal, PlusCircle } from 'lucide-react';
 import type { Recipe } from '@/lib/types';
 import type { SuggestRecipeOutput } from '@/ai/types';
 import { Alert, AlertTitle, AlertDescription } from './ui/alert';
@@ -115,16 +115,7 @@ export default function ChandyekView({
                     </CardContent>
                     <CardFooter className="flex justify-between items-center gap-2">
                       <Button onClick={() => onViewRecipe(recipe)}>Voir la recette</Button>
-                      <div className='flex gap-1'>
-                        {recipe.youtubeUrl && (
-                          <Button asChild variant="ghost" size="icon" className='text-red-600 hover:text-red-700'>
-                            <a href={recipe.youtubeUrl} target="_blank" rel="noopener noreferrer" aria-label="Voir la vidéo sur YouTube">
-                              <Youtube />
-                            </a>
-                          </Button>
-                        )}
-                        <Button variant="outline" onClick={() => onSaveRecipe(recipe)}><PlusCircle className='h-4 w-4'/></Button>
-                      </div>
+                      <Button variant="outline" onClick={() => onSaveRecipe(recipe)}><PlusCircle className='h-4 w-4'/></Button>
                     </CardFooter>
                   </Card>
                 ))}

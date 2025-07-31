@@ -23,7 +23,6 @@ export interface Recipe {
   ingredients: RecipeIngredient[];
   preparation: string;
   calories: number;
-  youtubeUrl?: string;
 }
 
 export interface BasketItem extends Ingredient {
