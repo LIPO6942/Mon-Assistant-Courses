@@ -177,6 +177,17 @@ export default function KitchenAssistantPage() {
     }
   };
 
+  const handleFridgeScan = (ingredients: string[]) => {
+    setChandyekIngredients(ingredients.join(', '));
+    setActiveTab('chandyek');
+    // Close any open sheets, which is a bit of a hack
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    // Wait for sheet to close then generate recipes
+    setTimeout(() => {
+      handleGenerateAiRecipes();
+    }, 500);
+  };
+
   const handleSaveIngredient = (formData: Omit<Ingredient, 'id'> & { id?: string }) => {
     if (formData.id) {
       setPantry(prev => prev.map(ing => ing.id === formData.id ? { ...ing, ...formData } as Ingredient : ing));
@@ -420,6 +431,7 @@ export default function KitchenAssistantPage() {
         onViewRecipe={setViewingRecipe}
         onDeleteRecipe={handleDeleteSavedRecipe}
         onTogglePurchaseStatus={handleTogglePurchaseStatus}
+        onFridgeScan={handleFridgeScan}
       />
       <AppNav 
         activeTab={activeTab} 

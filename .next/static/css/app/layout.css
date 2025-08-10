@@ -1341,6 +1341,9 @@ video {
 .col-span-3 {
   grid-column: span 3 / span 3;
 }
+.m-4 {
+  margin: 1rem;
+}
 .-mx-1 {
   margin-left: -0.25rem;
   margin-right: -0.25rem;
@@ -1422,6 +1425,9 @@ video {
 .grid {
   display: grid;
 }
+.hidden {
+  display: none;
+}
 .h-10 {
   height: 2.5rem;
 }
@@ -1479,6 +1485,9 @@ video {
 .h-px {
   height: 1px;
 }
+.h-16 {
+  height: 4rem;
+}
 .max-h-\[60vh\] {
   max-height: 60vh;
 }
@@ -1532,6 +1541,9 @@ video {
 }
 .w-full {
   width: 100%;
+}
+.w-16 {
+  width: 4rem;
 }
 .min-w-\[8rem\] {
   min-width: 8rem;
@@ -1856,6 +1868,9 @@ video {
 }
 .to-secondary\/50 {
   --tw-gradient-to: hsl(var(--secondary) / 0.5) var(--tw-gradient-to-position);
+}
+.object-cover {
+  object-fit: cover;
 }
 .p-0 {
   padding: 0px;
