@@ -86,7 +86,7 @@ export default function RecipesView({
         <h2 className='text-2xl font-bold mb-2'>À court d'idées ?</h2>
         <p className='text-muted-foreground mb-4'>Utilisez les filtres pour affiner les suggestions aléatoires !</p>
         
-        <div className="flex justify-center gap-4 mb-6">
+        <div className="flex flex-wrap justify-center gap-4 mb-6">
             <Button 
                 size="sm"
                 variant={filterQuick ? "secondary" : "outline"} 
