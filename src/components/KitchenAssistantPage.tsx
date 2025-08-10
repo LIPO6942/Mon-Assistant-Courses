@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { initialCategories, predefinedIngredients, discoverableRecipes, initialHealthConditions } from '@/lib/data';
 import type { Ingredient, Recipe, BasketItem, CategoryDef, RecipeIngredient, HealthConditionCategory, HealthCondition } from '@/lib/types';
 import { suggestRecipes } from '@/ai/flows/suggest-recipe-flow';
@@ -148,7 +148,7 @@ export default function KitchenAssistantPage() {
 
 
   // --- HANDLERS ---
-  const handleGenerateAiRecipes = async () => {
+  const handleGenerateAiRecipes = useCallback(async () => {
     if (chandyekIngredientsList.length === 0) {
       setChandyekError("Veuillez sélectionner au moins un ingrédient.");
       return;
@@ -175,18 +175,12 @@ export default function KitchenAssistantPage() {
     } finally {
       setIsChandyekLoading(false);
     }
-  };
+  }, [chandyekIngredientsList]);
 
-  const handleFridgeScan = (ingredients: string[]) => {
+  const handleFridgeScan = useCallback((ingredients: string[]) => {
     setChandyekIngredients(ingredients.join(', '));
     setActiveTab('chandyek');
-    // Close any open sheets, which is a bit of a hack
-    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
-    // Wait for sheet to close then generate recipes
-    setTimeout(() => {
-      handleGenerateAiRecipes();
-    }, 500);
-  };
+  }, [setChandyekIngredients, setActiveTab]);
 
   const handleSaveIngredient = (formData: Omit<Ingredient, 'id'> & { id?: string }) => {
     if (formData.id) {
