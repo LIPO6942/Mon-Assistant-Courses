@@ -36,7 +36,7 @@ export default function FridgeScannerSheet({ onIngredientsIdentified }: FridgeSc
     }
 
     try {
-      const newStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      const newStream = await navigator.mediaDevices.getUserMedia({ video: true });
       setStream(newStream);
       setHasCameraPermission(true);
       if (videoRef.current) {
@@ -150,4 +150,3 @@ export default function FridgeScannerSheet({ onIngredientsIdentified }: FridgeSc
     </SheetContent>
   );
 }
-
