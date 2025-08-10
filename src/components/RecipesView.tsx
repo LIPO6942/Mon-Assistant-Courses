@@ -151,10 +151,12 @@ export default function RecipesView({
       <div className='text-center py-8 px-4 rounded-xl bg-gradient-to-br from-accent/10 via-card to-card border-2 border-accent/20 shadow-lg'>
         <h2 className='text-2xl font-bold mb-2'>J’ai pas envie de cuisiner</h2>
         <p className='text-muted-foreground mb-6'>Pas le courage ? Laissez le hasard décider de votre prochain plat à emporter !</p>
-        <Button size="lg" onClick={handleSpin} className="bg-accent hover:bg-accent/90 text-accent-foreground" disabled={isSpinning}>
-          <Dices className={`mr-2 h-5 w-5 ${isSpinning ? 'animate-spin' : ''}`} />
-          {isSpinning ? 'Ça tourne...' : 'Lancer la roue de la flemme !'}
-        </Button>
+        <div className="flex justify-center">
+          <Button size="lg" onClick={handleSpin} className="bg-accent hover:bg-accent/90 text-accent-foreground" disabled={isSpinning}>
+            <Dices className={`mr-2 h-5 w-5 ${isSpinning ? 'animate-spin' : ''}`} />
+            {isSpinning ? 'Ça tourne...' : 'Lancer la roue de la flemme !'}
+          </Button>
+        </div>
         
         <div className="mt-8 h-24 flex flex-col justify-center items-center">
             {isSpinning && (
