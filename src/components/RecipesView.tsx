@@ -88,6 +88,7 @@ export default function RecipesView({
         
         <div className="flex justify-center gap-4 mb-6">
             <Button 
+                size="sm"
                 variant={filterQuick ? "secondary" : "outline"} 
                 onClick={() => setFilterQuick(!filterQuick)}
                 className={cn(filterQuick && 'ring-2 ring-primary')}
@@ -95,6 +96,7 @@ export default function RecipesView({
                 <Clock className="mr-2 h-4 w-4"/> Je suis pressé(e)
             </Button>
             <Button 
+                size="sm"
                 variant={filterEconomical ? "secondary" : "outline"}
                 onClick={() => setFilterEconomical(!filterEconomical)}
                 className={cn(filterEconomical && 'ring-2 ring-primary')}
