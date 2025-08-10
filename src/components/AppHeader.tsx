@@ -9,6 +9,7 @@ import BasketSheet from './BasketSheet';
 import SavedRecipesSheet from './SavedRecipesSheet';
 import type { BasketItem, Recipe } from '@/lib/types';
 import FridgeScannerSheet from './FridgeScannerSheet';
+import { useState } from 'react';
 
 interface AppHeaderProps {
   basket: BasketItem[];
@@ -37,6 +38,8 @@ export default function AppHeader({
   onTogglePurchaseStatus,
   onFridgeScan,
 }: AppHeaderProps) {
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+
   return (
     <header className="bg-card shadow-md sticky top-0 z-20">
       <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-4 h-[69px]">
@@ -46,13 +49,13 @@ export default function AppHeader({
         </div>
 
         <div className="flex items-center gap-2">
-           <Sheet>
+           <Sheet open={isScannerOpen} onOpenChange={setIsScannerOpen}>
             <SheetTrigger asChild>
               <Button variant="outline" size="icon" className="relative rounded-full">
                 <Refrigerator />
               </Button>
             </SheetTrigger>
-            <FridgeScannerSheet onIngredientsIdentified={onFridgeScan} />
+            <FridgeScannerSheet onIngredientsIdentified={onFridgeScan} open={isScannerOpen} onOpenChange={setIsScannerOpen} />
           </Sheet>
 
           <Sheet>

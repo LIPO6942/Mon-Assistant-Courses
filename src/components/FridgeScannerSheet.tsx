@@ -11,9 +11,11 @@ import { cn } from '@/lib/utils';
 
 interface FridgeScannerSheetProps {
   onIngredientsIdentified: (ingredients: string[]) => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-export default function FridgeScannerSheet({ onIngredientsIdentified }: FridgeScannerSheetProps) {
+export default function FridgeScannerSheet({ onIngredientsIdentified, open, onOpenChange }: FridgeScannerSheetProps) {
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const [hasCameraPermission, setHasCameraPermission] = React.useState<boolean | null>(null);
@@ -21,13 +23,27 @@ export default function FridgeScannerSheet({ onIngredientsIdentified }: FridgeSc
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
+  const cleanupAndReset = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+    }
+    setStream(null);
+    setHasCameraPermission(null);
+    setIsLoading(false);
+    setError(null);
+  };
+
   React.useEffect(() => {
-    // Attach stream to video element when stream is ready
+    // This effect runs when the sheet is closed
+    if (!open) {
+      cleanupAndReset();
+    }
+  }, [open]);
+
+  React.useEffect(() => {
     if (stream && videoRef.current) {
       videoRef.current.srcObject = stream;
     }
-
-    // Cleanup: stop the camera stream when the component unmounts or stream changes
     return () => {
       if (stream) {
         stream.getTracks().forEach(track => track.stop());
@@ -75,17 +91,11 @@ export default function FridgeScannerSheet({ onIngredientsIdentified }: FridgeSc
       try {
         const result = await identifyIngredientsFromImage({ photoDataUri });
         
-        // Find the close button and click it to hide the sheet BEFORE calling the parent callback
-        const closeButton = document.querySelector('button[aria-label="Close"]');
-        if (closeButton instanceof HTMLElement) {
-          closeButton.click();
-        }
+        onOpenChange(false); // Close the sheet
 
         if (result.ingredients && result.ingredients.length > 0) {
           onIngredientsIdentified(result.ingredients);
         } else {
-          // This error will likely not be seen as the sheet closes, but it's good practice.
-          // A toast notification would be a better UX for this case.
           console.log("Aucun ingrédient n'a pu être identifié. Essayez une photo plus claire.");
         }
       } catch (err) {
