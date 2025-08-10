@@ -105,8 +105,11 @@ export default function RecipesView({
             </Button>
         </div>
 
-        <Button size="lg" onClick={findRandomRecipes}>
-          <Shuffle className="mr-2 h-5 w-5" />
+        <Button 
+          onClick={findRandomRecipes}
+          className="h-11 rounded-md px-4 sm:px-8 text-sm sm:text-base whitespace-normal sm:whitespace-nowrap"
+        >
+          <Shuffle className="mr-2 h-5 w-5 shrink-0" />
           Trouver une idée de recette
         </Button>
 
