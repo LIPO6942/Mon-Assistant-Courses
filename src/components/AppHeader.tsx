@@ -1,13 +1,14 @@
 
 'use client';
 
-import { ChefHat, ShoppingBasket, BookHeart } from 'lucide-react';
+import { ChefHat, ShoppingBasket, BookHeart, Refrigerator } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetTrigger } from '@/components/ui/sheet';
 import BasketSheet from './BasketSheet';
 import SavedRecipesSheet from './SavedRecipesSheet';
 import type { BasketItem, Recipe } from '@/lib/types';
+import FridgeScannerSheet from './FridgeScannerSheet';
 
 interface AppHeaderProps {
   basket: BasketItem[];
@@ -20,6 +21,7 @@ interface AppHeaderProps {
   onViewRecipe: (recipe: (Omit<Recipe, 'id'> & { id?: string })) => void;
   onDeleteRecipe: (recipeId: string) => void;
   onTogglePurchaseStatus: (id: string, itemPrice: number, itemQuantity: number) => void;
+  onFridgeScan: (ingredients: string[]) => void;
 }
 
 export default function AppHeader({
@@ -33,6 +35,7 @@ export default function AppHeader({
   onViewRecipe,
   onDeleteRecipe,
   onTogglePurchaseStatus,
+  onFridgeScan,
 }: AppHeaderProps) {
   return (
     <header className="bg-card shadow-md sticky top-0 z-20">
@@ -43,6 +46,15 @@ export default function AppHeader({
         </div>
 
         <div className="flex items-center gap-2">
+           <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="icon" className="relative rounded-full">
+                <Refrigerator />
+              </Button>
+            </SheetTrigger>
+            <FridgeScannerSheet onIngredientsIdentified={onFridgeScan} />
+          </Sheet>
+
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="outline" size="icon" className="relative rounded-full">
