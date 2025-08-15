@@ -54,6 +54,7 @@ interface KitchenAssistantDialogsProps {
   viewingUserRecipe: UserRecipe | null;
   setViewingUserRecipe: (recipe: UserRecipe | null) => void;
   onDeleteUserRecipe: (recipeId: string) => void;
+  onEditUserRecipe: (recipe: UserRecipe) => void;
 }
 
 export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsProps) {
@@ -87,6 +88,7 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
     viewingUserRecipe,
     setViewingUserRecipe,
     onDeleteUserRecipe,
+    onEditUserRecipe,
   } = props;
 
   const [quantityInput, setQuantityInput] = React.useState('1');
@@ -219,17 +221,29 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
                 <DialogFooter className="sm:justify-between w-full">
                   <div>
                     {viewingUserRecipe && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          onDeleteUserRecipe(viewingUserRecipe.id);
-                          setViewingUserRecipe(null);
-                        }}
-                        aria-label="Supprimer la recette"
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
+                      <div className='flex items-center gap-1'>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            onEditUserRecipe(viewingUserRecipe);
+                          }}
+                          aria-label="Modifier la recette"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            onDeleteUserRecipe(viewingUserRecipe.id);
+                            setViewingUserRecipe(null);
+                          }}
+                          aria-label="Supprimer la recette"
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
                     )}
                   </div>
                   <Button

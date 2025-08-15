@@ -6,7 +6,7 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, Shuffle, Dices, Clock, Coins, Utensils, BookUser } from 'lucide-react';
+import { PlusCircle, Shuffle, Dices, Clock, Coins, Utensils, BookUser, Search } from 'lucide-react';
 import type { Recipe, UserRecipe } from '@/lib/types';
 import { streetFoodOptions } from '@/lib/data';
 import { cn } from '@/lib/utils';
@@ -17,6 +17,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"
+import { Input } from './ui/input';
 
 interface RecipesViewProps {
   setViewingRecipe: (recipe: (Omit<Recipe, 'id'> & { id?: string; }) | null) => void;
@@ -43,14 +44,28 @@ export default function RecipesView({
 
   const [filterQuick, setFilterQuick] = useState(false);
   const [filterEconomical, setFilterEconomical] = useState(false);
+  const [userRecipeTagFilter, setUserRecipeTagFilter] = useState('');
 
-  const filteredRecipes = useMemo(() => {
+  const filteredDiscoverableRecipes = useMemo(() => {
     return discoverableRecipes.filter(recipe => {
       const quickMatch = !filterQuick || (recipe.preparationTime <= 15);
       const economicalMatch = !filterEconomical || recipe.isEconomical;
       return quickMatch && economicalMatch;
     });
   }, [discoverableRecipes, filterQuick, filterEconomical]);
+  
+  const filteredUserRecipes = useMemo(() => {
+    if (!userRecipeTagFilter) return userRecipes;
+    const filterTags = userRecipeTagFilter.toLowerCase().split(',').map(t => t.trim()).filter(Boolean);
+    if (filterTags.length === 0) return userRecipes;
+
+    return userRecipes.filter(recipe => {
+      const recipeTags = (recipe.tags || '').toLowerCase().split(',').map(t => t.trim());
+      return filterTags.every(ft => recipeTags.includes(ft));
+    });
+
+  }, [userRecipes, userRecipeTagFilter]);
+
 
   useEffect(() => {
     return () => {
@@ -61,11 +76,11 @@ export default function RecipesView({
   }, []);
 
   const findRandomRecipes = () => {
-    if (filteredRecipes.length === 0) {
+    if (filteredDiscoverableRecipes.length === 0) {
         setSuggestedRecipes([]);
         return;
     }
-    const shuffled = [...filteredRecipes].sort(() => 0.5 - Math.random());
+    const shuffled = [...filteredDiscoverableRecipes].sort(() => 0.5 - Math.random());
     setSuggestedRecipes(shuffled.slice(0, 2));
   };
 
@@ -108,9 +123,20 @@ export default function RecipesView({
             <div className='text-center py-4 px-4 rounded-xl bg-gradient-to-br from-secondary/50 via-card to-card border-2 border-border/50 shadow-lg'>
               <p className='text-muted-foreground mb-6 max-w-2xl mx-auto'>Votre carnet de recettes personnel. Créez, modifiez et conservez vos propres créations culinaires ici-même.</p>
               
-              {userRecipes.length > 0 ? (
+              <div className="relative mb-6 max-w-sm mx-auto">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <Input 
+                  type="search" 
+                  placeholder="Filtrer par tags (ex: vegan, rapide)..." 
+                  className="pl-11 rounded-full h-10" 
+                  value={userRecipeTagFilter}
+                  onChange={(e) => setUserRecipeTagFilter(e.target.value)} 
+                />
+              </div>
+
+              {filteredUserRecipes.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-6">
-                  {userRecipes.map(recipe => (
+                  {filteredUserRecipes.map(recipe => (
                     <Card key={recipe.id} className="cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col" onClick={() => onViewUserRecipe(recipe)}>
                       <CardContent className='p-3 flex items-center gap-3'>
                          <div className="relative w-12 h-12 aspect-square shrink-0">
@@ -134,7 +160,7 @@ export default function RecipesView({
                   ))}
                 </div>
               ) : (
-                  <p className='text-muted-foreground mb-6'>Vous n'avez pas encore créé de recette.</p>
+                  <p className='text-muted-foreground mb-6'>{userRecipes.length > 0 ? "Aucune recette ne correspond à votre filtre." : "Vous n'avez pas encore créé de recette."}</p>
               )}
               
               <Button onClick={() => openUserRecipeForm()}>
@@ -211,7 +237,7 @@ export default function RecipesView({
               ))}
           </div>
         ) : (
-            filteredRecipes.length === 0 && <p className="text-muted-foreground mt-4 text-sm">Aucune recette ne correspond à vos filtres. Essayez d'en retirer un.</p>
+            filteredDiscoverableRecipes.length === 0 && <p className="text-muted-foreground mt-4 text-sm">Aucune recette ne correspond à vos filtres. Essayez d'en retirer un.</p>
         )}
       </div>
 

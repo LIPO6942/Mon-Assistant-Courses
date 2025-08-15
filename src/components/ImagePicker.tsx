@@ -28,18 +28,29 @@ export default function ImagePicker({ photoDataUri, setPhotoDataUri }: ImagePick
   }, [stream]);
 
   React.useEffect(() => {
-    return () => cleanupStream();
-  }, [cleanupStream]);
+    if (isCameraOpen) {
+      handleOpenCamera();
+    } else {
+      cleanupStream();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isCameraOpen]);
+  
+  React.useEffect(() => {
+      if (stream && videoRef.current) {
+          videoRef.current.srcObject = stream;
+      }
+  }, [stream]);
 
   const handleOpenCamera = async () => {
     setIsLoading(true);
     try {
       const newStream = await navigator.mediaDevices.getUserMedia({ video: true });
       setStream(newStream);
-      setIsCameraOpen(true);
     } catch (error) {
       console.error("Error accessing camera: ", error);
       alert("Impossible d'accéder à la caméra. Veuillez vérifier les permissions.");
+      setIsCameraOpen(false);
     } finally {
       setIsLoading(false);
     }
@@ -57,7 +68,6 @@ export default function ImagePicker({ photoDataUri, setPhotoDataUri }: ImagePick
         const dataUri = canvas.toDataURL('image/jpeg');
         setPhotoDataUri(dataUri);
       }
-      cleanupStream();
       setIsCameraOpen(false);
     }
   };
@@ -94,7 +104,7 @@ export default function ImagePicker({ photoDataUri, setPhotoDataUri }: ImagePick
         )}
       </div>
       <div className="flex flex-col gap-2">
-        <Button type="button" onClick={handleOpenCamera} disabled={isLoading}>
+        <Button type="button" onClick={() => setIsCameraOpen(true)} disabled={isLoading}>
           {isLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Camera className="h-4 w-4 mr-2" />}
           Prendre une photo
         </Button>
@@ -119,7 +129,7 @@ export default function ImagePicker({ photoDataUri, setPhotoDataUri }: ImagePick
              <canvas ref={canvasRef} className="hidden" />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setIsCameraOpen(false); cleanupStream(); }}>Annuler</Button>
+            <Button variant="outline" onClick={() => { setIsCameraOpen(false); }}>Annuler</Button>
             <Button onClick={handleCapture}>Capturer</Button>
           </DialogFooter>
         </DialogContent>
