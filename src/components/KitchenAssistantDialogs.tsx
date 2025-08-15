@@ -15,6 +15,8 @@ import type { Ingredient, Recipe, CategoryDef, HealthConditionCategory, UserReci
 import UserRecipeForm from './UserRecipeForm';
 import Image from 'next/image';
 import { Label } from './ui/label';
+import { Checkbox } from './ui/checkbox';
+import { cn } from '@/lib/utils';
 
 interface KitchenAssistantDialogsProps {
   isAddEditDialogOpen: boolean;
@@ -89,6 +91,7 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
 
   const [quantityInput, setQuantityInput] = React.useState('1');
   const [portions, setPortions] = React.useState(viewingRecipe?.portions || viewingUserRecipe?.portions || 2);
+  const [checkedSteps, setCheckedSteps] = React.useState<Set<number>>(new Set());
 
   React.useEffect(() => {
     if (isQuantityDialogOpen) {
@@ -98,6 +101,8 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
 
   React.useEffect(() => {
     setPortions(viewingRecipe?.portions || viewingUserRecipe?.portions || 2);
+    // Reset checked steps when a new recipe is viewed
+    setCheckedSteps(new Set());
   }, [viewingRecipe, viewingUserRecipe]);
 
 
@@ -114,10 +119,23 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
     // Format to max 2 decimal places, and remove trailing zeros
     return parseFloat(adjusted.toFixed(2));
   };
+
+  const handleToggleStep = (index: number) => {
+    setCheckedSteps(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(index)) {
+        newSet.delete(index);
+      } else {
+        newSet.add(index);
+      }
+      return newSet;
+    });
+  };
   
   const currentRecipe = viewingRecipe || viewingUserRecipe;
   const currentIngredients = currentRecipe?.ingredients as RecipeIngredient[] | undefined;
   const basePortions = currentRecipe?.portions || 1;
+  const preparationSteps = currentRecipe?.preparation.split('\n').filter(line => line.trim() !== '') || [];
 
   return (
     <>
@@ -179,7 +197,24 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
                         )}
                     </ul>
                     <h4 className='font-semibold mt-4'>Préparation :</h4>
-                    <p className="text-sm text-muted-foreground whitespace-pre-wrap mt-2">{currentRecipe.preparation}</p>
+                     <div className="text-sm text-muted-foreground whitespace-pre-wrap mt-2 space-y-3">
+                        {preparationSteps.map((step, index) => (
+                          <div key={index} className="flex items-start gap-3">
+                            <Checkbox 
+                              id={`step-${index}`} 
+                              checked={checkedSteps.has(index)}
+                              onCheckedChange={() => handleToggleStep(index)}
+                              className='mt-1'
+                            />
+                            <label 
+                              htmlFor={`step-${index}`} 
+                              className={cn("flex-1 cursor-pointer", checkedSteps.has(index) && "line-through text-muted-foreground/70")}
+                            >
+                              {step}
+                            </label>
+                          </div>
+                        ))}
+                    </div>
                 </ScrollArea>
                 <DialogFooter className='justify-between w-full'>
                    <div>

@@ -1437,6 +1437,9 @@ video {
 .aspect-video {
   aspect-ratio: 16 / 9;
 }
+.aspect-square {
+  aspect-ratio: 1 / 1;
+}
 .h-10 {
   height: 2.5rem;
 }
@@ -2132,6 +2135,9 @@ video {
 }
 .text-secondary-foreground {
   color: hsl(var(--secondary-foreground));
+}
+.text-muted-foreground\/70 {
+  color: hsl(var(--muted-foreground) / 0.7);
 }
 .line-through {
   text-decoration-line: line-through;

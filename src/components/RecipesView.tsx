@@ -100,23 +100,25 @@ export default function RecipesView({
         {userRecipes.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
             {userRecipes.map(recipe => (
-              <Card key={recipe.id} className="cursor-pointer hover:shadow-xl transition-shadow" onClick={() => onViewUserRecipe(recipe)}>
-                <CardHeader className='p-0'>
-                  <div className="aspect-video relative w-full">
+              <Card key={recipe.id} className="cursor-pointer hover:shadow-xl transition-shadow flex flex-col" onClick={() => onViewUserRecipe(recipe)}>
+                <CardHeader className='p-4'>
+                  <CardTitle className='text-lg'>{recipe.title}</CardTitle>
+                </CardHeader>
+                <CardContent className='p-4 pt-0 flex-grow flex items-center gap-4'>
+                   <div className="aspect-square relative w-24 h-24 shrink-0">
                     {recipe.photoDataUri ? (
-                      <Image src={recipe.photoDataUri} alt={recipe.title} layout="fill" objectFit="cover" className="rounded-t-lg" />
+                      <Image src={recipe.photoDataUri} alt={recipe.title} layout="fill" objectFit="cover" className="rounded-lg" />
                     ) : (
-                      <div className="w-full h-full bg-secondary flex items-center justify-center rounded-t-lg">
-                          <Utensils className="h-12 w-12 text-muted-foreground" />
+                      <div className="w-full h-full bg-secondary flex items-center justify-center rounded-lg">
+                          <Utensils className="h-10 w-10 text-muted-foreground" />
                       </div>
                     )}
                   </div>
-                </CardHeader>
-                <CardContent className='p-4'>
-                  <CardTitle className='text-lg'>{recipe.title}</CardTitle>
-                  <div className="flex items-center gap-2 mt-2">
-                    <Badge variant="outline">{recipe.category}</Badge>
-                    <Badge variant="outline" className="flex items-center gap-1"><Clock className="h-3 w-3"/>{recipe.preparationTime} min</Badge>
+                  <div className="flex flex-col">
+                    <div className="flex flex-wrap items-center gap-2 mt-2">
+                      <Badge variant="outline">{recipe.category}</Badge>
+                      <Badge variant="outline" className="flex items-center gap-1"><Clock className="h-3 w-3"/>{recipe.preparationTime} min</Badge>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
