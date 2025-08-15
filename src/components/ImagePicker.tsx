@@ -45,12 +45,18 @@ export default function ImagePicker({ photoDataUri, setPhotoDataUri }: ImagePick
   const handleOpenCamera = async () => {
     setIsLoading(true);
     try {
-      const newStream = await navigator.mediaDevices.getUserMedia({ video: true });
+      const newStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
       setStream(newStream);
     } catch (error) {
-      console.error("Error accessing camera: ", error);
-      alert("Impossible d'accéder à la caméra. Veuillez vérifier les permissions.");
-      setIsCameraOpen(false);
+      console.error("Error accessing environment camera, trying default: ", error);
+      try {
+        const newStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        setStream(newStream);
+      } catch (finalError) {
+        console.error("Error accessing any camera: ", finalError);
+        alert("Impossible d'accéder à la caméra. Veuillez vérifier les permissions.");
+        setIsCameraOpen(false);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -64,9 +70,33 @@ export default function ImagePicker({ photoDataUri, setPhotoDataUri }: ImagePick
       canvas.height = video.videoHeight;
       const context = canvas.getContext('2d');
       if (context) {
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const dataUri = canvas.toDataURL('image/jpeg');
-        setPhotoDataUri(dataUri);
+        // Create a new canvas to resize the image
+        const tempCanvas = document.createElement('canvas');
+        const tempCtx = tempCanvas.getContext('2d');
+        if (tempCtx) {
+          const maxWidth = 800;
+          const maxHeight = 800;
+          let { width, height } = video;
+
+          if (width > height) {
+            if (width > maxWidth) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            }
+          } else {
+            if (height > maxHeight) {
+              width = Math.round((width * maxHeight) / height);
+              height = maxHeight;
+            }
+          }
+          
+          tempCanvas.width = width;
+          tempCanvas.height = height;
+          tempCtx.drawImage(video, 0, 0, width, height);
+          
+          const dataUri = tempCanvas.toDataURL('image/jpeg', 0.8); // Compress to JPEG with 80% quality
+          setPhotoDataUri(dataUri);
+        }
       }
       setIsCameraOpen(false);
     }
@@ -77,7 +107,36 @@ export default function ImagePicker({ photoDataUri, setPhotoDataUri }: ImagePick
     if (file) {
       const reader = new FileReader();
       reader.onload = (e) => {
-        setPhotoDataUri(e.target?.result as string);
+        const img = document.createElement('img');
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+             const maxWidth = 800;
+             const maxHeight = 800;
+             let { width, height } = img;
+
+             if (width > height) {
+               if (width > maxWidth) {
+                 height = Math.round((height * maxWidth) / width);
+                 width = maxWidth;
+               }
+             } else {
+               if (height > maxHeight) {
+                 width = Math.round((width * maxHeight) / height);
+                 height = maxHeight;
+               }
+             }
+
+             canvas.width = width;
+             canvas.height = height;
+             ctx.drawImage(img, 0, 0, width, height);
+
+             const dataUri = canvas.toDataURL('image/jpeg', 0.8); // Compress to JPEG with 80% quality
+             setPhotoDataUri(dataUri);
+          }
+        };
+        img.src = e.target?.result as string;
       };
       reader.readAsDataURL(file);
     }
@@ -125,7 +184,7 @@ export default function ImagePicker({ photoDataUri, setPhotoDataUri }: ImagePick
         <DialogContent>
           <DialogHeader><DialogTitle>Prendre une photo</DialogTitle></DialogHeader>
           <div className="bg-secondary rounded-lg overflow-hidden my-4">
-             <video ref={videoRef} autoPlay playsInline className="w-full h-auto" />
+             <video ref={videoRef} autoPlay playsInline muted className="w-full h-auto" />
              <canvas ref={canvasRef} className="hidden" />
           </div>
           <DialogFooter>
