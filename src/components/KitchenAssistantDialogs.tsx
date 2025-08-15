@@ -216,15 +216,32 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
                         ))}
                     </div>
                 </ScrollArea>
-                <DialogFooter className='justify-between w-full'>
-                   <div>
+                <DialogFooter className="sm:justify-between w-full">
+                  <div>
                     {viewingUserRecipe && (
-                      <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onDeleteUserRecipe(viewingUserRecipe.id); setViewingUserRecipe(null); }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          onDeleteUserRecipe(viewingUserRecipe.id);
+                          setViewingUserRecipe(null);
+                        }}
+                        aria-label="Supprimer la recette"
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
                     )}
                   </div>
-                  <div>
-                    <Button type="button" variant="outline" className='mr-2' onClick={() => { setViewingRecipe(null); setViewingUserRecipe(null); }}>Fermer</Button>
-                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setViewingRecipe(null);
+                      setViewingUserRecipe(null);
+                    }}
+                  >
+                    Fermer
+                  </Button>
                 </DialogFooter>
               </>
             )}
