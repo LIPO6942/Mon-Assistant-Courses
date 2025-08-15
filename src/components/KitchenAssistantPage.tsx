@@ -107,14 +107,14 @@ export default function KitchenAssistantPage() {
           totalSpentData,
           healthConditionsData,
         ] = await Promise.all([
-          db.get('pantry'),
-          db.get('basket'),
-          db.get('categories'),
-          db.get('savedRecipes'),
-          db.get('userRecipes'),
-          db.get('budget'),
-          db.get('totalSpent'),
-          db.get('healthConditions'),
+          db.get<Ingredient[]>('pantry'),
+          db.get<BasketItem[]>('basket'),
+          db.get<CategoryDef[]>('categories'),
+          db.get<Recipe[]>('savedRecipes'),
+          db.get<UserRecipe[]>('userRecipes'),
+          db.get<number>('budget'),
+          db.get<number>('totalSpent'),
+          db.get<HealthConditionCategory[]>('healthConditions'),
         ]);
 
         setPantry(pantryData ?? predefinedIngredients);
@@ -585,4 +585,3 @@ export default function KitchenAssistantPage() {
     </div>
   );
 }
-
