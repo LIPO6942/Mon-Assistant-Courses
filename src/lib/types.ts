@@ -1,5 +1,9 @@
 
+
 export const units = ['pièce', 'kg', 'g', 'L', 'ml', 'boîte', 'paquet', 'botte', 'cuillère à soupe', 'cuillère à café'] as const;
+
+export const recipeCategories = ['Entrée', 'Plat', 'Dessert', 'Boisson', 'Sauce', 'Accompagnement', 'Autre'] as const;
+export type RecipeCategory = typeof recipeCategories[number];
 
 export interface Ingredient {
   id: string;
@@ -20,12 +24,27 @@ export interface Recipe {
   title: string;
   description: string;
   country: string;
+  portions: number;
   ingredients: RecipeIngredient[];
   preparation: string;
   calories: number;
   preparationTime: number; // in minutes
   isEconomical: boolean;
 }
+
+export interface UserRecipe {
+  id: string;
+  photoDataUri?: string;
+  title: string;
+  category: RecipeCategory;
+  portions: number;
+  ingredients: RecipeIngredient[];
+  preparation: string;
+  preparationTime: number;
+  author?: string;
+  tags?: string;
+}
+
 
 export interface BasketItem extends Ingredient {
   quantity: number;

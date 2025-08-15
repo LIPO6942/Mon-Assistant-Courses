@@ -1,9 +1,10 @@
 
+
 'use client';
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { initialCategories, predefinedIngredients, discoverableRecipes, initialHealthConditions } from '@/lib/data';
-import type { Ingredient, Recipe, BasketItem, CategoryDef, RecipeIngredient, HealthConditionCategory, HealthCondition } from '@/lib/types';
+import type { Ingredient, Recipe, BasketItem, CategoryDef, RecipeIngredient, HealthConditionCategory, HealthCondition, UserRecipe } from '@/lib/types';
 import { suggestRecipes } from '@/ai/flows/suggest-recipe-flow';
 import type { SuggestRecipeOutput } from '@/ai/types';
 
@@ -21,6 +22,7 @@ export default function KitchenAssistantPage() {
   const [basket, setBasket] = useState<BasketItem[]>([]);
   const [categories, setCategories] = useState<CategoryDef[]>(initialCategories);
   const [savedRecipes, setSavedRecipes] = useState<Recipe[]>([]);
+  const [userRecipes, setUserRecipes] = useState<UserRecipe[]>([]);
   const [initialBudget, setInitialBudget] = useState(200);
   const [totalSpent, setTotalSpent] = useState(0);
   const [healthConditions, setHealthConditions] = useState<HealthConditionCategory[]>(initialHealthConditions);
@@ -41,9 +43,12 @@ export default function KitchenAssistantPage() {
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<{ id?: string; name: string } | null>(null);
   const [viewingRecipe, setViewingRecipe] = useState<(Omit<Recipe, 'id'> & { id?: string; }) | null>(null);
+  const [viewingUserRecipe, setViewingUserRecipe] = useState<UserRecipe | null>(null);
   const [isHealthConditionManagerOpen, setHealthConditionManagerOpen] = useState(false);
   const [isQuantityDialogOpen, setQuantityDialogOpen] = useState(false);
   const [ingredientForQuantity, setIngredientForQuantity] = useState<Ingredient | null>(null);
+  const [isUserRecipeFormOpen, setUserRecipeFormOpen] = useState(false);
+  const [editingUserRecipe, setEditingUserRecipe] = useState<UserRecipe | null>(null);
 
 
   // --- WAKE LOCK ---
@@ -100,6 +105,9 @@ export default function KitchenAssistantPage() {
       const storedSavedRecipes = localStorage.getItem('saved-recipes-data');
       if (storedSavedRecipes) setSavedRecipes(JSON.parse(storedSavedRecipes));
 
+      const storedUserRecipes = localStorage.getItem('user-recipes-data');
+      if (storedUserRecipes) setUserRecipes(JSON.parse(storedUserRecipes));
+
       const storedBudget = localStorage.getItem('budget-data');
       if (storedBudget) setInitialBudget(JSON.parse(storedBudget));
       
@@ -117,6 +125,7 @@ export default function KitchenAssistantPage() {
   useEffect(() => { localStorage.setItem('basket-data', JSON.stringify(basket)); }, [basket]);
   useEffect(() => { localStorage.setItem('categories-data', JSON.stringify(categories)); }, [categories]);
   useEffect(() => { localStorage.setItem('saved-recipes-data', JSON.stringify(savedRecipes)); }, [savedRecipes]);
+  useEffect(() => { localStorage.setItem('user-recipes-data', JSON.stringify(userRecipes)); }, [userRecipes]);
   useEffect(() => { localStorage.setItem('budget-data', JSON.stringify(initialBudget)); }, [initialBudget]);
   useEffect(() => { localStorage.setItem('total-spent-data', JSON.stringify(totalSpent)); }, [totalSpent]);
   useEffect(() => { localStorage.setItem('health-conditions-data', JSON.stringify(healthConditions)); }, [healthConditions]);
@@ -410,6 +419,29 @@ export default function KitchenAssistantPage() {
     }));
   };
 
+  // --- USER RECIPE HANDLERS ---
+  const openUserRecipeForm = (recipe?: UserRecipe) => {
+    setEditingUserRecipe(recipe || null);
+    setUserRecipeFormOpen(true);
+  };
+
+  const handleSaveUserRecipe = (recipeData: Omit<UserRecipe, 'id'> & { id?: string }) => {
+    if (recipeData.id) {
+      setUserRecipes(prev => prev.map(r => r.id === recipeData.id ? { ...r, ...recipeData } as UserRecipe : r));
+    } else {
+      const newRecipe: UserRecipe = { ...recipeData, id: self.crypto.randomUUID() };
+      setUserRecipes(prev => [...prev, newRecipe]);
+    }
+    setUserRecipeFormOpen(false);
+    setEditingUserRecipe(null);
+  };
+  
+  const handleDeleteUserRecipe = (recipeId: string) => {
+    if (window.confirm("Êtes-vous sûr de vouloir supprimer cette recette ?")) {
+      setUserRecipes(prev => prev.filter(r => r.id !== recipeId));
+    }
+  };
+
 
   // --- RENDER ---
   return (
@@ -464,6 +496,9 @@ export default function KitchenAssistantPage() {
               setViewingRecipe={setViewingRecipe}
               discoverableRecipes={discoverableRecipes}
               handleSaveRecipe={handleSaveRecipe}
+              userRecipes={userRecipes}
+              openUserRecipeForm={openUserRecipeForm}
+              onViewUserRecipe={setViewingUserRecipe}
             />
           )}
           {activeTab === 'chandyek' && (
@@ -511,6 +546,13 @@ export default function KitchenAssistantPage() {
         setQuantityDialogOpen={setQuantityDialogOpen}
         ingredientForQuantity={ingredientForQuantity}
         onAddToBasket={addToBasket}
+        isUserRecipeFormOpen={isUserRecipeFormOpen}
+        setUserRecipeFormOpen={setUserRecipeFormOpen}
+        editingUserRecipe={editingUserRecipe}
+        handleSaveUserRecipe={handleSaveUserRecipe}
+        viewingUserRecipe={viewingUserRecipe}
+        setViewingUserRecipe={setViewingUserRecipe}
+        onDeleteUserRecipe={handleDeleteUserRecipe}
       />
     </div>
   );
