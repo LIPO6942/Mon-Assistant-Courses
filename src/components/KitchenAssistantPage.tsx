@@ -15,17 +15,20 @@ import PantryView from './PantryView';
 import RecipesView from './RecipesView';
 import ChandyekView from './ChandyekView';
 import NutritionalGuideView from './NutritionalGuideView';
+import { db } from '@/lib/idb';
+
 
 export default function KitchenAssistantPage() {
   // --- STATE MANAGEMENT ---
-  const [pantry, setPantry] = useState<Ingredient[]>(predefinedIngredients);
+  const [pantry, setPantry] = useState<Ingredient[]>([]);
   const [basket, setBasket] = useState<BasketItem[]>([]);
-  const [categories, setCategories] = useState<CategoryDef[]>(initialCategories);
+  const [categories, setCategories] = useState<CategoryDef[]>([]);
   const [savedRecipes, setSavedRecipes] = useState<Recipe[]>([]);
   const [userRecipes, setUserRecipes] = useState<UserRecipe[]>([]);
   const [initialBudget, setInitialBudget] = useState(200);
   const [totalSpent, setTotalSpent] = useState(0);
-  const [healthConditions, setHealthConditions] = useState<HealthConditionCategory[]>(initialHealthConditions);
+  const [healthConditions, setHealthConditions] = useState<HealthConditionCategory[]>([]);
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
   
   // Ephemeral state
   const [activeTab, setActiveTab] = useState<'pantry' | 'recipes' | 'chandyek' | 'guide'>('pantry');
@@ -90,45 +93,66 @@ export default function KitchenAssistantPage() {
   }, []);
 
 
-  // --- LOCALSTORAGE PERSISTENCE ---
+  // --- INDEXEDDB PERSISTENCE ---
   useEffect(() => {
-    try {
-      const storedPantry = localStorage.getItem('pantry-data');
-      if (storedPantry) setPantry(JSON.parse(storedPantry));
+    async function loadData() {
+      try {
+        const [
+          pantryData,
+          basketData,
+          categoriesData,
+          savedRecipesData,
+          userRecipesData,
+          budgetData,
+          totalSpentData,
+          healthConditionsData,
+        ] = await Promise.all([
+          db.get('pantry'),
+          db.get('basket'),
+          db.get('categories'),
+          db.get('savedRecipes'),
+          db.get('userRecipes'),
+          db.get('budget'),
+          db.get('totalSpent'),
+          db.get('healthConditions'),
+        ]);
 
-      const storedBasket = localStorage.getItem('basket-data');
-      if (storedBasket) setBasket(JSON.parse(storedBasket));
+        setPantry(pantryData ?? predefinedIngredients);
+        setBasket(basketData ?? []);
+        setCategories(categoriesData ?? initialCategories);
+        setSavedRecipes(savedRecipesData ?? []);
+        setUserRecipes(userRecipesData ?? []);
+        setInitialBudget(budgetData ?? 200);
+        setTotalSpent(totalSpentData ?? 0);
+        setHealthConditions(healthConditionsData ?? initialHealthConditions);
 
-      const storedCategories = localStorage.getItem('categories-data');
-      if (storedCategories) setCategories(JSON.parse(storedCategories));
-
-      const storedSavedRecipes = localStorage.getItem('saved-recipes-data');
-      if (storedSavedRecipes) setSavedRecipes(JSON.parse(storedSavedRecipes));
-
-      const storedUserRecipes = localStorage.getItem('user-recipes-data');
-      if (storedUserRecipes) setUserRecipes(JSON.parse(storedUserRecipes));
-
-      const storedBudget = localStorage.getItem('budget-data');
-      if (storedBudget) setInitialBudget(JSON.parse(storedBudget));
-      
-      const storedTotalSpent = localStorage.getItem('total-spent-data');
-      if (storedTotalSpent) setTotalSpent(JSON.parse(storedTotalSpent));
-
-      const storedHealthConditions = localStorage.getItem('health-conditions-data');
-      if (storedHealthConditions) setHealthConditions(JSON.parse(storedHealthConditions));
-    } catch (error) {
-      console.error("Error loading data from localStorage", error);
+      } catch (error) {
+        console.error("Error loading data from IndexedDB", error);
+        // Fallback to initial data if loading fails
+        setPantry(predefinedIngredients);
+        setBasket([]);
+        setCategories(initialCategories);
+        setSavedRecipes([]);
+        setUserRecipes([]);
+        setInitialBudget(200);
+        setTotalSpent(0);
+        setHealthConditions(initialHealthConditions);
+      } finally {
+        setIsDataLoaded(true);
+      }
     }
+    loadData();
   }, []);
 
-  useEffect(() => { localStorage.setItem('pantry-data', JSON.stringify(pantry)); }, [pantry]);
-  useEffect(() => { localStorage.setItem('basket-data', JSON.stringify(basket)); }, [basket]);
-  useEffect(() => { localStorage.setItem('categories-data', JSON.stringify(categories)); }, [categories]);
-  useEffect(() => { localStorage.setItem('saved-recipes-data', JSON.stringify(savedRecipes)); }, [savedRecipes]);
-  useEffect(() => { localStorage.setItem('user-recipes-data', JSON.stringify(userRecipes)); }, [userRecipes]);
-  useEffect(() => { localStorage.setItem('budget-data', JSON.stringify(initialBudget)); }, [initialBudget]);
-  useEffect(() => { localStorage.setItem('total-spent-data', JSON.stringify(totalSpent)); }, [totalSpent]);
-  useEffect(() => { localStorage.setItem('health-conditions-data', JSON.stringify(healthConditions)); }, [healthConditions]);
+  useEffect(() => { if (isDataLoaded) db.set('pantry', pantry); }, [pantry, isDataLoaded]);
+  useEffect(() => { if (isDataLoaded) db.set('basket', basket); }, [basket, isDataLoaded]);
+  useEffect(() => { if (isDataLoaded) db.set('categories', categories); }, [categories, isDataLoaded]);
+  useEffect(() => { if (isDataLoaded) db.set('savedRecipes', savedRecipes); }, [savedRecipes, isDataLoaded]);
+  useEffect(() => { if (isDataLoaded) db.set('userRecipes', userRecipes); }, [userRecipes, isDataLoaded]);
+  useEffect(() => { if (isDataLoaded) db.set('budget', initialBudget); }, [initialBudget, isDataLoaded]);
+  useEffect(() => { if (isDataLoaded) db.set('totalSpent', totalSpent); }, [totalSpent, isDataLoaded]);
+  useEffect(() => { if (isDataLoaded) db.set('healthConditions', healthConditions); }, [healthConditions, isDataLoaded]);
+
 
   // --- MEMOIZED CALCULATIONS ---
   const basketTotalToPay = useMemo(() => basket.reduce((total, item) => !item.purchased ? total + item.price * item.quantity : total, 0), [basket]);
@@ -269,10 +293,7 @@ export default function KitchenAssistantPage() {
     setBasket(prevBasket =>
       prevBasket.map(item => {
         if (item.id === id) {
-          const isPurchased = !item.purchased;
-          // This seems complex, let's simplify. The budget manager should derive its state.
-          // Let's just toggle purchased state.
-          return { ...item, purchased: isPurchased };
+          return { ...item, purchased: !item.purchased };
         }
         return item;
       })
@@ -442,6 +463,13 @@ export default function KitchenAssistantPage() {
     }
   };
 
+  if (!isDataLoaded) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p>Chargement des données...</p>
+      </div>
+    );
+  }
 
   // --- RENDER ---
   return (
@@ -557,3 +585,4 @@ export default function KitchenAssistantPage() {
     </div>
   );
 }
+
