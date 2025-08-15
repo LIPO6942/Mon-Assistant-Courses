@@ -144,14 +144,14 @@ export default function KitchenAssistantPage() {
     loadData();
   }, []);
 
-  useEffect(() => { if (isDataLoaded) db.set('pantry', pantry); }, [pantry, isDataLoaded]);
-  useEffect(() => { if (isDataLoaded) db.set('basket', basket); }, [basket, isDataLoaded]);
-  useEffect(() => { if (isDataLoaded) db.set('categories', categories); }, [categories, isDataLoaded]);
-  useEffect(() => { if (isDataLoaded) db.set('savedRecipes', savedRecipes); }, [savedRecipes, isDataLoaded]);
-  useEffect(() => { if (isDataLoaded) db.set('userRecipes', userRecipes); }, [userRecipes, isDataLoaded]);
-  useEffect(() => { if (isDataLoaded) db.set('budget', initialBudget); }, [initialBudget, isDataLoaded]);
-  useEffect(() => { if (isDataLoaded) db.set('totalSpent', totalSpent); }, [totalSpent, isDataLoaded]);
-  useEffect(() => { if (isDataLoaded) db.set('healthConditions', healthConditions); }, [healthConditions, isDataLoaded]);
+  useEffect(() => { if (isDataLoaded) { try { db.set('pantry', pantry); } catch(e) { console.error(e); alert("Le stockage local est plein. Impossible de sauvegarder les modifications du garde-manger.")}} }, [pantry, isDataLoaded]);
+  useEffect(() => { if (isDataLoaded) { try { db.set('basket', basket); } catch(e) { console.error(e); alert("Le stockage local est plein. Impossible de sauvegarder les modifications du panier.")}} }, [basket, isDataLoaded]);
+  useEffect(() => { if (isDataLoaded) { try { db.set('categories', categories); } catch(e) { console.error(e); alert("Le stockage local est plein. Impossible de sauvegarder les modifications des catégories.")}} }, [categories, isDataLoaded]);
+  useEffect(() => { if (isDataLoaded) { try { db.set('savedRecipes', savedRecipes); } catch(e) { console.error(e); alert("Le stockage local est plein. Impossible de sauvegarder les recettes.")}} }, [savedRecipes, isDataLoaded]);
+  useEffect(() => { if (isDataLoaded) { try { db.set('userRecipes', userRecipes); } catch(e) { console.error(e); alert("Le stockage local est plein. Impossible de sauvegarder vos recettes personnelles.")}} }, [userRecipes, isDataLoaded]);
+  useEffect(() => { if (isDataLoaded) { try { db.set('budget', initialBudget); } catch(e) { console.error(e); alert("Le stockage local est plein. Impossible de sauvegarder le budget.")}} }, [initialBudget, isDataLoaded]);
+  useEffect(() => { if (isDataLoaded) { try { db.set('totalSpent', totalSpent); } catch(e) { console.error(e); alert("Le stockage local est plein. Impossible de sauvegarder le total dépensé.")}} }, [totalSpent, isDataLoaded]);
+  useEffect(() => { if (isDataLoaded) { try { db.set('healthConditions', healthConditions); } catch(e) { console.error(e); alert("Le stockage local est plein. Impossible de sauvegarder les conditions de santé.")}} }, [healthConditions, isDataLoaded]);
 
 
   // --- MEMOIZED CALCULATIONS ---
@@ -446,6 +446,11 @@ export default function KitchenAssistantPage() {
     setUserRecipeFormOpen(true);
   };
 
+  const handleEditUserRecipe = (recipe: UserRecipe) => {
+    setViewingUserRecipe(null); // Close the view dialog
+    openUserRecipeForm(recipe); // Open the form with the recipe to edit
+  };
+
   const handleSaveUserRecipe = (recipeData: Omit<UserRecipe, 'id'> & { id?: string }) => {
     if (recipeData.id) {
       setUserRecipes(prev => prev.map(r => r.id === recipeData.id ? { ...r, ...recipeData } as UserRecipe : r));
@@ -581,6 +586,7 @@ export default function KitchenAssistantPage() {
         viewingUserRecipe={viewingUserRecipe}
         setViewingUserRecipe={setViewingUserRecipe}
         onDeleteUserRecipe={handleDeleteUserRecipe}
+        onEditUserRecipe={handleEditUserRecipe}
       />
     </div>
   );
