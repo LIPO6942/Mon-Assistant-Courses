@@ -76,7 +76,8 @@ export default function ImagePicker({ photoDataUri, setPhotoDataUri }: ImagePick
         if (tempCtx) {
           const maxWidth = 800;
           const maxHeight = 800;
-          let { width, height } = video;
+          let width = video.videoWidth;
+          let height = video.videoHeight;
 
           if (width > height) {
             if (width > maxWidth) {
