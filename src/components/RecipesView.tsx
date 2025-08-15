@@ -11,6 +11,12 @@ import type { Recipe, UserRecipe } from '@/lib/types';
 import { streetFoodOptions } from '@/lib/data';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 
 interface RecipesViewProps {
   setViewingRecipe: (recipe: (Omit<Recipe, 'id'> & { id?: string; }) | null) => void;
@@ -90,48 +96,55 @@ export default function RecipesView({
 
   return (
     <div className="space-y-8">
-      <div className='text-center py-8 px-4 rounded-xl bg-gradient-to-br from-secondary/50 via-card to-card border-2 border-border/50 shadow-lg'>
-        <div className="flex justify-center items-center gap-3 mb-4">
-            <BookUser className="h-8 w-8 text-primary"/>
-            <h2 className='text-3xl font-bold'>Recetteti</h2>
-        </div>
-        <p className='text-muted-foreground mb-6 max-w-2xl mx-auto'>Votre carnet de recettes personnel. Créez, modifiez et conservez vos propres créations culinaires ici-même.</p>
-        
-        {userRecipes.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-            {userRecipes.map(recipe => (
-              <Card key={recipe.id} className="cursor-pointer hover:shadow-xl transition-shadow flex flex-col" onClick={() => onViewUserRecipe(recipe)}>
-                <CardContent className='p-4 flex items-center gap-4'>
-                   <div className="relative w-12 h-12 shrink-0">
-                    {recipe.photoDataUri ? (
-                      <Image src={recipe.photoDataUri} alt={recipe.title} layout="fill" objectFit="cover" className="rounded-md" />
-                    ) : (
-                      <div className="w-full h-full bg-secondary flex items-center justify-center rounded-md">
-                          <Utensils className="h-6 w-6 text-muted-foreground" />
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex flex-col overflow-hidden">
-                    <CardTitle className='text-lg truncate'>{recipe.title}</CardTitle>
-                    <div className="flex flex-wrap items-center gap-2 mt-1">
-                      <Badge variant="outline">{recipe.category}</Badge>
-                      <Badge variant="outline" className="flex items-center gap-1"><Clock className="h-3 w-3"/>{recipe.preparationTime} min</Badge>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : (
-            <p className='text-muted-foreground mb-6'>Vous n'avez pas encore créé de recette.</p>
-        )}
-        
-        <Button onClick={() => openUserRecipeForm()}>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Créer ma recette
-        </Button>
-      </div>
-
+       <Accordion type="single" collapsible className="w-full">
+        <AccordionItem value="item-1">
+          <AccordionTrigger>
+            <div className="flex justify-center items-center gap-3 py-2 text-primary">
+                <BookUser className="h-8 w-8 text-primary"/>
+                <h2 className='text-3xl font-bold'>Recetteti</h2>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className='text-center py-4 px-4 rounded-xl bg-gradient-to-br from-secondary/50 via-card to-card border-2 border-border/50 shadow-lg'>
+              <p className='text-muted-foreground mb-6 max-w-2xl mx-auto'>Votre carnet de recettes personnel. Créez, modifiez et conservez vos propres créations culinaires ici-même.</p>
+              
+              {userRecipes.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-6">
+                  {userRecipes.map(recipe => (
+                    <Card key={recipe.id} className="cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col" onClick={() => onViewUserRecipe(recipe)}>
+                      <CardContent className='p-3 flex items-center gap-3'>
+                         <div className="relative w-12 h-12 aspect-square shrink-0">
+                          {recipe.photoDataUri ? (
+                            <Image src={recipe.photoDataUri} alt={recipe.title} layout="fill" objectFit="cover" className="rounded-md" />
+                          ) : (
+                            <div className="w-full h-full bg-secondary flex items-center justify-center rounded-md">
+                                <Utensils className="h-6 w-6 text-muted-foreground" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex flex-col overflow-hidden">
+                          <CardTitle className='text-base font-semibold truncate'>{recipe.title}</CardTitle>
+                          <div className="flex flex-wrap items-center gap-1 mt-1">
+                            <Badge variant="outline" className="text-xs">{recipe.category}</Badge>
+                            <Badge variant="outline" className="flex items-center gap-1 text-xs"><Clock className="h-3 w-3"/>{recipe.preparationTime} min</Badge>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                  <p className='text-muted-foreground mb-6'>Vous n'avez pas encore créé de recette.</p>
+              )}
+              
+              <Button onClick={() => openUserRecipeForm()}>
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Créer ma recette
+              </Button>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
 
       <div className='text-center py-8 px-4 rounded-xl bg-gradient-to-br from-primary/10 via-card to-card border-2 border-primary/20 shadow-lg'>
         <h2 className='text-2xl font-bold mb-2'>À court d'idées ?</h2>
