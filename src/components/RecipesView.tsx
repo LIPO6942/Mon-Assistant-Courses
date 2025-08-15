@@ -6,7 +6,7 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, Shuffle, Dices, Clock, Coins, Utensils, BookUser, Search } from 'lucide-react';
+import { PlusCircle, Shuffle, Dices, Clock, Coins, Utensils, BookUser, Search, Tag } from 'lucide-react';
 import type { Recipe, UserRecipe } from '@/lib/types';
 import { streetFoodOptions } from '@/lib/data';
 import { cn } from '@/lib/utils';
@@ -153,6 +153,9 @@ export default function RecipesView({
                           <div className="flex flex-wrap items-center gap-1 mt-1">
                             <Badge variant="outline" className="text-xs">{recipe.category}</Badge>
                             <Badge variant="outline" className="flex items-center gap-1 text-xs"><Clock className="h-3 w-3"/>{recipe.preparationTime} min</Badge>
+                             {recipe.tags && recipe.tags.split(',').map(tag => tag.trim() && (
+                                <Badge key={tag.trim()} variant="secondary" className="text-xs flex items-center gap-1"><Tag className="h-3 w-3"/>{tag.trim()}</Badge>
+                            ))}
                           </div>
                         </div>
                       </CardContent>
