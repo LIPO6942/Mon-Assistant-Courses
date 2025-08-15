@@ -101,21 +101,19 @@ export default function RecipesView({
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
             {userRecipes.map(recipe => (
               <Card key={recipe.id} className="cursor-pointer hover:shadow-xl transition-shadow flex flex-col" onClick={() => onViewUserRecipe(recipe)}>
-                <CardHeader className='p-4'>
-                  <CardTitle className='text-lg'>{recipe.title}</CardTitle>
-                </CardHeader>
-                <CardContent className='p-4 pt-0 flex-grow flex items-center gap-4'>
-                   <div className="aspect-square relative w-24 h-24 shrink-0">
+                <CardContent className='p-4 flex items-center gap-4'>
+                   <div className="relative w-12 h-12 shrink-0">
                     {recipe.photoDataUri ? (
-                      <Image src={recipe.photoDataUri} alt={recipe.title} layout="fill" objectFit="cover" className="rounded-lg" />
+                      <Image src={recipe.photoDataUri} alt={recipe.title} layout="fill" objectFit="cover" className="rounded-md" />
                     ) : (
-                      <div className="w-full h-full bg-secondary flex items-center justify-center rounded-lg">
-                          <Utensils className="h-10 w-10 text-muted-foreground" />
+                      <div className="w-full h-full bg-secondary flex items-center justify-center rounded-md">
+                          <Utensils className="h-6 w-6 text-muted-foreground" />
                       </div>
                     )}
                   </div>
-                  <div className="flex flex-col">
-                    <div className="flex flex-wrap items-center gap-2 mt-2">
+                  <div className="flex flex-col overflow-hidden">
+                    <CardTitle className='text-lg truncate'>{recipe.title}</CardTitle>
+                    <div className="flex flex-wrap items-center gap-2 mt-1">
                       <Badge variant="outline">{recipe.category}</Badge>
                       <Badge variant="outline" className="flex items-center gap-1"><Clock className="h-3 w-3"/>{recipe.preparationTime} min</Badge>
                     </div>
