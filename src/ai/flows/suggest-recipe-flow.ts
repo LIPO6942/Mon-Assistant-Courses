@@ -37,11 +37,12 @@ Pour chaque recette, tu dois fournir les informations suivantes de manière stru
 1.  **title** : Un nom de recette accrocheur.
 2.  **description** : Une courte phrase pour donner envie.
 3.  **country** : Le pays d'origine de la recette.
-4.  **ingredients** : La liste complète des ingrédients, y compris ceux que l'utilisateur n'a pas, avec leur quantité et leur unité.
-5.  **preparation** : Les instructions de préparation détaillées, étape par étape.
-6.  **calories** : Une estimation des calories pour le plat.
-7.  **preparationTime**: Une estimation du temps total de préparation en minutes (un nombre entier).
-8.  **isEconomical**: Un booléen (true/false) indiquant si la recette est considérée comme économique (utilisant des ingrédients peu coûteux et courants).
+4.  **portions**: Le nombre de personnes pour qui la recette est prévue (généralement 2 ou 4).
+5.  **ingredients** : La liste complète des ingrédients, y compris ceux que l'utilisateur n'a pas, avec leur quantité et leur unité.
+6.  **preparation** : Les instructions de préparation détaillées, étape par étape.
+7.  **calories** : Une estimation des calories pour le plat.
+8.  **preparationTime**: Une estimation du temps total de préparation en minutes (un nombre entier).
+9.  **isEconomical**: Un booléen (true/false) indiquant si la recette est considérée comme économique (utilisant des ingrédients peu coûteux et courants).
 
 Assure-toi que la sortie est un objet JSON valide qui respecte le schéma défini.`,
 });

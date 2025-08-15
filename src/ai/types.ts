@@ -39,6 +39,7 @@ export const SuggestRecipeOutputSchema = z.object({
   title: z.string().describe("The name of the recipe."),
   description: z.string().describe("A short, enticing description of the dish."),
   country: z.string().describe("The country of origin of the recipe."),
+  portions: z.number().int().describe("The number of people the recipe is for."),
   ingredients: z.array(z.object({
     name: z.string().describe("The name of the ingredient."),
     quantity: z.number().describe("The numeric quantity of the ingredient."),

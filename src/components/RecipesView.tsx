@@ -1,25 +1,33 @@
 
+
 'use client';
 
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, Shuffle, Dices, Clock, Coins } from 'lucide-react';
-import type { Recipe } from '@/lib/types';
+import { PlusCircle, Shuffle, Dices, Clock, Coins, Utensils, BookUser } from 'lucide-react';
+import type { Recipe, UserRecipe } from '@/lib/types';
 import { streetFoodOptions } from '@/lib/data';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 interface RecipesViewProps {
   setViewingRecipe: (recipe: (Omit<Recipe, 'id'> & { id?: string; }) | null) => void;
   discoverableRecipes: Recipe[];
   handleSaveRecipe: (recipe: Omit<Recipe, 'id'> & { id?: string; }) => void;
+  userRecipes: UserRecipe[];
+  openUserRecipeForm: (recipe?: UserRecipe) => void;
+  onViewUserRecipe: (recipe: UserRecipe | null) => void;
 }
 
 export default function RecipesView({
   setViewingRecipe,
   discoverableRecipes,
   handleSaveRecipe,
+  userRecipes,
+  openUserRecipeForm,
+  onViewUserRecipe
 }: RecipesViewProps) {
   const [suggestedRecipes, setSuggestedRecipes] = useState<Recipe[]>([]);
   const [selectedStreetFood, setSelectedStreetFood] = useState<string | null>(null);
@@ -82,6 +90,49 @@ export default function RecipesView({
 
   return (
     <div className="space-y-8">
+      <div className='text-center py-8 px-4 rounded-xl bg-gradient-to-br from-secondary/50 via-card to-card border-2 border-border/50 shadow-lg'>
+        <div className="flex justify-center items-center gap-3 mb-4">
+            <BookUser className="h-8 w-8 text-primary"/>
+            <h2 className='text-3xl font-bold'>Recetteti</h2>
+        </div>
+        <p className='text-muted-foreground mb-6 max-w-2xl mx-auto'>Votre carnet de recettes personnel. Créez, modifiez et conservez vos propres créations culinaires ici-même.</p>
+        
+        {userRecipes.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+            {userRecipes.map(recipe => (
+              <Card key={recipe.id} className="cursor-pointer hover:shadow-xl transition-shadow" onClick={() => onViewUserRecipe(recipe)}>
+                <CardHeader className='p-0'>
+                  <div className="aspect-video relative w-full">
+                    {recipe.photoDataUri ? (
+                      <Image src={recipe.photoDataUri} alt={recipe.title} layout="fill" objectFit="cover" className="rounded-t-lg" />
+                    ) : (
+                      <div className="w-full h-full bg-secondary flex items-center justify-center rounded-t-lg">
+                          <Utensils className="h-12 w-12 text-muted-foreground" />
+                      </div>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent className='p-4'>
+                  <CardTitle className='text-lg'>{recipe.title}</CardTitle>
+                  <div className="flex items-center gap-2 mt-2">
+                    <Badge variant="outline">{recipe.category}</Badge>
+                    <Badge variant="outline" className="flex items-center gap-1"><Clock className="h-3 w-3"/>{recipe.preparationTime} min</Badge>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+            <p className='text-muted-foreground mb-6'>Vous n'avez pas encore créé de recette.</p>
+        )}
+        
+        <Button onClick={() => openUserRecipeForm()}>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Créer ma recette
+        </Button>
+      </div>
+
+
       <div className='text-center py-8 px-4 rounded-xl bg-gradient-to-br from-primary/10 via-card to-card border-2 border-primary/20 shadow-lg'>
         <h2 className='text-2xl font-bold mb-2'>À court d'idées ?</h2>
         <p className='text-muted-foreground mb-4'>Utilisez les filtres pour affiner les suggestions aléatoires !</p>

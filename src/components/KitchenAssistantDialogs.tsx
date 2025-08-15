@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -6,11 +7,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Minus, Plus } from 'lucide-react';
+import { Minus, Plus, Pencil, Trash2, Users } from 'lucide-react';
 import IngredientForm from './IngredientForm';
 import CategoryForm from './CategoryForm';
 import HealthConditionManager from './HealthConditionManager';
-import type { Ingredient, Recipe, CategoryDef, HealthConditionCategory, HealthCondition } from '@/lib/types';
+import type { Ingredient, Recipe, CategoryDef, HealthConditionCategory, UserRecipe, RecipeIngredient } from '@/lib/types';
+import UserRecipeForm from './UserRecipeForm';
+import Image from 'next/image';
+import { Label } from './ui/label';
 
 interface KitchenAssistantDialogsProps {
   isAddEditDialogOpen: boolean;
@@ -39,6 +43,15 @@ interface KitchenAssistantDialogsProps {
   setQuantityDialogOpen: (isOpen: boolean) => void;
   ingredientForQuantity: Ingredient | null;
   onAddToBasket: (ingredient: Ingredient, quantity: number) => void;
+
+  isUserRecipeFormOpen: boolean;
+  setUserRecipeFormOpen: (isOpen: boolean) => void;
+  editingUserRecipe: UserRecipe | null;
+  handleSaveUserRecipe: (recipeData: Omit<UserRecipe, 'id'> & { id?: string }) => void;
+  
+  viewingUserRecipe: UserRecipe | null;
+  setViewingUserRecipe: (recipe: UserRecipe | null) => void;
+  onDeleteUserRecipe: (recipeId: string) => void;
 }
 
 export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsProps) {
@@ -64,10 +77,18 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
     isQuantityDialogOpen,
     setQuantityDialogOpen,
     ingredientForQuantity,
-    onAddToBasket
+    onAddToBasket,
+    isUserRecipeFormOpen,
+    setUserRecipeFormOpen,
+    editingUserRecipe,
+    handleSaveUserRecipe,
+    viewingUserRecipe,
+    setViewingUserRecipe,
+    onDeleteUserRecipe,
   } = props;
 
   const [quantityInput, setQuantityInput] = React.useState('1');
+  const [portions, setPortions] = React.useState(viewingRecipe?.portions || viewingUserRecipe?.portions || 2);
 
   React.useEffect(() => {
     if (isQuantityDialogOpen) {
@@ -75,13 +96,29 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
     }
   }, [isQuantityDialogOpen]);
 
+  React.useEffect(() => {
+    setPortions(viewingRecipe?.portions || viewingUserRecipe?.portions || 2);
+  }, [viewingRecipe, viewingUserRecipe]);
+
+
   const handleConfirmQuantity = () => {
     const quantity = parseFloat(quantityInput);
     if (!isNaN(quantity) && quantity > 0 && ingredientForQuantity) {
       onAddToBasket(ingredientForQuantity, quantity);
     }
   };
+
+  const calculateAdjustedQuantity = (baseQuantity: number, basePortions: number, newPortions: number) => {
+    if (!basePortions) return baseQuantity;
+    const adjusted = (baseQuantity / basePortions) * newPortions;
+    // Format to max 2 decimal places, and remove trailing zeros
+    return parseFloat(adjusted.toFixed(2));
+  };
   
+  const currentRecipe = viewingRecipe || viewingUserRecipe;
+  const currentIngredients = currentRecipe?.ingredients as RecipeIngredient[] | undefined;
+  const basePortions = currentRecipe?.portions || 1;
+
   return (
     <>
       <Dialog open={isAddEditDialogOpen} onOpenChange={setAddEditDialogOpen}>
@@ -100,27 +137,78 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
         </DialogContent>
       </Dialog>
       
-      <Dialog open={!!viewingRecipe} onOpenChange={(open) => !open && setViewingRecipe(null)}>
+      <Dialog open={!!currentRecipe} onOpenChange={(open) => {
+        if (!open) {
+          setViewingRecipe(null);
+          setViewingUserRecipe(null);
+        }
+      }}>
         <DialogContent className="max-w-lg">
-            {viewingRecipe && (
+            {currentRecipe && (
               <>
                 <DialogHeader>
-                  <DialogTitle>{viewingRecipe.title}</DialogTitle>
-                  <DialogDescription>{viewingRecipe.country} - Environ {viewingRecipe.calories} kcal - {viewingRecipe.description}</DialogDescription>
+                  {(currentRecipe as UserRecipe).photoDataUri && (
+                    <div className="relative w-full h-48 mb-4 rounded-lg overflow-hidden">
+                       <Image src={(currentRecipe as UserRecipe).photoDataUri!} alt={currentRecipe.title} layout="fill" objectFit="cover" />
+                    </div>
+                  )}
+                  <DialogTitle>{currentRecipe.title}</DialogTitle>
+                  <DialogDescription>
+                    {'country' in currentRecipe ? `${currentRecipe.country} - ` : ''}
+                    {'calories' in currentRecipe ? `Environ ${currentRecipe.calories} kcal` : ''}
+                    {'description' in currentRecipe ? ` - ${currentRecipe.description}` : ''}
+                  </DialogDescription>
                 </DialogHeader>
+                
+                <div className="flex items-center gap-4 my-2">
+                  <Label htmlFor="portions" className="flex items-center gap-2"><Users className='h-4 w-4'/> Portions :</Label>
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="icon" className='h-8 w-8' onClick={() => setPortions(p => Math.max(1, p - 1))}><Minus className='h-4 w-4'/></Button>
+                    <Input id="portions" type="number" value={portions} onChange={e => setPortions(Math.max(1, parseInt(e.target.value, 10) || 1))} className="w-16 h-8 text-center font-bold" />
+                    <Button variant="outline" size="icon" className='h-8 w-8' onClick={() => setPortions(p => p + 1)}><Plus className='h-4 w-4'/></Button>
+                  </div>
+                </div>
+
                 <ScrollArea className="h-72 my-2 border rounded-md p-4">
                     <h4 className='font-semibold'>Ingrédients :</h4>
                     <ul className='list-disc pl-5 text-sm space-y-1 my-2'>
-                        {viewingRecipe.ingredients.map(ing => <li key={ing.name}>{ing.quantity} {ing.unit} de {ing.name}</li>)}
+                        {currentIngredients?.map((ing, i) => 
+                          <li key={ing.name + i}>
+                            {calculateAdjustedQuantity(ing.quantity, basePortions, portions)} {ing.unit} de {ing.name}
+                          </li>
+                        )}
                     </ul>
                     <h4 className='font-semibold mt-4'>Préparation :</h4>
-                    <p className="text-sm text-muted-foreground whitespace-pre-wrap mt-2">{viewingRecipe.preparation}</p>
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap mt-2">{currentRecipe.preparation}</p>
                 </ScrollArea>
-                <DialogFooter>
-                  <DialogClose asChild><Button type="button">Fermer</Button></DialogClose>
+                <DialogFooter className='justify-between w-full'>
+                   <div>
+                    {viewingUserRecipe && (
+                      <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onDeleteUserRecipe(viewingUserRecipe.id); setViewingUserRecipe(null); }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                    )}
+                  </div>
+                  <div>
+                    <Button type="button" variant="outline" className='mr-2' onClick={() => { setViewingRecipe(null); setViewingUserRecipe(null); }}>Fermer</Button>
+                  </div>
                 </DialogFooter>
               </>
             )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isUserRecipeFormOpen} onOpenChange={setUserRecipeFormOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader><DialogTitle>{editingUserRecipe ? "Modifier" : "Créer"} ma recette</DialogTitle></DialogHeader>
+          <UserRecipeForm
+            key={editingUserRecipe?.id || 'new-user-recipe'}
+            initialData={editingUserRecipe}
+            onSave={handleSaveUserRecipe}
+            formId='user-recipe-form'
+          />
+           <DialogFooter>
+              <Button variant="outline" onClick={() => setUserRecipeFormOpen(false)}>Annuler</Button>
+              <Button type="submit" form="user-recipe-form">Sauvegarder</Button>
+            </DialogFooter>
         </DialogContent>
       </Dialog>
 
