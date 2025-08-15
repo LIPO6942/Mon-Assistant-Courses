@@ -155,6 +155,7 @@ export const discoverableRecipes: Recipe[] = [
     description: 'Un plat de pâtes italien classique, crémeux et savoureux, prêt en un rien de temps.',
     country: 'Italie',
     calories: 650,
+    portions: 4,
     preparationTime: 20,
     isEconomical: false,
     ingredients: [
@@ -172,6 +173,7 @@ export const discoverableRecipes: Recipe[] = [
     description: 'Un plat marocain parfumé et fondant, sucré-salé, qui fait voyager les papilles.',
     country: 'Maroc',
     calories: 550,
+    portions: 4,
     preparationTime: 60,
     isEconomical: false,
     ingredients: [
@@ -192,6 +194,7 @@ export const discoverableRecipes: Recipe[] = [
     description: 'Une soupe de nouilles japonaise riche et réconfortante avec un bouillon de porc crémeux.',
     country: 'Japon',
     calories: 800,
+    portions: 2,
     preparationTime: 120,
     isEconomical: false,
     ingredients: [
@@ -210,6 +213,7 @@ export const discoverableRecipes: Recipe[] = [
     description: 'Le goût de Mexico dans une tortilla, avec du porc mariné, de l\'ananas et une salsa fraîche.',
     country: 'Mexique',
     calories: 450,
+    portions: 4,
     preparationTime: 30,
     isEconomical: false,
     ingredients: [
@@ -229,6 +233,7 @@ export const discoverableRecipes: Recipe[] = [
     description: 'Un ragoût de bœuf français emblématique, mijoté lentement dans du vin rouge.',
     country: 'France',
     calories: 700,
+    portions: 6,
     preparationTime: 200,
     isEconomical: false,
     ingredients: [
@@ -248,6 +253,7 @@ export const discoverableRecipes: Recipe[] = [
     description: 'Un gratin grec généreux avec des aubergines, de la viande hachée et une sauce béchamel onctueuse.',
     country: 'Grèce',
     calories: 750,
+    portions: 6,
     preparationTime: 90,
     isEconomical: false,
     ingredients: [
@@ -268,6 +274,7 @@ export const discoverableRecipes: Recipe[] = [
     description: 'Un curry thaïlandais crémeux, épicé et plein de saveurs, servi avec du riz jasmin.',
     country: 'Thaïlande',
     calories: 600,
+    portions: 4,
     preparationTime: 30,
     isEconomical: false,
     ingredients: [
@@ -287,6 +294,7 @@ export const discoverableRecipes: Recipe[] = [
     description: 'Le plat espagnol emblématique, un riz safrané garni de poulet, lapin et légumes verts.',
     country: 'Espagne',
     calories: 850,
+    portions: 4,
     preparationTime: 60,
     isEconomical: false,
     ingredients: [
@@ -307,6 +315,7 @@ export const discoverableRecipes: Recipe[] = [
     description: 'Un plat indien crémeux et légèrement épicé, avec des morceaux de poulet marinés dans une sauce tomate riche.',
     country: 'Inde',
     calories: 680,
+    portions: 4,
     preparationTime: 45,
     isEconomical: false,
     ingredients: [
@@ -326,6 +335,7 @@ export const discoverableRecipes: Recipe[] = [
     description: 'Le plat de nouilles sautées le plus célèbre de Thaïlande, un mélange parfait de sucré, salé et acide.',
     country: 'Thaïlande',
     calories: 700,
+    portions: 2,
     preparationTime: 30,
     isEconomical: true,
     ingredients: [
@@ -346,6 +356,7 @@ export const discoverableRecipes: Recipe[] = [
     description: 'Une soupe de nouilles vietnamienne parfumée et réconfortante avec un bouillon de bœuf riche et des herbes fraîches.',
     country: 'Vietnam',
     calories: 500,
+    portions: 4,
     preparationTime: 45,
     isEconomical: false,
     ingredients: [
@@ -366,6 +377,7 @@ export const discoverableRecipes: Recipe[] = [
     description: 'L\'icône américaine. Un steak juteux, du fromage fondant, dans un pain brioché moelleux.',
     country: 'USA',
     calories: 750,
+    portions: 4,
     preparationTime: 20,
     isEconomical: false,
     ingredients: [
@@ -385,6 +397,7 @@ export const discoverableRecipes: Recipe[] = [
     description: 'Une trempette crémeuse de pois chiches du Moyen-Orient, parfaite en apéritif ou en repas léger.',
     country: 'Liban',
     calories: 400,
+    portions: 4,
     preparationTime: 10,
     isEconomical: true,
     ingredients: [
@@ -404,6 +417,7 @@ export const discoverableRecipes: Recipe[] = [
     description: 'Une salade croquante et savoureuse, un classique indémodable.',
     country: 'Mexique / USA',
     calories: 550,
+    portions: 2,
     preparationTime: 20,
     isEconomical: false,
     ingredients: [
@@ -424,6 +438,7 @@ export const discoverableRecipes: Recipe[] = [
     description: 'Un plat familial généreux et parfumé, emblème de la cuisine tunisienne.',
     country: 'Tunisie',
     calories: 900,
+    portions: 6,
     preparationTime: 120,
     isEconomical: false,
     ingredients: [
@@ -446,6 +461,7 @@ export const discoverableRecipes: Recipe[] = [
     description: 'La reine des pizzas, simple, aux couleurs de l\'Italie, un vrai délice.',
     country: 'Italie',
     calories: 750,
+    portions: 1,
     preparationTime: 25,
     isEconomical: true,
     ingredients: [
@@ -464,6 +480,7 @@ export const discoverableRecipes: Recipe[] = [
     description: 'Un plat tex-mex riche et épicé, réconfortant et parfait à partager.',
     country: 'USA / Mexique',
     calories: 600,
+    portions: 6,
     preparationTime: 90,
     isEconomical: true,
     ingredients: [
@@ -484,6 +501,7 @@ export const discoverableRecipes: Recipe[] = [
     description: 'Un plat d\'été provençal, plein de légumes du soleil mijotés longuement.',
     country: 'France',
     calories: 300,
+    portions: 4,
     preparationTime: 75,
     isEconomical: true,
     ingredients: [
@@ -504,6 +522,7 @@ export const discoverableRecipes: Recipe[] = [
     description: 'Un classique simple, rapide et économique pour un repas léger.',
     country: 'France',
     calories: 300,
+    portions: 1,
     preparationTime: 10,
     isEconomical: true,
     ingredients: [
@@ -522,6 +541,7 @@ export const discoverableRecipes: Recipe[] = [
     description: 'Une salade saine, nourrissante et économique, parfaite pour un déjeuner à emporter.',
     country: 'International',
     calories: 400,
+    portions: 4,
     preparationTime: 30,
     isEconomical: true,
     ingredients: [
@@ -539,6 +559,7 @@ export const discoverableRecipes: Recipe[] = [
     description: 'Une soupe froide espagnole rafraîchissante, parfaite pour les chaudes journées d\'été.',
     country: 'Espagne',
     calories: 150,
+    portions: 4,
     preparationTime: 15,
     isEconomical: true,
     ingredients: [
@@ -558,6 +579,7 @@ export const discoverableRecipes: Recipe[] = [
     description: 'Un plat sénégalais emblématique, du poulet mariné dans une sauce aux oignons et au citron.',
     country: 'Sénégal',
     calories: 500,
+    portions: 6,
     preparationTime: 75,
     isEconomical: true,
     ingredients: [
@@ -576,6 +598,7 @@ export const discoverableRecipes: Recipe[] = [
     description: 'Un tapa espagnol classique, rapide, simple et incroyablement savoureux.',
     country: 'Espagne',
     calories: 350,
+    portions: 2,
     preparationTime: 10,
     isEconomical: false,
     ingredients: [
@@ -593,6 +616,7 @@ export const discoverableRecipes: Recipe[] = [
     description: 'Un plat indien végétarien crémeux, parfumé et très réconfortant. Parfait avec du riz ou du naan.',
     country: 'Inde',
     calories: 450,
+    portions: 4,
     preparationTime: 25,
     isEconomical: true,
     ingredients: [
@@ -612,6 +636,7 @@ export const discoverableRecipes: Recipe[] = [
     description: 'L\'antipasto italien par excellence. Frais, simple et plein de saveurs.',
     country: 'Italie',
     calories: 250,
+    portions: 4,
     preparationTime: 15,
     isEconomical: true,
     ingredients: [
@@ -629,6 +654,7 @@ export const discoverableRecipes: Recipe[] = [
     description: 'Un classique de la bistronomie française, réconfortant et gourmand.',
     country: 'France',
     calories: 450,
+    portions: 4,
     preparationTime: 60,
     isEconomical: true,
     ingredients: [
@@ -647,6 +673,7 @@ export const discoverableRecipes: Recipe[] = [
     description: 'Un ragoût de bœuf riche et parfumé au paprika, le plat national de la Hongrie.',
     country: 'Hongrie',
     calories: 600,
+    portions: 6,
     preparationTime: 150,
     isEconomical: false,
     ingredients: [
@@ -665,6 +692,7 @@ export const discoverableRecipes: Recipe[] = [
     description: 'Du poisson cru "cuit" dans du jus de citron vert, un plat péruvien frais et acidulé.',
     country: 'Pérou',
     calories: 300,
+    portions: 4,
     preparationTime: 20,
     isEconomical: false,
     ingredients: [
@@ -683,6 +711,7 @@ export const discoverableRecipes: Recipe[] = [
     description: 'Le plat national brésilien, un ragoût copieux de haricots noirs et de différentes viandes de porc.',
     country: 'Brésil',
     calories: 950,
+    portions: 8,
     preparationTime: 240,
     isEconomical: true,
     ingredients: [
@@ -701,6 +730,7 @@ export const discoverableRecipes: Recipe[] = [
     description: 'Le classique de la street-food britannique : du poisson frit dans une pâte à la bière, servi avec des frites épaisses.',
     country: 'Royaume-Uni',
     calories: 850,
+    portions: 4,
     preparationTime: 40,
     isEconomical: false,
     ingredients: [
@@ -719,6 +749,7 @@ export const discoverableRecipes: Recipe[] = [
     description: 'Une escalope de veau panée et frite, une spécialité viennoise croustillante et délicieuse.',
     country: 'Autriche',
     calories: 600,
+    portions: 4,
     preparationTime: 20,
     isEconomical: false,
     ingredients: [
@@ -736,6 +767,7 @@ export const discoverableRecipes: Recipe[] = [
     description: 'Un bol de riz coréen coloré et sain, garni de légumes variés, de viande et d\'un œuf sur le plat.',
     country: 'Corée du Sud',
     calories: 650,
+    portions: 4,
     preparationTime: 40,
     isEconomical: false,
     ingredients: [
@@ -755,6 +787,7 @@ export const discoverableRecipes: Recipe[] = [
     description: 'Une recette italienne simple, rapide et débordante de la fraîcheur du basilic.',
     country: 'Italie',
     calories: 550,
+    portions: 4,
     preparationTime: 15,
     isEconomical: true,
     ingredients: [
@@ -773,6 +806,7 @@ export const discoverableRecipes: Recipe[] = [
     description: 'Le sandwich parisien par excellence, gratiné et délicieusement régressif.',
     country: 'France',
     calories: 600,
+    portions: 4,
     preparationTime: 15,
     isEconomical: true,
     ingredients: [
@@ -790,6 +824,7 @@ export const discoverableRecipes: Recipe[] = [
     description: 'Des triangles croustillants indiens farcis d\'un mélange épicé de pommes de terre et de petits pois.',
     country: 'Inde',
     calories: 300,
+    portions: 4,
     preparationTime: 45,
     isEconomical: true,
     ingredients: [
@@ -808,6 +843,7 @@ export const discoverableRecipes: Recipe[] = [
     description: 'Le petit-déjeuner ou brunch tendance, simple, sain et délicieux.',
     country: 'International',
     calories: 350,
+    portions: 2,
     preparationTime: 5,
     isEconomical: false,
     ingredients: [
@@ -825,6 +861,7 @@ export const discoverableRecipes: Recipe[] = [
     description: 'Une collation mexicaine rapide et réconfortante, parfaite pour les enfants et les adultes.',
     country: 'Mexique',
     calories: 400,
+    portions: 2,
     preparationTime: 10,
     isEconomical: true,
     ingredients: [
@@ -840,6 +877,7 @@ export const discoverableRecipes: Recipe[] = [
     description: 'Une salade croquante et rafraîchissante, avec une vinaigrette savoureuse.',
     country: 'Chine',
     calories: 150,
+    portions: 2,
     preparationTime: 10,
     isEconomical: true,
     ingredients: [
@@ -858,6 +896,7 @@ export const discoverableRecipes: Recipe[] = [
     description: 'Des œufs pochés dans une sauce tomate épicée, un plat convivial originaire du Moyen-Orient et d\'Afrique du Nord.',
     country: 'Moyen-Orient / Tunisie',
     calories: 400,
+    portions: 2,
     preparationTime: 25,
     isEconomical: true,
     ingredients: [
@@ -878,6 +917,7 @@ export const discoverableRecipes: Recipe[] = [
     description: 'Une salade-repas complète et colorée, emblématique de la cuisine du sud de la France.',
     country: 'France',
     calories: 500,
+    portions: 2,
     preparationTime: 30,
     isEconomical: false,
     ingredients: [
