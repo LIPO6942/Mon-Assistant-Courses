@@ -501,31 +501,47 @@ export default function KitchenAssistantPage() {
 
   const handleShareUserRecipe = async (recipe: UserRecipe) => {
     const title = `Recette: ${recipe.title}`;
-    
-    const ingredientsText = recipe.ingredients
-      .map(ing => `- ${ing.quantity} ${ing.unit} ${ing.name}`)
-      .join('\n');
-
+    const ingredientsText = recipe.ingredients.map(ing => `- ${ing.quantity} ${ing.unit} ${ing.name}`).join('\n');
     const preparationText = recipe.preparation;
-
     const fullText = `${title}\n\nAuteur: ${recipe.author || 'Non spécifié'}\nPour ${recipe.portions} personnes\nTemps: ${recipe.preparationTime} min\n\n---\n\n**Ingrédients:**\n${ingredientsText}\n\n---\n\n**Préparation:**\n${preparationText}`;
 
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: title,
-          text: fullText,
-        });
-      } catch (error) {
-        console.error('Erreur lors du partage:', error);
-      }
-    } else {
+    if (!recipe.photoDataUri || !navigator.share) {
+      // Fallback for browsers that don't support sharing or if there's no image
       try {
         await navigator.clipboard.writeText(fullText);
         alert('Recette copiée dans le presse-papiers !');
       } catch (error) {
         console.error('Erreur lors de la copie:', error);
         alert('Impossible de copier la recette.');
+      }
+      return;
+    }
+
+    try {
+      // Convert Data URI to Blob
+      const response = await fetch(recipe.photoDataUri);
+      const blob = await response.blob();
+      const file = new File([blob], 'recette.jpg', { type: blob.type });
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          title: title,
+          text: fullText,
+          files: [file],
+        });
+      } else {
+        // If file sharing is not supported, share text only
+        await navigator.share({ title: title, text: fullText });
+      }
+    } catch (error) {
+      console.error('Erreur lors du partage:', error);
+      // Fallback to clipboard if sharing fails
+      try {
+        await navigator.clipboard.writeText(fullText);
+        alert('Le partage a échoué. Recette copiée dans le presse-papiers !');
+      } catch (copyError) {
+        console.error('Erreur lors de la copie:', copyError);
+        alert('Impossible de partager ou de copier la recette.');
       }
     }
   };
