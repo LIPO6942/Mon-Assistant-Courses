@@ -468,6 +468,37 @@ export default function KitchenAssistantPage() {
     }
   };
 
+  const handleShareUserRecipe = async (recipe: UserRecipe) => {
+    const title = `Recette: ${recipe.title}`;
+    
+    const ingredientsText = recipe.ingredients
+      .map(ing => `- ${ing.quantity} ${ing.unit} ${ing.name}`)
+      .join('\n');
+
+    const preparationText = recipe.preparation;
+
+    const fullText = `${title}\n\nAuteur: ${recipe.author || 'Non spécifié'}\nPour ${recipe.portions} personnes\nTemps: ${recipe.preparationTime} min\n\n---\n\n**Ingrédients:**\n${ingredientsText}\n\n---\n\n**Préparation:**\n${preparationText}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: title,
+          text: fullText,
+        });
+      } catch (error) {
+        console.error('Erreur lors du partage:', error);
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(fullText);
+        alert('Recette copiée dans le presse-papiers !');
+      } catch (error) {
+        console.error('Erreur lors de la copie:', error);
+        alert('Impossible de copier la recette.');
+      }
+    }
+  };
+
   if (!isDataLoaded) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -587,6 +618,7 @@ export default function KitchenAssistantPage() {
         setViewingUserRecipe={setViewingUserRecipe}
         onDeleteUserRecipe={handleDeleteUserRecipe}
         onEditUserRecipe={handleEditUserRecipe}
+        onShareUserRecipe={handleShareUserRecipe}
       />
     </div>
   );
