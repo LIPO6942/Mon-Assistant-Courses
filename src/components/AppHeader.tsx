@@ -21,6 +21,7 @@ interface AppHeaderProps {
   savedRecipes: Recipe[];
   onViewRecipe: (recipe: (Omit<Recipe, 'id'> & { id?: string })) => void;
   onDeleteRecipe: (recipeId: string) => void;
+  onShareRecipe: (recipe: Recipe) => void;
   onTogglePurchaseStatus: (id: string, itemPrice: number, itemQuantity: number) => void;
   onFridgeScan: (ingredients: string[]) => void;
 }
@@ -35,6 +36,7 @@ export default function AppHeader({
   savedRecipes,
   onViewRecipe,
   onDeleteRecipe,
+  onShareRecipe,
   onTogglePurchaseStatus,
   onFridgeScan,
 }: AppHeaderProps) {
@@ -69,6 +71,7 @@ export default function AppHeader({
               recipes={savedRecipes}
               onViewRecipe={onViewRecipe}
               onDeleteRecipe={onDeleteRecipe}
+              onShareRecipe={onShareRecipe}
             />
           </Sheet>
           
