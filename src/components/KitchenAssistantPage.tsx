@@ -505,40 +505,54 @@ export default function KitchenAssistantPage() {
     const preparationText = recipe.preparation;
     const fullText = `${title}\n\nAuteur: ${recipe.author || 'Non spécifié'}\nPour ${recipe.portions} personnes\nTemps: ${recipe.preparationTime} min\n\n---\n\n**Ingrédients:**\n${ingredientsText}\n\n---\n\n**Préparation:**\n${preparationText}`;
 
-    // Fallback for browsers that don't support sharing files or if there's no image
-    if (!recipe.photoDataUri || !navigator.share || !navigator.canShare) {
+    if (!navigator.share) {
       try {
         await navigator.clipboard.writeText(fullText);
         alert('Recette copiée dans le presse-papiers !');
       } catch (error) {
-        console.error('Erreur lors de la copie:', error);
+        console.error('Erreur de copie:', error);
         alert('Impossible de copier la recette.');
       }
       return;
     }
-  
-    try {
-      // First, copy the text to the clipboard
-      await navigator.clipboard.writeText(fullText);
-      alert('Le texte de la recette a été copié. Vous pouvez maintenant le coller avec l\'image.');
 
-      // Then, try to share the image
-      const response = await fetch(recipe.photoDataUri);
-      const blob = await response.blob();
-      const file = new File([blob], 'recette.jpg', { type: blob.type });
-  
-      if (navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          title: title,
-          files: [file],
-        });
-      } else {
-        // This case is less likely if the initial check passed, but as a fallback
-        throw new Error("Le partage de fichiers n'est pas supporté.");
+    let file: File | undefined;
+    if (recipe.photoDataUri) {
+      try {
+        const response = await fetch(recipe.photoDataUri);
+        const blob = await response.blob();
+        file = new File([blob], 'recette.jpg', { type: blob.type });
+      } catch (error) {
+        console.error("Erreur de création du fichier image:", error);
       }
+    }
+
+    const shareData: ShareData = {
+      title: title,
+      text: fullText,
+    };
+    
+    if (file && navigator.canShare({ files: [file] })) {
+      shareData.files = [file];
+    }
+    
+    try {
+      await navigator.share(shareData);
     } catch (error) {
-      console.error('Erreur lors du partage:', error);
-      alert('Le partage a échoué. Le texte de la recette a été copié dans le presse-papiers.');
+        // This error might happen if the user cancels the share, or if the target app has issues.
+        console.error('Erreur lors du partage :', error);
+        // Fallback for apps that fail to share both text and image (like WhatsApp)
+        if (error instanceof DOMException && error.name === 'AbortError') {
+             // User cancelled, do nothing.
+        } else if (shareData.files) {
+            try {
+                await navigator.clipboard.writeText(fullText);
+                alert('Le texte de la recette a été copié. Vous pouvez maintenant le coller avec l\'image si le partage a échoué.');
+                await navigator.share({ files: shareData.files });
+            } catch (fallbackError) {
+                console.error('Erreur du partage de secours:', fallbackError);
+            }
+        }
     }
   };
 
