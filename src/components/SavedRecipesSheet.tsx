@@ -6,18 +6,20 @@ import { SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { Recipe } from '@/lib/types';
-import { BookOpen, Trash2 } from 'lucide-react';
+import { BookOpen, Trash2, Share2 } from 'lucide-react';
 
 interface SavedRecipesSheetProps {
   recipes: Recipe[];
   onViewRecipe: (recipe: (Omit<Recipe, 'id'> & { id?: string })) => void;
   onDeleteRecipe: (recipeId: string) => void;
+  onShareRecipe: (recipe: Recipe) => void;
 }
 
 export default function SavedRecipesSheet({
   recipes,
   onViewRecipe,
   onDeleteRecipe,
+  onShareRecipe,
 }: SavedRecipesSheetProps) {
   return (
     <SheetContent className="flex flex-col w-full sm:max-w-lg">
@@ -42,9 +44,14 @@ export default function SavedRecipesSheet({
                 </CardContent>
                 <CardFooter className="flex justify-between bg-card/50 p-3">
                   <Button size="sm" onClick={() => onViewRecipe(recipe)}>Voir la recette</Button>
-                  <Button variant="ghost" size="icon" onClick={() => onDeleteRecipe(recipe.id)}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
+                  <div className="flex items-center">
+                    <Button variant="ghost" size="icon" onClick={() => onShareRecipe(recipe)} aria-label="Partager la recette">
+                      <Share2 className="h-4 w-4 text-primary" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => onDeleteRecipe(recipe.id)} aria-label="Supprimer la recette">
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
                 </CardFooter>
               </Card>
             ))}

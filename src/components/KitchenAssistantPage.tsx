@@ -381,6 +381,37 @@ export default function KitchenAssistantPage() {
     setSavedRecipes(prev => prev.filter(r => r.id !== recipeId));
   };
 
+  const handleShareSavedRecipe = async (recipe: Recipe) => {
+    const title = `Recette: ${recipe.title}`;
+    
+    const ingredientsText = recipe.ingredients
+      .map(ing => `- ${ing.quantity} ${ing.unit} ${ing.name}`)
+      .join('\n');
+
+    const preparationText = recipe.preparation;
+
+    const fullText = `${title}\n\nOrigine: ${recipe.country}\nPour ${recipe.portions} personnes\nTemps: ${recipe.preparationTime} min\nCalories: ~${recipe.calories} kcal\n\n---\n\n**Ingrédients:**\n${ingredientsText}\n\n---\n\n**Préparation:**\n${preparationText}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: title,
+          text: fullText,
+        });
+      } catch (error) {
+        console.error('Erreur lors du partage:', error);
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(fullText);
+        alert('Recette copiée dans le presse-papiers !');
+      } catch (error) {
+        console.error('Erreur lors de la copie:', error);
+        alert('Impossible de copier la recette.');
+      }
+    }
+  };
+
   const handleToggleChandyekIngredient = (ingredientName: string) => {
     setChandyekIngredients(prev => {
       const ingredientsList = prev ? prev.split(', ').filter(Boolean) : [];
@@ -520,6 +551,7 @@ export default function KitchenAssistantPage() {
         savedRecipes={savedRecipes}
         onViewRecipe={setViewingRecipe}
         onDeleteRecipe={handleDeleteSavedRecipe}
+        onShareRecipe={handleShareSavedRecipe}
         onTogglePurchaseStatus={handleTogglePurchaseStatus}
         onFridgeScan={handleFridgeScan}
       />
