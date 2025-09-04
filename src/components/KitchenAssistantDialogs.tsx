@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Minus, Plus, Pencil, Trash2, Users } from 'lucide-react';
+import { Minus, Plus, Pencil, Trash2, Users, Share2 } from 'lucide-react';
 import IngredientForm from './IngredientForm';
 import CategoryForm from './CategoryForm';
 import HealthConditionManager from './HealthConditionManager';
@@ -55,6 +55,7 @@ interface KitchenAssistantDialogsProps {
   setViewingUserRecipe: (recipe: UserRecipe | null) => void;
   onDeleteUserRecipe: (recipeId: string) => void;
   onEditUserRecipe: (recipe: UserRecipe) => void;
+  onShareUserRecipe: (recipe: UserRecipe) => void;
 }
 
 export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsProps) {
@@ -89,6 +90,7 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
     setViewingUserRecipe,
     onDeleteUserRecipe,
     onEditUserRecipe,
+    onShareUserRecipe,
   } = props;
 
   const [quantityInput, setQuantityInput] = React.useState('1');
@@ -222,6 +224,14 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
                   <div>
                     {viewingUserRecipe && (
                       <div className='flex items-center gap-1'>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onShareUserRecipe(viewingUserRecipe)}
+                          aria-label="Partager la recette"
+                        >
+                          <Share2 className="h-4 w-4 text-primary" />
+                        </Button>
                         <Button
                           variant="ghost"
                           size="icon"
