@@ -505,7 +505,16 @@ export default function KitchenAssistantPage() {
     const preparationText = recipe.preparation;
     const fullText = `${title}\n\nAuteur: ${recipe.author || 'Non spécifié'}\nPour ${recipe.portions} personnes\nTemps: ${recipe.preparationTime} min\n\n---\n\n**Ingrédients:**\n${ingredientsText}\n\n---\n\n**Préparation:**\n${preparationText}`;
 
-    if (!navigator.share) {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: title,
+          text: fullText,
+        });
+      } catch (error) {
+        console.error('Erreur lors du partage :', error);
+      }
+    } else {
       try {
         await navigator.clipboard.writeText(fullText);
         alert('Recette copiée dans le presse-papiers !');
@@ -513,46 +522,6 @@ export default function KitchenAssistantPage() {
         console.error('Erreur de copie:', error);
         alert('Impossible de copier la recette.');
       }
-      return;
-    }
-
-    let file: File | undefined;
-    if (recipe.photoDataUri) {
-      try {
-        const response = await fetch(recipe.photoDataUri);
-        const blob = await response.blob();
-        file = new File([blob], 'recette.jpg', { type: blob.type });
-      } catch (error) {
-        console.error("Erreur de création du fichier image:", error);
-      }
-    }
-
-    const shareData: ShareData = {
-      title: title,
-      text: fullText,
-    };
-    
-    if (file && navigator.canShare({ files: [file] })) {
-      shareData.files = [file];
-    }
-    
-    try {
-      await navigator.share(shareData);
-    } catch (error) {
-        // This error might happen if the user cancels the share, or if the target app has issues.
-        console.error('Erreur lors du partage :', error);
-        // Fallback for apps that fail to share both text and image (like WhatsApp)
-        if (error instanceof DOMException && error.name === 'AbortError') {
-             // User cancelled, do nothing.
-        } else if (shareData.files) {
-            try {
-                await navigator.clipboard.writeText(fullText);
-                alert('Le texte de la recette a été copié. Vous pouvez maintenant le coller avec l\'image si le partage a échoué.');
-                await navigator.share({ files: shareData.files });
-            } catch (fallbackError) {
-                console.error('Erreur du partage de secours:', fallbackError);
-            }
-        }
     }
   };
 
