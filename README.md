@@ -14,27 +14,21 @@ Après avoir téléchargé le code, vous aurez besoin de Node.js (version 20 ou 
     npm install
     ```
 
-2.  **Configurer la clé API (pour l'IA) :**
-    -   Obtenez une clé API gratuite depuis [Google AI Studio](https://aistudio.google.com/app/apikey).
+2.  **Configurer la clé API (pour l'IA, via Groq – gratuit) :**
+    -   Créez un compte sur `https://console.groq.com/` et générez une clé API (offre gratuite, sans carte bancaire).
     -   Créez un fichier nommé `.env` à la racine de votre projet.
     -   Ajoutez cette ligne dans le fichier `.env`, en remplaçant `VOTRE_CLÉ_API_ICI` par votre clé :
         ```
-        GOOGLE_API_KEY=VOTRE_CLÉ_API_ICI
+        GROQ_API_KEY=VOTRE_CLÉ_API_ICI
         ```
 
-3.  **Lancer les serveurs :**
-    Vous aurez besoin de **deux terminaux**.
-
-    -   Dans le **premier terminal**, lancez le serveur pour les fonctions d'IA :
-        ```bash
-        npm run genkit:dev
-        ```
-    -   Dans le **second terminal**, lancez le serveur de l'application web :
+3.  **Lancer l'application :**
+    -   Les intégrations IA n'utilisent plus Genkit/Gemini en local. Lancez simplement :
         ```bash
         npm run dev
         ```
 
-L'application sera alors disponible à l'adresse `http://localhost:9002`.
+L'application sera alors disponible à l'adresse `http://localhost:3000`.
 
 ### Accéder à l'application depuis votre téléphone (en local)
 
@@ -47,7 +41,7 @@ Pour tester l'application sur votre téléphone pendant qu'elle tourne sur votre
 3.  **Ouvrez le lien sur votre téléphone :**
     Sur le navigateur de votre téléphone, entrez l'adresse suivante en remplaçant `ADRESSE_IP_DE_VOTRE_PC` par l'adresse que vous venez de trouver :
     ```
-    http://ADRESSE_IP_DE_VOTRE_PC:9002
+    http://ADRESSE_IP_DE_VOTRE_PC:3000
     ```
 Si cela ne fonctionne pas, il se peut que le pare-feu de votre ordinateur bloque la connexion. Vous devrez peut-être autoriser Node.js ou votre terminal à accepter les connexions entrantes.
 
@@ -89,7 +83,7 @@ Pour rendre votre application accessible depuis n'importe où sans dépendre de 
     -   Importez votre projet depuis GitHub.
     -   Vercel détectera automatiquement que c'est un projet Next.js.
     -   Avant de déployer, allez dans la section "Environment Variables" (Variables d'environnement).
-    -   Ajoutez votre clé API avec le nom `GOOGLE_API_KEY` et la valeur que vous avez obtenue depuis AI Studio.
+    -   Ajoutez votre clé API avec le nom `GROQ_API_KEY` et la valeur générée dans la console Groq.
     -   Cliquez sur **"Deploy"**.
 
 Après quelques instants, Vercel vous fournira une URL publique pour votre application (par exemple : `mon-assistant.vercel.app`), accessible depuis n'importe quel appareil connecté à internet.

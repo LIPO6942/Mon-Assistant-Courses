@@ -1,4 +1,5 @@
-// A simple key-value store using IndexedDB
+// A simple key-value store using IndexedDB (browser only). On the server, we
+// provide a no-op stub to avoid SSR build/runtime errors.
 
 const DB_NAME = 'MonAssistantDeCoursesDB';
 const DB_VERSION = 1;
@@ -70,4 +71,19 @@ class AppDB {
   }
 }
 
-export const db = new AppDB();
+class NoopDB {
+  async get<T>(_key: IDBValidKey): Promise<T | undefined> {
+    return undefined;
+  }
+  async set(_key: IDBValidKey, _value: any): Promise<void> {
+    return;
+  }
+  async delete(_key: IDBValidKey): Promise<void> {
+    return;
+  }
+  async clear(): Promise<void> {
+    return;
+  }
+}
+
+export const db = typeof indexedDB === 'undefined' ? (new NoopDB() as unknown as AppDB) : new AppDB();

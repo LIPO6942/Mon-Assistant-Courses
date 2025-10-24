@@ -1,10 +1,10 @@
 
 'use strict';
 
-const CACHE_NAME = 'mon-assistant-courses-cache-v3';
+const CACHE_NAME = 'mon-assistant-courses-cache-v4';
 const urlsToCache = [
   '/',
-  '/manifest.json?v=3',
+  '/manifest.json?v=4',
   '/styles/globals.css',
   '/scripts/main.js'
 ];

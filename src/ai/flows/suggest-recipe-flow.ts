@@ -6,58 +6,57 @@
  * - suggestRecipes - A function that suggests recipes based on a list of ingredients.
  */
 
-import { ai } from '@/ai/genkit';
 import {
   SuggestRecipeInputSchema,
   SuggestRecipesOutputSchema,
   type SuggestRecipeInput,
   type SuggestRecipeOutput,
 } from '@/ai/types';
+import { groqChatJson, GroqModels } from '@/ai/groq';
 
 export async function suggestRecipes(input: SuggestRecipeInput): Promise<SuggestRecipeOutput[]> {
-  const result = await suggestRecipesFlow(input);
-  return result.recipes;
-}
+  const parsedInput = SuggestRecipeInputSchema.parse(input);
 
-const prompt = ai.definePrompt({
-  name: 'suggestRecipesPrompt',
-  model: 'googleai/gemini-1.5-flash',
-  input: { schema: SuggestRecipeInputSchema },
-  output: { schema: SuggestRecipesOutputSchema },
-  prompt: `Tu es un chef cuisinier créatif et expérimenté. Ta mission est de proposer des recettes délicieuses et variées à partir d'une liste d'ingrédients fournie par l'utilisateur.
+  const systemPrompt = [
+    'Tu es un chef cuisinier créatif et expérimenté.',
+    'Rends uniquement un objet JSON valide respectant ce schéma exact:',
+    '{ "recipes": [',
+    '  {',
+    '    "title": string,',
+    '    "description": string,',
+    '    "country": string,',
+    '    "portions": number,',
+    '    "ingredients": [ { "name": string, "quantity": number, "unit": string } ],',
+    '    "preparation": string,',
+    '    "calories": number,',
+    '    "preparationTime": number,',
+    '    "isEconomical": boolean',
+    '  }',
+    '] }',
+  ].join('\n');
 
-Ingrédients disponibles :
-{{#each ingredients}}
-- {{{this}}}
-{{/each}}
+  const userPrompt = [
+    'Ingrédients disponibles :',
+    ...parsedInput.ingredients.map((i) => `- ${i}`),
+    '',
+    'Génère 3 recettes différentes. Tu peux inclure des ingrédients supplémentaires si nécessaire.',
+    'Respecte strictement le schéma demandé et renvoie uniquement du JSON sans texte additionnel.',
+  ].join('\n');
 
-Génère 3 recettes différentes en utilisant certains de ces ingrédients. N'hésite pas à inclure des ingrédients supplémentaires qui pourraient être nécessaires.
+  const output = await groqChatJson<{ recipes: SuggestRecipeOutput[] }>({
+    model: GroqModels.Text,
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt },
+    ],
+    temperature: 0.7,
+    max_tokens: 1800,
+    response_format: { type: 'json_object' },
+  });
 
-Pour chaque recette, tu dois fournir les informations suivantes de manière structurée :
-1.  **title** : Un nom de recette accrocheur.
-2.  **description** : Une courte phrase pour donner envie.
-3.  **country** : Le pays d'origine de la recette.
-4.  **portions**: Le nombre de personnes pour qui la recette est prévue (généralement 2 ou 4).
-5.  **ingredients** : La liste complète des ingrédients, y compris ceux que l'utilisateur n'a pas, avec leur quantité et leur unité.
-6.  **preparation** : Les instructions de préparation détaillées, étape par étape.
-7.  **calories** : Une estimation des calories pour le plat.
-8.  **preparationTime**: Une estimation du temps total de préparation en minutes (un nombre entier).
-9.  **isEconomical**: Un booléen (true/false) indiquant si la recette est considérée comme économique (utilisant des ingrédients peu coûteux et courants).
-
-Assure-toi que la sortie est un objet JSON valide qui respecte le schéma défini.`,
-});
-
-const suggestRecipesFlow = ai.defineFlow(
-  {
-    name: 'suggestRecipesFlow',
-    inputSchema: SuggestRecipeInputSchema,
-    outputSchema: SuggestRecipesOutputSchema,
-  },
-  async (input) => {
-    const { output } = await prompt(input);
-    if (!output || !output.recipes) {
-      throw new Error("L'IA n'a pas pu générer de recettes valides. Veuillez réessayer.");
-    }
-    return output;
+  const validated = SuggestRecipesOutputSchema.parse(output);
+  if (!validated.recipes || validated.recipes.length === 0) {
+    throw new Error("L'IA n'a pas pu générer de recettes valides. Veuillez réessayer.");
   }
-);
+  return validated.recipes;
+}
