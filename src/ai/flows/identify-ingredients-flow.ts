@@ -8,8 +8,8 @@
  * - IdentifyIngredientsOutput - The return type for the function.
  */
 
-import { ai } from '@/ai/genkit';
 import { z } from 'zod';
+import { groqChatJson, GroqModels, type GroqMessageContentPart } from '@/ai/groq';
 
 const IdentifyIngredientsInputSchema = z.object({
   photoDataUri: z
@@ -26,32 +26,30 @@ const IdentifyIngredientsOutputSchema = z.object({
 export type IdentifyIngredientsOutput = z.infer<typeof IdentifyIngredientsOutputSchema>;
 
 export async function identifyIngredientsFromImage(input: IdentifyIngredientsInput): Promise<IdentifyIngredientsOutput> {
-  return identifyIngredientsFlow(input);
+  const parsed = IdentifyIngredientsInputSchema.parse(input);
+
+  // Groq supports OpenAI-style vision content arrays
+  const systemPrompt = [
+    "Tu es un assistant de vision spécialisé pour reconnaître des ingrédients sur des photos de frigo ou garde-manger.",
+    'Retourne uniquement un JSON valide de la forme: { "ingredients": string[] }',
+  ].join('\n');
+
+  const userContent: GroqMessageContentPart[] = [
+    { type: 'text', text: 'Analyse l’image et liste uniquement les noms des ingrédients.' },
+    { type: 'image_url', image_url: { url: parsed.photoDataUri } },
+  ];
+
+  const output = await groqChatJson<IdentifyIngredientsOutput>({
+    model: GroqModels.Vision,
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userContent },
+    ],
+    temperature: 0.2,
+    max_tokens: 600,
+    response_format: { type: 'json_object' },
+  });
+
+  const validated = IdentifyIngredientsOutputSchema.parse(output);
+  return validated;
 }
-
-const prompt = ai.definePrompt({
-  name: 'identifyIngredientsPrompt',
-  model: 'googleai/gemini-1.5-flash',
-  input: { schema: IdentifyIngredientsInputSchema },
-  output: { schema: IdentifyIngredientsOutputSchema },
-  prompt: `Analyse l'image suivante d'un réfrigérateur ou d'un garde-manger. Identifie tous les ingrédients alimentaires que tu reconnais distinctement.
-
-Liste uniquement les noms des ingrédients, sans description ni quantité. Sois concis et précis.
-
-Photo: {{media url=photoDataUri}}`,
-});
-
-const identifyIngredientsFlow = ai.defineFlow(
-  {
-    name: 'identifyIngredientsFlow',
-    inputSchema: IdentifyIngredientsInputSchema,
-    outputSchema: IdentifyIngredientsOutputSchema,
-  },
-  async (input) => {
-    const { output } = await prompt(input);
-    if (!output) {
-      throw new Error("L'IA n'a pas pu identifier d'ingrédients. Assurez-vous que l'image est claire et bien éclairée.");
-    }
-    return output;
-  }
-);
