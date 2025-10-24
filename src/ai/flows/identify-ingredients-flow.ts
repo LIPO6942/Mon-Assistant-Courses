@@ -9,7 +9,7 @@
  */
 
 import { z } from 'zod';
-import { groqChatJson, GroqModels, type GroqMessageContentPart } from '@/ai/groq';
+import { groqChatJson, getPreferredVisionModel, type GroqMessageContentPart } from '@/ai/groq';
 
 const IdentifyIngredientsInputSchema = z.object({
   photoDataUri: z
@@ -40,7 +40,7 @@ export async function identifyIngredientsFromImage(input: IdentifyIngredientsInp
   ];
 
   const output = await groqChatJson<IdentifyIngredientsOutput>({
-    model: GroqModels.Vision,
+    model: getPreferredVisionModel(),
     messages: [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userContent },

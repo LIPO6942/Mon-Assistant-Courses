@@ -12,7 +12,7 @@ import {
   type SuggestRecipeInput,
   type SuggestRecipeOutput,
 } from '@/ai/types';
-import { groqChatJson, GroqModels } from '@/ai/groq';
+import { groqChatJson, getPreferredTextModel } from '@/ai/groq';
 
 export async function suggestRecipes(input: SuggestRecipeInput): Promise<SuggestRecipeOutput[]> {
   const parsedInput = SuggestRecipeInputSchema.parse(input);
@@ -44,7 +44,7 @@ export async function suggestRecipes(input: SuggestRecipeInput): Promise<Suggest
   ].join('\n');
 
   const output = await groqChatJson<{ recipes: SuggestRecipeOutput[] }>({
-    model: GroqModels.Text,
+    model: getPreferredTextModel(),
     messages: [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },

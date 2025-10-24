@@ -105,9 +105,26 @@ export async function groqChatJson<T = unknown>(
   }
 }
 
-export const GroqModels = {
-  // Strong general reasoning/text
-  Text: 'llama-3.1-70b-versatile',
-  // Vision-capable model (preview names used by Groq)
-  Vision: 'llama-3.2-11b-vision-preview',
-} as const;
+const DEFAULT_TEXT_MODELS = [
+  'llama-3.1-70b-versatile',
+  'llama-3.1-8b-instant',
+  'llama-3.2-90b-text-preview',
+  'llama-3.2-11b-text-preview',
+];
+
+const DEFAULT_VISION_MODELS = [
+  'llama-3.2-11b-vision-preview',
+  'llama-3.2-90b-vision-preview',
+];
+
+export function getPreferredTextModel(): string {
+  const override = process.env.GROQ_TEXT_MODEL?.trim();
+  if (override) return override;
+  return DEFAULT_TEXT_MODELS[0];
+}
+
+export function getPreferredVisionModel(): string {
+  const override = process.env.GROQ_VISION_MODEL?.trim();
+  if (override) return override;
+  return DEFAULT_VISION_MODELS[0];
+}

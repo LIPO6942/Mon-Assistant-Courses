@@ -12,7 +12,7 @@ import {
   type NutritionalGuideInput,
   type NutritionalGuideOutput,
 } from '@/ai/types';
-import { groqChatText, GroqModels } from '@/ai/groq';
+import { groqChatText, getPreferredTextModel } from '@/ai/groq';
 
 export async function getNutritionalAdvice(input: NutritionalGuideInput): Promise<NutritionalGuideOutput> {
   const parsedInput = NutritionalGuideInputSchema.parse(input);
@@ -38,7 +38,7 @@ export async function getNutritionalAdvice(input: NutritionalGuideInput): Promis
   ].join('\n');
 
   const advice = await groqChatText({
-    model: GroqModels.Text,
+    model: getPreferredTextModel(),
     messages: [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
