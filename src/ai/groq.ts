@@ -1,5 +1,3 @@
-'use server';
-
 /**
  * Minimal Groq OpenAI-compatible client using native fetch.
  *
