@@ -106,10 +106,12 @@ export async function groqChatJson<T = unknown>(
 }
 
 const DEFAULT_TEXT_MODELS = [
-  'llama-3.1-70b-versatile',
+  // Prefer supported defaults first
   'llama-3.1-8b-instant',
-  'llama-3.2-90b-text-preview',
   'llama-3.2-11b-text-preview',
+  'llama-3.2-90b-text-preview',
+  // Deprecated previously-used model kept as last resort (may 400)
+  'llama-3.1-70b-versatile',
 ];
 
 const DEFAULT_VISION_MODELS = [
