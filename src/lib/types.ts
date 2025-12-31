@@ -14,7 +14,7 @@ export interface Ingredient {
 }
 
 export interface RecipeIngredient {
-  name:string;
+  name: string;
   quantity: number;
   unit: string;
 }
@@ -52,8 +52,8 @@ export interface BasketItem extends Ingredient {
 }
 
 export interface CategoryDef {
-    id: string;
-    name: string;
+  id: string;
+  name: string;
 }
 
 export interface HealthCondition {
@@ -73,4 +73,4 @@ export interface PurchaseRecord {
   unit: string;
 }
 
-export type PurchaseHistory = Record<string, PurchaseRecord>;
+export type PurchaseHistory = Record<string, PurchaseRecord[]>;

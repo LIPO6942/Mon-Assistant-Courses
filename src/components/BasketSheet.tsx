@@ -6,7 +6,7 @@ import { SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components
 import type { BasketItem, PurchaseHistory } from '@/lib/types';
 import { Minus, Plus, Trash2, Share2, History } from 'lucide-react';
 import { Checkbox } from './ui/checkbox';
-import { cn } from '@/lib/utils';
+import { cn, getProductStatus } from '@/lib/utils';
 
 interface BasketSheetProps {
   basket: BasketItem[];
@@ -58,26 +58,42 @@ export default function BasketSheet({
                 <div className='flex justify-between items-center'>
                   <div className="flex items-center gap-3">
                     <Checkbox
-                      id={`item-${item.id}`}
+                      id={item.id}
                       checked={!!item.purchased}
                       onCheckedChange={() => onTogglePurchaseStatus(item.id, item.price, item.quantity)}
-                      aria-label={`Marquer ${item.name} comme acheté`}
+                      className="h-5 w-5 rounded-md border-primary/30"
                     />
                     <label
-                      htmlFor={`item-${item.id}`}
-                      className={cn(
-                        'font-semibold cursor-pointer',
-                        item.purchased && 'line-through text-muted-foreground'
-                      )}
+                      htmlFor={item.id}
+                      className={cn("text-sm font-semibold text-foreground cursor-pointer flex items-center gap-2", item.purchased && 'line-through text-muted-foreground')}
                     >
                       {item.name}
+                      {(() => {
+                        const status = getProductStatus(purchaseHistory[item.id]);
+                        if (!status) return null;
+                        return (
+                          <span
+                            className={cn(
+                              "h-2 w-2 rounded-full",
+                              status === 'green' && "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]",
+                              status === 'orange' && "bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.6)]",
+                              status === 'red' && "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"
+                            )}
+                            title={
+                              status === 'green' ? "Nouvellement acheté" :
+                                status === 'orange' ? "Fréquence d'achat habituelle atteinte" :
+                                  "En retard / Rupture probable"
+                            }
+                          />
+                        );
+                      })()}
                     </label>
                   </div>
-                  {purchaseHistory[item.id] && (
+                  {purchaseHistory[item.id]?.length > 0 && (
                     <div className="flex items-center gap-1.5 ml-8 -mt-1">
                       <History className="h-3 w-3 text-primary/70" />
                       <span className="text-[10px] text-muted-foreground font-medium italic">
-                        Acheté le {new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(new Date(purchaseHistory[item.id].date))} ({purchaseHistory[item.id].quantity} {purchaseHistory[item.id].unit})
+                        Acheté le {new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(new Date(purchaseHistory[item.id][purchaseHistory[item.id].length - 1].date))} ({purchaseHistory[item.id][purchaseHistory[item.id].length - 1].quantity} {purchaseHistory[item.id][purchaseHistory[item.id].length - 1].unit})
                       </span>
                     </div>
                   )}
