@@ -5,10 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Plus, PlusCircle, Pencil, Trash2, Search, BrainCircuit } from 'lucide-react';
-import type { Ingredient, CategoryDef } from '@/lib/types';
+import { Plus, PlusCircle, Pencil, Trash2, Search, BrainCircuit, History } from 'lucide-react';
+import type { Ingredient, CategoryDef, PurchaseHistory } from '@/lib/types';
 import BudgetManager from './BudgetManager';
 import { cn } from '@/lib/utils';
+import { Sheet, SheetTrigger } from '@/components/ui/sheet';
+import QuickReorderSheet from './QuickReorderSheet';
 
 interface PantryViewProps {
   groupedIngredients: Record<string, Ingredient[]>;
@@ -31,6 +33,9 @@ interface PantryViewProps {
   resetTotalSpent: () => void;
   basketItemCount: number;
   remainingBudget: number;
+  purchaseHistory: PurchaseHistory;
+  pantry: Ingredient[];
+  onAddToBasket: (ingredient: Ingredient, quantity: number) => void;
 }
 
 export default function PantryView({
@@ -53,13 +58,16 @@ export default function PantryView({
   clearBasket,
   resetTotalSpent,
   basketItemCount,
-  remainingBudget
+  remainingBudget,
+  purchaseHistory,
+  pantry,
+  onAddToBasket
 }: PantryViewProps) {
   return (
     <div>
-      <BudgetManager 
-        initialBudget={initialBudget} 
-        setInitialBudget={setInitialBudget} 
+      <BudgetManager
+        initialBudget={initialBudget}
+        setInitialBudget={setInitialBudget}
         basketTotalToPay={basketTotalToPay}
         totalSpent={totalSpent}
         clearBasket={clearBasket}
@@ -67,9 +75,19 @@ export default function PantryView({
         basketItemCount={basketItemCount}
         remainingBudget={remainingBudget}
       />
-      <div className="relative mb-6">
-        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-        <Input type="search" placeholder="Rechercher un ingrédient..." className="pl-11 rounded-full h-11 text-base" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+      <div className="flex gap-2 mb-6">
+        <div className="relative flex-grow">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+          <Input type="search" placeholder="Rechercher un ingrédient..." className="pl-11 rounded-full h-11 text-base" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+        </div>
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="outline" size="icon" className="h-11 w-11 rounded-full shadow-sm shrink-0" title="Historique / Re-commande">
+              <History className="h-5 w-5" />
+            </Button>
+          </SheetTrigger>
+          <QuickReorderSheet purchaseHistory={purchaseHistory} pantry={pantry} onAddToBasket={onAddToBasket} />
+        </Sheet>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {Object.entries(groupedIngredients).filter(([, items]) => items.length > 0).map(([categoryName, items]) => {
@@ -96,11 +114,11 @@ export default function PantryView({
                           </div>
                           <div className='flex items-center gap-1'>
                             <Button variant="ghost" size="icon" className='h-8 w-8 rounded-full' title="Ajouter au panier" onClick={() => openQuantityDialog(item)}><Plus className="h-4 w-4" /></Button>
-                            <Button 
-                              variant={isSelectedForChandyek ? "secondary" : "ghost"} 
-                              size="icon" 
-                              className='h-8 w-8 rounded-full' 
-                              title="Ajouter/Retirer de 'Ch3andek'" 
+                            <Button
+                              variant={isSelectedForChandyek ? "secondary" : "ghost"}
+                              size="icon"
+                              className='h-8 w-8 rounded-full'
+                              title="Ajouter/Retirer de 'Ch3andek'"
                               onClick={() => onToggleChandyekIngredient(item.name)}
                             >
                               <BrainCircuit className={cn("h-4 w-4", isSelectedForChandyek ? 'text-primary' : 'text-accent')} />

@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetTrigger } from '@/components/ui/sheet';
 import BasketSheet from './BasketSheet';
 import SavedRecipesSheet from './SavedRecipesSheet';
-import type { BasketItem, Recipe } from '@/lib/types';
+import type { BasketItem, Recipe, PurchaseHistory } from '@/lib/types';
 import FridgeScannerSheet from './FridgeScannerSheet';
 import { useState } from 'react';
 
@@ -24,6 +24,7 @@ interface AppHeaderProps {
   onShareRecipe: (recipe: Recipe) => void;
   onTogglePurchaseStatus: (id: string, itemPrice: number, itemQuantity: number) => void;
   onFridgeScan: (ingredients: string[]) => void;
+  purchaseHistory: PurchaseHistory;
 }
 
 export default function AppHeader({
@@ -51,7 +52,7 @@ export default function AppHeader({
         </div>
 
         <div className="flex items-center gap-2">
-           <Sheet open={isScannerOpen} onOpenChange={setIsScannerOpen}>
+          <Sheet open={isScannerOpen} onOpenChange={setIsScannerOpen}>
             <SheetTrigger asChild>
               <Button variant="outline" size="icon" className="relative rounded-full">
                 <Refrigerator />
@@ -67,14 +68,14 @@ export default function AppHeader({
                 {savedRecipes.length > 0 && <Badge className="absolute -top-2 -right-2 h-6 w-6 rounded-full flex items-center justify-center bg-primary text-primary-foreground">{savedRecipes.length}</Badge>}
               </Button>
             </SheetTrigger>
-            <SavedRecipesSheet 
+            <SavedRecipesSheet
               recipes={savedRecipes}
               onViewRecipe={onViewRecipe}
               onDeleteRecipe={onDeleteRecipe}
               onShareRecipe={onShareRecipe}
             />
           </Sheet>
-          
+
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="outline" size="icon" className="relative rounded-full">
@@ -82,7 +83,7 @@ export default function AppHeader({
                 {basket.length > 0 && <Badge className="absolute -top-2 -right-2 h-6 w-6 rounded-full flex items-center justify-center bg-accent text-accent-foreground">{basket.reduce((acc, item) => acc + item.quantity, 0)}</Badge>}
               </Button>
             </SheetTrigger>
-            <BasketSheet 
+            <BasketSheet
               basket={basket}
               basketTotal={basketTotal}
               updateBasketQuantity={updateBasketQuantity}
@@ -90,6 +91,7 @@ export default function AppHeader({
               handleConfirmPurchase={handleConfirmPurchase}
               onShareBasket={handleShareBasket}
               onTogglePurchaseStatus={onTogglePurchaseStatus}
+              purchaseHistory={purchaseHistory}
             />
           </Sheet>
         </div>
