@@ -77,7 +77,7 @@ export default function BasketSheet({
                     <div className="flex items-center gap-1.5 ml-8 -mt-1">
                       <History className="h-3 w-3 text-primary/70" />
                       <span className="text-[10px] text-muted-foreground font-medium italic">
-                        Dernier achat le {new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(new Date(purchaseHistory[item.id].date))} ({purchaseHistory[item.id].quantity} {purchaseHistory[item.id].unit})
+                        Acheté le {new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(new Date(purchaseHistory[item.id].date))} ({purchaseHistory[item.id].quantity} {purchaseHistory[item.id].unit})
                       </span>
                     </div>
                   )}
