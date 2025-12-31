@@ -8,7 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Plus, PlusCircle, Pencil, Trash2, Search, BrainCircuit, History } from 'lucide-react';
 import type { Ingredient, CategoryDef, PurchaseHistory } from '@/lib/types';
 import BudgetManager from './BudgetManager';
-import { cn } from '@/lib/utils';
+import { cn, getProductStatus } from '@/lib/utils';
 import { Sheet, SheetTrigger } from '@/components/ui/sheet';
 import QuickReorderSheet from './QuickReorderSheet';
 
@@ -108,8 +108,24 @@ export default function PantryView({
                       const isSelectedForChandyek = chandyekIngredientsList.includes(item.name);
                       return (
                         <li key={item.id} className="flex items-center justify-between p-2 rounded-md hover:bg-secondary/50 transition-colors">
-                          <div>
-                            <span className='font-medium'>{item.name}</span>
+                          <div className="flex flex-col">
+                            <div className="flex items-center gap-2">
+                              <span className='font-medium'>{item.name}</span>
+                              {(() => {
+                                const status = getProductStatus(purchaseHistory[item.id]);
+                                if (!status) return null;
+                                return (
+                                  <span
+                                    className={cn(
+                                      "h-1.5 w-1.5 rounded-full shrink-0",
+                                      status === 'green' && "bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.6)]",
+                                      status === 'orange' && "bg-orange-500 shadow-[0_0_6px_rgba(249,115,22,0.6)]",
+                                      status === 'red' && "bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.6)]"
+                                    )}
+                                  />
+                                );
+                              })()}
+                            </div>
                             <p className='text-sm text-muted-foreground'>{item.price.toFixed(2)} DT / {item.unit}</p>
                           </div>
                           <div className='flex items-center gap-1'>
