@@ -89,22 +89,24 @@ export default function BasketSheet({
                       })()}
                     </label>
                   </div>
-                  {purchaseHistory[item.id]?.length > 0 && (
-                    <div className="flex items-center gap-1.5 ml-8 -mt-1">
-                      <History className="h-3 w-3 text-primary/70" />
-                      <span className="text-[10px] text-muted-foreground font-medium italic">
-                        Acheté le {new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(new Date(purchaseHistory[item.id][purchaseHistory[item.id].length - 1].date))} ({purchaseHistory[item.id][purchaseHistory[item.id].length - 1].quantity} {purchaseHistory[item.id][purchaseHistory[item.id].length - 1].unit})
-                      </span>
-                    </div>
-                  )}
                   <span className={cn('font-bold text-primary', item.purchased && 'line-through text-muted-foreground')}>
                     {(item.price * item.quantity).toFixed(2)} DT
                   </span>
                 </div>
                 <div className='flex justify-between items-center'>
-                  <span className={cn('text-sm text-muted-foreground', item.purchased && 'line-through')}>
-                    {item.price.toFixed(2)} DT / {item.unit}
-                  </span>
+                  <div className="flex flex-col gap-0.5">
+                    <span className={cn('text-sm text-muted-foreground', item.purchased && 'line-through')}>
+                      {item.price.toFixed(2)} DT / {item.unit}
+                    </span>
+                    {purchaseHistory[item.id]?.length > 0 && (
+                      <div className="flex items-center gap-1 opacity-80">
+                        <History className="h-2.5 w-2.5 text-primary/70 shrink-0" />
+                        <span className="text-[9px] text-muted-foreground font-medium italic leading-none">
+                          Acheté le {new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(new Date(purchaseHistory[item.id][purchaseHistory[item.id].length - 1].date))} ({purchaseHistory[item.id][purchaseHistory[item.id].length - 1].quantity} {purchaseHistory[item.id][purchaseHistory[item.id].length - 1].unit})
+                        </span>
+                      </div>
+                    )}
+                  </div>
                   <div className='flex items-center gap-2'>
                     <Button variant="ghost" size="icon" className='h-7 w-7 rounded-full' onClick={() => updateBasketQuantity(item.id, item.quantity - 1)} disabled={!!item.purchased}><Minus className='h-4 w-4' /></Button>
                     <span className='font-bold w-4 text-center'>{item.quantity}</span>
