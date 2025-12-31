@@ -40,7 +40,7 @@ export default function BasketSheet({
   const purchasedItemCount = basket.filter(item => item.purchased).length;
 
   return (
-    <SheetContent className="flex flex-col px-4">
+    <SheetContent className="flex flex-col px-4 w-[90%] sm:max-w-md">
       <SheetHeader>
         <div className="flex justify-between items-center">
           <SheetTitle>Mon Panier</SheetTitle>
