@@ -128,7 +128,14 @@ export default function KitchenAssistantPage() {
         setInitialBudget(budgetData ?? 200);
         setTotalSpent(totalSpentData ?? 0);
         setHealthConditions(healthConditionsData ?? initialHealthConditions);
-        setPurchaseHistory(purchaseHistoryData ?? {});
+        // Migrate purchase history if needed
+        const migratedHistory: PurchaseHistory = {};
+        if (purchaseHistoryData) {
+          Object.entries(purchaseHistoryData).forEach(([id, data]) => {
+            migratedHistory[id] = Array.isArray(data) ? data : [data];
+          });
+        }
+        setPurchaseHistory(migratedHistory);
 
       } catch (error) {
         console.error("Error loading data from IndexedDB", error);
@@ -322,11 +329,12 @@ export default function KitchenAssistantPage() {
     const now = new Date().toISOString();
     basket.forEach(item => {
       if (item.purchased) {
-        newHistory[item.id] = {
+        if (!newHistory[item.id]) newHistory[item.id] = [];
+        newHistory[item.id].push({
           date: now,
           quantity: item.quantity,
           unit: item.unit
-        };
+        });
       }
     });
 
