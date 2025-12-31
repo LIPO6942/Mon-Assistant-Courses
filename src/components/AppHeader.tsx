@@ -40,6 +40,7 @@ export default function AppHeader({
   onShareRecipe,
   onTogglePurchaseStatus,
   onFridgeScan,
+  purchaseHistory,
 }: AppHeaderProps) {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
 
