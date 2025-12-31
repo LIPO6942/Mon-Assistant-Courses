@@ -20,7 +20,7 @@ export default function QuickReorderSheet({ purchaseHistory, pantry, onAddToBask
             return { id, record, ingredient };
         })
         .filter(item => item.ingredient)
-        .sort((a, b) => new Date(b.record.date).getTime() - new Date(a.record.date).getTime());
+        .sort((a, b) => new Date(a.record.date).getTime() - new Date(b.record.date).getTime());
 
     return (
         <SheetContent side="right" className="flex flex-col w-[90%] sm:max-w-md">
@@ -44,7 +44,7 @@ export default function QuickReorderSheet({ purchaseHistory, pantry, onAddToBask
                                         <h4 className="font-semibold text-foreground leading-tight mb-1">{ingredient!.name}</h4>
                                         <div className="flex flex-col gap-0.5">
                                             <p className="text-sm text-primary font-medium">
-                                                Dernier achat : {new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(record.date))}
+                                                Acheté le : {new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(record.date))}
                                             </p>
                                             <p className="text-xs text-muted-foreground">
                                                 Quantité : {record.quantity} {record.unit}
