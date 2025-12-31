@@ -66,3 +66,11 @@ export interface HealthConditionCategory {
   name: string;
   conditions: HealthCondition[];
 }
+
+export interface PurchaseRecord {
+  date: string;
+  quantity: number;
+  unit: string;
+}
+
+export type PurchaseHistory = Record<string, PurchaseRecord>;
