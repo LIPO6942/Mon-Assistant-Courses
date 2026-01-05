@@ -276,7 +276,7 @@ export default function RecipesView({
                     return 'fast-foods';
                   };
                   const category = getCategory(selectedStreetFood);
-                  window.open(`https://kol-youm.vercel.app/khrouj?category=${category}`, '_blank');
+                  window.open(`https://kol-youm-app.vercel.app/khrouj?category=${category}`, '_blank');
                 }}
               >
                 <Utensils className="h-4 w-4" />
