@@ -270,13 +270,8 @@ export default function RecipesView({
                 variant="outline"
                 className="mt-6 gap-2"
                 onClick={() => {
-                  const getCategory = (food: string) => {
-                    const lowerFood = food.toLowerCase();
-                    if (lowerFood.includes('lablebi') || lowerFood.includes('poulet')) return 'restaurants';
-                    return 'fast-foods';
-                  };
-                  const category = getCategory(selectedStreetFood);
-                  window.open(`https://kol-youm-app.vercel.app/khrouj?category=${category}`, '_blank');
+                  const query = encodeURIComponent(selectedStreetFood);
+                  window.open(`https://kol-youm.vercel.app/khrouj?category=fast-food&query=${query}`, '_blank');
                 }}
               >
                 <Utensils className="h-4 w-4" />
