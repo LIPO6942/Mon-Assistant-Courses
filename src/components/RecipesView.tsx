@@ -271,7 +271,7 @@ export default function RecipesView({
                 className="mt-6 gap-2"
                 onClick={() => {
                   const query = encodeURIComponent(selectedStreetFood);
-                  window.open(`https://kol-youm.vercel.app/khrouj?category=fast-food&query=${query}`, '_blank');
+                  window.open(`https://kol-youm-app.vercel.app/khrouj?category=fast-food&query=${query}`, '_blank');
                 }}
               >
                 <Utensils className="h-4 w-4" />
