@@ -36,6 +36,7 @@ interface PantryViewProps {
   purchaseHistory: PurchaseHistory;
   pantry: Ingredient[];
   onAddToBasket: (ingredient: Ingredient, quantity: number) => void;
+  onDeleteFromHistory: (id: string) => void;
 }
 
 export default function PantryView({
@@ -61,7 +62,8 @@ export default function PantryView({
   remainingBudget,
   purchaseHistory,
   pantry,
-  onAddToBasket
+  onAddToBasket,
+  onDeleteFromHistory
 }: PantryViewProps) {
   return (
     <div>
@@ -86,7 +88,12 @@ export default function PantryView({
               <History className="h-5 w-5" />
             </Button>
           </SheetTrigger>
-          <QuickReorderSheet purchaseHistory={purchaseHistory} pantry={pantry} onAddToBasket={onAddToBasket} />
+          <QuickReorderSheet
+            purchaseHistory={purchaseHistory}
+            pantry={pantry}
+            onAddToBasket={onAddToBasket}
+            onDeleteFromHistory={onDeleteFromHistory}
+          />
         </Sheet>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
