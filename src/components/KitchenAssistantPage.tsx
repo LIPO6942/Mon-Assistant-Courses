@@ -343,6 +343,14 @@ export default function KitchenAssistantPage() {
     setBasket(prevBasket => prevBasket.filter(item => !item.purchased));
   };
 
+  const handleDeleteFromHistory = (ingredientId: string) => {
+    setPurchaseHistory(prev => {
+      const newHistory = { ...prev };
+      delete newHistory[ingredientId];
+      return newHistory;
+    });
+  };
+
   const handleShareBasket = async () => {
     if (basket.length === 0) {
       alert("Votre panier est vide.");
@@ -612,6 +620,7 @@ export default function KitchenAssistantPage() {
               purchaseHistory={purchaseHistory}
               pantry={pantry}
               onAddToBasket={addToBasket}
+              onDeleteFromHistory={handleDeleteFromHistory}
             />
           )}
           {activeTab === 'recipes' && (
