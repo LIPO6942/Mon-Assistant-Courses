@@ -16,6 +16,7 @@ import RecipesView from './RecipesView';
 import ChandyekView from './ChandyekView';
 import NutritionalGuideView from './NutritionalGuideView';
 import { db } from '@/lib/idb';
+import { AuthProvider } from '@/lib/auth-context';
 
 
 export default function KitchenAssistantPage() {
@@ -53,6 +54,10 @@ export default function KitchenAssistantPage() {
   const [ingredientForQuantity, setIngredientForQuantity] = useState<Ingredient | null>(null);
   const [isUserRecipeFormOpen, setUserRecipeFormOpen] = useState(false);
   const [editingUserRecipe, setEditingUserRecipe] = useState<UserRecipe | null>(null);
+
+  // Sharing State
+  const [isShareBasketDialogOpen, setShareBasketDialogOpen] = useState(false);
+  const [isInboxDialogOpen, setInboxDialogOpen] = useState(false);
 
 
   // --- WAKE LOCK ---
@@ -356,42 +361,46 @@ export default function KitchenAssistantPage() {
       alert("Votre panier est vide.");
       return;
     }
+    setShareBasketDialogOpen(true);
+  };
 
-    const title = 'Ma liste de courses';
-    const itemsToPayText = basket
-      .filter(item => !item.purchased)
-      .map(item => `- ${item.name}: ${item.quantity} ${item.unit}`)
-      .join('\n');
+  const handleMergeBasket = (items: BasketItem[]) => {
+    // 1. Merge into basket
+    setBasket(prev => {
+      const newBasket = [...prev];
+      items.forEach(newItem => {
+        const existing = newBasket.find(i => i.name === newItem.name); // Match by name to avoid ID conflicts or duplicates
+        if (existing) {
+          existing.quantity += newItem.quantity;
+        } else {
+          newBasket.push({ ...newItem, id: self.crypto.randomUUID(), purchased: false });
+        }
+      });
+      return newBasket;
+    });
 
-    const purchasedItemsText = basket
-      .filter(item => item.purchased)
-      .map(item => `- [x] ${item.name}: ${item.quantity} ${item.unit}`)
-      .join('\n');
+    // 2. Check for missing ingredients in pantry and ask to add
+    const missingIngredients = items.filter(item =>
+      !pantry.some(p => p.name.toLowerCase() === item.name.toLowerCase())
+    );
 
-    const totalText = `\nTotal à payer: ${basketTotalToPay.toFixed(2)} DT`;
-    let fullText = `${title}\n`;
-    if (itemsToPayText) fullText += `\nÀ acheter:\n${itemsToPayText}`;
-    if (purchasedItemsText) fullText += `\n\nDéjà acheté:\n${purchasedItemsText}`;
-    fullText += `\n${totalText}`;
+    if (missingIngredients.length > 0) {
+      if (confirm(`Vous avez reçu ${missingIngredients.length} produits qui ne sont pas dans votre garde-manger. Voulez-vous les ajouter ?`)) {
+        const newIngredients = missingIngredients.map(item => ({
+          id: self.crypto.randomUUID(),
+          name: item.name,
+          category: item.category || 'Autre',
+          unit: item.unit || 'pièce',
+          price: item.price || 0
+        } as Ingredient));
 
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: title,
-          text: fullText,
-        });
-      } catch (error) {
-        console.error('Erreur lors du partage:', error);
-      }
-    } else {
-      try {
-        await navigator.clipboard.writeText(fullText);
-        alert('Liste de courses copiée dans le presse-papiers !');
-      } catch (error) {
-        console.error('Erreur lors de la copie:', error);
-        alert('Impossible de copier la liste.');
+        setPantry(prev => [...prev, ...newIngredients].sort((a, b) => a.name.localeCompare(b.name)));
+        alert(`${newIngredients.length} produits ajoutés à votre garde-manger.`);
       }
     }
+
+    alert("Panier fusionné avec succès !");
+    setInboxDialogOpen(false);
   };
 
   const handleSaveRecipe = (recipeToSave: Omit<Recipe, 'id'> & { id?: string }) => {
@@ -571,123 +580,132 @@ export default function KitchenAssistantPage() {
 
   // --- RENDER ---
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col">
-      <AppHeader
-        basket={basket}
-        basketTotal={basketTotalToPay}
-        updateBasketQuantity={updateBasketQuantity}
-        clearBasket={clearBasket}
-        handleConfirmPurchase={handleConfirmPurchase}
-        handleShareBasket={handleShareBasket}
-        savedRecipes={savedRecipes}
-        onViewRecipe={setViewingRecipe}
-        onDeleteRecipe={handleDeleteSavedRecipe}
-        onShareRecipe={handleShareSavedRecipe}
-        onTogglePurchaseStatus={handleTogglePurchaseStatus}
-        onFridgeScan={handleFridgeScan}
-        purchaseHistory={purchaseHistory}
-      />
-      <AppNav
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        chandyekIngredientCount={chandyekIngredientsList.length}
-      />
+    <AuthProvider>
+      <div className="min-h-screen bg-background text-foreground flex flex-col">
+        <AppHeader
+          basket={basket}
+          basketTotal={basketTotalToPay}
+          updateBasketQuantity={updateBasketQuantity}
+          clearBasket={clearBasket}
+          handleConfirmPurchase={handleConfirmPurchase}
+          handleShareBasket={handleShareBasket}
+          savedRecipes={savedRecipes}
+          onViewRecipe={setViewingRecipe}
+          onDeleteRecipe={handleDeleteSavedRecipe}
+          onShareRecipe={handleShareSavedRecipe}
+          onTogglePurchaseStatus={handleTogglePurchaseStatus}
+          onFridgeScan={handleFridgeScan}
+          purchaseHistory={purchaseHistory}
+          onOpenInbox={() => setInboxDialogOpen(true)}
+        />
+        <AppNav
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          chandyekIngredientCount={chandyekIngredientsList.length}
+        />
 
-      <main className="container mx-auto p-4 md:p-6 lg:p-8 flex-grow">
-        <div className="animate-in fade-in-50">
-          {activeTab === 'pantry' && (
-            <PantryView
-              groupedIngredients={groupedIngredients}
-              categories={categories}
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
-              openQuantityDialog={handleOpenQuantityDialog}
-              openAddDialog={openAddDialog}
-              openEditDialog={openEditDialog}
-              handleDeleteIngredient={handleDeleteIngredient}
-              openCategoryDialog={openCategoryDialog}
-              handleDeleteCategory={handleDeleteCategory}
-              onToggleChandyekIngredient={handleToggleChandyekIngredient}
-              chandyekIngredientsList={chandyekIngredientsList}
-              initialBudget={initialBudget}
-              setInitialBudget={setInitialBudget}
-              basketTotalToPay={basketTotalToPay}
-              totalSpent={totalSpent + currentlyPurchasedInBasket}
-              clearBasket={clearBasket}
-              resetTotalSpent={resetTotalSpent}
-              basketItemCount={basket.length}
-              remainingBudget={remainingBudget - currentlyPurchasedInBasket}
-              purchaseHistory={purchaseHistory}
-              pantry={pantry}
-              onAddToBasket={addToBasket}
-              onDeleteFromHistory={handleDeleteFromHistory}
-            />
-          )}
-          {activeTab === 'recipes' && (
-            <RecipesView
-              setViewingRecipe={setViewingRecipe}
-              discoverableRecipes={discoverableRecipes}
-              handleSaveRecipe={handleSaveRecipe}
-              userRecipes={userRecipes}
-              openUserRecipeForm={openUserRecipeForm}
-              onViewUserRecipe={setViewingUserRecipe}
-            />
-          )}
-          {activeTab === 'chandyek' && (
-            <ChandyekView
-              selectedIngredients={chandyekIngredientsList}
-              aiSuggestions={aiSuggestions}
-              isLoading={isChandyekLoading}
-              error={chandyekError}
-              onGenerate={handleGenerateAiRecipes}
-              onSaveRecipe={handleSaveRecipe}
-              onViewRecipe={setViewingRecipe}
-              onRemoveIngredient={handleToggleChandyekIngredient}
-              onClearIngredients={handleClearChandyekIngredients}
-            />
-          )}
-          {activeTab === 'guide' && (
-            <NutritionalGuideView
-              healthConditions={healthConditions}
-              openHealthConditionManager={() => setHealthConditionManagerOpen(true)}
-            />
-          )}
-        </div>
-      </main>
+        <main className="container mx-auto p-4 md:p-6 lg:p-8 flex-grow">
+          <div className="animate-in fade-in-50">
+            {activeTab === 'pantry' && (
+              <PantryView
+                groupedIngredients={groupedIngredients}
+                categories={categories}
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                openQuantityDialog={handleOpenQuantityDialog}
+                openAddDialog={openAddDialog}
+                openEditDialog={openEditDialog}
+                handleDeleteIngredient={handleDeleteIngredient}
+                openCategoryDialog={openCategoryDialog}
+                handleDeleteCategory={handleDeleteCategory}
+                onToggleChandyekIngredient={handleToggleChandyekIngredient}
+                chandyekIngredientsList={chandyekIngredientsList}
+                initialBudget={initialBudget}
+                setInitialBudget={setInitialBudget}
+                basketTotalToPay={basketTotalToPay}
+                totalSpent={totalSpent + currentlyPurchasedInBasket}
+                clearBasket={clearBasket}
+                resetTotalSpent={resetTotalSpent}
+                basketItemCount={basket.length}
+                remainingBudget={remainingBudget - currentlyPurchasedInBasket}
+                purchaseHistory={purchaseHistory}
+                pantry={pantry}
+                onAddToBasket={addToBasket}
+                onDeleteFromHistory={handleDeleteFromHistory}
+              />
+            )}
+            {activeTab === 'recipes' && (
+              <RecipesView
+                setViewingRecipe={setViewingRecipe}
+                discoverableRecipes={discoverableRecipes}
+                handleSaveRecipe={handleSaveRecipe}
+                userRecipes={userRecipes}
+                openUserRecipeForm={openUserRecipeForm}
+                onViewUserRecipe={setViewingUserRecipe}
+              />
+            )}
+            {activeTab === 'chandyek' && (
+              <ChandyekView
+                selectedIngredients={chandyekIngredientsList}
+                aiSuggestions={aiSuggestions}
+                isLoading={isChandyekLoading}
+                error={chandyekError}
+                onGenerate={handleGenerateAiRecipes}
+                onSaveRecipe={handleSaveRecipe}
+                onViewRecipe={setViewingRecipe}
+                onRemoveIngredient={handleToggleChandyekIngredient}
+                onClearIngredients={handleClearChandyekIngredients}
+              />
+            )}
+            {activeTab === 'guide' && (
+              <NutritionalGuideView
+                healthConditions={healthConditions}
+                openHealthConditionManager={() => setHealthConditionManagerOpen(true)}
+              />
+            )}
+          </div>
+        </main>
 
-      <KitchenAssistantDialogs
-        isAddEditDialogOpen={isAddEditDialogOpen}
-        setAddEditDialogOpen={setAddEditDialogOpen}
-        editingIngredient={editingIngredient}
-        categories={categories}
-        handleSaveIngredient={handleSaveIngredient}
-        isCategoryDialogOpen={isCategoryDialogOpen}
-        setIsCategoryDialogOpen={setIsCategoryDialogOpen}
-        editingCategory={editingCategory}
-        handleSaveCategory={handleSaveCategory}
-        viewingRecipe={viewingRecipe}
-        setViewingRecipe={setViewingRecipe}
-        isHealthConditionManagerOpen={isHealthConditionManagerOpen}
-        setHealthConditionManagerOpen={setHealthConditionManagerOpen}
-        healthConditions={healthConditions}
-        onSaveHealthCategory={handleSaveHealthCategory}
-        onDeleteHealthCategory={handleDeleteHealthCategory}
-        onSaveHealthCondition={handleSaveHealthCondition}
-        onDeleteHealthCondition={handleDeleteHealthCondition}
-        isQuantityDialogOpen={isQuantityDialogOpen}
-        setQuantityDialogOpen={setQuantityDialogOpen}
-        ingredientForQuantity={ingredientForQuantity}
-        onAddToBasket={addToBasket}
-        isUserRecipeFormOpen={isUserRecipeFormOpen}
-        setUserRecipeFormOpen={setUserRecipeFormOpen}
-        editingUserRecipe={editingUserRecipe}
-        handleSaveUserRecipe={handleSaveUserRecipe}
-        viewingUserRecipe={viewingUserRecipe}
-        setViewingUserRecipe={setViewingUserRecipe}
-        onDeleteUserRecipe={handleDeleteUserRecipe}
-        onEditUserRecipe={handleEditUserRecipe}
-        onShareUserRecipe={handleShareUserRecipe}
-      />
-    </div>
+        <KitchenAssistantDialogs
+          isAddEditDialogOpen={isAddEditDialogOpen}
+          setAddEditDialogOpen={setAddEditDialogOpen}
+          editingIngredient={editingIngredient}
+          categories={categories}
+          handleSaveIngredient={handleSaveIngredient}
+          isCategoryDialogOpen={isCategoryDialogOpen}
+          setIsCategoryDialogOpen={setIsCategoryDialogOpen}
+          editingCategory={editingCategory}
+          handleSaveCategory={handleSaveCategory}
+          viewingRecipe={viewingRecipe}
+          setViewingRecipe={setViewingRecipe}
+          isHealthConditionManagerOpen={isHealthConditionManagerOpen}
+          setHealthConditionManagerOpen={setHealthConditionManagerOpen}
+          healthConditions={healthConditions}
+          onSaveHealthCategory={handleSaveHealthCategory}
+          onDeleteHealthCategory={handleDeleteHealthCategory}
+          onSaveHealthCondition={handleSaveHealthCondition}
+          onDeleteHealthCondition={handleDeleteHealthCondition}
+          isQuantityDialogOpen={isQuantityDialogOpen}
+          setQuantityDialogOpen={setQuantityDialogOpen}
+          ingredientForQuantity={ingredientForQuantity}
+          onAddToBasket={addToBasket}
+          isUserRecipeFormOpen={isUserRecipeFormOpen}
+          setUserRecipeFormOpen={setUserRecipeFormOpen}
+          editingUserRecipe={editingUserRecipe}
+          handleSaveUserRecipe={handleSaveUserRecipe}
+          viewingUserRecipe={viewingUserRecipe}
+          setViewingUserRecipe={setViewingUserRecipe}
+          onDeleteUserRecipe={handleDeleteUserRecipe}
+          onEditUserRecipe={handleEditUserRecipe}
+          onShareUserRecipe={handleShareUserRecipe}
+          isShareBasketDialogOpen={isShareBasketDialogOpen}
+          setShareBasketDialogOpen={setShareBasketDialogOpen}
+          basket={basket}
+          isInboxDialogOpen={isInboxDialogOpen}
+          setInboxDialogOpen={setInboxDialogOpen}
+          onMergeBasket={handleMergeBasket}
+        />
+      </div>
+    </AuthProvider>
   );
 }
