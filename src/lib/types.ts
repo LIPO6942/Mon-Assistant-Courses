@@ -74,3 +74,16 @@ export interface PurchaseRecord {
 }
 
 export type PurchaseHistory = Record<string, PurchaseRecord[]>;
+
+export type BasketShareStatus = 'pending' | 'accepted' | 'rejected';
+
+export interface BasketShareInvitation {
+  id: string;
+  senderId: string;
+  senderName: string; // Or email if name is not available
+  recipientEmail: string; // Used to filter invitations
+  items: BasketItem[];
+  status: BasketShareStatus;
+  createdAt: string; // ISO string
+  sharedAt: number; // Timestamp for sorting
+}
