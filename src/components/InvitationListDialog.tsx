@@ -54,7 +54,8 @@ export function InvitationListDialog({
     const handleAction = async (invitation: BasketShareInvitation, action: 'accept' | 'reject') => {
         setProcessingId(invitation.id);
         try {
-            await updateInvitationStatus(invitation.id, action);
+            const status = action === 'accept' ? 'accepted' : 'rejected';
+            await updateInvitationStatus(invitation.id, status);
             if (action === 'accept') {
                 onMergeBasket(invitation.items);
             }
