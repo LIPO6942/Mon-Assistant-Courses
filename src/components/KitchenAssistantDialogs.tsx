@@ -8,7 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { BasketShareDialog } from './BasketShareDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Minus, Plus, Pencil, Trash2, Users, Share2 } from 'lucide-react';
+import { Minus, Plus, Pencil, Trash2, Users, Share2, AlertTriangle } from 'lucide-react';
 import IngredientForm from './IngredientForm';
 import CategoryForm from './CategoryForm';
 import HealthConditionManager from './HealthConditionManager';
@@ -65,6 +65,7 @@ interface KitchenAssistantDialogsProps {
   sharedBasketToMerge: BasketItem[] | null;
   setSharedBasketToMerge: (basket: BasketItem[] | null) => void;
   onMergeBasket: () => void;
+  isInApp?: boolean;
 }
 
 export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsProps) {
@@ -106,6 +107,7 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
     sharedBasketToMerge,
     setSharedBasketToMerge,
     onMergeBasket,
+    isInApp,
   } = props;
 
   const [quantityInput, setQuantityInput] = React.useState('1');
@@ -371,6 +373,15 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
               Vous avez reçu un panier contenant {sharedBasketToMerge?.length} articles. Voulez-vous les ajouter à votre liste ?
             </DialogDescription>
           </DialogHeader>
+          {isInApp && (
+            <div className="bg-amber-100 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 p-3 rounded-lg flex gap-3 items-start my-2">
+              <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+              <div className="text-xs text-amber-800 dark:text-amber-200">
+                <p className="font-bold">Navigateur limité détecté (Messenger/Instagram)</p>
+                <p>Pour enregistrer ce panier de façon permanente, <strong>ouvrez ce lien dans Chrome ou Safari</strong> (Menu ⋮ &gt; Ouvrir dans le navigateur).</p>
+              </div>
+            </div>
+          )}
           <div className="max-h-60 overflow-y-auto my-4 border rounded-md p-2 bg-muted/20">
             <ul className="space-y-1 text-sm">
               {sharedBasketToMerge?.map((item, idx) => (

@@ -37,3 +37,18 @@ export function getProductStatus(history: PurchaseRecord[] | undefined): 'green'
 
   return null;
 }
+
+export function isInAppBrowser(): boolean {
+  if (typeof window === 'undefined') return false;
+  const ua = navigator.userAgent || navigator.vendor || (window as any).opera;
+  return (
+    /FBAN/i.test(ua) ||
+    /FBAV/i.test(ua) ||
+    /Instagram/i.test(ua) ||
+    /Messenger/i.test(ua) ||
+    /LinkedInApp/i.test(ua) ||
+    /Twitter/i.test(ua) ||
+    /WhatsApp/i.test(ua) ||
+    /Snapchat/i.test(ua)
+  );
+}

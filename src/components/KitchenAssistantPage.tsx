@@ -15,6 +15,7 @@ import RecipesView from './RecipesView';
 import ChandyekView from './ChandyekView';
 import NutritionalGuideView from './NutritionalGuideView';
 import { db } from '@/lib/idb';
+import { isInAppBrowser } from '@/lib/utils';
 
 
 export default function KitchenAssistantPage() {
@@ -719,6 +720,7 @@ export default function KitchenAssistantPage() {
         sharedBasketToMerge={sharedBasketToMerge}
         setSharedBasketToMerge={setSharedBasketToMerge}
         onMergeBasket={handleMergeBasket}
+        isInApp={isInAppBrowser()}
       />
     </div>
   );
