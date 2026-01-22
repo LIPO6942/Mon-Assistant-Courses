@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
     Dialog,
@@ -13,9 +13,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BasketItem } from "@/lib/types";
-import { createShareInvitation } from "@/lib/sharing-service";
-import { useAuth } from "@/lib/auth-context";
-import { Loader2, Send } from "lucide-react";
+import { encodeBasket } from "@/lib/url-sharing";
+import { Copy, Share2, Check } from "lucide-react";
 
 interface BasketShareDialogProps {
     isOpen: boolean;
@@ -28,79 +27,71 @@ export function BasketShareDialog({
     onOpenChange,
     basket,
 }: BasketShareDialogProps) {
-    const { user } = useAuth();
-    const [email, setEmail] = useState("");
-    const [loading, setLoading] = useState(false);
-    const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+    const [shareUrl, setShareUrl] = useState("");
+    const [copied, setCopied] = useState(false);
 
-    const handleShare = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!user || user.isAnonymous) {
-            setMessage({ type: 'error', text: "Vous devez être connecté pour partager." });
-            return;
+    useEffect(() => {
+        if (isOpen && basket.length > 0) {
+            const encoded = encodeBasket(basket);
+            // Use window.location.origin to get the base URL
+            const url = `${window.location.origin}/?d=${encoded}`;
+            setShareUrl(url);
+            setCopied(false);
         }
-        if (basket.length === 0) {
-            setMessage({ type: 'error', text: "Votre panier est vide." });
-            return;
-        }
+    }, [isOpen, basket]);
 
-        setLoading(true);
-        setMessage(null);
-
+    const handleCopy = async () => {
         try {
-            await createShareInvitation(
-                user.uid,
-                user.displayName || user.email || "Un ami",
-                email,
-                basket
-            );
-            setMessage({ type: 'success', text: "Invitation envoyée avec succès !" });
-            setEmail("");
-            setTimeout(() => onOpenChange(false), 2000);
-        } catch (error) {
-            console.error(error);
-            setMessage({ type: 'error', text: "Erreur lors de l'envoi de l'invitation." });
-        } finally {
-            setLoading(false);
+            await navigator.clipboard.writeText(shareUrl);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch (err) {
+            console.error("Failed to copy", err);
+        }
+    };
+
+    const handleNativeShare = async () => {
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: 'Ma liste de courses MAC',
+                    text: 'Voici ma liste de courses ! cliques sur le lien pour l\'importer.',
+                    url: shareUrl
+                });
+                onOpenChange(false);
+            } catch (err) {
+                console.error('Error sharing', err);
+            }
         }
     };
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
                     <DialogTitle>Partager votre panier</DialogTitle>
                     <DialogDescription>
-                        Envoyez votre liste de courses à un ami. Il pourra l'ajouter à sa propre liste.
+                        Partagez ce lien avec vos amis. En l'ouvrant, ils pourront ajouter vos articles à leur liste.
                     </DialogDescription>
                 </DialogHeader>
-                <form onSubmit={handleShare} className="grid gap-4 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="email" className="text-right">
-                            Email
-                        </Label>
-                        <Input
-                            id="email"
-                            type="email"
-                            placeholder="ami@exemple.com"
-                            className="col-span-3"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                        />
+
+                <div className="flex items-center space-x-2 my-4">
+                    <div className="grid flex-1 gap-2">
+                        <Label htmlFor="link" className="sr-only">Lien</Label>
+                        <Input id="link" value={shareUrl} readOnly />
                     </div>
-                    {message && (
-                        <div className={`text-sm text-center ${message.type === 'success' ? 'text-green-500' : 'text-red-500'}`}>
-                            {message.text}
-                        </div>
-                    )}
-                    <DialogFooter>
-                        <Button type="submit" disabled={loading}>
-                            {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                            Envoyer
-                        </Button>
-                    </DialogFooter>
-                </form>
+                    <Button size="sm" className="px-3" onClick={handleCopy}>
+                        {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                    </Button>
+                </div>
+
+                <DialogFooter className="sm:justify-between">
+                    <Button variant="outline" onClick={() => onOpenChange(false)}>Fermer</Button>
+                    <Button onClick={handleNativeShare} className="w-full sm:w-auto">
+                        <Share2 className="mr-2 h-4 w-4" />
+                        Partager via...
+                    </Button>
+                </DialogFooter>
             </DialogContent>
         </Dialog>
     );
