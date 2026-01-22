@@ -180,8 +180,13 @@ export default function KitchenAssistantPage() {
         const decodedBasket = decodeBasket(encodedData);
         if (decodedBasket) {
           setSharedBasketToMerge(decodedBasket);
-          // Clean URL
-          window.history.replaceState({}, '', window.location.pathname);
+
+          // Clean URL only if NOT in an In-App browser
+          // This ensures that if the user clicks "Open in Chrome" from Messenger, 
+          // the full URL with data is passed to the new browser.
+          if (!isInAppBrowser()) {
+            window.history.replaceState({}, '', window.location.pathname);
+          }
         }
       }
     }
