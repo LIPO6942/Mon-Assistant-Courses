@@ -6,7 +6,6 @@ import * as React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription, DialogClose } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { BasketShareDialog } from './BasketShareDialog';
-import { InvitationListDialog } from './InvitationListDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Minus, Plus, Pencil, Trash2, Users, Share2 } from 'lucide-react';
@@ -63,9 +62,9 @@ interface KitchenAssistantDialogsProps {
   isShareBasketDialogOpen: boolean;
   setShareBasketDialogOpen: (open: boolean) => void;
   basket: BasketItem[];
-  isInboxDialogOpen: boolean;
-  setInboxDialogOpen: (open: boolean) => void;
-  onMergeBasket: (items: BasketItem[]) => void;
+  sharedBasketToMerge: BasketItem[] | null;
+  setSharedBasketToMerge: (basket: BasketItem[] | null) => void;
+  onMergeBasket: () => void;
 }
 
 export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsProps) {
@@ -104,8 +103,8 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
     isShareBasketDialogOpen,
     setShareBasketDialogOpen,
     basket,
-    isInboxDialogOpen,
-    setInboxDialogOpen,
+    sharedBasketToMerge,
+    setSharedBasketToMerge,
     onMergeBasket,
   } = props;
 
@@ -364,11 +363,30 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
         basket={basket}
       />
 
-      <InvitationListDialog
-        isOpen={isInboxDialogOpen}
-        onOpenChange={setInboxDialogOpen}
-        onMergeBasket={onMergeBasket}
-      />
+      <Dialog open={!!sharedBasketToMerge} onOpenChange={(open) => !open && setSharedBasketToMerge(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Panier Partagé Reçu !</DialogTitle>
+            <DialogDescription>
+              Vous avez reçu un panier contenant {sharedBasketToMerge?.length} articles. Voulez-vous les ajouter à votre liste ?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-60 overflow-y-auto my-4 border rounded-md p-2 bg-muted/20">
+            <ul className="space-y-1 text-sm">
+              {sharedBasketToMerge?.map((item, idx) => (
+                <li key={idx} className="flex justify-between">
+                  <span>{item.name}</span>
+                  <span className="text-muted-foreground">{item.quantity} {item.unit}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSharedBasketToMerge(null)}>Ignorer</Button>
+            <Button onClick={onMergeBasket}>Fusionner</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

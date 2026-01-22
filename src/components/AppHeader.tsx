@@ -1,7 +1,7 @@
 
 'use client';
 
-import { ChefHat, ShoppingBasket, BookHeart, Refrigerator, LogIn, Mail, User as UserIcon } from 'lucide-react';
+import { ChefHat, ShoppingBasket, BookHeart, Refrigerator } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetTrigger } from '@/components/ui/sheet';
@@ -9,9 +9,7 @@ import BasketSheet from './BasketSheet';
 import SavedRecipesSheet from './SavedRecipesSheet';
 import type { BasketItem, Recipe, PurchaseHistory } from '@/lib/types';
 import FridgeScannerSheet from './FridgeScannerSheet';
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/lib/auth-context';
-import { getPendingInvitations } from '@/lib/sharing-service';
+import { useState } from 'react';
 
 interface AppHeaderProps {
   basket: BasketItem[];
@@ -27,7 +25,6 @@ interface AppHeaderProps {
   onTogglePurchaseStatus: (id: string, itemPrice: number, itemQuantity: number) => void;
   onFridgeScan: (ingredients: string[]) => void;
   purchaseHistory: PurchaseHistory;
-  onOpenInbox: () => void;
 }
 
 export default function AppHeader({
@@ -44,19 +41,8 @@ export default function AppHeader({
   onTogglePurchaseStatus,
   onFridgeScan,
   purchaseHistory,
-  onOpenInbox,
 }: AppHeaderProps) {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
-  const { user, signInWithGoogle, signInAnonymouslyUser } = useAuth();
-  const [pendingCount, setPendingCount] = useState(0);
-
-  useEffect(() => {
-    if (user?.email) {
-      getPendingInvitations(user.email).then(invites => setPendingCount(invites.length));
-    } else {
-      setPendingCount(0);
-    }
-  }, [user]);
 
   return (
     <header className="bg-card shadow-md sticky top-0 z-20">
@@ -75,17 +61,6 @@ export default function AppHeader({
             </SheetTrigger>
             <FridgeScannerSheet onIngredientsIdentified={onFridgeScan} open={isScannerOpen} onOpenChange={setIsScannerOpen} />
           </Sheet>
-
-          {user ? (
-            <Button variant="outline" size="icon" className="relative rounded-full" onClick={onOpenInbox} title="Boîte de réception">
-              <Mail />
-              {pendingCount > 0 && <Badge className="absolute -top-2 -right-2 h-6 w-6 rounded-full flex items-center justify-center bg-red-500 text-white">{pendingCount}</Badge>}
-            </Button>
-          ) : (
-            <Button variant="ghost" size="icon" className="rounded-full" onClick={() => signInWithGoogle()} title="Se connecter">
-              <LogIn />
-            </Button>
-          )}
 
           <Sheet>
             <SheetTrigger asChild>
