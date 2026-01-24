@@ -133,7 +133,7 @@ export default function PantryView({
                                 );
                               })()}
                             </div>
-                            <p className='text-sm text-muted-foreground'>{item.price.toFixed(2)} DT / {item.unit}</p>
+                            <p className='text-sm text-muted-foreground'>{item.price.toFixed(3)} DT / {item.unit}</p>
                           </div>
                           <div className='flex items-center gap-1'>
                             <Button variant="ghost" size="icon" className='h-8 w-8 rounded-full' title="Ajouter au panier" onClick={() => openQuantityDialog(item)}><Plus className="h-4 w-4" /></Button>

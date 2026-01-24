@@ -61,100 +61,100 @@ export default function UserRecipeForm({ initialData, onSave, formId }: UserReci
     <form id={formId} onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <ScrollArea className="h-[65vh] pr-6">
         <div className="space-y-6">
+          <div>
+            <Label>Photo du plat</Label>
+            <ImagePicker photoDataUri={photoDataUri} setPhotoDataUri={setPhotoDataUri} />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label>Photo du plat</Label>
-              <ImagePicker photoDataUri={photoDataUri} setPhotoDataUri={setPhotoDataUri} />
+              <Label htmlFor="title">Nom de la recette</Label>
+              <Input id="title" {...register("title", { required: "Le nom est requis" })} />
+              {errors.title && <p className="text-sm text-destructive mt-1">{errors.title.message}</p>}
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <Label htmlFor="title">Nom de la recette</Label>
-                    <Input id="title" {...register("title", { required: "Le nom est requis" })} />
-                    {errors.title && <p className="text-sm text-destructive mt-1">{errors.title.message}</p>}
-                </div>
-                 <div>
-                    <Label htmlFor="author">Auteur (facultatif)</Label>
-                    <Input id="author" {...register("author")} />
-                </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <Label htmlFor="category">Catégorie</Label>
-                <ControllerSelect
-                  control={control}
-                  name="category"
-                  items={recipeCategories}
-                  placeholder="Choisir une catégorie"
-                />
-              </div>
-              <div>
-                <Label htmlFor="preparationTime">Temps (min)</Label>
-                <Input id="preparationTime" type="number" {...register("preparationTime", { required: "Le temps est requis" })} />
-                 {errors.preparationTime && <p className="text-sm text-destructive mt-1">{errors.preparationTime.message}</p>}
-              </div>
-               <div>
-                <Label htmlFor="portions">Portions</Label>
-                <Input id="portions" type="number" {...register("portions", { required: "Le nombre de portions est requis" })} />
-                 {errors.portions && <p className="text-sm text-destructive mt-1">{errors.portions.message}</p>}
-              </div>
-            </div>
-            
-             <div>
-                <Label htmlFor="tags">Tags (facultatif, séparés par des virgules)</Label>
-                <Input id="tags" {...register("tags")} placeholder="ex: vegan, rapide, sans gluten"/>
-            </div>
-
             <div>
-              <Label>Ingrédients</Label>
-              <div className="space-y-2 mt-1">
-                {fields.map((field, index) => (
-                  <div key={field.id} className="flex items-center gap-2">
-                    <Input
-                      placeholder="Nom"
-                      {...register(`ingredients.${index}.name`, { required: true })}
-                      className="w-1/2"
-                    />
-                    <Input
-                      type="number"
-                      step="0.1"
-                      placeholder="Qté"
-                      {...register(`ingredients.${index}.quantity`, { required: true, valueAsNumber: true })}
-                      className="w-1/4"
-                    />
-                     <ControllerSelect
-                        control={control}
-                        name={`ingredients.${index}.unit`}
-                        items={[...units]}
-                        placeholder="Unité"
-                        className="w-1/4"
-                     />
-                    <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="mt-2"
-                onClick={() => append({ name: '', quantity: 1, unit: 'pièce' })}
-              >
-                Ajouter un ingrédient
-              </Button>
+              <Label htmlFor="author">Auteur (facultatif)</Label>
+              <Input id="author" {...register("author")} />
             </div>
+          </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <Label htmlFor="preparation">Étapes de préparation</Label>
-              <Textarea
-                id="preparation"
-                {...register("preparation", { required: "La préparation est requise" })}
-                rows={8}
+              <Label htmlFor="category">Catégorie</Label>
+              <ControllerSelect
+                control={control}
+                name="category"
+                items={recipeCategories}
+                placeholder="Choisir une catégorie"
               />
-              {errors.preparation && <p className="text-sm text-destructive mt-1">{errors.preparation.message}</p>}
             </div>
+            <div>
+              <Label htmlFor="preparationTime">Temps (min)</Label>
+              <Input id="preparationTime" type="number" {...register("preparationTime", { required: "Le temps est requis" })} />
+              {errors.preparationTime && <p className="text-sm text-destructive mt-1">{errors.preparationTime.message}</p>}
+            </div>
+            <div>
+              <Label htmlFor="portions">Portions</Label>
+              <Input id="portions" type="number" {...register("portions", { required: "Le nombre de portions est requis" })} />
+              {errors.portions && <p className="text-sm text-destructive mt-1">{errors.portions.message}</p>}
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="tags">Tags (facultatif, séparés par des virgules)</Label>
+            <Input id="tags" {...register("tags")} placeholder="ex: vegan, rapide, sans gluten" />
+          </div>
+
+          <div>
+            <Label>Ingrédients</Label>
+            <div className="space-y-2 mt-1">
+              {fields.map((field, index) => (
+                <div key={field.id} className="flex items-center gap-2">
+                  <Input
+                    placeholder="Nom"
+                    {...register(`ingredients.${index}.name`, { required: true })}
+                    className="w-1/2"
+                  />
+                  <Input
+                    type="number"
+                    step="0.001"
+                    placeholder="Qté"
+                    {...register(`ingredients.${index}.quantity`, { required: true, valueAsNumber: true })}
+                    className="w-1/4"
+                  />
+                  <ControllerSelect
+                    control={control}
+                    name={`ingredients.${index}.unit`}
+                    items={[...units]}
+                    placeholder="Unité"
+                    className="w-1/4"
+                  />
+                  <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="mt-2"
+              onClick={() => append({ name: '', quantity: 1, unit: 'pièce' })}
+            >
+              Ajouter un ingrédient
+            </Button>
+          </div>
+
+          <div>
+            <Label htmlFor="preparation">Étapes de préparation</Label>
+            <Textarea
+              id="preparation"
+              {...register("preparation", { required: "La préparation est requise" })}
+              rows={8}
+            />
+            {errors.preparation && <p className="text-sm text-destructive mt-1">{errors.preparation.message}</p>}
+          </div>
         </div>
       </ScrollArea>
     </form>
