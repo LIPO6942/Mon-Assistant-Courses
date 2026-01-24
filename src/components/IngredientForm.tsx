@@ -75,7 +75,7 @@ export default function IngredientForm({ ingredient, categories, onSave, formId 
         <Input
           id="price"
           type="number"
-          step="0.1"
+          step="0.001"
           min="0"
           value={formData.price}
           onChange={(e) => setFormData({ ...formData, price: e.target.value })}

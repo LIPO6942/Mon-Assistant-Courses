@@ -90,13 +90,13 @@ export default function BasketSheet({
                     </label>
                   </div>
                   <span className={cn('font-bold text-primary whitespace-nowrap shrink-0 pt-0.5', item.purchased && 'line-through text-muted-foreground')}>
-                    {(item.price * item.quantity).toFixed(2)} DT
+                    {(item.price * item.quantity).toFixed(3)} DT
                   </span>
                 </div>
                 <div className='flex justify-between items-center gap-2 mt-1'>
                   <div className="flex items-center gap-2 min-w-0 flex-1 flex-wrap">
                     <span className={cn('text-xs text-muted-foreground whitespace-nowrap', item.purchased && 'line-through')}>
-                      {item.price.toFixed(2)} DT / {item.unit}
+                      {item.price.toFixed(3)} DT / {item.unit}
                     </span>
                     {purchaseHistory[item.id]?.length > 0 && (
                       <>
@@ -126,7 +126,7 @@ export default function BasketSheet({
         <SheetFooter className='pt-4 border-t flex-col gap-2 w-full'>
           <div className="flex justify-between items-center w-full">
             <span className="text-lg font-semibold text-muted-foreground">Total à Payer</span>
-            <span className="text-2xl font-bold text-primary">{basketTotal.toFixed(2)} DT</span>
+            <span className="text-2xl font-bold text-primary">{basketTotal.toFixed(3)} DT</span>
           </div>
           <Button onClick={handleConfirmPurchase} className="w-full" disabled={purchasedItemCount === 0}>
             Valider les {purchasedItemCount} articles achetés
