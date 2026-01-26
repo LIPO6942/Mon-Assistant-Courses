@@ -91,7 +91,39 @@ export class SmartMatchingService {
         const exactMatch = allIngredients.find(i => normalize(i.name) === normRaw);
         if (exactMatch) return { ingredient: exactMatch, confidence: 1, isAlias: false };
 
-        // 3. Fuzzy Matching (Levenshtein)
+        // 3. Recherche par containment et similarité de mots
+        // Ceci permet de matcher "Lait" avec "Lait demi écrémé" ou "Delio" avec "Delio aroma g"
+        const containmentMatch = allIngredients.find(i => {
+            const normIng = normalize(i.name);
+            const rawWords = normRaw.split(' ').filter(w => w.length > 2);
+            const ingWords = normIng.split(' ').filter(w => w.length > 2);
+
+            // Si le nom MAC est contenu dans le nom Lawra9 (ex: "lait" dans "lait demi ecreme")
+            if (normRaw.includes(normIng) && normIng.length >= 3) return true;
+
+            // Si le nom Lawra9 est contenu dans le nom MAC
+            if (normIng.includes(normRaw) && normRaw.length >= 3) return true;
+
+            // Si le nom Lawra9 commence par le nom MAC (ex: "lait demi ecreme" commence par "lait")
+            if (normRaw.startsWith(normIng + ' ') && normIng.length >= 3) return true;
+
+            // Si le nom MAC commence par le nom Lawra9
+            if (normIng.startsWith(normRaw + ' ') && normRaw.length >= 3) return true;
+
+            // Si tous les mots significatifs du nom MAC sont dans le nom Lawra9
+            if (ingWords.length > 0 && ingWords.every(word => normRaw.includes(word))) return true;
+
+            // Si tous les mots significatifs du nom Lawra9 sont dans le nom MAC
+            if (rawWords.length > 0 && rawWords.every(word => normIng.includes(word))) return true;
+
+            return false;
+        });
+
+        if (containmentMatch) {
+            return { ingredient: containmentMatch, confidence: 0.85, isAlias: false };
+        }
+
+        // 4. Fuzzy Matching (Levenshtein) - pour les fautes de frappe
         let bestMatch: Ingredient | undefined;
         let minDistance = Infinity;
 
@@ -99,8 +131,8 @@ export class SmartMatchingService {
             const normIng = normalize(ing.name);
             const distance = getLevenshteinDistance(normRaw, normIng);
 
-            // Seuil arbitraire : la distance doit être < 30% de la longueur du nom
-            if (distance < minDistance && distance < normIng.length * 0.4) {
+            // Seuil plus permissif : la distance doit être < 50% de la longueur du nom
+            if (distance < minDistance && distance < normIng.length * 0.5) {
                 minDistance = distance;
                 bestMatch = ing;
             }
