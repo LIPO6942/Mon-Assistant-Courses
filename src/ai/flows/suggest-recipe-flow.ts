@@ -53,7 +53,8 @@ export async function suggestRecipes(input: SuggestRecipeInput): Promise<Suggest
     '   - Tu peux ajouter des ingrédients de base courants (épices, huile, sel, ail, oignon, etc.)',
     '',
     '3. DIVERSITÉ ET QUALITÉ :',
-    '   - Génère 3 recettes DIFFÉRENTES de pays VARIÉS (Tunisie, Maroc, Libye, Syrie, Liban, Turquie, Arabie Saoudite, Égypte, etc.)',
+    '   - Génère 3 recettes DIFFÉRENTES de pays TRÈS VARIÉS du monde entier',
+    '   - Pays suggérés : Tunisie, Maroc, Algérie, Libye, Égypte, Soudan, Syrie, Liban, Jordanie, Palestine, Irak, Arabie Saoudite, Yémen, Oman, Émirats, Qatar, Koweït, Bahreïn, Turquie, Iran, Afghanistan, Pakistan, Inde, Bangladesh, Thaïlande, Vietnam, Chine, Japon, Corée, Indonésie, Malaisie, Philippines, Éthiopie, Sénégal, Nigeria, Kenya, Brésil, Argentine, Mexique, Pérou, Colombie, Espagne, Italie, Grèce, France, Portugal, Russie, Pologne, Hongrie, etc.',
     '   - AU MOINS UNE recette doit être un PLAT CONSISTANT et COMPLET (pas juste une salade ou entrée)',
     '   - Privilégie la QUALITÉ et l\'AUTHENTICITÉ sur la quantité',
     '',
@@ -86,20 +87,7 @@ export async function suggestRecipes(input: SuggestRecipeInput): Promise<Suggest
     throw new Error("L'IA n'a pas pu générer de recettes valides. Veuillez réessayer.");
   }
 
-  // Add images from Unsplash for each recipe
-  const recipesWithImages = await Promise.all(
-    validated.recipes.map(async (recipe) => {
-      try {
-        // Search for food images on Unsplash
-        const searchQuery = encodeURIComponent(`${recipe.title} ${recipe.country} food`);
-        const unsplashUrl = `https://source.unsplash.com/400x300/?${searchQuery}`;
-        return { ...recipe, imageUrl: unsplashUrl };
-      } catch (error) {
-        console.error('Error fetching image for recipe:', recipe.title, error);
-        return recipe; // Return recipe without image if fetch fails
-      }
-    })
-  );
-
-  return recipesWithImages;
+  // Return recipes without images for now
+  // Images will be added in a future update using generate_image tool
+  return validated.recipes;
 }

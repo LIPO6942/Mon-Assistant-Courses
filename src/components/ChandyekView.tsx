@@ -102,20 +102,7 @@ export default function ChandyekView({
               <h3 className="font-semibold text-lg mb-3">Recettes suggérées par l'IA :</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {aiSuggestions.map((recipe, index) => (
-                  <Card key={index} className="flex flex-col bg-secondary/30 overflow-hidden">
-                    {recipe.imageUrl && (
-                      <div className="relative w-full h-48 bg-muted">
-                        <img
-                          src={recipe.imageUrl}
-                          alt={recipe.title}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            // Hide image if it fails to load
-                            e.currentTarget.style.display = 'none';
-                          }}
-                        />
-                      </div>
-                    )}
+                  <Card key={index} className="flex flex-col bg-secondary/30">
                     <CardHeader>
                       <CardTitle>{recipe.title}</CardTitle>
                       <div className="flex items-center flex-wrap gap-2 mt-2 text-sm text-muted-foreground">
