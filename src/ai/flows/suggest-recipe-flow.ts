@@ -18,7 +18,7 @@ export async function suggestRecipes(input: SuggestRecipeInput): Promise<Suggest
   const parsedInput = SuggestRecipeInputSchema.parse(input);
 
   const systemPrompt = [
-    'Tu es un chef cuisinier créatif et expérimenté.',
+    'Tu es un chef cuisinier créatif et expérimenté, spécialisé dans la cuisine internationale.',
     'Rends uniquement un objet JSON valide respectant ce schéma exact:',
     '{ "recipes": [',
     '  {',
@@ -39,8 +39,18 @@ export async function suggestRecipes(input: SuggestRecipeInput): Promise<Suggest
     'Ingrédients disponibles :',
     ...parsedInput.ingredients.map((i) => `- ${i}`),
     '',
-    'Génère 3 recettes différentes. Tu peux inclure des ingrédients supplémentaires si nécessaire.',
-    'Respecte strictement le schéma demandé et renvoie uniquement du JSON sans texte additionnel.',
+    'CONSIGNES IMPORTANTES :',
+    '1. Génère 3 recettes différentes et VARIÉES provenant de pays différents (Tunisie, Maroc, Libye, Syrie, Liban, Turquie, Arabie Saoudite, Égypte, Jordanie, Palestine, Irak, etc.)',
+    '2. AU MOINS UNE recette doit être un PLAT CONSISTANT et COMPLET (pas juste une salade ou une entrée)',
+    '3. Utilise AU MAXIMUM les ingrédients disponibles dans la liste ci-dessus',
+    '4. Tu peux ajouter quelques ingrédients de base courants si nécessaire (épices, huile, sel, etc.)',
+    '5. Pour le champ "preparation", écris des instructions TRÈS DÉTAILLÉES, étape par étape, comme si tu expliquais à un adolescent de 15 ans :',
+    '   - Explique chaque technique de cuisine simplement',
+    '   - Donne des repères visuels (couleur, texture, odeur)',
+    '   - Indique les temps de cuisson précis',
+    '   - Ajoute des conseils et astuces pour réussir',
+    '   - Sépare chaque étape par \\n pour la lisibilité',
+    '6. Respecte strictement le schéma JSON demandé et renvoie uniquement du JSON sans texte additionnel.',
   ].join('\n');
 
   const output = await groqChatJson<{ recipes: SuggestRecipeOutput[] }>({
@@ -50,7 +60,7 @@ export async function suggestRecipes(input: SuggestRecipeInput): Promise<Suggest
       { role: 'user', content: userPrompt },
     ],
     temperature: 0.7,
-    max_tokens: 1800,
+    max_tokens: 3000,
     response_format: { type: 'json_object' },
   });
 

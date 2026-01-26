@@ -121,7 +121,7 @@ export function ImportFromLawra9Dialog({ allIngredients, categories, onUpdatePri
                     <span className="hidden sm:inline">Importer de Lawra9</span>
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
+            <DialogContent className="sm:max-w-xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
                 <DialogHeader className="p-6 pb-2">
                     <DialogTitle className="flex items-center gap-2 text-2xl font-bold">
                         <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
