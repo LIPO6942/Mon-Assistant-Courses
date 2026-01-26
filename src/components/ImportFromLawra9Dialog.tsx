@@ -171,23 +171,34 @@ export function ImportFromLawra9Dialog({ allIngredients, onUpdatePrices, onAddIn
 
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2 mb-1">
-                                                    <span className="font-bold text-sm truncate">{p.raw.name}</span>
-                                                    <span className="text-xs font-mono bg-secondary px-1.5 py-0.5 rounded text-secondary-foreground">
-                                                        {p.raw.price.toFixed(3)}
+                                                    <span className="font-bold text-sm truncate">
+                                                        {p.match ? p.match.name : p.raw.name}
                                                     </span>
+                                                    <div className="flex items-center gap-1.5 ml-auto">
+                                                        {p.match && Math.abs(p.match.price - p.raw.price) > 0.0001 && (
+                                                            <span className="text-[10px] line-through text-muted-foreground">
+                                                                {p.match.price.toFixed(3)}
+                                                            </span>
+                                                        )}
+                                                        <span className={cn(
+                                                            "text-xs font-mono px-1.5 py-0.5 rounded",
+                                                            p.match && p.raw.price > p.match.price ? "bg-red-100 text-red-700 dark:bg-red-900/30" :
+                                                                p.match && p.raw.price < p.match.price ? "bg-green-100 text-green-700 dark:bg-green-900/30" :
+                                                                    "bg-secondary text-secondary-foreground"
+                                                        )}>
+                                                            {p.raw.price.toFixed(3)}
+                                                        </span>
+                                                    </div>
                                                 </div>
 
-                                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                                <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
                                                     {p.match ? (
                                                         <>
-                                                            <ArrowRight className="h-3 w-3" />
-                                                            <span className={cn(
-                                                                "font-medium px-2 py-0.5 rounded-full",
-                                                                p.status === 'exact' ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
-                                                            )}>
-                                                                {p.match.name}
-                                                            </span>
-                                                            {p.status === 'fuzzy' && <span className="italic">(Suggéré)</span>}
+                                                            <span className="shrink-0">Mise à jour du prix</span>
+                                                            {p.raw.name !== p.match.name && (
+                                                                <span className="truncate italic">(Source: "{p.raw.name}")</span>
+                                                            )}
+                                                            {p.status === 'fuzzy' && <span className="bg-orange-100 text-orange-700 px-1 rounded ml-1 text-[8px] font-black uppercase">IA</span>}
                                                         </>
                                                     ) : (
                                                         <span className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 px-2 py-0.5 rounded-full font-medium">✨ Nouveau produit</span>
