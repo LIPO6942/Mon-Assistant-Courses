@@ -32,6 +32,7 @@ export type GenerateShoppingListOutput = z.infer<typeof GenerateShoppingListOutp
 
 export const SuggestRecipeInputSchema = z.object({
   ingredients: z.array(z.string()).describe("The list of ingredients the user has."),
+  keyIngredients: z.array(z.string()).optional().describe("Optional key ingredients like chicken, beef, fish, eggs, etc."),
 });
 export type SuggestRecipeInput = z.infer<typeof SuggestRecipeInputSchema>;
 

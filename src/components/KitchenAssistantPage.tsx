@@ -266,8 +266,18 @@ export default function KitchenAssistantPage() {
     setIsChandyekLoading(true);
     setChandyekError(null);
     setAiSuggestions([]);
+
+    // Filter key ingredients from the selected ingredients
+    const keyIngredientsList = ['Poulet', 'Bœuf', 'Agneau', 'Poisson', 'Crevettes', 'Œufs', 'Tofu', 'Lentilles', 'Pois chiches'];
+    const keyIngredients = chandyekIngredientsList.filter(ing =>
+      keyIngredientsList.some(key => ing.toLowerCase().includes(key.toLowerCase()))
+    );
+
     try {
-      const results = await suggestRecipes({ ingredients: chandyekIngredientsList });
+      const results = await suggestRecipes({
+        ingredients: chandyekIngredientsList,
+        keyIngredients: keyIngredients.length > 0 ? keyIngredients : undefined
+      });
       setAiSuggestions(results);
     } catch (err) {
       console.error(err);
