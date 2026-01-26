@@ -87,3 +87,22 @@ export interface BasketShareInvitation {
   createdAt: string; // ISO string
   sharedAt: number; // Timestamp for sorting
 }
+
+export interface ProductAlias {
+  id: string;
+  rawName: string; // The messy name from Lawra9
+  ingredientId: string; // The clean name in MAC
+}
+
+export interface Lawra9Product {
+  name: string;
+  price: number;
+  unit: string;
+  category: string;
+}
+
+export interface Lawra9ImportData {
+  source: string;
+  date: string;
+  products: Lawra9Product[];
+}

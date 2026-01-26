@@ -11,6 +11,7 @@ import BudgetManager from './BudgetManager';
 import { cn, getProductStatus } from '@/lib/utils';
 import { Sheet, SheetTrigger } from '@/components/ui/sheet';
 import QuickReorderSheet from './QuickReorderSheet';
+import { ImportFromLawra9Dialog } from './ImportFromLawra9Dialog';
 
 interface PantryViewProps {
   groupedIngredients: Record<string, Ingredient[]>;
@@ -37,6 +38,8 @@ interface PantryViewProps {
   pantry: Ingredient[];
   onAddToBasket: (ingredient: Ingredient, quantity: number) => void;
   onDeleteFromHistory: (id: string) => void;
+  onUpdatePrices: (updates: { id: string; price: number }[]) => void;
+  onAddIngredients: (newIngredients: Omit<Ingredient, 'id'>[]) => void;
 }
 
 export default function PantryView({
@@ -63,7 +66,9 @@ export default function PantryView({
   purchaseHistory,
   pantry,
   onAddToBasket,
-  onDeleteFromHistory
+  onDeleteFromHistory,
+  onUpdatePrices,
+  onAddIngredients
 }: PantryViewProps) {
   return (
     <div>
@@ -82,6 +87,11 @@ export default function PantryView({
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input type="search" placeholder="Rechercher un ingrédient..." className="pl-11 rounded-full h-11 text-base" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
         </div>
+        <ImportFromLawra9Dialog
+          allIngredients={pantry}
+          onUpdatePrices={onUpdatePrices}
+          onAddIngredients={onAddIngredients}
+        />
         <Sheet>
           <SheetTrigger asChild>
             <Button variant="outline" size="icon" className="h-11 w-11 rounded-full shadow-sm shrink-0" title="Historique / Re-commande">
