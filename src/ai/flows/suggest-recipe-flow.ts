@@ -72,6 +72,7 @@ export async function suggestRecipes(input: SuggestRecipeInput): Promise<Suggest
     '   - Inclus les variantes régionales et noms locaux',
     '',
     '5. INSTRUCTIONS ULTRA-DÉTAILLÉES :',
+    '   - Exige AU MOINS 5 ÉTAPES distinctes et numérotées par recette',
     '   - Chaque étape doit être EXTRÊMEMENT DÉTAILLÉE comme pour quelqu\'un qui n\'a jamais cuisiné',
     '   - Inclus les temps PRÉCIS, températures EXACTES, quantités MESURÉES',
     '   - Explique POURQUOI on fait chaque action (ex: "on fait dorer l\'oignon pour développer les sucres naturels et créer une base de saveur")',
@@ -102,7 +103,19 @@ export async function suggestRecipes(input: SuggestRecipeInput): Promise<Suggest
     throw new Error("L'IA n'a pas pu générer de recettes valides. Veuillez réessayer.");
   }
 
-  // Return recipes without images for now
-  // Images will be added in a future update using generate_image tool
-  return validated.recipes;
+  // Generate images using Pollinations.ai
+  const recipesWithImages = validated.recipes.map((recipe) => {
+    // Construct a detailed prompt for the image
+    const imagePrompt = `delicious ${recipe.title}, ${recipe.country} cuisine, professional food photography, 4k, appetizing, close-up`;
+    // Encode the prompt for the URL
+    const encodedPrompt = encodeURIComponent(imagePrompt);
+    // Pollinations.ai URL with seed for consistency (optional, but good for caching)
+    // Using random seed to get variety
+    const seed = Math.floor(Math.random() * 1000);
+    const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=800&height=600&nologo=true&seed=${seed}`;
+
+    return { ...recipe, imageUrl };
+  });
+
+  return recipesWithImages;
 }
