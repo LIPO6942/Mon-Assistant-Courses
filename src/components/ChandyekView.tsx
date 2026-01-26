@@ -124,7 +124,24 @@ export default function ChandyekView({
               <h3 className="font-semibold text-lg mb-3">Recettes suggérées par l'IA :</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {aiSuggestions.map((recipe, index) => (
-                  <Card key={index} className="flex flex-col bg-secondary/30">
+                  <Card key={index} className="flex flex-col bg-secondary/30 overflow-hidden">
+                    {recipe.imageUrl && (
+                      <div className="relative w-full h-48 bg-muted group">
+                        <img
+                          src={recipe.imageUrl}
+                          alt={recipe.title}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                          loading="lazy"
+                          onError={(e) => {
+                            // Hide image if it fails to load
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                          <span className="text-white text-sm font-medium">✨ Suggestion IA</span>
+                        </div>
+                      </div>
+                    )}
                     <CardHeader>
                       <CardTitle>{recipe.title}</CardTitle>
                       <div className="flex items-center flex-wrap gap-2 mt-2 text-sm text-muted-foreground">
@@ -135,7 +152,7 @@ export default function ChandyekView({
                       </div>
                     </CardHeader>
                     <CardContent className="flex-grow">
-                      <p className="text-sm text-muted-foreground">{recipe.description}</p>
+                      <p className="text-sm text-muted-foreground whitespace-pre-line">{recipe.description}</p>
                     </CardContent>
                     <CardFooter className="flex justify-between items-center gap-2">
                       <Button onClick={() => onViewRecipe(recipe)}>Voir la recette</Button>
