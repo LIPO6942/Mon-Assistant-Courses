@@ -39,18 +39,35 @@ export async function suggestRecipes(input: SuggestRecipeInput): Promise<Suggest
     'Ingrédients disponibles :',
     ...parsedInput.ingredients.map((i) => `- ${i}`),
     '',
-    'CONSIGNES IMPORTANTES :',
-    '1. Génère 3 recettes différentes et VARIÉES provenant de pays différents (Tunisie, Maroc, Libye, Syrie, Liban, Turquie, Arabie Saoudite, Égypte, Jordanie, Palestine, Irak, etc.)',
-    '2. AU MOINS UNE recette doit être un PLAT CONSISTANT et COMPLET (pas juste une salade ou une entrée)',
-    '3. Utilise AU MAXIMUM les ingrédients disponibles dans la liste ci-dessus',
-    '4. Tu peux ajouter quelques ingrédients de base courants si nécessaire (épices, huile, sel, etc.)',
-    '5. Pour le champ "preparation", écris des instructions TRÈS DÉTAILLÉES, étape par étape, comme si tu expliquais à un adolescent de 15 ans :',
-    '   - Explique chaque technique de cuisine simplement',
+    'CONSIGNES CRITIQUES :',
+    '',
+    '1. COHÉRENCE CULINAIRE ABSOLUE :',
+    '   - NE JAMAIS mélanger des ingrédients incompatibles culturellement',
+    '   - Exemple INTERDIT : briouat avec spaghetti, couscous avec nouilles chinoises, etc.',
+    '   - Chaque recette doit être AUTHENTIQUE et RÉALISTE',
+    '   - Si un ingrédient ne convient pas à une recette traditionnelle, NE PAS le forcer',
+    '',
+    '2. UTILISATION DES INGRÉDIENTS :',
+    '   - Utilise AU MAXIMUM les ingrédients disponibles MAIS seulement si cela a du sens',
+    '   - Il vaut mieux une recette cohérente avec 3 ingrédients qu\'une recette absurde avec 10',
+    '   - Tu peux ajouter des ingrédients de base courants (épices, huile, sel, ail, oignon, etc.)',
+    '',
+    '3. DIVERSITÉ ET QUALITÉ :',
+    '   - Génère 3 recettes DIFFÉRENTES de pays VARIÉS (Tunisie, Maroc, Libye, Syrie, Liban, Turquie, Arabie Saoudite, Égypte, etc.)',
+    '   - AU MOINS UNE recette doit être un PLAT CONSISTANT et COMPLET (pas juste une salade ou entrée)',
+    '   - Privilégie la QUALITÉ et l\'AUTHENTICITÉ sur la quantité',
+    '',
+    '4. INSTRUCTIONS DÉTAILLÉES :',
+    '   - Écris des instructions TRÈS DÉTAILLÉES, étape par étape, comme pour un adolescent de 15 ans',
+    '   - Explique chaque technique simplement',
     '   - Donne des repères visuels (couleur, texture, odeur)',
     '   - Indique les temps de cuisson précis',
-    '   - Ajoute des conseils et astuces pour réussir',
-    '   - Sépare chaque étape par \\n pour la lisibilité',
-    '6. Respecte strictement le schéma JSON demandé et renvoie uniquement du JSON sans texte additionnel.',
+    '   - Ajoute des conseils et astuces',
+    '   - Sépare chaque étape par \\n',
+    '',
+    '5. FORMAT JSON :',
+    '   - Respecte strictement le schéma JSON demandé',
+    '   - Renvoie uniquement du JSON sans texte additionnel',
   ].join('\n');
 
   const output = await groqChatJson<{ recipes: SuggestRecipeOutput[] }>({
@@ -68,5 +85,21 @@ export async function suggestRecipes(input: SuggestRecipeInput): Promise<Suggest
   if (!validated.recipes || validated.recipes.length === 0) {
     throw new Error("L'IA n'a pas pu générer de recettes valides. Veuillez réessayer.");
   }
-  return validated.recipes;
+
+  // Add images from Unsplash for each recipe
+  const recipesWithImages = await Promise.all(
+    validated.recipes.map(async (recipe) => {
+      try {
+        // Search for food images on Unsplash
+        const searchQuery = encodeURIComponent(`${recipe.title} ${recipe.country} food`);
+        const unsplashUrl = `https://source.unsplash.com/400x300/?${searchQuery}`;
+        return { ...recipe, imageUrl: unsplashUrl };
+      } catch (error) {
+        console.error('Error fetching image for recipe:', recipe.title, error);
+        return recipe; // Return recipe without image if fetch fails
+      }
+    })
+  );
+
+  return recipesWithImages;
 }
