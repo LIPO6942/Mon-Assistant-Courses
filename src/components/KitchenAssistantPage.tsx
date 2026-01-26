@@ -15,7 +15,7 @@ import RecipesView from './RecipesView';
 import ChandyekView from './ChandyekView';
 import NutritionalGuideView from './NutritionalGuideView';
 import { db } from '@/lib/idb';
-import { isInAppBrowser } from '@/lib/utils';
+import { isInAppBrowser, getProductStatus } from '@/lib/utils';
 
 
 export default function KitchenAssistantPage() {
@@ -216,6 +216,23 @@ export default function KitchenAssistantPage() {
   const chandyekIngredientsList = useMemo(() => {
     return chandyekIngredients.split(', ').filter(Boolean);
   }, [chandyekIngredients]);
+
+  // Auto-add ingredients with green status to Ch3andek
+  useEffect(() => {
+    if (!isDataLoaded) return;
+
+    const greenIngredients = pantry.filter(ingredient => {
+      const status = getProductStatus(purchaseHistory[ingredient.id]);
+      return status === 'green';
+    });
+
+    // Only add if there are green ingredients and chandyek is empty
+    if (greenIngredients.length > 0 && !chandyekIngredients) {
+      const ingredientNames = greenIngredients.map(ing => ing.name).join(', ');
+      setChandyekIngredients(ingredientNames);
+    }
+  }, [isDataLoaded, pantry, purchaseHistory, chandyekIngredients]);
+
 
 
   // --- HANDLERS ---
