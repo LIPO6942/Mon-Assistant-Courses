@@ -89,6 +89,7 @@ export default function PantryView({
         </div>
         <ImportFromLawra9Dialog
           allIngredients={pantry}
+          categories={categories}
           onUpdatePrices={onUpdatePrices}
           onAddIngredients={onAddIngredients}
         />

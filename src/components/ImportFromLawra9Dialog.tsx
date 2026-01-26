@@ -7,9 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ShoppingBag, Check, AlertCircle, RefreshCw, ArrowRight } from 'lucide-react';
 import { SmartMatchingService, cleanProductName, mapLawra9Category } from '@/lib/smart-matching';
-import { Ingredient, Lawra9ImportData, Lawra9Product } from '@/lib/types';
+import { Ingredient, Lawra9ImportData, Lawra9Product, CategoryDef } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface MatchedProduct {
     raw: Lawra9Product;
@@ -17,20 +18,30 @@ interface MatchedProduct {
     confidence: number;
     isSelected: boolean;
     status: 'exact' | 'fuzzy' | 'new';
+    targetCategory: string; // The category it will be added to/updated in
 }
 
 interface ImportFromLawra9DialogProps {
     allIngredients: Ingredient[];
+    categories: CategoryDef[];
     onUpdatePrices: (updates: { id: string; price: number }[]) => void;
     onAddIngredients: (newIngredients: Omit<Ingredient, 'id'>[]) => void;
 }
 
-export function ImportFromLawra9Dialog({ allIngredients, onUpdatePrices, onAddIngredients }: ImportFromLawra9DialogProps) {
+export function ImportFromLawra9Dialog({ allIngredients, categories, onUpdatePrices, onAddIngredients }: ImportFromLawra9DialogProps) {
     const [open, setOpen] = useState(false);
     const [step, setStep] = useState<'input' | 'review'>('input');
     const [jsonInput, setJsonInput] = useState('');
     const [matchedProducts, setMatchedProducts] = useState<MatchedProduct[]>([]);
     const [isProcessing, setIsProcessing] = useState(false);
+
+    const onCategoryChange = (index: number, newCategory: string) => {
+        setMatchedProducts(prev => {
+            const next = [...prev];
+            next[index] = { ...next[index], targetCategory: newCategory };
+            return next;
+        });
+    };
 
     const toggleAll = (select: boolean) => {
         setMatchedProducts(prev => prev.map(p => ({ ...p, isSelected: select })));
@@ -57,7 +68,8 @@ export function ImportFromLawra9Dialog({ allIngredients, onUpdatePrices, onAddIn
                     match: ingredient,
                     confidence,
                     isSelected: true,
-                    status
+                    status,
+                    targetCategory: ingredient ? ingredient.category : mapLawra9Category(p.category)
                 } as MatchedProduct;
             }));
 
@@ -88,7 +100,7 @@ export function ImportFromLawra9Dialog({ allIngredients, onUpdatePrices, onAddIn
                     name: m.raw.name,
                     price: m.raw.price,
                     unit: m.raw.unit,
-                    category: mapLawra9Category(m.raw.category)
+                    category: m.targetCategory
                 });
             }
         }
@@ -192,17 +204,37 @@ export function ImportFromLawra9Dialog({ allIngredients, onUpdatePrices, onAddIn
                                                 </div>
 
                                                 <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                                                    {p.match ? (
-                                                        <>
-                                                            <span className="shrink-0">Mise à jour du prix</span>
-                                                            {p.raw.name !== p.match.name && (
-                                                                <span className="truncate italic">(Source: "{p.raw.name}")</span>
-                                                            )}
-                                                            {p.status === 'fuzzy' && <span className="bg-orange-100 text-orange-700 px-1 rounded ml-1 text-[8px] font-black uppercase">IA</span>}
-                                                        </>
-                                                    ) : (
-                                                        <span className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 px-2 py-0.5 rounded-full font-medium">✨ Nouveau produit</span>
-                                                    )}
+                                                    <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                                                        {p.match ? (
+                                                            <>
+                                                                <span className="shrink-0">Mise à jour du prix</span>
+                                                                {p.raw.name !== p.match.name && (
+                                                                    <span className="truncate italic">(Source: "{p.raw.name}")</span>
+                                                                )}
+                                                                {p.status === 'fuzzy' && <span className="bg-orange-100 text-orange-700 px-1 rounded text-[8px] font-black uppercase shrink-0">IA</span>}
+                                                            </>
+                                                        ) : (
+                                                            <span className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 px-2 py-0.5 rounded-full font-medium">✨ Nouveau produit</span>
+                                                        )}
+                                                    </div>
+                                                    <Select
+                                                        value={p.targetCategory}
+                                                        onValueChange={(val) => onCategoryChange(i, val)}
+                                                    >
+                                                        <SelectTrigger
+                                                            className="shrink-0 h-6 w-auto px-2 py-0 text-[9px] font-semibold uppercase tracking-wider border-border/50 bg-muted"
+                                                            onClick={(e) => e.stopPropagation()}
+                                                        >
+                                                            <SelectValue />
+                                                        </SelectTrigger>
+                                                        <SelectContent onClick={(e) => e.stopPropagation()}>
+                                                            {categories.map(cat => (
+                                                                <SelectItem key={cat.id} value={cat.name} className="text-xs">
+                                                                    {cat.name}
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
                                                 </div>
                                             </div>
                                         </div>
