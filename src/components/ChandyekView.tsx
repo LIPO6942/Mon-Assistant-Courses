@@ -72,21 +72,43 @@ export default function ChandyekView({
           </div>
 
           {selectedIngredients.length > 0 && (
-            <div className='text-center'>
-              <Button size="lg" onClick={onGenerate} disabled={isLoading}>
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    L'IA réfléchit...
-                  </>
-                ) : (
-                  <>
-                    <Lightbulb className="mr-2 h-5 w-5" />
-                    Générer des idées de recettes
-                  </>
-                )}
-              </Button>
-            </div>
+            <>
+              <div className='mt-6'>
+                <h3 className="font-semibold text-base mb-3">Avez-vous des ingrédients phares ? (optionnel)</h3>
+                <p className="text-sm text-muted-foreground mb-3">Sélectionnez les ingrédients principaux que vous souhaitez privilégier dans les recettes :</p>
+                <div className="flex flex-wrap gap-2">
+                  {['Poulet', 'Bœuf', 'Agneau', 'Poisson', 'Crevettes', 'Œufs', 'Tofu', 'Lentilles', 'Pois chiches'].map(ing => {
+                    const isSelected = selectedIngredients.includes(ing);
+                    return (
+                      <Badge
+                        key={ing}
+                        variant={isSelected ? "default" : "outline"}
+                        className={`cursor-pointer transition-all ${isSelected ? 'ring-2 ring-primary' : 'hover:bg-secondary'}`}
+                        onClick={() => onRemoveIngredient(ing)}
+                      >
+                        {ing} {isSelected && '✓'}
+                      </Badge>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className='text-center mt-6'>
+                <Button size="lg" onClick={onGenerate} disabled={isLoading}>
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      L'IA réfléchit...
+                    </>
+                  ) : (
+                    <>
+                      <Lightbulb className="mr-2 h-5 w-5" />
+                      Générer des idées de recettes
+                    </>
+                  )}
+                </Button>
+              </div>
+            </>
           )}
 
           {error && (
