@@ -50,6 +50,7 @@ export const SuggestRecipeOutputSchema = z.object({
   calories: z.number().describe("The estimated total calories for the dish."),
   preparationTime: z.number().int().describe("The estimated total preparation time in minutes."),
   isEconomical: z.boolean().describe("A boolean indicating if the recipe is considered cheap to prepare."),
+  isMainDish: z.boolean().optional().describe("A boolean indicating if this is the main consistent dish."),
   imageUrl: z.string().optional().describe("An optional URL to an image of the dish."),
 });
 export type SuggestRecipeOutput = z.infer<typeof SuggestRecipeOutputSchema>;

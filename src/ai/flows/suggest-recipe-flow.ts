@@ -30,7 +30,8 @@ export async function suggestRecipes(input: SuggestRecipeInput): Promise<Suggest
     '    "preparation": string,',
     '    "calories": number,',
     '    "preparationTime": number,',
-    '    "isEconomical": boolean',
+    '    "isEconomical": boolean,',
+    '    "isMainDish": boolean',
     '  }',
     '] }',
   ].join('\n');
@@ -82,6 +83,8 @@ export async function suggestRecipes(input: SuggestRecipeInput): Promise<Suggest
     '   - Mentionne les ERREURS COURANTES à éviter',
     '   - Sépare chaque étape par \\n pour la lisibilité',
     '',
+    '   - Une fois la génération terminée, identifie CLAIREMENT le plat consistant en mettant "isMainDish": true dans le JSON pour CE plat uniquement',
+    '',
     '6. FORMAT JSON :',
     '   - Respecte strictement le schéma JSON demandé',
     '   - Renvoie uniquement du JSON sans texte additionnel',
@@ -103,18 +106,24 @@ export async function suggestRecipes(input: SuggestRecipeInput): Promise<Suggest
     throw new Error("L'IA n'a pas pu générer de recettes valides. Veuillez réessayer.");
   }
 
-  // Generate images using Pollinations.ai
+  // Generate images using Pollinations.ai ONLY for the main dish
   const recipesWithImages = validated.recipes.map((recipe) => {
-    // Construct a detailed prompt for the image
-    const imagePrompt = `delicious ${recipe.title}, ${recipe.country} cuisine, professional food photography, 4k, appetizing, close-up`;
-    // Encode the prompt for the URL
-    const encodedPrompt = encodeURIComponent(imagePrompt);
-    // Pollinations.ai URL with seed for consistency (optional, but good for caching)
-    // Using random seed to get variety
-    const seed = Math.floor(Math.random() * 1000);
-    const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=800&height=600&nologo=true&seed=${seed}`;
+    // Only generate image if it is the main dish
+    if (recipe.isMainDish) {
+      // Construct a detailed prompt for the image
+      const imagePrompt = `delicious ${recipe.title}, ${recipe.country} cuisine, professional food photography, 4k, appetizing, close-up`;
+      // Encode the prompt for the URL
+      const encodedPrompt = encodeURIComponent(imagePrompt);
+      // Pollinations.ai URL with seed for consistency (optional, but good for caching)
+      // Using random seed to get variety
+      const seed = Math.floor(Math.random() * 1000);
+      const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=800&height=600&nologo=true&seed=${seed}`;
 
-    return { ...recipe, imageUrl };
+      return { ...recipe, imageUrl };
+    }
+
+    // For other dishes, return without image URL
+    return { ...recipe, imageUrl: undefined };
   });
 
   return recipesWithImages;
