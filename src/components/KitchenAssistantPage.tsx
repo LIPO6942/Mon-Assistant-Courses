@@ -306,6 +306,23 @@ export default function KitchenAssistantPage() {
     setIsCategoryDialogOpen(true);
   };
 
+  const handleUpdatePrices = (updates: { id: string; price: number }[]) => {
+    setPantry(prev => prev.map(ing => {
+      const update = updates.find(u => u.id === ing.id);
+      return update ? { ...ing, price: update.price } : ing;
+    }));
+    alert(`${updates.length} prix mis à jour avec succès.`);
+  };
+
+  const handleAddIngredients = (newItems: Omit<Ingredient, 'id'>[]) => {
+    const prepared = newItems.map(item => ({
+      ...item,
+      id: self.crypto.randomUUID()
+    } as Ingredient));
+    setPantry(prev => [...prev, ...prepared].sort((a, b) => a.name.localeCompare(b.name)));
+    alert(`${newItems.length} nouveaux produits ajoutés au garde-manger.`);
+  };
+
   const addToBasket = (ingredient: Ingredient, quantity: number) => {
     setBasket(prev => {
       const existingItem = prev.find(item => item.id === ingredient.id);
@@ -653,6 +670,8 @@ export default function KitchenAssistantPage() {
               pantry={pantry}
               onAddToBasket={addToBasket}
               onDeleteFromHistory={handleDeleteFromHistory}
+              onUpdatePrices={handleUpdatePrices}
+              onAddIngredients={handleAddIngredients}
             />
           )}
           {activeTab === 'recipes' && (

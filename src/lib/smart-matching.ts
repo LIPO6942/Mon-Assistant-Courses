@@ -1,0 +1,97 @@
+
+import { db } from './idb';
+import { Ingredient, ProductAlias } from './types';
+
+/**
+ * Calcul de la distance de Levenshtein pour le fuzzy matching
+ */
+function getLevenshteinDistance(a: string, b: string): number {
+    const tmp = [];
+    for (let i = 0; i <= a.length; i++) { tmp[i] = [i]; }
+    for (let j = 0; j <= b.length; j++) { tmp[0][j] = j; }
+    for (let i = 1; i <= a.length; i++) {
+        for (let j = 1; j <= b.length; j++) {
+            tmp[i][j] = Math.min(
+                tmp[i - 1][j] + 1,
+                tmp[i][j - 1] + 1,
+                tmp[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)
+            );
+        }
+    }
+    return tmp[a.length][b.length];
+}
+
+function normalize(text: string): string {
+    return text.toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+export class SmartMatchingService {
+    private static ALIASES_KEY = 'product_aliases';
+    private static CUSTOM_INGREDIENTS_KEY = 'custom_ingredients';
+
+    /**
+     * Trouve l'ingrédient correspondant à un nom brut de Lawra9
+     */
+    static async findMatch(rawName: string, allIngredients: Ingredient[]): Promise<{ ingredient?: Ingredient; confidence: number; isAlias: boolean }> {
+        const normRaw = normalize(rawName);
+
+        // 1. Vérifier dans les alias enregistrés
+        const aliases = await db.get<ProductAlias[]>(this.ALIASES_KEY) || [];
+        const alias = aliases.find(a => normalize(a.rawName) === normRaw);
+        if (alias) {
+            const found = allIngredients.find(i => i.id === alias.ingredientId);
+            if (found) return { ingredient: found, confidence: 1, isAlias: true };
+        }
+
+        // 2. Recherche exacte sur le nom normalisé
+        const exactMatch = allIngredients.find(i => normalize(i.name) === normRaw);
+        if (exactMatch) return { ingredient: exactMatch, confidence: 1, isAlias: false };
+
+        // 3. Fuzzy Matching (Levenshtein)
+        let bestMatch: Ingredient | undefined;
+        let minDistance = Infinity;
+
+        for (const ing of allIngredients) {
+            const normIng = normalize(ing.name);
+            const distance = getLevenshteinDistance(normRaw, normIng);
+
+            // Seuil arbitraire : la distance doit être < 30% de la longueur du nom
+            if (distance < minDistance && distance < normIng.length * 0.4) {
+                minDistance = distance;
+                bestMatch = ing;
+            }
+        }
+
+        const confidence = bestMatch ? 1 - (minDistance / Math.max(normRaw.length, normalize(bestMatch.name).length)) : 0;
+
+        return {
+            ingredient: bestMatch,
+            confidence: confidence,
+            isAlias: false
+        };
+    }
+
+    /**
+     * Enregistre un nouvel alias pour le futur
+     */
+    static async saveAlias(rawName: string, ingredientId: string): Promise<void> {
+        const aliases = await db.get<ProductAlias[]>(this.ALIASES_KEY) || [];
+        const existingIndex = aliases.findIndex(a => normalize(a.rawName) === normalize(rawName));
+
+        if (existingIndex >= 0) {
+            aliases[existingIndex].ingredientId = ingredientId;
+        } else {
+            aliases.push({
+                id: `alias-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+                rawName,
+                ingredientId
+            });
+        }
+        await db.set(this.ALIASES_KEY, aliases);
+    }
+}
