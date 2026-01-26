@@ -21,13 +21,52 @@ function getLevenshteinDistance(a: string, b: string): number {
     return tmp[a.length][b.length];
 }
 
+/**
+ * Nettoie le nom du produit pour l'affichage et la création (ex: "Spaghetti 500g" -> "Spaghetti")
+ */
+export function cleanProductName(name: string): string {
+    return (name || '')
+        .replace(/\b(\d+[\.,]?\d*)\s*(kg|gr|g|ml|lt|l|cl|pcs|piece|u|un|x|pack|promo)\b/gi, '')
+        .replace(/\b\d+\b/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
 function normalize(text: string): string {
-    return text.toLowerCase()
+    return (text || '')
+        .toLowerCase()
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '')
+        // Retirer les grammages et unités courantes (ex: 500g, 1L, 2.5kg, x6)
+        .replace(/\b(\d+[\.,]?\d*)\s*(kg|gr|g|ml|lt|l|cl|pcs|piece|u|un|x|pack|promo)\b/g, ' ')
+        // Retirer les chiffres isolés qui sont souvent des quantités
+        .replace(/\b\d+\b/g, ' ')
         .replace(/[^a-z0-9]/g, ' ')
         .replace(/\s+/g, ' ')
         .trim();
+}
+
+/**
+ * Mappage des catégories Lawra9 vers les catégories MAC
+ */
+export function mapLawra9Category(lawra9Cat: string): string {
+    const mapping: Record<string, string> = {
+        'Eau': 'Boissons',
+        'Boissons': 'Boissons',
+        'Frais': 'Produits Laitiers & Oeufs',
+        'Pâtes': 'Épicerie Salée',
+        'Epicerie Salée': 'Épicerie Salée',
+        'Epicerie Sucrée': 'Épicerie Sucrée',
+        'Fruits & Légumes': 'Fruits et Légumes',
+        'Boucherie & Volaille': 'Viandes et Poissons',
+        'Poisson': 'Viandes et Poissons',
+        'Boulangerie': 'Boulangerie & Pâtisserie',
+        'Entretien': 'Autre',
+        'Hygiène': 'Autre',
+        'Maison & Divers': 'Autre'
+    };
+
+    return mapping[lawra9Cat] || 'Autre';
 }
 
 export class SmartMatchingService {
