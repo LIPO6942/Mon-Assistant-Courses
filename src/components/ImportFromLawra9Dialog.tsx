@@ -151,8 +151,8 @@ export function ImportFromLawra9Dialog({ allIngredients, categories, onUpdatePri
                             </div>
                         </div>
                     ) : (
-                        <div className="flex flex-col h-full overflow-hidden">
-                            <div className="flex justify-between items-center mb-4 px-1">
+                        <div className="flex flex-col h-[500px] overflow-hidden">
+                            <div className="flex justify-between items-center mb-4 px-1 flex-shrink-0">
                                 <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{matchedProducts.length} produits détectés</span>
                                 <div className="flex gap-2">
                                     <Button variant="ghost" size="sm" className="h-8 text-[10px] font-bold uppercase tracking-wider" onClick={() => toggleAll(true)}>Tout sélectionner</Button>
