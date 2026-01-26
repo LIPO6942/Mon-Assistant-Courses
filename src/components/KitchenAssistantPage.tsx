@@ -221,9 +221,31 @@ export default function KitchenAssistantPage() {
   useEffect(() => {
     if (!isDataLoaded) return;
 
+    // Categories to exclude from Ch3andek auto-selection
+    const excludedCategories = [
+      'maison',
+      'médicaments',
+      'médicament',
+      'produits de soin',
+      'produit de soin',
+      'soin',
+      'bien-être',
+      'bien être',
+      'hygiène',
+      'entretien',
+      'nettoyage',
+    ];
+
     const greenIngredients = pantry.filter(ingredient => {
       const status = getProductStatus(purchaseHistory[ingredient.id]);
-      return status === 'green';
+      const categoryLower = ingredient.category.toLowerCase();
+
+      // Check if category contains any excluded keywords
+      const isExcluded = excludedCategories.some(excluded =>
+        categoryLower.includes(excluded)
+      );
+
+      return status === 'green' && !isExcluded;
     });
 
     // Only add if there are green ingredients and chandyek is empty

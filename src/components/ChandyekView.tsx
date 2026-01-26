@@ -33,13 +33,13 @@ export default function ChandyekView({
   onRemoveIngredient,
   onClearIngredients
 }: ChandyekViewProps) {
-  
+
   return (
     <div className="space-y-8">
       <Card className="max-w-4xl mx-auto shadow-lg border-border/50 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
         <CardHeader className="text-center">
           <div className="flex justify-center items-center gap-2 mb-2">
-            <Salad className="h-8 w-8 text-primary"/>
+            <Salad className="h-8 w-8 text-primary" />
             <CardTitle className="text-3xl font-bold">Ch3andek?</CardTitle>
           </div>
           <CardDescription>
@@ -102,26 +102,39 @@ export default function ChandyekView({
               <h3 className="font-semibold text-lg mb-3">Recettes suggérées par l'IA :</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {aiSuggestions.map((recipe, index) => (
-                  <Card key={index} className="flex flex-col bg-secondary/30">
+                  <Card key={index} className="flex flex-col bg-secondary/30 overflow-hidden">
+                    {recipe.imageUrl && (
+                      <div className="relative w-full h-48 bg-muted">
+                        <img
+                          src={recipe.imageUrl}
+                          alt={recipe.title}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            // Hide image if it fails to load
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      </div>
+                    )}
                     <CardHeader>
                       <CardTitle>{recipe.title}</CardTitle>
                       <div className="flex items-center flex-wrap gap-2 mt-2 text-sm text-muted-foreground">
                         <Badge variant="secondary" className="w-fit">{recipe.country}</Badge>
-                        <Badge variant="outline" className="flex items-center gap-1 bg-card"><Clock className="h-3 w-3"/>{recipe.preparationTime} min</Badge>
-                        {recipe.isEconomical && <Badge variant="outline" className="flex items-center gap-1 bg-card"><Coins className="h-3 w-3"/>Éco</Badge>}
+                        <Badge variant="outline" className="flex items-center gap-1 bg-card"><Clock className="h-3 w-3" />{recipe.preparationTime} min</Badge>
+                        {recipe.isEconomical && <Badge variant="outline" className="flex items-center gap-1 bg-card"><Coins className="h-3 w-3" />Éco</Badge>}
                         <Badge variant="outline" className="bg-card">{recipe.calories} kcal</Badge>
                       </div>
                     </CardHeader>
                     <CardContent className="flex-grow">
-                       <p className="text-sm text-muted-foreground">{recipe.description}</p>
+                      <p className="text-sm text-muted-foreground">{recipe.description}</p>
                     </CardContent>
                     <CardFooter className="flex justify-between items-center gap-2">
                       <Button onClick={() => onViewRecipe(recipe)}>Voir la recette</Button>
-                      <Button variant="outline" size="icon" onClick={() => onSaveRecipe(recipe)}><PlusCircle className='h-4 w-4'/></Button>
+                      <Button variant="outline" size="icon" onClick={() => onSaveRecipe(recipe)}><PlusCircle className='h-4 w-4' /></Button>
                     </CardFooter>
                   </Card>
                 ))}
-               </div>
+              </div>
             </div>
           )}
         </CardContent>
