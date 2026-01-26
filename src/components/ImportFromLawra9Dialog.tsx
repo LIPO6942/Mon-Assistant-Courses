@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ShoppingBag, Check, AlertCircle, RefreshCw, ArrowRight } from 'lucide-react';
-import { SmartMatchingService } from '@/lib/smart-matching';
+import { SmartMatchingService, cleanProductName, mapLawra9Category } from '@/lib/smart-matching';
 import { Ingredient, Lawra9ImportData, Lawra9Product } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -32,6 +32,10 @@ export function ImportFromLawra9Dialog({ allIngredients, onUpdatePrices, onAddIn
     const [matchedProducts, setMatchedProducts] = useState<MatchedProduct[]>([]);
     const [isProcessing, setIsProcessing] = useState(false);
 
+    const toggleAll = (select: boolean) => {
+        setMatchedProducts(prev => prev.map(p => ({ ...p, isSelected: select })));
+    };
+
     const handleProcessJSON = async () => {
         try {
             setIsProcessing(true);
@@ -49,7 +53,7 @@ export function ImportFromLawra9Dialog({ allIngredients, onUpdatePrices, onAddIn
                 else if (confidence > 0.4) status = 'fuzzy';
 
                 return {
-                    raw: p,
+                    raw: { ...p, name: cleanProductName(p.name) },
                     match: ingredient,
                     confidence,
                     isSelected: true,
@@ -84,7 +88,7 @@ export function ImportFromLawra9Dialog({ allIngredients, onUpdatePrices, onAddIn
                     name: m.raw.name,
                     price: m.raw.price,
                     unit: m.raw.unit,
-                    category: m.raw.category
+                    category: mapLawra9Category(m.raw.category)
                 });
             }
         }
@@ -135,57 +139,66 @@ export function ImportFromLawra9Dialog({ allIngredients, onUpdatePrices, onAddIn
                             </div>
                         </div>
                     ) : (
-                        <ScrollArea className="h-[450px] pr-4">
-                            <div className="space-y-3">
-                                {matchedProducts.map((p, i) => (
-                                    <div
-                                        key={i}
-                                        className={cn(
-                                            "flex items-center gap-4 p-3 rounded-xl border transition-all cursor-pointer",
-                                            p.isSelected ? "bg-card border-border shadow-sm" : "bg-muted/30 border-transparent opacity-60"
-                                        )}
-                                        onClick={() => {
-                                            const next = [...matchedProducts];
-                                            next[i].isSelected = !next[i].isSelected;
-                                            setMatchedProducts(next);
-                                        }}
-                                    >
-                                        <div className={cn(
-                                            "h-5 w-5 rounded-full flex items-center justify-center border transition-all",
-                                            p.isSelected ? "bg-primary border-primary text-white" : "border-muted-foreground"
-                                        )}>
-                                            {p.isSelected && <Check className="h-3 w-3" />}
-                                        </div>
-
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <span className="font-bold text-sm truncate">{p.raw.name}</span>
-                                                <span className="text-xs font-mono bg-secondary px-1.5 py-0.5 rounded text-secondary-foreground">
-                                                    {p.raw.price.toFixed(3)}
-                                                </span>
-                                            </div>
-
-                                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                                {p.match ? (
-                                                    <>
-                                                        <ArrowRight className="h-3 w-3" />
-                                                        <span className={cn(
-                                                            "font-medium px-2 py-0.5 rounded-full",
-                                                            p.status === 'exact' ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
-                                                        )}>
-                                                            {p.match.name}
-                                                        </span>
-                                                        {p.status === 'fuzzy' && <span className="italic">(Suggéré)</span>}
-                                                    </>
-                                                ) : (
-                                                    <span className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 px-2 py-0.5 rounded-full font-medium">✨ Nouveau produit</span>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
+                        <div className="flex flex-col h-full overflow-hidden">
+                            <div className="flex justify-between items-center mb-4 px-1">
+                                <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{matchedProducts.length} produits détectés</span>
+                                <div className="flex gap-2">
+                                    <Button variant="ghost" size="sm" className="h-8 text-[10px] font-bold uppercase tracking-wider" onClick={() => toggleAll(true)}>Tout sélectionner</Button>
+                                    <Button variant="ghost" size="sm" className="h-8 text-[10px] font-bold uppercase tracking-wider" onClick={() => toggleAll(false)}>Tout déselectionner</Button>
+                                </div>
                             </div>
-                        </ScrollArea>
+                            <ScrollArea className="flex-1 pr-4">
+                                <div className="space-y-3">
+                                    {matchedProducts.map((p, i) => (
+                                        <div
+                                            key={i}
+                                            className={cn(
+                                                "flex items-center gap-4 p-3 rounded-xl border transition-all cursor-pointer",
+                                                p.isSelected ? "bg-card border-border shadow-sm" : "bg-muted/30 border-transparent opacity-60"
+                                            )}
+                                            onClick={() => {
+                                                const next = [...matchedProducts];
+                                                next[i].isSelected = !next[i].isSelected;
+                                                setMatchedProducts(next);
+                                            }}
+                                        >
+                                            <div className={cn(
+                                                "h-5 w-5 rounded-full flex items-center justify-center border transition-all",
+                                                p.isSelected ? "bg-primary border-primary text-white" : "border-muted-foreground"
+                                            )}>
+                                                {p.isSelected && <Check className="h-3 w-3" />}
+                                            </div>
+
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <span className="font-bold text-sm truncate">{p.raw.name}</span>
+                                                    <span className="text-xs font-mono bg-secondary px-1.5 py-0.5 rounded text-secondary-foreground">
+                                                        {p.raw.price.toFixed(3)}
+                                                    </span>
+                                                </div>
+
+                                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                                    {p.match ? (
+                                                        <>
+                                                            <ArrowRight className="h-3 w-3" />
+                                                            <span className={cn(
+                                                                "font-medium px-2 py-0.5 rounded-full",
+                                                                p.status === 'exact' ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
+                                                            )}>
+                                                                {p.match.name}
+                                                            </span>
+                                                            {p.status === 'fuzzy' && <span className="italic">(Suggéré)</span>}
+                                                        </>
+                                                    ) : (
+                                                        <span className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 px-2 py-0.5 rounded-full font-medium">✨ Nouveau produit</span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </ScrollArea>
+                        </div>
                     )}
                 </div>
 
