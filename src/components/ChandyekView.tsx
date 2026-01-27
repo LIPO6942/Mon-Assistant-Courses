@@ -5,7 +5,7 @@ import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { BrainCircuit, Salad, X, Lightbulb, Loader2, Terminal, PlusCircle, Clock, Coins } from 'lucide-react';
+import { BrainCircuit, Salad, X, Lightbulb, Loader2, Terminal, PlusCircle, Clock, Coins, ExternalLink } from 'lucide-react';
 import type { Recipe } from '@/lib/types';
 import type { SuggestRecipeOutput } from '@/ai/types';
 import { Alert, AlertTitle, AlertDescription } from './ui/alert';
@@ -132,41 +132,75 @@ export default function ChandyekView({
           {aiSuggestions.length > 0 && (
             <div className="mt-6">
               <h3 className="font-semibold text-lg mb-3">Recettes suggérées par l'IA :</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {aiSuggestions.map((recipe, index) => (
-                  <Card key={index} className="flex flex-col bg-secondary/30 overflow-hidden">
+                  <Card key={index} className="flex flex-col bg-secondary/30 overflow-hidden border-primary/20 hover:border-primary/40 transition-colors">
                     {recipe.imageUrl && index === 0 && (
                       <div className="relative w-full h-48 bg-muted group">
                         <img
                           src={recipe.imageUrl}
                           alt={recipe.title}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                          loading="lazy"
-                          onError={(e) => {
-                            // Hide image if it fails to load
-                            e.currentTarget.style.display = 'none';
-                          }}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
-                          <span className="text-white text-sm font-medium">✨ Suggestion IA</span>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-bottom p-4">
+                          <Badge className="mt-auto bg-primary text-primary-foreground border-none">Chef's Choice</Badge>
                         </div>
                       </div>
                     )}
-                    <CardHeader>
-                      <CardTitle>{recipe.title}</CardTitle>
-                      <div className="flex items-center flex-wrap gap-2 mt-2 text-sm text-muted-foreground">
-                        <Badge variant="secondary" className="w-fit">{recipe.country}</Badge>
-                        <Badge variant="outline" className="flex items-center gap-1 bg-card"><Clock className="h-3 w-3" />{recipe.preparationTime} min</Badge>
-                        {recipe.isEconomical && <Badge variant="outline" className="flex items-center gap-1 bg-card"><Coins className="h-3 w-3" />Éco</Badge>}
-                        <Badge variant="outline" className="bg-card">{recipe.calories} kcal</Badge>
+
+                    <CardHeader className="pb-2">
+                      <div className="flex justify-between items-start gap-2">
+                        <CardTitle className="text-lg font-bold leading-tight line-clamp-2">{recipe.title}</CardTitle>
+                        <Badge variant="outline" className="shrink-0">{recipe.country}</Badge>
                       </div>
+                      <CardDescription className="line-clamp-2 text-xs">{recipe.description}</CardDescription>
                     </CardHeader>
-                    <CardContent className="flex-grow">
-                      <p className="text-sm text-muted-foreground whitespace-pre-line">{recipe.description}</p>
+
+                    <CardContent className="flex-grow pb-2">
+                      <div className="space-y-2">
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Ingrédients utilisés :</p>
+                        <div className="flex flex-wrap gap-1">
+                          {recipe.ingredients.slice(0, 6).map((ing, i) => (
+                            <Badge key={i} variant="secondary" className="px-1 py-0 text-[10px] font-normal lowercase bg-secondary/50">
+                              {ing.name}
+                            </Badge>
+                          ))}
+                          {recipe.ingredients.length > 6 && (
+                            <span className="text-[10px] text-muted-foreground">+{recipe.ingredients.length - 6}...</span>
+                          )}
+                        </div>
+                      </div>
                     </CardContent>
-                    <CardFooter className="flex justify-between items-center gap-2">
-                      <Button onClick={() => onViewRecipe(recipe)}>Voir la recette</Button>
-                      <Button variant="outline" size="icon" onClick={() => onSaveRecipe(recipe)}><PlusCircle className='h-4 w-4' /></Button>
+
+                    <CardFooter className="flex flex-col gap-2 pt-2 border-t border-primary/5">
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground w-full">Cuisiner sur :</p>
+                      <div className="flex flex-wrap gap-2 w-full">
+                        {(recipe.searchLinks || []).map((link, i) => (
+                          <Button key={i} variant="outline" size="sm" className="flex-1 h-8 text-xs gap-1 py-1" asChild>
+                            <a href={link.url} target="_blank" rel="noopener noreferrer">
+                              <ExternalLink className="h-3 w-3" />
+                              {link.label}
+                            </a>
+                          </Button>
+                        ))}
+                        {!recipe.searchLinks && recipe.searchUrl && (
+                          <Button variant="outline" size="sm" className="flex-1 h-8 text-xs gap-1" asChild>
+                            <a href={recipe.searchUrl} target="_blank" rel="noopener noreferrer">
+                              <ExternalLink className="h-3 w-3" />
+                              Google
+                            </a>
+                          </Button>
+                        )}
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full h-8 text-[10px] text-muted-foreground hover:text-primary transition-colors gap-1"
+                        onClick={() => onSaveRecipe(recipe)}
+                      >
+                        <PlusCircle className='h-3 w-3' />
+                        Enregistrer l'idée
+                      </Button>
                     </CardFooter>
                   </Card>
                 ))}

@@ -45,13 +45,18 @@ export const SuggestRecipeOutputSchema = z.object({
     name: z.string().describe("The name of the ingredient."),
     quantity: z.number().describe("The numeric quantity of the ingredient."),
     unit: z.string().describe("The unit of measurement (e.g., 'g', 'ml', 'pcs').")
-  })).describe("The array of ingredients for the recipe."),
-  preparation: z.string().describe("The detailed, step-by-step preparation instructions for the recipe."),
-  calories: z.number().describe("The estimated total calories for the dish."),
+  })).describe("The list of ingredients for the recipe."),
+  preparation: z.string().optional().describe("Minimal preparation instructions."),
+  calories: z.number().optional().describe("Total calories for the dish."),
   preparationTime: z.number().int().describe("The estimated total preparation time in minutes."),
   isEconomical: z.boolean().describe("A boolean indicating if the recipe is considered cheap to prepare."),
   isMainDish: z.boolean().optional().describe("A boolean indicating if this is the main consistent dish."),
   imageUrl: z.string().optional().describe("An optional URL to an image of the dish."),
+  searchUrl: z.string().optional().describe("A URL to search for this recipe online."),
+  searchLinks: z.array(z.object({
+    label: z.string(),
+    url: z.string()
+  })).optional().describe("Multiple specialized search links."),
 });
 export type SuggestRecipeOutput = z.infer<typeof SuggestRecipeOutputSchema>;
 

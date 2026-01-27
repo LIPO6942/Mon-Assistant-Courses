@@ -30,6 +30,8 @@ export interface Recipe {
   calories: number;
   preparationTime: number; // in minutes
   isEconomical: boolean;
+  searchUrl?: string;
+  searchLinks?: { label: string; url: string }[];
 }
 
 export interface UserRecipe {
