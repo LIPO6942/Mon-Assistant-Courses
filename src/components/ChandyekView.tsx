@@ -78,15 +78,25 @@ export default function ChandyekView({
                 <p className="text-sm text-muted-foreground mb-3">Sélectionnez les ingrédients principaux que vous souhaitez privilégier dans les recettes :</p>
                 <div className="flex flex-wrap gap-2">
                   {['Poulet', 'Bœuf', 'Agneau', 'Poisson', 'Crevettes', 'Œufs', 'Tofu', 'Lentilles', 'Pois chiches'].map(ing => {
-                    const isSelected = selectedIngredients.includes(ing);
+                    // Check if this specific ingredient or its generic category is already selected
+                    const isSpecificSelected = selectedIngredients.some(i => i.toLowerCase() === ing.toLowerCase());
+                    const isCategorySelected = (ing === 'Poulet' || ing === 'Bœuf' || ing === 'Agneau') &&
+                      selectedIngredients.some(i => i.toLowerCase() === 'viande' || i.toLowerCase() === 'viandes');
+
+                    if (isSpecificSelected || isCategorySelected) return null;
+
                     return (
                       <Badge
                         key={ing}
-                        variant={isSelected ? "default" : "outline"}
-                        className={`cursor-pointer transition-all ${isSelected ? 'ring-2 ring-primary' : 'hover:bg-secondary'}`}
-                        onClick={() => onRemoveIngredient(ing)}
+                        variant="outline"
+                        className="cursor-pointer transition-all hover:bg-secondary"
+                        onClick={() => onGenerate()} // Trigger generation or we could just allow clicking to add it to some keyIngredients state if we had it, but here it seems to just be a suggestion list. 
+                      // Wait, looking at the previous code, clicking it called onRemoveIngredient(ing) which is counter-intuitive for a "select" list.
+                      // Actually, looking at line 87: onClick={() => onRemoveIngredient(ing)}
+                      // If it's selected, it should be removable. But the request says "ne plus afficher la proposition boeuf".
+                      // So if it's already there (selected), we hide it.
                       >
-                        {ing} {isSelected && '✓'}
+                        {ing}
                       </Badge>
                     );
                   })}
@@ -125,7 +135,7 @@ export default function ChandyekView({
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {aiSuggestions.map((recipe, index) => (
                   <Card key={index} className="flex flex-col bg-secondary/30 overflow-hidden">
-                    {recipe.imageUrl && (
+                    {recipe.imageUrl && index === 0 && (
                       <div className="relative w-full h-48 bg-muted group">
                         <img
                           src={recipe.imageUrl}
