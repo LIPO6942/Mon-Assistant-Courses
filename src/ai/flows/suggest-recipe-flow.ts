@@ -80,7 +80,7 @@ export async function suggestRecipes(input: SuggestRecipeInput): Promise<Suggest
       { label: 'Marmiton', url: `https://www.marmiton.org/recettes/recherche.aspx?aqt=${recipeTitle}` },
       { label: 'Journal des Femmes', url: `https://cuisine.journaldesfemmes.fr/recherche/?f_recherche=${recipeTitle}` },
       { label: 'YouTube', url: `https://www.google.com/search?q=site:youtube.com+${recipeTitle}+recette&btnI=1` },
-      { label: 'TikTok', url: `https://www.tiktok.com/search/video?q=${recipeTitle}%20recette` }
+      { label: 'TikTok', url: `https://www.google.com/search?q=site:tiktok.com+${recipeTitle}+recette&btnI=1` }
     ];
 
     const searchUrl = searchLinks[0].url; // Default to Google

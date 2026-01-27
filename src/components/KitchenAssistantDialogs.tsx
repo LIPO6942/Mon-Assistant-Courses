@@ -197,15 +197,45 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
                   {'calories' in currentRecipe ? `Environ ${currentRecipe.calories} kcal` : ''}
                   {'description' in currentRecipe ? ` - ${currentRecipe.description}` : ''}
                 </DialogDescription>
-                {('searchUrl' in currentRecipe) && currentRecipe.searchUrl && (
-                  <div className="mt-2">
-                    <Button variant="outline" size="sm" asChild className="gap-2">
-                      <a href={currentRecipe.searchUrl} target="_blank" rel="noopener noreferrer">
-                        <ExternalLink className="h-4 w-4" />
-                        Voir la recette complète en ligne
-                      </a>
-                    </Button>
+                {currentRecipe && 'searchLinks' in currentRecipe && currentRecipe.searchLinks && currentRecipe.searchLinks.length > 0 ? (
+                  <div className="flex flex-wrap gap-2 mt-4">
+                    {currentRecipe.searchLinks.map((link, i) => {
+                      const isYouTube = link.label.toLowerCase() === 'youtube';
+                      const isTikTok = link.label.toLowerCase() === 'tiktok';
+                      const isGoogle = link.label.toLowerCase() === 'google';
+
+                      return (
+                        <Button
+                          key={i}
+                          variant="outline"
+                          size="sm"
+                          className={cn(
+                            "flex-1 h-8 text-[10px] gap-1 py-1 transition-all duration-300 font-bold",
+                            isYouTube && "bg-[#FF0000] hover:bg-[#CC0000] text-white border-none shadow-sm",
+                            isTikTok && "bg-black hover:bg-zinc-800 text-white border-none shadow-sm",
+                            isGoogle && "bg-gradient-to-r from-blue-500/10 via-red-500/10 to-yellow-500/10 border-primary/10 hover:border-primary/30"
+                          )}
+                          asChild
+                        >
+                          <a href={link.url} target="_blank" rel="noopener noreferrer">
+                            <ExternalLink className={cn("h-3 w-3", (isYouTube || isTikTok) && "text-white")} />
+                            {link.label}
+                          </a>
+                        </Button>
+                      );
+                    })}
                   </div>
+                ) : (
+                  currentRecipe && 'searchUrl' in currentRecipe && currentRecipe.searchUrl && (
+                    <div className="mt-2">
+                      <Button variant="outline" size="sm" asChild className="gap-2">
+                        <a href={currentRecipe.searchUrl} target="_blank" rel="noopener noreferrer">
+                          <ExternalLink className="h-4 w-4" />
+                          Voir la recette complète en ligne
+                        </a>
+                      </Button>
+                    </div>
+                  )
                 )}
               </DialogHeader>
 
@@ -227,25 +257,29 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
                     </li>
                   )}
                 </ul>
-                <h4 className='font-semibold mt-4'>Préparation :</h4>
-                <div className="text-sm text-muted-foreground whitespace-pre-wrap mt-2 space-y-3">
-                  {preparationSteps.map((step, index) => (
-                    <div key={index} className="flex items-start gap-3">
-                      <Checkbox
-                        id={`step-${index}`}
-                        checked={checkedSteps.has(index)}
-                        onCheckedChange={() => handleToggleStep(index)}
-                        className='mt-1'
-                      />
-                      <label
-                        htmlFor={`step-${index}`}
-                        className={cn("flex-1 cursor-pointer", checkedSteps.has(index) && "line-through text-muted-foreground/70")}
-                      >
-                        {step}
-                      </label>
+                {preparationSteps.length > 0 && (
+                  <>
+                    <h4 className='font-semibold mt-4'>Préparation :</h4>
+                    <div className="text-sm text-muted-foreground whitespace-pre-wrap mt-2 space-y-3">
+                      {preparationSteps.map((step, index) => (
+                        <div key={index} className="flex items-start gap-3">
+                          <Checkbox
+                            id={`step-${index}`}
+                            checked={checkedSteps.has(index)}
+                            onCheckedChange={() => handleToggleStep(index)}
+                            className='mt-1'
+                          />
+                          <label
+                            htmlFor={`step-${index}`}
+                            className={cn("flex-1 cursor-pointer", checkedSteps.has(index) && "line-through text-muted-foreground/70")}
+                          >
+                            {step}
+                          </label>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </>
+                )}
               </ScrollArea>
               <DialogFooter className="sm:justify-between w-full">
                 <div>
