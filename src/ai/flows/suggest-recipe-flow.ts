@@ -70,7 +70,7 @@ export async function suggestRecipes(input: SuggestRecipeInput): Promise<Suggest
     const searchLinks = [
       { label: 'Google', url: `https://www.google.com/search?q=${fullQuery}` },
       { label: 'Marmiton', url: `https://www.marmiton.org/recettes/recherche.aspx?aqt=${recipeTitle}` },
-      { label: 'Cuisine AZ', url: `https://www.cuisineaz.com/recherche/recherche.aspx?q=${recipeTitle}` },
+      { label: 'Journal des Femmes', url: `https://cuisine.journaldesfemmes.fr/recherche/?f_recherche=${recipeTitle}` },
       { label: 'YouTube', url: `https://www.youtube.com/results?search_query=recette+${recipeTitle}` }
     ];
 
