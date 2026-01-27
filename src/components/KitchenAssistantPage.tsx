@@ -258,24 +258,42 @@ export default function KitchenAssistantPage() {
 
 
   // --- HANDLERS ---
-  const handleGenerateAiRecipes = useCallback(async () => {
-    if (chandyekIngredientsList.length === 0) {
+  const handleGenerateAiRecipes = useCallback(async (extraIngredient?: string) => {
+    let currentIngredients = [...chandyekIngredientsList];
+
+    if (extraIngredient) {
+      if (!currentIngredients.some(ing => ing.toLowerCase() === extraIngredient.toLowerCase())) {
+        currentIngredients.push(extraIngredient);
+        // Sync back to the main search string state
+        setChandyekIngredients(prev => {
+          const list = prev ? prev.split(', ').filter(Boolean) : [];
+          if (!list.some(i => i.toLowerCase() === extraIngredient.toLowerCase())) {
+            list.push(extraIngredient);
+            return list.join(', ');
+          }
+          return prev;
+        });
+      }
+    }
+
+    if (currentIngredients.length === 0) {
       setChandyekError("Veuillez sélectionner au moins un ingrédient.");
       return;
     }
+
     setIsChandyekLoading(true);
     setChandyekError(null);
     setAiSuggestions([]);
 
     // Filter key ingredients from the selected ingredients
     const keyIngredientsList = ['Poulet', 'Bœuf', 'Agneau', 'Poisson', 'Crevettes', 'Œufs', 'Tofu', 'Lentilles', 'Pois chiches'];
-    const keyIngredients = chandyekIngredientsList.filter(ing =>
+    const keyIngredients = currentIngredients.filter(ing =>
       keyIngredientsList.some(key => ing.toLowerCase().includes(key.toLowerCase()))
     );
 
     try {
       const results = await suggestRecipes({
-        ingredients: chandyekIngredientsList,
+        ingredients: currentIngredients,
         keyIngredients: keyIngredients.length > 0 ? keyIngredients : undefined
       });
       setAiSuggestions(results);

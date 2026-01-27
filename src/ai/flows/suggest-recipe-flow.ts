@@ -44,6 +44,9 @@ export async function suggestRecipes(input: SuggestRecipeInput): Promise<Suggest
     'Ingrédients disponibles :',
     ...parsedInput.ingredients.map((i: string) => `- ${i}`),
     '',
+    ...(parsedInput.keyIngredients && parsedInput.keyIngredients.length > 0
+      ? ['🎯 INGRÉDIENTS PHARES (À utiliser en priorité) :', ...parsedInput.keyIngredients.map((i: string) => `- ${i}`), '']
+      : []),
     'CONSIGNES :',
     '- Soit EXTRÊMEMENT RAPIDE : ne génère que le titre, une description d’une ligne et la liste des ingrédients utilisés.',
     '- NE GÉNÈRE AUCUNE ÉTAPE DE PRÉPARATION.',
@@ -73,11 +76,11 @@ export async function suggestRecipes(input: SuggestRecipeInput): Promise<Suggest
 
     // Construct Search Links
     const searchLinks = [
-      { label: 'Google', url: `https://www.google.com/search?q=${fullQuery}` },
+      { label: 'Google', url: `https://www.google.com/search?q=${fullQuery}&btnI=1` },
       { label: 'Marmiton', url: `https://www.marmiton.org/recettes/recherche.aspx?aqt=${recipeTitle}` },
       { label: 'Journal des Femmes', url: `https://cuisine.journaldesfemmes.fr/recherche/?f_recherche=${recipeTitle}` },
-      { label: 'YouTube', url: `https://www.youtube.com/results?search_query=recette+${recipeTitle}` },
-      { label: 'TikTok', url: `https://www.tiktok.com/search?q=${recipeTitle}+recette` }
+      { label: 'YouTube', url: `https://www.google.com/search?q=site:youtube.com+${recipeTitle}+recette&btnI=1` },
+      { label: 'TikTok', url: `https://www.tiktok.com/search/video?q=${recipeTitle}%20recette` }
     ];
 
     const searchUrl = searchLinks[0].url; // Default to Google
