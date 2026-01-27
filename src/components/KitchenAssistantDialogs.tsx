@@ -8,7 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { BasketShareDialog } from './BasketShareDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Minus, Plus, Pencil, Trash2, Users, Share2, AlertTriangle } from 'lucide-react';
+import { Minus, Plus, Pencil, Trash2, Users, Share2, AlertTriangle, ExternalLink } from 'lucide-react';
 import IngredientForm from './IngredientForm';
 import CategoryForm from './CategoryForm';
 import HealthConditionManager from './HealthConditionManager';
@@ -197,6 +197,16 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
                   {'calories' in currentRecipe ? `Environ ${currentRecipe.calories} kcal` : ''}
                   {'description' in currentRecipe ? ` - ${currentRecipe.description}` : ''}
                 </DialogDescription>
+                {('searchUrl' in currentRecipe) && currentRecipe.searchUrl && (
+                  <div className="mt-2">
+                    <Button variant="outline" size="sm" asChild className="gap-2">
+                      <a href={currentRecipe.searchUrl} target="_blank" rel="noopener noreferrer">
+                        <ExternalLink className="h-4 w-4" />
+                        Voir la recette complète en ligne
+                      </a>
+                    </Button>
+                  </div>
+                )}
               </DialogHeader>
 
               <div className="flex items-center gap-4 my-2">
