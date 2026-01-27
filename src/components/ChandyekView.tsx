@@ -16,7 +16,7 @@ interface ChandyekViewProps {
   aiSuggestions: SuggestRecipeOutput[];
   isLoading: boolean;
   error: string | null;
-  onGenerate: () => void;
+  onGenerate: (extraIngredient?: string) => void;
   onSaveRecipe: (recipe: SuggestRecipeOutput) => void;
   onViewRecipe: (recipe: SuggestRecipeOutput) => void;
   onRemoveIngredient: (ingredient: string) => void;
@@ -91,11 +91,7 @@ export default function ChandyekView({
                         key={ing}
                         variant="outline"
                         className="cursor-pointer transition-all hover:bg-secondary"
-                        onClick={() => onGenerate()} // Trigger generation or we could just allow clicking to add it to some keyIngredients state if we had it, but here it seems to just be a suggestion list. 
-                      // Wait, looking at the previous code, clicking it called onRemoveIngredient(ing) which is counter-intuitive for a "select" list.
-                      // Actually, looking at line 87: onClick={() => onRemoveIngredient(ing)}
-                      // If it's selected, it should be removable. But the request says "ne plus afficher la proposition boeuf".
-                      // So if it's already there (selected), we hide it.
+                        onClick={() => onGenerate(ing)}
                       >
                         {ing}
                       </Badge>
