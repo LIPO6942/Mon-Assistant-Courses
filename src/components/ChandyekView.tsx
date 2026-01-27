@@ -9,6 +9,7 @@ import { BrainCircuit, Salad, X, Lightbulb, Loader2, Terminal, PlusCircle, Clock
 import type { Recipe } from '@/lib/types';
 import type { SuggestRecipeOutput } from '@/ai/types';
 import { Alert, AlertTitle, AlertDescription } from './ui/alert';
+import { cn } from '@/lib/utils';
 
 interface ChandyekViewProps {
   selectedIngredients: string[];
@@ -175,14 +176,31 @@ export default function ChandyekView({
                     <CardFooter className="flex flex-col gap-2 pt-2 border-t border-primary/5">
                       <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground w-full">Cuisiner sur :</p>
                       <div className="flex flex-wrap gap-2 w-full">
-                        {(recipe.searchLinks || []).map((link, i) => (
-                          <Button key={i} variant="outline" size="sm" className="flex-1 h-8 text-xs gap-1 py-1" asChild>
-                            <a href={link.url} target="_blank" rel="noopener noreferrer">
-                              <ExternalLink className="h-3 w-3" />
-                              {link.label}
-                            </a>
-                          </Button>
-                        ))}
+                        {(recipe.searchLinks || []).map((link, i) => {
+                          const isYouTube = link.label.toLowerCase() === 'youtube';
+                          const isTikTok = link.label.toLowerCase() === 'tiktok';
+                          const isGoogle = link.label.toLowerCase() === 'google';
+
+                          return (
+                            <Button
+                              key={i}
+                              variant="outline"
+                              size="sm"
+                              className={cn(
+                                "flex-1 h-8 text-[10px] gap-1 py-1 transition-all duration-300 font-bold",
+                                isYouTube && "bg-[#FF0000] hover:bg-[#CC0000] text-white border-none shadow-sm",
+                                isTikTok && "bg-black hover:bg-zinc-800 text-white border-none shadow-sm",
+                                isGoogle && "bg-gradient-to-r from-blue-500/10 via-red-500/10 to-yellow-500/10 border-primary/10 hover:border-primary/30"
+                              )}
+                              asChild
+                            >
+                              <a href={link.url} target="_blank" rel="noopener noreferrer">
+                                <ExternalLink className={cn("h-3 w-3", (isYouTube || isTikTok) && "text-white")} />
+                                {link.label}
+                              </a>
+                            </Button>
+                          );
+                        })}
                         {!recipe.searchLinks && recipe.searchUrl && (
                           <Button variant="outline" size="sm" className="flex-1 h-8 text-xs gap-1" asChild>
                             <a href={recipe.searchUrl} target="_blank" rel="noopener noreferrer">
