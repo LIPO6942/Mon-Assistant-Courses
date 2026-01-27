@@ -101,7 +101,7 @@ export default function ChandyekView({
               </div>
 
               <div className='text-center mt-6'>
-                <Button size="lg" onClick={onGenerate} disabled={isLoading}>
+                <Button size="lg" onClick={() => onGenerate()} disabled={isLoading}>
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-5 w-5 animate-spin" />
