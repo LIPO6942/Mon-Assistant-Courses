@@ -63,13 +63,15 @@ export async function suggestRecipes(input: SuggestRecipeInput): Promise<Suggest
 
   // Generate images and search URLs
   const recipesWithExtras = validated.recipes.map((recipe: SuggestRecipeOutput, index: number) => {
-    const query = encodeURIComponent(`${recipe.title} ${recipe.country} recette`);
+    const recipeTitle = encodeURIComponent(recipe.title);
+    const fullQuery = encodeURIComponent(`${recipe.title} ${recipe.country} recette`);
 
     // Construct Search Links
     const searchLinks = [
-      { label: 'Google', url: `https://www.google.com/search?q=${query}` },
-      { label: 'Marmiton', url: `https://www.marmiton.org/recettes/recherche.aspx?aqt=${query}` },
-      { label: '750g', url: `https://www.750g.com/recherche.htm?q=${query}` }
+      { label: 'Google', url: `https://www.google.com/search?q=${fullQuery}` },
+      { label: 'Marmiton', url: `https://www.marmiton.org/recettes/recherche.aspx?aqt=${recipeTitle}` },
+      { label: 'Cuisine AZ', url: `https://www.cuisineaz.com/recherche/recherche.aspx?q=${recipeTitle}` },
+      { label: 'YouTube', url: `https://www.youtube.com/results?search_query=recette+${recipeTitle}` }
     ];
 
     const searchUrl = searchLinks[0].url; // Default to Google
