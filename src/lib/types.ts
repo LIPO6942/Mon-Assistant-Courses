@@ -24,12 +24,12 @@ export interface Recipe {
   title: string;
   description: string;
   country: string;
-  portions: number;
+  portions?: number;
   ingredients: RecipeIngredient[];
-  preparation: string;
-  calories: number;
-  preparationTime: number; // in minutes
-  isEconomical: boolean;
+  preparation?: string;
+  calories?: number;
+  preparationTime?: number; // in minutes
+  isEconomical?: boolean;
   searchUrl?: string;
   searchLinks?: { label: string; url: string }[];
 }

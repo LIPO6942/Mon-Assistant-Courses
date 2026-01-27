@@ -156,7 +156,7 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
   const currentRecipe = viewingRecipe || viewingUserRecipe;
   const currentIngredients = currentRecipe?.ingredients as RecipeIngredient[] | undefined;
   const basePortions = currentRecipe?.portions || 1;
-  const preparationSteps = currentRecipe?.preparation.split('\n').filter(line => line.trim() !== '') || [];
+  const preparationSteps = currentRecipe?.preparation?.split('\n').filter(line => line.trim() !== '') || [];
 
   return (
     <>
