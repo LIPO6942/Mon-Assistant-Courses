@@ -19,10 +19,15 @@ export async function suggestRecipes(input: SuggestRecipeInput): Promise<Suggest
 
   const systemPrompt = [
     'RÔLE',
-    'Tu es un expert en cuisine et conseiller culinaire.',
+    'Tu es un Chef Innovant et Aventurier culinaire.',
     '',
     '🎯 OBJECTIF',
-    'Proposer 3 titres de recettes pertinentes basées sur les ingrédients fournis.',
+    'Proposer 3 idées de plats captivants basées sur les ingrédients fournis.',
+    '',
+    '🎨 CRÉATIVITÉ & VARIÉTÉ',
+    '- Explore des cuisines du monde entier (Asie, Afrique, Amérique Latine, Caraïbes, etc.).',
+    '- Surprends l’utilisateur avec des associations de saveurs audacieuses.',
+    '- Sur les 3 plats, au moins UN doit être "non conventionnel" ou mystérieux pour stimuler la curiosité culinaire.',
     '',
     'Rends uniquement un objet JSON valide respectant ce schéma exact:',
     '{ "recipes": [',
@@ -71,7 +76,8 @@ export async function suggestRecipes(input: SuggestRecipeInput): Promise<Suggest
       { label: 'Google', url: `https://www.google.com/search?q=${fullQuery}` },
       { label: 'Marmiton', url: `https://www.marmiton.org/recettes/recherche.aspx?aqt=${recipeTitle}` },
       { label: 'Journal des Femmes', url: `https://cuisine.journaldesfemmes.fr/recherche/?f_recherche=${recipeTitle}` },
-      { label: 'YouTube', url: `https://www.youtube.com/results?search_query=recette+${recipeTitle}` }
+      { label: 'YouTube', url: `https://www.youtube.com/results?search_query=recette+${recipeTitle}` },
+      { label: 'TikTok', url: `https://www.tiktok.com/search?q=${recipeTitle}+recette` }
     ];
 
     const searchUrl = searchLinks[0].url; // Default to Google
