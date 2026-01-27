@@ -48,8 +48,8 @@ export default function RecipesView({
 
   const filteredDiscoverableRecipes = useMemo(() => {
     return discoverableRecipes.filter(recipe => {
-      const quickMatch = !filterQuick || (recipe.preparationTime <= 15);
-      const economicalMatch = !filterEconomical || recipe.isEconomical;
+      const quickMatch = !filterQuick || (recipe.preparationTime !== undefined && recipe.preparationTime <= 15);
+      const economicalMatch = !filterEconomical || !!recipe.isEconomical;
       return quickMatch && economicalMatch;
     });
   }, [discoverableRecipes, filterQuick, filterEconomical]);
@@ -216,11 +216,15 @@ export default function RecipesView({
                       <CardTitle>{recipe.title}</CardTitle>
                       <div className="flex items-center gap-2 mt-2">
                         <Badge variant="secondary" className="w-fit">{recipe.country}</Badge>
-                        <Badge variant="outline" className="flex items-center gap-1"><Clock className="h-3 w-3" />{recipe.preparationTime} min</Badge>
+                        {recipe.preparationTime !== undefined && (
+                          <Badge variant="outline" className="flex items-center gap-1"><Clock className="h-3 w-3" />{recipe.preparationTime} min</Badge>
+                        )}
                         {recipe.isEconomical && <Badge variant="outline" className="flex items-center gap-1"><Coins className="h-3 w-3" />Éco</Badge>}
                       </div>
                     </div>
-                    <Badge variant="outline" className="whitespace-nowrap">{recipe.calories} kcal</Badge>
+                    {recipe.calories !== undefined && (
+                      <Badge variant="outline" className="whitespace-nowrap">{recipe.calories} kcal</Badge>
+                    )}
                   </div>
                 </CardHeader>
                 <CardContent className="flex-grow">
