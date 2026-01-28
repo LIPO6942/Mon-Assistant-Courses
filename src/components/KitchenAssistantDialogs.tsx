@@ -376,7 +376,7 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
           <div className="flex items-center justify-center gap-4 py-4">
             <Button variant="outline" size="icon" onClick={() => {
               const current = parseFloat(quantityInput) || 0;
-              const next = Math.max(0.001, parseFloat((current - 0.001).toFixed(3)));
+              const next = Math.max(0, parseFloat((current - 1).toFixed(3)));
               setQuantityInput(String(next));
             }}><Minus className="h-4 w-4" /></Button>
             <Input
@@ -393,7 +393,7 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
             />
             <Button variant="outline" size="icon" onClick={() => {
               const current = parseFloat(quantityInput) || 0;
-              const next = parseFloat((current + 0.001).toFixed(3));
+              const next = parseFloat((current + 1).toFixed(3));
               setQuantityInput(String(next));
             }}><Plus className="h-4 w-4" /></Button>
           </div>

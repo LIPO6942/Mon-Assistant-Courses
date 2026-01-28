@@ -196,19 +196,20 @@ export function ImportFromLawra9Dialog({ allIngredients, categories, onUpdatePri
                                                     <span className="font-bold text-sm truncate block">
                                                         {p.match ? p.match.name : p.raw.name}
                                                     </span>
-                                                    <div className="flex items-center gap-1.5 ml-auto shrink-0">
-                                                        {p.match && Math.abs(p.match.price - p.raw.price) > 0.0001 && (
-                                                            <span className="hidden xs:inline text-[10px] line-through text-muted-foreground">
-                                                                {p.match.price.toFixed(3)}
+                                                    <div className="flex items-center gap-1.5 ml-auto shrink-0 text-[10px]">
+                                                        {p.match && (
+                                                            <span className="text-muted-foreground whitespace-nowrap">
+                                                                MAC: <span className="line-through">{p.match.price.toFixed(3)}</span>
                                                             </span>
                                                         )}
+                                                        {p.match && <ArrowRight className="h-3 w-3 text-muted-foreground/50" />}
                                                         <span className={cn(
-                                                            "text-xs font-mono px-1.5 py-0.5 rounded",
+                                                            "font-mono px-1.5 py-0.5 rounded font-bold whitespace-nowrap",
                                                             p.match && p.raw.price > p.match.price ? "bg-red-100 text-red-700 dark:bg-red-900/30" :
                                                                 p.match && p.raw.price < p.match.price ? "bg-green-100 text-green-700 dark:bg-green-900/30" :
                                                                     "bg-secondary text-secondary-foreground"
                                                         )}>
-                                                            {p.raw.price.toFixed(3)}
+                                                            {p.match ? 'Lawra9: ' : ''}{p.raw.price.toFixed(3)} DT
                                                         </span>
                                                     </div>
                                                 </div>

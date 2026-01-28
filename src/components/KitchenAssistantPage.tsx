@@ -436,6 +436,11 @@ export default function KitchenAssistantPage() {
     // Update purchase history
     const newHistory = { ...purchaseHistory };
     const now = new Date().toISOString();
+
+    // Items to add to Ch3andek
+    let newChandyekIngredients = chandyekIngredients ? chandyekIngredients.split(', ').filter(Boolean) : [];
+    let hasChandyekUpdates = false;
+
     basket.forEach(item => {
       if (item.purchased) {
         if (!newHistory[item.id]) newHistory[item.id] = [];
@@ -444,8 +449,18 @@ export default function KitchenAssistantPage() {
           quantity: item.quantity,
           unit: item.unit
         });
+
+        // Add to Ch3andek if not present
+        if (!newChandyekIngredients.some(ingName => ingName.toLowerCase() === item.name.toLowerCase())) {
+          newChandyekIngredients.push(item.name);
+          hasChandyekUpdates = true;
+        }
       }
     });
+
+    if (hasChandyekUpdates) {
+      setChandyekIngredients(newChandyekIngredients.join(', '));
+    }
 
     setPurchaseHistory(newHistory);
     setTotalSpent(prev => prev + costOfPurchasedItems);
