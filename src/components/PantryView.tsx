@@ -134,9 +134,9 @@ export default function PantryView({
                   <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors" onClick={() => handleDeleteCategory(category.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
                 </div>}
               </CardHeader>
-              <CardContent className="flex-grow p-4">
-                <ScrollArea className="h-64 pr-2">
-                  <ul className="space-y-2">
+              <CardContent className="flex-grow p-3">
+                <ScrollArea className="h-64">
+                  <ul className="space-y-2 pr-4">
                     {items.map(item => {
                       const isSelectedForChandyek = chandyekIngredientsList.includes(item.name);
                       return (
