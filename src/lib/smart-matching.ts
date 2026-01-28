@@ -93,52 +93,38 @@ export class SmartMatchingService {
 
         // 3. Recherche par containment et similarité de mots
         // Ceci permet de matcher "Lait" avec "Lait demi écrémé" ou "Delio" avec "Delio aroma g"
-        const containmentMatch = allIngredients.find(i => {
-            const normIng = normalize(i.name);
-            const rawWords = normRaw.split(' ').filter(w => w.length > 2);
-            const ingWords = normIng.split(' ').filter(w => w.length > 2);
-
-            // Si le nom MAC est contenu dans le nom Lawra9 (ex: "lait" dans "lait demi ecreme")
-            if (normRaw.includes(normIng) && normIng.length >= 3) return true;
-
-            // Si le nom Lawra9 est contenu dans le nom MAC
-            if (normIng.includes(normRaw) && normRaw.length >= 3) return true;
-
-            // Si le nom Lawra9 commence par le nom MAC (ex: "lait demi ecreme" commence par "lait")
-            if (normRaw.startsWith(normIng + ' ') && normIng.length >= 3) return true;
-
-            // Si le nom MAC commence par le nom Lawra9
-            if (normIng.startsWith(normRaw + ' ') && normRaw.length >= 3) return true;
-
-            // Si tous les mots significatifs du nom MAC sont dans le nom Lawra9
-            if (ingWords.length > 0 && ingWords.every(word => normRaw.includes(word))) return true;
-
-            // Si tous les mots significatifs du nom Lawra9 sont dans le nom MAC
-            if (rawWords.length > 0 && rawWords.every(word => normIng.includes(word))) return true;
-
-            return false;
-        });
-
-        if (containmentMatch) {
-            return { ingredient: containmentMatch, confidence: 0.85, isAlias: false };
-        }
-
-        // 4. Fuzzy Matching (Levenshtein) - pour les fautes de frappe
-        let bestMatch: Ingredient | undefined;
-        let minDistance = Infinity;
+        // 3. Recherche par containment et similarité de mots
+        // Ceci permet de matcher "Lait" avec "Lait demi écrémé" ou "Delio" avec "Delio aroma g"
+        let bestContainmentMatch: Ingredient | undefined;
+        let bestContainmentScore = 0;
 
         for (const ing of allIngredients) {
             const normIng = normalize(ing.name);
-            const distance = getLevenshteinDistance(normRaw, normIng);
+            const ingWords = normIng.split(' ').filter(w => w.length > 2);
 
-            // Seuil plus permissif : la distance doit être < 50% de la longueur du nom
-            if (distance < minDistance && distance < normIng.length * 0.5) {
-                minDistance = distance;
-                bestMatch = ing;
+            // Priorité absolue : Le nom MAC est un préfixe exact ou contenu exact du nom importé
+            // Ex: MAC "Eau" -> Import "Eau Pristine"
+            // Ex: MAC "Lait" -> Import "Lait Delice"
+
+            // Score 0.95 : Le nom importé COMMENCE par le nom MAC + espace (ex: "Eau X")
+            if (normRaw.startsWith(normIng + ' ') && normIng.length >= 2) {
+                if (0.95 > bestContainmentScore) { bestContainmentMatch = ing; bestContainmentScore = 0.95; }
+            }
+            // Score 0.9 : Le nom MAC est contenu dans le nom importé (ex: "Pack Eau X")
+            else if (normRaw.includes(' ' + normIng + ' ') || normRaw.endsWith(' ' + normIng) || normRaw === normIng) {
+                if (0.9 > bestContainmentScore) { bestContainmentMatch = ing; bestContainmentScore = 0.9; }
+            }
+            // Cas simple 'includes' mais attention aux faux positifs courts
+            else if (normRaw.includes(normIng) && normIng.length >= 4) {
+                if (0.85 > bestContainmentScore) { bestContainmentMatch = ing; bestContainmentScore = 0.85; }
             }
         }
 
-        const confidence = bestMatch ? 1 - (minDistance / Math.max(normRaw.length, normalize(bestMatch.name).length)) : 0;
+        if (bestContainmentMatch) {
+            return { ingredient: bestContainmentMatch, confidence: bestContainmentScore, isAlias: false };
+        }
+
+        // 4. Fuzzy Matching (Levenshtein) - pour les fautes de frappe
 
         return {
             ingredient: bestMatch,
