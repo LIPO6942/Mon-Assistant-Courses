@@ -73,6 +73,7 @@ export interface PurchaseRecord {
   date: string;
   quantity: number;
   unit: string;
+  price?: number;
 }
 
 export type PurchaseHistory = Record<string, PurchaseRecord[]>;

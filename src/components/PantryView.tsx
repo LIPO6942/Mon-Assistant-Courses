@@ -40,6 +40,7 @@ interface PantryViewProps {
   onDeleteFromHistory: (id: string) => void;
   onUpdatePrices: (updates: { id: string; price: number }[]) => void;
   onAddIngredients: (newIngredients: Omit<Ingredient, 'id'>[]) => void;
+  onViewCategoryTrends: (category: CategoryDef) => void;
 }
 
 export default function PantryView({
@@ -68,7 +69,8 @@ export default function PantryView({
   onAddToBasket,
   onDeleteFromHistory,
   onUpdatePrices,
-  onAddIngredients
+  onAddIngredients,
+  onViewCategoryTrends
 }: PantryViewProps) {
   return (
     <div>
@@ -128,7 +130,13 @@ export default function PantryView({
           return (
             <Card key={category.id} className={cn("flex flex-col backdrop-blur-xl shadow-sm rounded-3xl overflow-hidden border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group/card", palette.bg, palette.border)}>
               <CardHeader className={cn("flex flex-row items-center justify-between pb-3 border-b border-border/10", palette.header)}>
-                <CardTitle className={cn("text-lg font-bold tracking-tight px-1", palette.text)}>{category.name}</CardTitle>
+                <CardTitle
+                  className={cn("text-lg font-bold tracking-tight px-1 cursor-pointer hover:underline decoration-dashed decoration-2 underline-offset-4 transition-all", palette.text)}
+                  onClick={() => onViewCategoryTrends(category)}
+                  title="Voir l'évolution des prix"
+                >
+                  {category.name}
+                </CardTitle>
                 {category.name !== 'Autre' && <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover/card:opacity-100 transition-opacity">
                   <Button variant="ghost" size="icon" className={cn("h-7 w-7 transition-colors", palette.icon, palette.buttonHover)} onClick={() => openCategoryDialog(category)}><Pencil className="h-3.5 w-3.5" /></Button>
                   <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors" onClick={() => handleDeleteCategory(category.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
