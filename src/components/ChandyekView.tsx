@@ -147,7 +147,7 @@ export default function ChandyekView({
 
                     <CardHeader className="pb-2">
                       <div className="flex justify-between items-start gap-2">
-                        <CardTitle className="text-lg font-bold leading-tight line-clamp-2">{recipe.title}</CardTitle>
+                        <CardTitle className="text-lg font-bold leading-tight">{recipe.title}</CardTitle>
                         <Badge variant="outline" className="shrink-0">{recipe.country}</Badge>
                       </div>
                       <CardDescription className="line-clamp-2 text-xs">{recipe.description}</CardDescription>
