@@ -36,7 +36,6 @@ export default function SavedRecipesSheet({
                 <CardHeader className="p-4">
                   <div className="flex justify-between items-start">
                     <CardTitle className="text-lg pr-2">{recipe.title}</CardTitle>
-                    <Badge variant="outline" className="whitespace-nowrap bg-card">{recipe.calories} kcal</Badge>
                   </div>
                   <Badge variant="secondary" className="w-fit mt-1">{recipe.country}</Badge>
                 </CardHeader>
