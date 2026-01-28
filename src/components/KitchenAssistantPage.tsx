@@ -14,6 +14,7 @@ import PantryView from './PantryView';
 import RecipesView from './RecipesView';
 import ChandyekView from './ChandyekView';
 import NutritionalGuideView from './NutritionalGuideView';
+import CategoryPriceEvolutionDialog from './CategoryPriceEvolutionDialog';
 import { db } from '@/lib/idb';
 import { isInAppBrowser, getProductStatus } from '@/lib/utils';
 
@@ -57,6 +58,9 @@ export default function KitchenAssistantPage() {
   // Sharing State
   const [isShareBasketDialogOpen, setShareBasketDialogOpen] = useState(false);
   const [sharedBasketToMerge, setSharedBasketToMerge] = useState<BasketItem[] | null>(null);
+
+  // Price Evolution State
+  const [viewingCategoryTrends, setViewingCategoryTrends] = useState<CategoryDef | null>(null);
 
 
 
@@ -754,6 +758,7 @@ export default function KitchenAssistantPage() {
               onDeleteFromHistory={handleDeleteFromHistory}
               onUpdatePrices={handleUpdatePrices}
               onAddIngredients={handleAddIngredients}
+              onViewCategoryTrends={setViewingCategoryTrends}
             />
           )}
           {activeTab === 'recipes' && (
@@ -818,15 +823,22 @@ export default function KitchenAssistantPage() {
         viewingUserRecipe={viewingUserRecipe}
         setViewingUserRecipe={setViewingUserRecipe}
         onDeleteUserRecipe={handleDeleteUserRecipe}
-        onEditUserRecipe={handleEditUserRecipe}
         onShareUserRecipe={handleShareUserRecipe}
+        onEditUserRecipe={handleEditUserRecipe}
         isShareBasketDialogOpen={isShareBasketDialogOpen}
         setShareBasketDialogOpen={setShareBasketDialogOpen}
         basket={basket}
         sharedBasketToMerge={sharedBasketToMerge}
         setSharedBasketToMerge={setSharedBasketToMerge}
         onMergeBasket={handleMergeBasket}
-        isInApp={isInAppBrowser()}
+      />
+
+      <CategoryPriceEvolutionDialog
+        category={viewingCategoryTrends}
+        isOpen={!!viewingCategoryTrends}
+        onClose={() => setViewingCategoryTrends(null)}
+        pantry={pantry}
+        purchaseHistory={purchaseHistory}
       />
     </div>
   );
