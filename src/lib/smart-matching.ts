@@ -126,9 +126,29 @@ export class SmartMatchingService {
 
         // 4. Fuzzy Matching (Levenshtein) - pour les fautes de frappe
 
+        let bestMatch: Ingredient | undefined;
+        let bestScore = 0;
+
+        for (const ing of allIngredients) {
+            const normIng = normalize(ing.name);
+            const distance = getLevenshteinDistance(normRaw, normIng);
+            const maxLength = Math.max(normRaw.length, normIng.length);
+            const score = maxLength === 0 ? 0 : 1 - (distance / maxLength);
+
+            if (score > bestScore) {
+                bestScore = score;
+                bestMatch = ing;
+            }
+        }
+
+        // Seuil minimal pour accepter un fuzzy match
+        if (bestScore < 0.4) {
+            return { ingredient: undefined, confidence: 0, isAlias: false };
+        }
+
         return {
             ingredient: bestMatch,
-            confidence: confidence,
+            confidence: bestScore,
             isAlias: false
         };
     }
