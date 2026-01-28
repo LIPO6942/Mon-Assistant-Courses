@@ -196,20 +196,20 @@ export function ImportFromLawra9Dialog({ allIngredients, categories, onUpdatePri
                                                     <span className="font-bold text-sm truncate block">
                                                         {p.match ? p.match.name : p.raw.name}
                                                     </span>
-                                                    <div className="flex items-center gap-1.5 ml-auto shrink-0 text-[10px]">
+                                                    <div className="flex flex-col sm:flex-row sm:items-center items-end gap-0.5 sm:gap-1.5 ml-auto shrink-0 text-[10px]">
                                                         {p.match && (
                                                             <span className="text-muted-foreground whitespace-nowrap">
-                                                                MAC: <span className="line-through">{p.match.price.toFixed(3)}</span>
+                                                                <span className="hidden sm:inline">MAC: </span><span className="line-through">{p.match.price.toFixed(3)}</span>
                                                             </span>
                                                         )}
-                                                        {p.match && <ArrowRight className="h-3 w-3 text-muted-foreground/50" />}
+                                                        {p.match && <ArrowRight className="h-3 w-3 text-muted-foreground/50 hidden sm:block" />}
                                                         <span className={cn(
                                                             "font-mono px-1.5 py-0.5 rounded font-bold whitespace-nowrap",
                                                             p.match && p.raw.price > p.match.price ? "bg-red-100 text-red-700 dark:bg-red-900/30" :
                                                                 p.match && p.raw.price < p.match.price ? "bg-green-100 text-green-700 dark:bg-green-900/30" :
                                                                     "bg-secondary text-secondary-foreground"
                                                         )}>
-                                                            {p.match ? 'Lawra9: ' : ''}{p.raw.price.toFixed(3)} DT
+                                                            <span className="hidden sm:inline">{p.match ? 'Lawra9: ' : ''}</span>{p.raw.price.toFixed(3)} DT
                                                         </span>
                                                     </div>
                                                 </div>
