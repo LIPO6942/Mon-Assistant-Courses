@@ -111,54 +111,84 @@ export default function PantryView({
         {Object.entries(groupedIngredients).filter(([, items]) => items.length > 0).map(([categoryName, items]) => {
           const category = categories.find(c => c.name === categoryName) || { id: 'c-autre', name: 'Autre' };
           return (
-            <Card key={category.id} className="flex flex-col bg-background/40 backdrop-blur-xl shadow-xl rounded-2xl overflow-hidden border border-primary/10 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/5 hover:-translate-y-1.5 group/card">
-              <CardHeader className="flex flex-row items-center justify-between bg-gradient-to-br from-primary/5 to-transparent border-b border-primary/5">
-                <CardTitle className="text-primary font-bold tracking-tight">{category.name}</CardTitle>
-                {category.name !== 'Autre' && <div className="flex items-center gap-0.5">
-                  <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-primary/10 hover:text-primary transition-colors" onClick={() => openCategoryDialog(category)}><Pencil className="h-3.5 w-3.5" /></Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive transition-colors" onClick={() => handleDeleteCategory(category.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+            <Card key={category.id} className="flex flex-col bg-card/60 backdrop-blur-xl shadow-sm rounded-3xl overflow-hidden border border-border/40 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 group/card">
+              <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-border/30 bg-muted/20">
+                <CardTitle className="text-lg font-bold tracking-tight bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent px-1">{category.name}</CardTitle>
+                {category.name !== 'Autre' && <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover/card:opacity-100 transition-opacity">
+                  <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors" onClick={() => openCategoryDialog(category)}><Pencil className="h-3.5 w-3.5" /></Button>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors" onClick={() => handleDeleteCategory(category.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
                 </div>}
               </CardHeader>
               <CardContent className="flex-grow p-4">
-                <ScrollArea className="h-64">
-                  <ul className="space-y-1 pr-3">
+                <ScrollArea className="h-64 pr-2">
+                  <ul className="space-y-2">
                     {items.map(item => {
                       const isSelectedForChandyek = chandyekIngredientsList.includes(item.name);
                       return (
-                        <li key={item.id} className="flex items-center justify-between p-2.5 rounded-xl hover:bg-primary/5 transition-all duration-300 border border-transparent hover:border-primary/10 group/item">
-                          <div className="flex flex-col">
+                        <li key={item.id} className="flex items-center justify-between p-3 rounded-2xl bg-card border border-border/40 shadow-sm hover:shadow-md hover:border-primary/20 transition-all duration-300 group/item">
+                          <div className="flex flex-col gap-1 min-w-0">
                             <div className="flex items-center gap-2">
-                              <span className='font-semibold text-sm group-hover/item:text-primary transition-colors'>{item.name}</span>
+                              <span className='font-semibold text-sm truncate'>{item.name}</span>
                               {(() => {
                                 const status = getProductStatus(purchaseHistory[item.id]);
                                 if (!status) return null;
                                 return (
                                   <span
                                     className={cn(
-                                      "h-1.5 w-1.5 rounded-full shrink-0",
-                                      status === 'green' && "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]",
-                                      status === 'orange' && "bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.6)]",
-                                      status === 'red' && "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"
+                                      "h-2 w-2 rounded-full shrink-0",
+                                      status === 'green' && "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]",
+                                      status === 'orange' && "bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.4)]",
+                                      status === 'red' && "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.4)]"
                                     )}
                                   />
                                 );
                               })()}
                             </div>
-                            <p className='text-[11px] text-muted-foreground/70 font-medium'>{item.price.toFixed(3)} DT / {item.unit}</p>
+                            <p className='text-[11px] text-muted-foreground font-medium'>{item.price.toFixed(3)} DT / {item.unit}</p>
                           </div>
-                          <div className='flex items-center gap-0.5 opacity-0 group-hover/item:opacity-100 transition-opacity'>
-                            <Button variant="ghost" size="icon" className='h-8 w-8 rounded-full hover:bg-primary/10' title="Ajouter au panier" onClick={() => openQuantityDialog(item)}><Plus className="h-4 w-4" /></Button>
+
+                          <div className='flex items-center gap-1 shrink-0'>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className='h-8 w-8 rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors'
+                              title="Ajouter au panier"
+                              onClick={() => openQuantityDialog(item)}
+                            >
+                              <Plus className="h-4 w-4" />
+                            </Button>
                             <Button
                               variant={isSelectedForChandyek ? "secondary" : "ghost"}
                               size="icon"
-                              className='h-8 w-8 rounded-full hover:bg-primary/10'
+                              className={cn(
+                                'h-8 w-8 rounded-full transition-colors',
+                                isSelectedForChandyek
+                                  ? 'bg-primary/15 text-primary hover:bg-primary/25'
+                                  : 'text-muted-foreground hover:text-primary hover:bg-primary/10'
+                              )}
                               title="Ajouter/Retirer de 'Ch3andek'"
                               onClick={() => onToggleChandyekIngredient(item.name)}
                             >
-                              <BrainCircuit className={cn("h-4 w-4", isSelectedForChandyek ? 'text-primary' : 'text-muted-foreground')} />
+                              <BrainCircuit className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon" className='h-8 w-8 rounded-full hover:bg-primary/10' title="Modifier" onClick={() => openEditDialog(item)}><Pencil className="h-3.5 w-3.5" /></Button>
-                            <Button variant="ghost" size="icon" className='h-8 w-8 rounded-full hover:bg-destructive/10 hover:text-destructive' title="Supprimer" onClick={() => handleDeleteIngredient(item.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className='h-8 w-8 rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors'
+                              title="Modifier"
+                              onClick={() => openEditDialog(item)}
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className='h-8 w-8 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors'
+                              title="Supprimer"
+                              onClick={() => handleDeleteIngredient(item.id)}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
                           </div>
                         </li>
                       );
@@ -166,14 +196,16 @@ export default function PantryView({
                   </ul>
                 </ScrollArea>
               </CardContent>
-              <CardFooter className="p-4 pt-0">
-                <Button variant="ghost" className="w-full bg-primary/5 hover:bg-primary/10 text-primary border border-primary/10 rounded-xl font-semibold transition-all" onClick={() => openAddDialog(category.name)}><PlusCircle className="mr-2 h-4 w-4" /> Ajouter un produit</Button>
+              <CardFooter className="p-4 pt-1 border-t border-border/30 bg-muted/10">
+                <Button variant="ghost" className="w-full mt-2 bg-transparent hover:bg-primary/10 text-primary/80 hover:text-primary border border-dashed border-primary/20 hover:border-primary/40 rounded-xl font-medium transition-all" onClick={() => openAddDialog(category.name)}><PlusCircle className="mr-2 h-4 w-4" /> Ajouter un produit</Button>
               </CardFooter>
             </Card>
           )
         })}
-        <Card className="flex flex-col items-center justify-center border-2 border-dashed bg-card/50 hover:border-primary hover:text-primary transition-all duration-300 min-h-[300px] rounded-xl group hover:bg-primary/5" onClick={() => openCategoryDialog()}>
-          <PlusCircle className="h-10 w-10 mb-2 text-muted-foreground group-hover:text-primary transition-colors" />
+        <Card className="flex flex-col items-center justify-center border-2 border-dashed border-muted-foreground/20 bg-muted/5 hover:border-primary/50 hover:bg-primary/5 transition-all duration-300 min-h-[350px] rounded-3xl group cursor-pointer" onClick={() => openCategoryDialog()}>
+          <div className="h-14 w-14 rounded-full bg-background shadow-sm flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 border border-border/50">
+            <PlusCircle className="h-7 w-7 text-muted-foreground group-hover:text-primary transition-colors" />
+          </div>
           <span className="font-semibold text-muted-foreground group-hover:text-primary transition-colors">Ajouter une catégorie</span>
         </Card>
       </div>
