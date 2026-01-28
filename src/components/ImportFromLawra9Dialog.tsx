@@ -218,7 +218,11 @@ export function ImportFromLawra9Dialog({ allIngredients, categories, onUpdatePri
                                                     <div className="flex items-center gap-1.5 flex-1 min-w-0 overflow-hidden">
                                                         {p.match ? (
                                                             <>
-                                                                <span className="shrink-0 font-medium text-emerald-600 dark:text-emerald-400">Mise à jour</span>
+                                                                {Math.abs(p.match.price - p.raw.price) > 0.001 ? (
+                                                                    <span className="shrink-0 font-medium text-emerald-600 dark:text-emerald-400">Mise à jour</span>
+                                                                ) : (
+                                                                    <span className="shrink-0 font-medium text-muted-foreground">Prix identique</span>
+                                                                )}
                                                                 {p.raw.name !== p.match.name && (
                                                                     <span className="truncate italic text-muted-foreground/70 hidden sm:inline">(Source: "{p.raw.name}")</span>
                                                                 )}
