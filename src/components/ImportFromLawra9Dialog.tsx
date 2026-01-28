@@ -152,11 +152,21 @@ export function ImportFromLawra9Dialog({ allIngredients, categories, onUpdatePri
                         </div>
                     ) : (
                         <div className="flex flex-col h-[500px] overflow-hidden">
-                            <div className="flex justify-between items-center mb-4 px-1 flex-shrink-0">
-                                <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{matchedProducts.length} produits détectés</span>
-                                <div className="flex gap-2">
-                                    <Button variant="ghost" size="sm" className="h-8 text-[10px] font-bold uppercase tracking-wider" onClick={() => toggleAll(true)}>Tout sélectionner</Button>
-                                    <Button variant="ghost" size="sm" className="h-8 text-[10px] font-bold uppercase tracking-wider" onClick={() => toggleAll(false)}>Tout déselectionner</Button>
+                            <div className="flex justify-between items-center mb-4 px-1 flex-shrink-0 gap-2">
+                                <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest truncate">{matchedProducts.length} produits</span>
+                                <div className="flex gap-2 shrink-0">
+                                    <Button variant="ghost" size="sm" className="h-8 w-8 px-0 sm:w-auto sm:px-3" onClick={() => toggleAll(true)} title="Tout sélectionner">
+                                        <div className="flex items-center gap-2">
+                                            <Check className="h-4 w-4" />
+                                            <span className="hidden sm:inline text-[10px] font-bold uppercase tracking-wider">Tout</span>
+                                        </div>
+                                    </Button>
+                                    <Button variant="ghost" size="sm" className="h-8 w-8 px-0 sm:w-auto sm:px-3" onClick={() => toggleAll(false)} title="Tout désélectionner">
+                                        <div className="flex items-center gap-2">
+                                            <span className="h-3 w-3 rounded-[2px] border border-current" />
+                                            <span className="hidden sm:inline text-[10px] font-bold uppercase tracking-wider">Aucun</span>
+                                        </div>
+                                    </Button>
                                 </div>
                             </div>
                             <ScrollArea className="flex-1 pr-4">
@@ -165,7 +175,7 @@ export function ImportFromLawra9Dialog({ allIngredients, categories, onUpdatePri
                                         <div
                                             key={i}
                                             className={cn(
-                                                "flex items-center gap-4 p-3 rounded-xl border transition-all cursor-pointer",
+                                                "flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer overflow-hidden",
                                                 p.isSelected ? "bg-card border-border shadow-sm" : "bg-muted/30 border-transparent opacity-60"
                                             )}
                                             onClick={() => {
@@ -175,20 +185,20 @@ export function ImportFromLawra9Dialog({ allIngredients, categories, onUpdatePri
                                             }}
                                         >
                                             <div className={cn(
-                                                "h-5 w-5 rounded-full flex items-center justify-center border transition-all",
+                                                "h-5 w-5 shrink-0 rounded-full flex items-center justify-center border transition-all",
                                                 p.isSelected ? "bg-primary border-primary text-white" : "border-muted-foreground"
                                             )}>
                                                 {p.isSelected && <Check className="h-3 w-3" />}
                                             </div>
 
-                                            <div className="flex-1 min-w-0">
+                                            <div className="flex-1 min-w-0 overflow-hidden">
                                                 <div className="flex items-center gap-2 mb-1">
-                                                    <span className="font-bold text-sm truncate">
+                                                    <span className="font-bold text-sm truncate block">
                                                         {p.match ? p.match.name : p.raw.name}
                                                     </span>
-                                                    <div className="flex items-center gap-1.5 ml-auto">
+                                                    <div className="flex items-center gap-1.5 ml-auto shrink-0">
                                                         {p.match && Math.abs(p.match.price - p.raw.price) > 0.0001 && (
-                                                            <span className="text-[10px] line-through text-muted-foreground">
+                                                            <span className="hidden xs:inline text-[10px] line-through text-muted-foreground">
                                                                 {p.match.price.toFixed(3)}
                                                             </span>
                                                         )}
@@ -203,18 +213,17 @@ export function ImportFromLawra9Dialog({ allIngredients, categories, onUpdatePri
                                                     </div>
                                                 </div>
 
-                                                <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                                                    <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                                                <div className="flex items-center gap-2 text-[10px] text-muted-foreground w-full">
+                                                    <div className="flex items-center gap-1.5 flex-1 min-w-0 overflow-hidden">
                                                         {p.match ? (
                                                             <>
-                                                                <span className="shrink-0">Mise à jour du prix</span>
+                                                                <span className="shrink-0 font-medium text-emerald-600 dark:text-emerald-400">Mise à jour</span>
                                                                 {p.raw.name !== p.match.name && (
-                                                                    <span className="truncate italic">(Source: "{p.raw.name}")</span>
+                                                                    <span className="truncate italic text-muted-foreground/70 hidden sm:inline">(Source: "{p.raw.name}")</span>
                                                                 )}
-                                                                {p.status === 'fuzzy' && <span className="bg-orange-100 text-orange-700 px-1 rounded text-[8px] font-black uppercase shrink-0">IA</span>}
                                                             </>
                                                         ) : (
-                                                            <span className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 px-2 py-0.5 rounded-full font-medium">✨ Nouveau produit</span>
+                                                            <span className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 px-2 py-0.5 rounded-full font-medium truncate shrink-0">✨ Nouveau</span>
                                                         )}
                                                     </div>
                                                     <Select
@@ -222,7 +231,7 @@ export function ImportFromLawra9Dialog({ allIngredients, categories, onUpdatePri
                                                         onValueChange={(val) => onCategoryChange(i, val)}
                                                     >
                                                         <SelectTrigger
-                                                            className="shrink-0 h-6 w-auto px-2 py-0 text-[9px] font-semibold uppercase tracking-wider border-border/50 bg-muted"
+                                                            className="shrink-0 h-6 w-[80px] sm:w-auto px-2 py-0 text-[8px] sm:text-[9px] font-semibold uppercase tracking-wider border-border/50 bg-muted truncate"
                                                             onClick={(e) => e.stopPropagation()}
                                                         >
                                                             <SelectValue />
