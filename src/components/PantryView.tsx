@@ -108,14 +108,29 @@ export default function PantryView({
         </Sheet>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        {Object.entries(groupedIngredients).filter(([, items]) => items.length > 0).map(([categoryName, items]) => {
+        {Object.entries(groupedIngredients).filter(([, items]) => items.length > 0).map(([categoryName, items], index) => {
           const category = categories.find(c => c.name === categoryName) || { id: 'c-autre', name: 'Autre' };
+
+          // Define a vibrant color palette
+          const colorPalettes = [
+            { name: 'emerald', border: 'border-emerald-200/50', bg: 'bg-emerald-50/30', header: 'bg-gradient-to-r from-emerald-100/80 to-emerald-50/20', text: 'text-emerald-700', icon: 'text-emerald-600', buttonHover: 'hover:bg-emerald-100 hover:text-emerald-700' },
+            { name: 'blue', border: 'border-blue-200/50', bg: 'bg-blue-50/30', header: 'bg-gradient-to-r from-blue-100/80 to-blue-50/20', text: 'text-blue-700', icon: 'text-blue-600', buttonHover: 'hover:bg-blue-100 hover:text-blue-700' },
+            { name: 'violet', border: 'border-violet-200/50', bg: 'bg-violet-50/30', header: 'bg-gradient-to-r from-violet-100/80 to-violet-50/20', text: 'text-violet-700', icon: 'text-violet-600', buttonHover: 'hover:bg-violet-100 hover:text-violet-700' },
+            { name: 'amber', border: 'border-amber-200/50', bg: 'bg-amber-50/30', header: 'bg-gradient-to-r from-amber-100/80 to-amber-50/20', text: 'text-amber-700', icon: 'text-amber-600', buttonHover: 'hover:bg-amber-100 hover:text-amber-700' },
+            { name: 'rose', border: 'border-rose-200/50', bg: 'bg-rose-50/30', header: 'bg-gradient-to-r from-rose-100/80 to-rose-50/20', text: 'text-rose-700', icon: 'text-rose-600', buttonHover: 'hover:bg-rose-100 hover:text-rose-700' },
+            { name: 'cyan', border: 'border-cyan-200/50', bg: 'bg-cyan-50/30', header: 'bg-gradient-to-r from-cyan-100/80 to-cyan-50/20', text: 'text-cyan-700', icon: 'text-cyan-600', buttonHover: 'hover:bg-cyan-100 hover:text-cyan-700' },
+            { name: 'orange', border: 'border-orange-200/50', bg: 'bg-orange-50/30', header: 'bg-gradient-to-r from-orange-100/80 to-orange-50/20', text: 'text-orange-700', icon: 'text-orange-600', buttonHover: 'hover:bg-orange-100 hover:text-orange-700' },
+            { name: 'indigo', border: 'border-indigo-200/50', bg: 'bg-indigo-50/30', header: 'bg-gradient-to-r from-indigo-100/80 to-indigo-50/20', text: 'text-indigo-700', icon: 'text-indigo-600', buttonHover: 'hover:bg-indigo-100 hover:text-indigo-700' },
+          ];
+
+          const palette = colorPalettes[index % colorPalettes.length];
+
           return (
-            <Card key={category.id} className="flex flex-col bg-card/60 backdrop-blur-xl shadow-sm rounded-3xl overflow-hidden border border-border/40 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 group/card">
-              <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-border/30 bg-muted/20">
-                <CardTitle className="text-lg font-bold tracking-tight bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent px-1">{category.name}</CardTitle>
+            <Card key={category.id} className={cn("flex flex-col backdrop-blur-xl shadow-sm rounded-3xl overflow-hidden border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group/card", palette.bg, palette.border)}>
+              <CardHeader className={cn("flex flex-row items-center justify-between pb-3 border-b border-border/10", palette.header)}>
+                <CardTitle className={cn("text-lg font-bold tracking-tight px-1", palette.text)}>{category.name}</CardTitle>
                 {category.name !== 'Autre' && <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover/card:opacity-100 transition-opacity">
-                  <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors" onClick={() => openCategoryDialog(category)}><Pencil className="h-3.5 w-3.5" /></Button>
+                  <Button variant="ghost" size="icon" className={cn("h-7 w-7 transition-colors", palette.icon, palette.buttonHover)} onClick={() => openCategoryDialog(category)}><Pencil className="h-3.5 w-3.5" /></Button>
                   <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors" onClick={() => handleDeleteCategory(category.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
                 </div>}
               </CardHeader>
@@ -125,10 +140,10 @@ export default function PantryView({
                     {items.map(item => {
                       const isSelectedForChandyek = chandyekIngredientsList.includes(item.name);
                       return (
-                        <li key={item.id} className="flex items-center justify-between p-3 rounded-2xl bg-card border border-border/40 shadow-sm hover:shadow-md hover:border-primary/20 transition-all duration-300 group/item">
-                          <div className="flex flex-col gap-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className='font-semibold text-sm truncate'>{item.name}</span>
+                        <li key={item.id} className="flex items-center justify-between p-2 rounded-2xl bg-background/50 border border-border/20 shadow-sm hover:shadow-md hover:bg-background/80 transition-all duration-300 group/item">
+                          <div className="flex flex-col gap-0.5 min-w-0 flex-1 mr-1">
+                            <div className="flex items-center gap-1.5">
+                              <span className='font-semibold text-sm truncate leading-tight'>{item.name}</span>
                               {(() => {
                                 const status = getProductStatus(purchaseHistory[item.id]);
                                 if (!status) return null;
@@ -144,37 +159,37 @@ export default function PantryView({
                                 );
                               })()}
                             </div>
-                            <p className='text-[11px] text-muted-foreground font-medium'>{item.price.toFixed(3)} DT / {item.unit}</p>
+                            <p className='text-[10px] text-muted-foreground font-medium'>{item.price.toFixed(3)} DT / {item.unit}</p>
                           </div>
 
-                          <div className='flex items-center gap-1 shrink-0'>
+                          <div className='flex items-center gap-0.5 shrink-0'>
                             <Button
                               variant="ghost"
                               size="icon"
-                              className='h-8 w-8 rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors'
+                              className={cn('h-7 w-7 rounded-full text-muted-foreground transition-colors', palette.buttonHover)}
                               title="Ajouter au panier"
                               onClick={() => openQuantityDialog(item)}
                             >
-                              <Plus className="h-4 w-4" />
+                              <Plus className="h-3.5 w-3.5" />
                             </Button>
                             <Button
                               variant={isSelectedForChandyek ? "secondary" : "ghost"}
                               size="icon"
                               className={cn(
-                                'h-8 w-8 rounded-full transition-colors',
+                                'h-7 w-7 rounded-full transition-colors',
                                 isSelectedForChandyek
                                   ? 'bg-primary/15 text-primary hover:bg-primary/25'
-                                  : 'text-muted-foreground hover:text-primary hover:bg-primary/10'
+                                  : `text-muted-foreground ${palette.buttonHover}`
                               )}
                               title="Ajouter/Retirer de 'Ch3andek'"
                               onClick={() => onToggleChandyekIngredient(item.name)}
                             >
-                              <BrainCircuit className="h-4 w-4" />
+                              <BrainCircuit className="h-3.5 w-3.5" />
                             </Button>
                             <Button
                               variant="ghost"
                               size="icon"
-                              className='h-8 w-8 rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors'
+                              className={cn('h-7 w-7 rounded-full text-muted-foreground transition-colors', palette.buttonHover)}
                               title="Modifier"
                               onClick={() => openEditDialog(item)}
                             >
@@ -183,7 +198,7 @@ export default function PantryView({
                             <Button
                               variant="ghost"
                               size="icon"
-                              className='h-8 w-8 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors'
+                              className='h-7 w-7 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors'
                               title="Supprimer"
                               onClick={() => handleDeleteIngredient(item.id)}
                             >
@@ -196,8 +211,8 @@ export default function PantryView({
                   </ul>
                 </ScrollArea>
               </CardContent>
-              <CardFooter className="p-4 pt-1 border-t border-border/30 bg-muted/10">
-                <Button variant="ghost" className="w-full mt-2 bg-transparent hover:bg-primary/10 text-primary/80 hover:text-primary border border-dashed border-primary/20 hover:border-primary/40 rounded-xl font-medium transition-all" onClick={() => openAddDialog(category.name)}><PlusCircle className="mr-2 h-4 w-4" /> Ajouter un produit</Button>
+              <CardFooter className="p-3 pt-1 border-t border-border/10 bg-black/5">
+                <Button variant="ghost" className={cn("w-full mt-2 bg-transparent border border-dashed rounded-xl font-medium transition-all", palette.text, palette.border, palette.buttonHover)} onClick={() => openAddDialog(category.name)}><PlusCircle className="mr-2 h-4 w-4" /> Ajouter un produit</Button>
               </CardFooter>
             </Card>
           )
