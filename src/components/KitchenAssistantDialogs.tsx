@@ -455,6 +455,25 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={isPreviewPhotoOpen} onOpenChange={setIsPreviewPhotoOpen}>
+        <DialogContent className="max-w-4xl w-full h-[80vh] p-0 overflow-hidden bg-black/90 border-none">
+          <div className="relative w-full h-full flex items-center justify-center">
+            <DialogClose className="absolute top-4 right-4 z-50 rounded-full bg-white/10 p-2 hover:bg-white/20 transition-colors">
+              <Minus className="h-6 w-6 text-white" />
+              <span className="sr-only">Fermer</span>
+            </DialogClose>
+            {currentRecipe && (currentRecipe as UserRecipe).photoDataUri && (
+              <Image
+                src={(currentRecipe as UserRecipe).photoDataUri!}
+                alt={currentRecipe.title}
+                className="object-contain"
+                fill
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

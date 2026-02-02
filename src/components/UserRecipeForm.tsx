@@ -227,7 +227,7 @@ export default function UserRecipeForm({ initialData, onSave, formId, pantry }: 
               type="button"
               variant="outline"
               size="sm"
-              className="mt-2"
+              className="mt-2 w-full sm:w-auto h-8 text-xs sm:text-sm"
               onClick={() => append({ name: '', quantity: 1, unit: 'pièce' })}
             >
               Ajouter un ingrédient
