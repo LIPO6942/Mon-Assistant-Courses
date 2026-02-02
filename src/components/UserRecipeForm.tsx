@@ -11,8 +11,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Sparkles, Loader2 } from 'lucide-react';
 import ImagePicker from './ImagePicker';
+import { ocrRecipeFromImage } from '@/ai/flows/ocr-recipe-flow';
 
 interface UserRecipeFormProps {
   initialData: UserRecipe | null;
@@ -28,8 +29,9 @@ type FormData = Omit<UserRecipe, 'id' | 'preparationTime' | 'portions'> & {
 
 export default function UserRecipeForm({ initialData, onSave, formId }: UserRecipeFormProps) {
   const [photoDataUri, setPhotoDataUri] = React.useState<string | undefined>(initialData?.photoDataUri);
+  const [isOcrLoading, setIsOcrLoading] = React.useState(false);
 
-  const { register, control, handleSubmit, formState: { errors } } = useForm<FormData>({
+  const { register, control, handleSubmit, setValue, formState: { errors } } = useForm<FormData>({
     defaultValues: {
       id: initialData?.id,
       title: initialData?.title || '',
@@ -43,10 +45,32 @@ export default function UserRecipeForm({ initialData, onSave, formId }: UserReci
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, replace } = useFieldArray({
     control,
     name: "ingredients",
   });
+
+  const handleOcr = async () => {
+    if (!photoDataUri) return;
+    setIsOcrLoading(true);
+    try {
+      const result = await ocrRecipeFromImage({ photoDataUri });
+      if (result.title) setValue('title', result.title);
+      if (result.category) setValue('category', result.category);
+      if (result.preparation) setValue('preparation', result.preparation);
+      if (result.preparationTime) setValue('preparationTime', String(result.preparationTime));
+      if (result.portions) setValue('portions', String(result.portions));
+      if (result.tags) setValue('tags', result.tags);
+      if (result.ingredients && result.ingredients.length > 0) {
+        replace(result.ingredients);
+      }
+    } catch (error) {
+      console.error("OCR Error:", error);
+      alert("Erreur lors de l'analyse de la recette par l'IA.");
+    } finally {
+      setIsOcrLoading(false);
+    }
+  };
 
   const onSubmit = (data: FormData) => {
     onSave({
@@ -61,9 +85,28 @@ export default function UserRecipeForm({ initialData, onSave, formId }: UserReci
     <form id={formId} onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <ScrollArea className="h-[65vh] pr-6">
         <div className="space-y-6">
-          <div>
-            <Label>Photo du plat</Label>
-            <ImagePicker photoDataUri={photoDataUri} setPhotoDataUri={setPhotoDataUri} />
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+            <div className="flex-1">
+              <Label>Photo du plat</Label>
+              <ImagePicker photoDataUri={photoDataUri} setPhotoDataUri={setPhotoDataUri} />
+            </div>
+            {photoDataUri && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleOcr}
+                disabled={isOcrLoading}
+                className="rounded-full border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 transition-all font-bold gap-2 self-start sm:self-auto"
+              >
+                {isOcrLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="h-4 w-4" />
+                )}
+                Remplissage Magique (IA)
+              </Button>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
