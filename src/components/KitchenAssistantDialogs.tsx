@@ -12,7 +12,7 @@ import { Minus, Plus, Pencil, Trash2, Users, Share2, AlertTriangle, ExternalLink
 import IngredientForm from './IngredientForm';
 import CategoryForm from './CategoryForm';
 import HealthConditionManager from './HealthConditionManager';
-import type { Ingredient, Recipe, CategoryDef, HealthConditionCategory, UserRecipe, RecipeIngredient, BasketItem } from '@/lib/types';
+import type { Ingredient, Recipe, CategoryDef, HealthConditionCategory, UserRecipe, RecipeIngredient, BasketItem, PurchaseHistory } from '@/lib/types';
 import UserRecipeForm from './UserRecipeForm';
 import Image from 'next/image';
 import { Label } from './ui/label';
@@ -66,6 +66,8 @@ interface KitchenAssistantDialogsProps {
   setSharedBasketToMerge: (basket: BasketItem[] | null) => void;
   onMergeBasket: () => void;
   isInApp?: boolean;
+  pantry: Ingredient[];
+  purchaseHistory: PurchaseHistory;
 }
 
 export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsProps) {
@@ -108,7 +110,11 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
     setSharedBasketToMerge,
     onMergeBasket,
     isInApp,
+    pantry,
+    purchaseHistory,
   } = props;
+
+  const [isPreviewPhotoOpen, setIsPreviewPhotoOpen] = React.useState(false);
 
   const [quantityInput, setQuantityInput] = React.useState('1');
   const [portions, setPortions] = React.useState(viewingRecipe?.portions || viewingUserRecipe?.portions || 2);
@@ -187,8 +193,14 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
             <>
               <DialogHeader>
                 {(currentRecipe as UserRecipe).photoDataUri && (
-                  <div className="relative w-full h-48 mb-4 rounded-lg overflow-hidden">
+                  <div
+                    className="relative w-full h-48 mb-4 rounded-lg overflow-hidden cursor-pointer group"
+                    onClick={() => setIsPreviewPhotoOpen(true)}
+                  >
                     <Image src={(currentRecipe as UserRecipe).photoDataUri!} alt={currentRecipe.title} layout="fill" objectFit="cover" />
+                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <span className="bg-white/90 text-primary text-xs font-bold px-3 py-1 rounded-full shadow-lg">Agrandir</span>
+                    </div>
                   </div>
                 )}
                 <DialogTitle>{currentRecipe.title}</DialogTitle>
@@ -341,6 +353,7 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
             initialData={editingUserRecipe}
             onSave={handleSaveUserRecipe}
             formId='user-recipe-form'
+            pantry={pantry}
           />
           <DialogFooter>
             <Button variant="outline" onClick={() => setUserRecipeFormOpen(false)}>Annuler</Button>

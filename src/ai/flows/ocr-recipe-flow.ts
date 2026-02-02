@@ -31,17 +31,19 @@ export async function ocrRecipeFromImage(input: OcrRecipeInput): Promise<OcrReci
     const parsed = OcrRecipeInputSchema.parse(input);
 
     const systemPrompt = [
-        "Tu es un expert en lecture de recettes (OCR). Ta mission est d'extraire les informations d'une photo de recette (livre, manuscrit, écran).",
-        "Instructions :",
-        "- Si la photo est floue, essaie de deviner ou laisse vide.",
-        "- Convertis les quantités en nombres.",
-        `- Utilise uniquement ces unités si possible : ${units.join(', ')}.`,
-        `- Utilise l'une de ces catégories : ${recipeCategories.join(', ')}.`,
+        "Tu es un expert en lecture de recettes (OCR). Ta mission est d'extraire TOUTES les informations possibles d'une photo de recette (livre, manuscrit, écran).",
+        "DIRECTIVES CRITIQUES :",
+        "- EXTRAIS CE QUE TU PEUX : Même si la photo ne contient que le titre ou juste quelques ingrédients, retourne ces informations. Ne renvoie pas un objet vide si au moins un champ est identifiable.",
+        "- SOIS RÉSILIENT : Si une partie est illisible, ignore-la mais continue pour le reste.",
+        "- FORMATAGE DES INGRÉDIENTS : Sépare bien le nom, la quantité (nombre uniquement) et l'unité.",
+        `- UNITÉS : Utilise prioritairement : ${units.join(', ')}.`,
+        `- CATÉGORIES : Choisis la plus proche parmi : ${recipeCategories.join(', ')}.`,
+        "- PRÉPARATION : Extrais les étapes même si elles sont partielles.",
         "Retourne uniquement un JSON valide.",
     ].join('\n');
 
     const userContent: GroqMessageContentPart[] = [
-        { type: 'text', text: 'Analyse cette recette et extrais les données structurées.' },
+        { type: 'text', text: 'Analyse cette image. Extrais le maximum de données de la recette, même si elle est incomplète.' },
         { type: 'image_url', image_url: { url: parsed.photoDataUri } },
     ];
 
