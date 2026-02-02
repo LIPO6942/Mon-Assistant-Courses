@@ -28,35 +28,59 @@ const OcrRecipeOutputSchema = z.object({
 export type OcrRecipeOutput = z.infer<typeof OcrRecipeOutputSchema>;
 
 export async function ocrRecipeFromImage(input: OcrRecipeInput): Promise<OcrRecipeOutput> {
+    console.log("[OCR] Starting recipe analysis...");
     const parsed = OcrRecipeInputSchema.parse(input);
 
     const systemPrompt = [
-        "Tu es un expert en lecture de recettes (OCR). Ta mission est d'extraire TOUTES les informations possibles d'une photo de recette (livre, manuscrit, écran).",
-        "DIRECTIVES CRITIQUES :",
-        "- EXTRAIS CE QUE TU PEUX : Même si la photo ne contient que le titre ou juste quelques ingrédients, retourne ces informations. Ne renvoie pas un objet vide si au moins un champ est identifiable.",
-        "- SOIS RÉSILIENT : Si une partie est illisible, ignore-la mais continue pour le reste.",
-        "- FORMATAGE DES INGRÉDIENTS : Sépare bien le nom, la quantité (nombre uniquement) et l'unité.",
-        `- UNITÉS : Utilise prioritairement : ${units.join(', ')}.`,
-        `- CATÉGORIES : Choisis la plus proche parmi : ${recipeCategories.join(', ')}.`,
-        "- PRÉPARATION : Extrais les étapes même si elles sont partielles.",
-        "Retourne uniquement un JSON valide.",
+        "Tu es un expert en lecture de recettes (OCR). Ta mission est d'extraire TOUTES les informations possibles d'une photo de recette.",
+        "IMPORTANT : Retourne un objet JSON avec les champs suivants :",
+        "- title (string)",
+        "- category (string: Plat, Entrée, Dessert, Petit Déjeuner, Boisson, Autre)",
+        "- portions (number)",
+        "- ingredients (array de {name: string, quantity: number, unit: string})",
+        "- preparation (string: concatène toutes les étapes)",
+        "- preparationTime (number: en minutes)",
+        "- tags (string: séparés par des virgules)",
+        "Si une donnée est manquante, laisse le champ ou mets une valeur par défaut cohérente.",
     ].join('\n');
 
     const userContent: GroqMessageContentPart[] = [
-        { type: 'text', text: 'Analyse cette image. Extrais le maximum de données de la recette, même si elle est incomplète.' },
+        { type: 'text', text: 'Analyse cette image de recette et extrais les données en JSON.' },
         { type: 'image_url', image_url: { url: parsed.photoDataUri } },
     ];
 
-    const output = await groqChatJson<OcrRecipeOutput>({
-        model: getPreferredVisionModel(),
-        messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userContent },
-        ],
-        temperature: 0.1,
-        max_tokens: 2000,
-        response_format: { type: 'json_object' },
-    });
+    try {
+        const output = await groqChatJson<any>({
+            model: getPreferredVisionModel(),
+            messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: userContent },
+            ],
+            temperature: 0.1,
+            max_tokens: 2000,
+            response_format: { type: 'json_object' },
+        });
 
-    return OcrRecipeOutputSchema.parse(output);
+        console.log("[OCR] raw output received");
+
+        // Soft validation to avoid crash on minor type mismatches
+        const refined: OcrRecipeOutput = {
+            title: typeof output.title === 'string' ? output.title : undefined,
+            category: recipeCategories.includes(output.category) ? output.category : 'Autre',
+            portions: Number(output.portions) || 2,
+            ingredients: Array.isArray(output.ingredients) ? output.ingredients.map((ing: any) => ({
+                name: String(ing.name || ''),
+                quantity: Number(ing.quantity) || 1,
+                unit: String(ing.unit || 'pièce')
+            })) : [],
+            preparation: typeof output.preparation === 'string' ? output.preparation : undefined,
+            preparationTime: Number(output.preparationTime) || 30,
+            tags: typeof output.tags === 'string' ? output.tags : undefined,
+        };
+
+        return refined;
+    } catch (error) {
+        console.error("[OCR] Critical error during Groq call:", error);
+        throw error;
+    }
 }
