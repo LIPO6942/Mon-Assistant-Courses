@@ -263,11 +263,36 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
               <ScrollArea className="h-72 my-2 border rounded-md p-4">
                 <h4 className='font-semibold'>Ingrédients :</h4>
                 <ul className='list-disc pl-5 text-sm space-y-1 my-2'>
-                  {currentIngredients?.map((ing, i) =>
-                    <li key={ing.name + i}>
-                      {calculateAdjustedQuantity(ing.quantity, basePortions, portions)} {ing.unit} de {ing.name}
-                    </li>
-                  )}
+                  {currentIngredients?.map((ing, i) => {
+                    // Logic for Stock Dots
+                    const pantryItem = pantry.find(p => p.name.toLowerCase() === ing.name.toLowerCase());
+                    let dotColor = 'bg-red-500'; // Default missing
+                    let tooltip = "Manquant du garde-manger";
+
+                    if (pantryItem) {
+                      const status = getProductStatus(purchaseHistory[pantryItem.id]);
+                      if (status === 'green') {
+                        dotColor = 'bg-green-500';
+                        tooltip = "En stock (Achat récent)";
+                      } else {
+                        // Orange for 'orange', 'red' (overdue), or 'grey' (unknown) if it IS in the pantry list
+                        dotColor = 'bg-amber-500';
+                        tooltip = "En stock (Achat ancien - Vérifier)";
+                      }
+                    }
+
+                    return (
+                      <li key={ing.name + i} className="flex items-center justify-between py-1 border-b border-dashed border-border/50 last:border-0">
+                        <div className="flex items-center gap-2">
+                          <div className={cn("w-2.5 h-2.5 rounded-full shrink-0", dotColor)} title={tooltip} />
+                          <span>{ing.name}</span>
+                        </div>
+                        <span className="text-muted-foreground font-medium">
+                          {calculateAdjustedQuantity(ing.quantity, basePortions, portions)} {ing.unit}
+                        </span>
+                      </li>
+                    );
+                  })}
                 </ul>
                 {preparationSteps.length > 0 && (
                   <>
