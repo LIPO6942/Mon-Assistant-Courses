@@ -17,6 +17,8 @@ import NutritionalGuideView from './NutritionalGuideView';
 import CategoryPriceEvolutionDialog from './CategoryPriceEvolutionDialog';
 import { db } from '@/lib/idb';
 import { isInAppBrowser, getProductStatus } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 
 export default function KitchenAssistantPage() {
@@ -164,6 +166,11 @@ export default function KitchenAssistantPage() {
     }
     loadData();
   }, []);
+
+  // New Pantry Addition Logic
+  const [confirmPantryAddOpen, setConfirmPantryAddOpen] = useState(false);
+  const [missingIngredients, setMissingIngredients] = useState<Omit<Ingredient, 'id'>[]>([]);
+  const [pendingRecipeSave, setPendingRecipeSave] = useState<{ recipe: UserRecipe, isNew: boolean } | null>(null);
 
   useEffect(() => { if (isDataLoaded) { try { db.set('pantry', pantry); } catch (e) { console.error(e); alert("Le stockage local est plein. Impossible de sauvegarder les modifications du garde-manger.") } } }, [pantry, isDataLoaded]);
   useEffect(() => { if (isDataLoaded) { try { db.set('basket', basket); } catch (e) { console.error(e); alert("Le stockage local est plein. Impossible de sauvegarder les modifications du panier.") } } }, [basket, isDataLoaded]);
@@ -653,20 +660,58 @@ export default function KitchenAssistantPage() {
     openUserRecipeForm(recipe); // Open the form with the recipe to edit
   };
 
-  const handleSaveUserRecipe = (recipeData: Omit<UserRecipe, 'id'> & { id?: string }) => {
-    if (recipeData.id) {
-      setUserRecipes(prev => prev.map(r => r.id === recipeData.id ? { ...r, ...recipeData } as UserRecipe : r));
+  const handleSaveUserRecipe = async (recipeData: UserRecipe | (Omit<UserRecipe, 'id'> & { id?: string })) => {
+    const isNew = !recipeData.id;
+    const finalRecipe: UserRecipe = isNew
+      ? { ...recipeData, id: self.crypto.randomUUID() } as UserRecipe
+      : recipeData as UserRecipe;
+
+    // Check for missing ingredients in pantry
+    const missing = finalRecipe.ingredients.filter(recipeIng => {
+      return !pantry.some(pantryIng => pantryIng.name.toLowerCase() === recipeIng.name.toLowerCase());
+    });
+
+    if (missing.length > 0) {
+      // Prepare potential new ingredients with default category
+      const newPantryItems: Omit<Ingredient, 'id'>[] = missing.map(ing => ({
+        name: ing.name,
+        category: 'Autre', // Default category, user can edit later
+        unit: ing.unit,
+        price: 0
+      }));
+      setMissingIngredients(newPantryItems);
+      setPendingRecipeSave({ recipe: finalRecipe, isNew });
+      setConfirmPantryAddOpen(true);
+      return; // Stop here, wait for user confirmation
+    }
+
+    // Proceed directly if no missing ingredients
+    completeRecipeSave(finalRecipe, isNew);
+  };
+
+  const completeRecipeSave = (finalRecipe: UserRecipe, isNew: boolean) => {
+    if (isNew) {
+      setUserRecipes(prev => [...prev, finalRecipe]);
     } else {
-      const newRecipe: UserRecipe = { ...recipeData, id: self.crypto.randomUUID() };
-      setUserRecipes(prev => [...prev, newRecipe]);
+      setUserRecipes(prev => prev.map(r => r.id === finalRecipe.id ? finalRecipe : r));
     }
     setUserRecipeFormOpen(false);
     setEditingUserRecipe(null);
   };
 
-  const handleDeleteUserRecipe = (recipeId: string) => {
+  const handleConfirmPantryAdd = (itemsToAdd: Omit<Ingredient, 'id'>[]) => {
+    handleAddIngredients(itemsToAdd); // Re-use the batch add function
+    if (pendingRecipeSave) {
+      completeRecipeSave(pendingRecipeSave.recipe, pendingRecipeSave.isNew);
+    }
+    setConfirmPantryAddOpen(false);
+    setPendingRecipeSave(null);
+    setMissingIngredients([]);
+  };
+
+  const handleDeleteUserRecipe = (id: string) => {
     if (window.confirm("Êtes-vous sûr de vouloir supprimer cette recette ?")) {
-      setUserRecipes(prev => prev.filter(r => r.id !== recipeId));
+      setUserRecipes(prev => prev.filter(r => r.id !== id));
     }
   };
 
@@ -831,6 +876,8 @@ export default function KitchenAssistantPage() {
         sharedBasketToMerge={sharedBasketToMerge}
         setSharedBasketToMerge={setSharedBasketToMerge}
         onMergeBasket={handleMergeBasket}
+        pantry={pantry}
+        purchaseHistory={purchaseHistory}
       />
 
       <CategoryPriceEvolutionDialog
@@ -840,6 +887,40 @@ export default function KitchenAssistantPage() {
         pantry={pantry}
         purchaseHistory={purchaseHistory}
       />
+
+      <Dialog open={confirmPantryAddOpen} onOpenChange={setConfirmPantryAddOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Ingrédients manquants</DialogTitle>
+            <DialogDescription>
+              Certains ingrédients de cette recette ne sont pas dans votre garde-manger. Voulez-vous les ajouter ?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm font-medium mb-2">Ingrédients détectés :</p>
+            <ul className="space-y-1">
+              {missingIngredients.map((ing, idx) => (
+                <li key={idx} className="text-sm flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-orange-500" />
+                  {ing.name}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => {
+              // Save recipe ONLY, ignore pantry add
+              if (pendingRecipeSave) completeRecipeSave(pendingRecipeSave.recipe, pendingRecipeSave.isNew);
+              setConfirmPantryAddOpen(false);
+            }}>
+              Non, enregistrer la recette uniquement
+            </Button>
+            <Button onClick={() => handleConfirmPantryAdd(missingIngredients)}>
+              Oui, ajouter au garde-manger
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

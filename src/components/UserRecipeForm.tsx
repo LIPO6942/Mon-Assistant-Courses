@@ -11,14 +11,16 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Trash2, Sparkles, Loader2 } from 'lucide-react';
+import { Trash2, Sparkles, Loader2, ChevronDown } from 'lucide-react';
 import ImagePicker from './ImagePicker';
 import { ocrRecipeFromImage } from '@/ai/flows/ocr-recipe-flow';
+import type { Ingredient } from '@/lib/types';
 
 interface UserRecipeFormProps {
   initialData: UserRecipe | null;
   onSave: (data: Omit<UserRecipe, 'id'> & { id?: string }) => void;
   formId: string;
+  pantry: Ingredient[];
 }
 
 type FormData = Omit<UserRecipe, 'id' | 'preparationTime' | 'portions'> & {
@@ -27,11 +29,16 @@ type FormData = Omit<UserRecipe, 'id' | 'preparationTime' | 'portions'> & {
   id?: string;
 };
 
-export default function UserRecipeForm({ initialData, onSave, formId }: UserRecipeFormProps) {
+export default function UserRecipeForm({ initialData, onSave, formId, pantry }: UserRecipeFormProps) {
   const [photoDataUri, setPhotoDataUri] = React.useState<string | undefined>(initialData?.photoDataUri);
   const [isOcrLoading, setIsOcrLoading] = React.useState(false);
+  const [focusedIngredientIndex, setFocusedIngredientIndex] = React.useState<number | null>(null);
 
-  const { register, control, handleSubmit, setValue, formState: { errors } } = useForm<FormData>({
+  const pantryNames = React.useMemo(() => {
+    return Array.from(new Set(pantry.map(i => i.name))).sort();
+  }, [pantry]);
+
+  const { register, control, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormData>({
     defaultValues: {
       id: initialData?.id,
       title: initialData?.title || '',
@@ -50,11 +57,15 @@ export default function UserRecipeForm({ initialData, onSave, formId }: UserReci
     name: "ingredients",
   });
 
+  const watchedIngredients = watch("ingredients");
+
   const handleOcr = async () => {
     if (!photoDataUri) return;
     setIsOcrLoading(true);
     try {
       const result = await ocrRecipeFromImage({ photoDataUri });
+      // Merge with existing data instead of replacing everything if possible, 
+      // but 'replace' for ingredients is cleaner for AI results.
       if (result.title) setValue('title', result.title);
       if (result.category) setValue('category', result.category);
       if (result.preparation) setValue('preparation', result.preparation);
@@ -150,33 +161,67 @@ export default function UserRecipeForm({ initialData, onSave, formId }: UserReci
 
           <div>
             <Label>Ingrédients</Label>
-            <div className="space-y-2 mt-1">
-              {fields.map((field, index) => (
-                <div key={field.id} className="flex items-center gap-2">
-                  <Input
-                    placeholder="Nom"
-                    {...register(`ingredients.${index}.name`, { required: true })}
-                    className="w-1/2"
-                  />
-                  <Input
-                    type="number"
-                    step="0.001"
-                    placeholder="Qté"
-                    {...register(`ingredients.${index}.quantity`, { required: true, valueAsNumber: true })}
-                    className="w-1/4"
-                  />
-                  <ControllerSelect
-                    control={control}
-                    name={`ingredients.${index}.unit`}
-                    items={[...units]}
-                    placeholder="Unité"
-                    className="w-1/4"
-                  />
-                  <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              ))}
+            <div className="space-y-4 mt-1">
+              {fields.map((field, index) => {
+                const currentName = watchedIngredients[index]?.name || '';
+                const suggestions = pantryNames.filter(name =>
+                  name.toLowerCase().includes(currentName.toLowerCase()) &&
+                  name.toLowerCase() !== currentName.toLowerCase()
+                ).slice(0, 5);
+
+                return (
+                  <div key={field.id} className="relative space-y-2 pb-2 border-b border-dashed sm:border-none sm:pb-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <div className="flex-1 min-w-[150px] relative">
+                        <Input
+                          placeholder="Nom (ex: Poulet, Tomate...)"
+                          {...register(`ingredients.${index}.name`, { required: true })}
+                          onFocus={() => setFocusedIngredientIndex(index)}
+                          onBlur={() => setTimeout(() => setFocusedIngredientIndex(null), 200)}
+                          className="w-full"
+                        />
+                        {focusedIngredientIndex === index && suggestions.length > 0 && (
+                          <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white dark:bg-zinc-900 border rounded-lg shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2">
+                            {suggestions.map(name => (
+                              <button
+                                key={name}
+                                type="button"
+                                className="w-full text-left px-3 py-2 text-sm hover:bg-primary/5 hover:text-primary transition-colors flex items-center justify-between group"
+                                onClick={() => {
+                                  setValue(`ingredients.${index}.name`, name);
+                                  setFocusedIngredientIndex(null);
+                                }}
+                              >
+                                <span>{name}</span>
+                                <ChevronDown className="h-3 w-3 opacity-0 group-hover:opacity-50" />
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 w-full sm:w-auto">
+                        <Input
+                          type="number"
+                          step="0.001"
+                          placeholder="Qté"
+                          {...register(`ingredients.${index}.quantity`, { required: true, valueAsNumber: true })}
+                          className="w-20"
+                        />
+                        <ControllerSelect
+                          control={control}
+                          name={`ingredients.${index}.unit`}
+                          items={[...units]}
+                          placeholder="Unité"
+                          className="w-24"
+                        />
+                        <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="shrink-0 hover:bg-destructive/10 hover:text-destructive">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
             <Button
               type="button"
