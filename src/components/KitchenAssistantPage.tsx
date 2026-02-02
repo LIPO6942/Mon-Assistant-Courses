@@ -19,6 +19,10 @@ import { db } from '@/lib/idb';
 import { isInAppBrowser, getProductStatus } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Input } from '@/components/ui/input';
+import { Plus } from 'lucide-react';
 
 
 export default function KitchenAssistantPage() {
@@ -716,7 +720,20 @@ export default function KitchenAssistantPage() {
   };
 
   const handleConfirmPantryAdd = (itemsToAdd: Omit<Ingredient, 'id'>[]) => {
-    handleAddIngredients(itemsToAdd); // Re-use the batch add function
+    // 1. Check if any categories are new and add them
+    const uniqueCategoryNames = Array.from(new Set(itemsToAdd.map(i => i.category)));
+    const newCategories = uniqueCategoryNames.filter(name => !categories.some(c => c.name.toLowerCase() === name.toLowerCase()));
+
+    if (newCategories.length > 0) {
+      setCategories(prev => [
+        ...prev,
+        ...newCategories.map(name => ({ id: self.crypto.randomUUID(), name }))
+      ]);
+    }
+
+    // 2. Add ingredients
+    handleAddIngredients(itemsToAdd);
+
     if (pendingRecipeSave) {
       completeRecipeSave(pendingRecipeSave.recipe, pendingRecipeSave.isNew);
     }
@@ -910,34 +927,97 @@ export default function KitchenAssistantPage() {
       />
 
       <Dialog open={confirmPantryAddOpen} onOpenChange={setConfirmPantryAddOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Ingrédients manquants</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <Plus className="h-5 w-5 text-primary" />
+              Ingrédients manquants
+            </DialogTitle>
             <DialogDescription>
-              Certains ingrédients de cette recette ne sont pas dans votre garde-manger. Voulez-vous les ajouter ?
+              Souhaitez-vous ajouter ces ingrédients à votre garde-manger ? Classifiez-les pour mieux les organiser.
             </DialogDescription>
           </DialogHeader>
-          <div className="py-4">
-            <p className="text-sm font-medium mb-2">Ingrédients détectés :</p>
-            <ul className="space-y-1">
-              {missingIngredients.map((ing, idx) => (
-                <li key={idx} className="text-sm flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-orange-500" />
-                  {ing.name}
-                </li>
-              ))}
-            </ul>
-          </div>
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button variant="outline" onClick={() => {
-              // Save recipe ONLY, ignore pantry add
+
+          <ScrollArea className="max-h-[50vh] pr-4 my-2">
+            <div className="space-y-4 py-2">
+              {missingIngredients.map((ing, idx) => {
+                const isCreatingNew = ing.category.startsWith("NEW:");
+                const currentCategory = isCreatingNew ? "" : ing.category;
+
+                return (
+                  <div key={idx} className="bg-zinc-50 dark:bg-zinc-900/50 p-3 rounded-xl border border-zinc-100 dark:border-zinc-800 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-sm">{ing.name}</span>
+                      <span className="text-[10px] uppercase font-bold text-muted-foreground">{ing.unit}</span>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Select
+                        value={isCreatingNew ? "ADD_NEW" : ing.category}
+                        onValueChange={(val) => {
+                          const updated = [...missingIngredients];
+                          if (val === "ADD_NEW") {
+                            updated[idx].category = "NEW:";
+                          } else {
+                            updated[idx].category = val;
+                          }
+                          setMissingIngredients(updated);
+                        }}
+                      >
+                        <SelectTrigger className="h-9 bg-white dark:bg-zinc-900">
+                          <SelectValue placeholder="Choisir une catégorie" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {categories.map(cat => (
+                            <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
+                          ))}
+                          <SelectItem value="ADD_NEW" className="text-primary font-bold">+ Nouvelle catégorie</SelectItem>
+                        </SelectContent>
+                      </Select>
+
+                      {isCreatingNew && (
+                        <Input
+                          placeholder="Nom de la nouvelle catégorie..."
+                          className="h-8 text-xs animate-in slide-in-from-top-1"
+                          autoFocus
+                          value={ing.category.replace("NEW:", "")}
+                          onChange={(e) => {
+                            const updated = [...missingIngredients];
+                            updated[idx].category = "NEW:" + e.target.value;
+                            setMissingIngredients(updated);
+                          }}
+                        />
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </ScrollArea>
+
+          <DialogFooter className="flex-col sm:flex-row gap-2 pt-4">
+            <Button variant="ghost" className="text-muted-foreground text-xs" onClick={() => {
               if (pendingRecipeSave) completeRecipeSave(pendingRecipeSave.recipe, pendingRecipeSave.isNew);
               setConfirmPantryAddOpen(false);
             }}>
-              Non, enregistrer la recette uniquement
+              Ignorer et enregistrer la recette
             </Button>
-            <Button onClick={() => handleConfirmPantryAdd(missingIngredients)}>
-              Oui, ajouter au garde-manger
+            <Button className="rounded-full px-6" onClick={() => {
+              // Finalize categories before adding
+              const finalItems = missingIngredients.map(ing => {
+                const category = ing.category.startsWith("NEW:")
+                  ? ing.category.replace("NEW:", "").trim() || "Autre"
+                  : ing.category;
+
+                // If it's a new category, we should probably add it to the global categories list too
+                // But handleAddIngredients currently just adds the ingredient.
+                // We'll let handleAddIngredients deal with checking if category exists if we want, 
+                // but let's just pass the string.
+                return { ...ing, category };
+              });
+              handleConfirmPantryAdd(finalItems);
+            }}>
+              Ajouter au garde-manger
             </Button>
           </DialogFooter>
         </DialogContent>

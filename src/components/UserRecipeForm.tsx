@@ -133,23 +133,6 @@ export default function UserRecipeForm({ initialData, onSave, formId, pantry }: 
                 <Label className="mb-2 block text-xs font-bold uppercase tracking-wider text-muted-foreground">Photo de la recette</Label>
                 <div className="relative">
                   <ImagePicker photoDataUri={photoDataUri} setPhotoDataUri={setPhotoDataUri} />
-                  {photoDataUri && (
-                    <Button
-                      type="button"
-                      variant="default"
-                      size="sm"
-                      onClick={handleOcr}
-                      disabled={isOcrLoading}
-                      className="absolute bottom-4 right-4 rounded-full shadow-xl bg-primary text-white hover:scale-105 transition-transform font-bold gap-2 py-5 px-6"
-                    >
-                      {isOcrLoading ? (
-                        <Loader2 className="h-5 w-5 animate-spin" />
-                      ) : (
-                        <Sparkles className="h-5 w-5" />
-                      )}
-                      <span>Remplissage Magique</span>
-                    </Button>
-                  )}
                 </div>
               </div>
 

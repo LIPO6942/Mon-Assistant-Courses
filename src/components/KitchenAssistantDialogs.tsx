@@ -119,6 +119,7 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
   const [quantityInput, setQuantityInput] = React.useState('1');
   const [portions, setPortions] = React.useState(viewingRecipe?.portions || viewingUserRecipe?.portions || 2);
   const [checkedSteps, setCheckedSteps] = React.useState<Set<number>>(new Set());
+  const [activeDetailTab, setActiveDetailTab] = React.useState<'ingredients' | 'preparation'>('ingredients');
 
   React.useEffect(() => {
     if (isQuantityDialogOpen) {
@@ -148,7 +149,7 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
   };
 
   const handleToggleStep = (index: number) => {
-    setCheckedSteps(prev => {
+    setCheckedSteps((prev: Set<number>) => {
       const newSet = new Set(prev);
       if (newSet.has(index)) {
         newSet.delete(index);
@@ -182,149 +183,217 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!currentRecipe} onOpenChange={(open) => {
+      <Dialog open={!!currentRecipe} onOpenChange={(open: boolean) => {
         if (!open) {
           setViewingRecipe(null);
           setViewingUserRecipe(null);
         }
       }}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-md p-0 overflow-hidden bg-white dark:bg-zinc-950">
           {currentRecipe && (
-            <>
-              <DialogHeader>
-                {(currentRecipe as UserRecipe).photoDataUri && (
-                  <div
-                    className="relative w-full h-48 mb-4 rounded-lg overflow-hidden cursor-pointer group"
-                    onClick={() => setIsPreviewPhotoOpen(true)}
-                  >
-                    <Image src={(currentRecipe as UserRecipe).photoDataUri!} alt={currentRecipe.title} layout="fill" objectFit="cover" />
-                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <span className="bg-white/90 text-primary text-xs font-bold px-3 py-1 rounded-full shadow-lg">Agrandir</span>
-                    </div>
-                  </div>
-                )}
-                <DialogTitle>{currentRecipe.title}</DialogTitle>
-                <DialogDescription>
-                  {'country' in currentRecipe ? `${currentRecipe.country} - ` : ''}
-                  {'calories' in currentRecipe ? `Environ ${currentRecipe.calories} kcal` : ''}
-                  {'description' in currentRecipe ? ` - ${currentRecipe.description}` : ''}
-                </DialogDescription>
-                {currentRecipe && 'searchLinks' in currentRecipe && currentRecipe.searchLinks && currentRecipe.searchLinks.length > 0 ? (
-                  <div className="flex flex-wrap gap-2 mt-4">
-                    {currentRecipe.searchLinks.map((link, i) => {
-                      const isYouTube = link.label.toLowerCase() === 'youtube';
-                      const isTikTok = link.label.toLowerCase() === 'tiktok';
-                      const isGoogle = link.label.toLowerCase() === 'google';
-
-                      return (
-                        <Button
-                          key={i}
-                          variant="outline"
-                          size="sm"
-                          className={cn(
-                            "flex-1 h-8 text-[10px] gap-1 py-1 transition-all duration-300 font-bold",
-                            isYouTube && "bg-[#FF0000] hover:bg-[#CC0000] text-white border-none shadow-sm",
-                            isTikTok && "bg-black hover:bg-zinc-800 text-white border-none shadow-sm",
-                            isGoogle && "bg-gradient-to-r from-blue-500/10 via-red-500/10 to-yellow-500/10 border-primary/10 hover:border-primary/30"
-                          )}
-                          asChild
-                        >
-                          <a href={link.url} target="_blank" rel="noopener noreferrer">
-                            <ExternalLink className={cn("h-3 w-3", (isYouTube || isTikTok) && "text-white")} />
-                            {link.label}
-                          </a>
-                        </Button>
-                      );
-                    })}
-                  </div>
+            <div className="flex flex-col h-[85vh]">
+              {/* Image Header / Title Section */}
+              <div className="relative h-64 shrink-0">
+                {(currentRecipe as UserRecipe).photoDataUri ? (
+                  <Image src={(currentRecipe as UserRecipe).photoDataUri!} alt={currentRecipe.title} layout="fill" objectFit="cover" className="brightness-90" />
                 ) : (
-                  currentRecipe && 'searchUrl' in currentRecipe && currentRecipe.searchUrl && (
-                    <div className="mt-2">
-                      <Button variant="outline" size="sm" asChild className="gap-2">
-                        <a href={currentRecipe.searchUrl} target="_blank" rel="noopener noreferrer">
-                          <ExternalLink className="h-4 w-4" />
-                          Voir la recette complète en ligne
-                        </a>
-                      </Button>
-                    </div>
-                  )
+                  <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                    <Users className="h-16 w-16 text-primary/20" />
+                  </div>
                 )}
-              </DialogHeader>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-6">
+                  <div className="flex justify-between items-end gap-4">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        {'category' in currentRecipe && (
+                          <span className="bg-primary text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                            {currentRecipe.category || 'Recette'}
+                          </span>
+                        )}
+                        {'country' in currentRecipe && currentRecipe.country && (
+                          <span className="bg-white/20 backdrop-blur-md text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                            {currentRecipe.country}
+                          </span>
+                        )}
+                      </div>
+                      <DialogTitle className="text-2xl font-black text-white leading-tight">{currentRecipe.title}</DialogTitle>
+                      <div className="flex items-center gap-3 text-white/80 text-xs font-medium">
+                        <div className="flex items-center gap-1">
+                          <Users className="h-3 w-3" />
+                          <span>{portions} pers.</span>
+                        </div>
+                        {'preparationTime' in currentRecipe && currentRecipe.preparationTime && (
+                          <div className="flex items-center gap-1">
+                            <Plus className="h-3 w-3" />
+                            <span>{currentRecipe.preparationTime} min</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
 
-              <div className="flex items-center gap-4 my-2">
-                <Label htmlFor="portions" className="flex items-center gap-2"><Users className='h-4 w-4' /> Portions :</Label>
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" size="icon" className='h-8 w-8' onClick={() => setPortions(p => Math.max(1, p - 1))}><Minus className='h-4 w-4' /></Button>
-                  <Input id="portions" type="number" value={portions} onChange={e => setPortions(Math.max(1, parseInt(e.target.value, 10) || 1))} className="w-16 h-8 text-center font-bold" />
-                  <Button variant="outline" size="icon" className='h-8 w-8' onClick={() => setPortions(p => p + 1)}><Plus className='h-4 w-4' /></Button>
+                    {(currentRecipe as UserRecipe).photoDataUri && (
+                      <Button
+                        variant="secondary"
+                        size="icon"
+                        className="rounded-full bg-white/20 backdrop-blur-md border-none text-white hover:bg-white/40"
+                        onClick={() => setIsPreviewPhotoOpen(true)}
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
 
-              <ScrollArea className="h-72 my-2 border rounded-md p-4">
-                <h4 className='font-semibold'>Ingrédients :</h4>
-                <ul className='list-disc pl-5 text-sm space-y-1 my-2'>
-                  {currentIngredients?.map((ing, i) => {
-                    // Logic for Stock Dots
-                    const pantryItem = pantry.find(p => p.name.toLowerCase() === ing.name.toLowerCase());
-                    let dotColor = 'bg-red-500'; // Default missing
-                    let tooltip = "Manquant du garde-manger";
+              {/* Action Buttons (External Links) */}
+              {currentRecipe && (('searchLinks' in currentRecipe && currentRecipe.searchLinks && currentRecipe.searchLinks.length > 0) || ('searchUrl' in currentRecipe && currentRecipe.searchUrl)) && (
+                <div className="px-4 pt-4 flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+                  {'searchLinks' in currentRecipe && currentRecipe.searchLinks?.map((link, i) => (
+                    <Button key={i} variant="outline" size="sm" className="h-8 rounded-full text-[10px] font-bold shrink-0 gap-1" asChild>
+                      <a href={link.url} target="_blank" rel="noopener noreferrer">
+                        <ExternalLink className="h-3 w-3" />
+                        {link.label}
+                      </a>
+                    </Button>
+                  ))}
+                  {'searchUrl' in currentRecipe && currentRecipe.searchUrl && (
+                    <Button variant="outline" size="sm" className="h-8 rounded-full text-[10px] font-bold shrink-0 gap-1" asChild>
+                      <a href={currentRecipe.searchUrl} target="_blank" rel="noopener noreferrer">
+                        <ExternalLink className="h-3 w-3" />
+                        Source
+                      </a>
+                    </Button>
+                  )}
+                </div>
+              )}
 
-                    if (pantryItem) {
-                      const status = getProductStatus(purchaseHistory[pantryItem.id]);
-                      if (status === 'green') {
-                        dotColor = 'bg-green-500';
-                        tooltip = "En stock (Achat récent)";
-                      } else {
-                        // Orange for 'orange', 'red' (overdue), or 'grey' (unknown) if it IS in the pantry list
-                        dotColor = 'bg-amber-500';
-                        tooltip = "En stock (Achat ancien - Vérifier)";
-                      }
-                    }
+              {/* Tab Navigation */}
+              <div className="px-4 py-4 flex gap-2 shrink-0">
+                <button
+                  onClick={() => setActiveDetailTab('ingredients')}
+                  className={cn(
+                    "flex-1 py-1.5 text-xs font-black uppercase tracking-widest rounded-full transition-all border-2",
+                    activeDetailTab === 'ingredients'
+                      ? "bg-primary border-primary text-white shadow-lg shadow-primary/20"
+                      : "border-zinc-100 dark:border-zinc-800 text-muted-foreground"
+                  )}
+                >
+                  Ingrédients
+                </button>
+                <button
+                  onClick={() => setActiveDetailTab('preparation')}
+                  className={cn(
+                    "flex-1 py-1.5 text-xs font-black uppercase tracking-widest rounded-full transition-all border-2",
+                    activeDetailTab === 'preparation'
+                      ? "bg-primary border-primary text-white shadow-lg shadow-primary/20"
+                      : "border-zinc-100 dark:border-zinc-800 text-muted-foreground"
+                  )}
+                >
+                  Préparation
+                </button>
+              </div>
 
-                    return (
-                      <li key={ing.name + i} className="flex items-center justify-between py-1 border-b border-dashed border-border/50 last:border-0">
-                        <div className="flex items-center gap-2">
-                          <div className={cn("w-2.5 h-2.5 rounded-full shrink-0", dotColor)} title={tooltip} />
-                          <span>{ing.name}</span>
-                        </div>
-                        <span className="text-muted-foreground font-medium">
-                          {calculateAdjustedQuantity(ing.quantity, basePortions, portions)} {ing.unit}
-                        </span>
-                      </li>
-                    );
-                  })}
-                </ul>
-                {preparationSteps.length > 0 && (
-                  <>
-                    <h4 className='font-semibold mt-4'>Préparation :</h4>
-                    <div className="text-sm text-muted-foreground whitespace-pre-wrap mt-2 space-y-3">
-                      {preparationSteps.map((step, index) => (
-                        <div key={index} className="flex items-start gap-3">
+              {/* Main Content Area */}
+              <ScrollArea className="flex-1 px-4 pb-6">
+                {activeDetailTab === 'ingredients' && (
+                  <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    {/* Portion Control */}
+                    <div className="flex items-center justify-between bg-zinc-50 dark:bg-zinc-900/50 p-3 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                      <div className="flex items-center gap-2">
+                        <Users className="h-4 w-4 text-primary" />
+                        <span className="text-sm font-bold">Ajuster portions</span>
+                      </div>
+                      <div className="flex items-center gap-1 bg-white dark:bg-zinc-900 rounded-full border border-zinc-200 dark:border-zinc-700 p-1">
+                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => setPortions((p: number) => Math.max(1, p - 1))}>
+                          <Minus className="h-3 w-3" />
+                        </Button>
+                        <span className="w-8 text-center text-sm font-black">{portions}</span>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => setPortions((p: number) => p + 1)}>
+                          <Plus className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      {currentIngredients?.map((ing, i) => {
+                        const pantryItem = pantry.find(p => p.name.toLowerCase() === ing.name.toLowerCase());
+                        let dotColor = 'bg-red-500';
+                        let tooltip = "Manquant du garde-manger";
+
+                        if (pantryItem) {
+                          const status = getProductStatus(purchaseHistory[pantryItem.id]);
+                          if (status === 'green') {
+                            dotColor = 'bg-green-500';
+                            tooltip = "En stock (Achat récent)";
+                          } else {
+                            dotColor = 'bg-amber-500';
+                            tooltip = "En stock (Achat ancien - Vérifier)";
+                          }
+                        }
+
+                        return (
+                          <div key={ing.name + i} className="group relative flex items-center justify-between p-3 bg-white dark:bg-zinc-900/50 rounded-xl border border-zinc-100 dark:border-zinc-800 hover:border-primary/20 transition-colors">
+                            <div className="flex items-center gap-3">
+                              <div className={cn("w-3 h-3 rounded-full shadow-inner shadow-black/20", dotColor)} title={tooltip} />
+                              <span className="font-semibold text-sm group-hover:text-primary transition-colors">{ing.name}</span>
+                            </div>
+                            <span className="bg-zinc-100 dark:bg-zinc-800 text-[10px] font-black px-2 py-1 rounded-lg">
+                              {calculateAdjustedQuantity(ing.quantity, basePortions, portions)} {ing.unit}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {activeDetailTab === 'preparation' && (
+                  <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    {preparationSteps.map((step, index) => (
+                      <div key={index}
+                        className={cn(
+                          "flex items-start gap-4 p-4 rounded-2xl border transition-all duration-300",
+                          checkedSteps.has(index)
+                            ? "bg-zinc-50 dark:bg-zinc-900/30 border-transparent opacity-60"
+                            : "bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 shadow-sm"
+                        )}
+                      >
+                        <div className="mt-1">
                           <Checkbox
                             id={`step-${index}`}
                             checked={checkedSteps.has(index)}
                             onCheckedChange={() => handleToggleStep(index)}
-                            className='mt-1'
+                            className="h-5 w-5 rounded-full border-2"
                           />
-                          <label
-                            htmlFor={`step-${index}`}
-                            className={cn("flex-1 cursor-pointer", checkedSteps.has(index) && "line-through text-muted-foreground/70")}
-                          >
-                            {step}
-                          </label>
                         </div>
-                      ))}
-                    </div>
-                  </>
+                        <label
+                          htmlFor={`step-${index}`}
+                          className={cn(
+                            "flex-1 text-sm leading-relaxed cursor-pointer font-medium",
+                            checkedSteps.has(index) ? "line-through text-muted-foreground italic" : "text-foreground"
+                          )}
+                        >
+                          {step}
+                        </label>
+                      </div>
+                    ))}
+                    {preparationSteps.length === 0 && (
+                      <div className="text-center py-12 text-muted-foreground italic">
+                        Aucune étape de préparation renseignée.
+                      </div>
+                    )}
+                  </div>
                 )}
               </ScrollArea>
-              <DialogFooter className="sm:justify-between w-full">
+
+              <DialogFooter className="sm:justify-between w-full shrink-0 px-4 py-4 border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 gap-4">
                 <div>
                   {viewingUserRecipe && (
                     <div className='flex items-center gap-1'>
                       <Button
                         variant="ghost"
                         size="icon"
+                        className="rounded-full hover:bg-white dark:hover:bg-zinc-800"
                         onClick={() => onShareUserRecipe(viewingUserRecipe)}
                         aria-label="Partager la recette"
                       >
@@ -333,6 +402,7 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
                       <Button
                         variant="ghost"
                         size="icon"
+                        className="rounded-full hover:bg-white dark:hover:bg-zinc-800"
                         onClick={() => {
                           onEditUserRecipe(viewingUserRecipe);
                         }}
@@ -343,6 +413,7 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
                       <Button
                         variant="ghost"
                         size="icon"
+                        className="rounded-full hover:bg-white dark:hover:bg-zinc-800"
                         onClick={() => {
                           onDeleteUserRecipe(viewingUserRecipe.id);
                           setViewingUserRecipe(null);
@@ -356,7 +427,8 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
                 </div>
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="default"
+                  className="rounded-full px-8 font-bold"
                   onClick={() => {
                     setViewingRecipe(null);
                     setViewingUserRecipe(null);
@@ -365,7 +437,7 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
                   Fermer
                 </Button>
               </DialogFooter>
-            </>
+            </div>
           )}
         </DialogContent>
       </Dialog>
@@ -421,7 +493,7 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
               type="text"
               inputMode="decimal"
               value={quantityInput}
-              onChange={e => {
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                 const val = e.target.value;
                 if (val === '' || /^[0-9]*\.?[0-9]*$/.test(val)) {
                   setQuantityInput(val);
@@ -447,7 +519,7 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
         basket={basket}
       />
 
-      <Dialog open={!!sharedBasketToMerge} onOpenChange={(open) => !open && setSharedBasketToMerge(null)}>
+      <Dialog open={!!sharedBasketToMerge} onOpenChange={(open: boolean) => !open && setSharedBasketToMerge(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Panier Partagé Reçu !</DialogTitle>
