@@ -17,7 +17,7 @@ import UserRecipeForm from './UserRecipeForm';
 import Image from 'next/image';
 import { Label } from './ui/label';
 import { Checkbox } from './ui/checkbox';
-import { cn } from '@/lib/utils';
+import { cn, getProductStatus } from '@/lib/utils';
 
 interface KitchenAssistantDialogsProps {
   isAddEditDialogOpen: boolean;
