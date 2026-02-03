@@ -18,6 +18,7 @@ import Image from 'next/image';
 import { Label } from './ui/label';
 import { Checkbox } from './ui/checkbox';
 import { cn, getProductStatus } from '@/lib/utils';
+import RecipeContent from './RecipeContent';
 
 interface KitchenAssistantDialogsProps {
   isAddEditDialogOpen: boolean;
@@ -118,8 +119,6 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
 
   const [quantityInput, setQuantityInput] = React.useState('1');
   const [portions, setPortions] = React.useState(viewingRecipe?.portions || viewingUserRecipe?.portions || 2);
-  const [checkedSteps, setCheckedSteps] = React.useState<Set<number>>(new Set());
-  const [activeDetailTab, setActiveDetailTab] = React.useState<'ingredients' | 'preparation'>('ingredients');
 
   React.useEffect(() => {
     if (isQuantityDialogOpen) {
@@ -129,8 +128,6 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
 
   React.useEffect(() => {
     setPortions(viewingRecipe?.portions || viewingUserRecipe?.portions || 2);
-    // Reset checked steps when a new recipe is viewed
-    setCheckedSteps(new Set());
   }, [viewingRecipe, viewingUserRecipe]);
 
 
@@ -148,22 +145,10 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
     return parseFloat(adjusted.toFixed(3));
   };
 
-  const handleToggleStep = (index: number) => {
-    setCheckedSteps((prev: Set<number>) => {
-      const newSet = new Set(prev);
-      if (newSet.has(index)) {
-        newSet.delete(index);
-      } else {
-        newSet.add(index);
-      }
-      return newSet;
-    });
-  };
 
   const currentRecipe = viewingRecipe || viewingUserRecipe;
   const currentIngredients = currentRecipe?.ingredients as RecipeIngredient[] | undefined;
   const basePortions = currentRecipe?.portions || 1;
-  const preparationSteps = currentRecipe?.preparation?.split('\n').filter(line => line.trim() !== '') || [];
 
   return (
     <>
@@ -267,124 +252,17 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
                 </div>
               )}
 
-              {/* Tab Navigation */}
-              <div className="px-4 py-4 flex gap-2 shrink-0">
-                <button
-                  onClick={() => setActiveDetailTab('ingredients')}
-                  className={cn(
-                    "flex-1 py-1.5 text-xs font-black uppercase tracking-widest rounded-full transition-all border-2",
-                    activeDetailTab === 'ingredients'
-                      ? "bg-primary border-primary text-white shadow-lg shadow-primary/20"
-                      : "border-zinc-100 dark:border-zinc-800 text-muted-foreground"
-                  )}
-                >
-                  Ingrédients
-                </button>
-                <button
-                  onClick={() => setActiveDetailTab('preparation')}
-                  className={cn(
-                    "flex-1 py-1.5 text-xs font-black uppercase tracking-widest rounded-full transition-all border-2",
-                    activeDetailTab === 'preparation'
-                      ? "bg-primary border-primary text-white shadow-lg shadow-primary/20"
-                      : "border-zinc-100 dark:border-zinc-800 text-muted-foreground"
-                  )}
-                >
-                  Préparation
-                </button>
+              {/* Unified Recipe Content */}
+              <div className="flex-1 min-h-0">
+                <RecipeContent
+                  ingredients={currentIngredients || []}
+                  preparation={currentRecipe.preparation || ''}
+                  basePortions={basePortions}
+                  initialPortions={portions}
+                  pantry={pantry}
+                  purchaseHistory={purchaseHistory}
+                />
               </div>
-
-              {/* Main Content Area */}
-              <ScrollArea className="flex-1 px-4 pb-6">
-                {activeDetailTab === 'ingredients' && (
-                  <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                    {/* Portion Control */}
-                    <div className="flex items-center justify-between bg-zinc-50 dark:bg-zinc-900/50 p-3 rounded-2xl border border-zinc-100 dark:border-zinc-800">
-                      <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4 text-primary" />
-                        <span className="text-sm font-bold">Ajuster portions</span>
-                      </div>
-                      <div className="flex items-center gap-1 bg-white dark:bg-zinc-900 rounded-full border border-zinc-200 dark:border-zinc-700 p-1">
-                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => setPortions((p: number) => Math.max(1, p - 1))}>
-                          <Minus className="h-3 w-3" />
-                        </Button>
-                        <span className="w-8 text-center text-sm font-black">{portions}</span>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => setPortions((p: number) => p + 1)}>
-                          <Plus className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </div>
-
-                    <div className="space-y-4">
-                      {currentIngredients?.map((ing, i) => {
-                        const pantryItem = pantry.find(p => p.name.toLowerCase() === ing.name.toLowerCase());
-                        let dotColor = 'bg-red-500';
-                        let tooltip = "Manquant du garde-manger";
-
-                        if (pantryItem) {
-                          const status = getProductStatus(purchaseHistory[pantryItem.id]);
-                          if (status === 'green') {
-                            dotColor = 'bg-green-500';
-                            tooltip = "En stock (Achat récent)";
-                          } else {
-                            dotColor = 'bg-amber-500';
-                            tooltip = "En stock (Achat ancien - Vérifier)";
-                          }
-                        }
-
-                        return (
-                          <div key={ing.name + i} className="group relative flex items-center justify-between p-3 bg-white dark:bg-zinc-900/50 rounded-xl border border-zinc-100 dark:border-zinc-800 hover:border-primary/20 transition-colors">
-                            <div className="flex items-center gap-3">
-                              <div className={cn("w-3 h-3 rounded-full shadow-inner shadow-black/20", dotColor)} title={tooltip} />
-                              <span className="font-semibold text-sm group-hover:text-primary transition-colors">{ing.name}</span>
-                            </div>
-                            <span className="bg-zinc-100 dark:bg-zinc-800 text-[10px] font-black px-2 py-1 rounded-lg">
-                              {calculateAdjustedQuantity(ing.quantity, basePortions, portions)} {ing.unit}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {activeDetailTab === 'preparation' && (
-                  <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                    {preparationSteps.map((step, index) => (
-                      <div key={index}
-                        className={cn(
-                          "flex items-start gap-4 p-4 rounded-2xl border transition-all duration-300",
-                          checkedSteps.has(index)
-                            ? "bg-zinc-50 dark:bg-zinc-900/30 border-transparent opacity-60"
-                            : "bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 shadow-sm"
-                        )}
-                      >
-                        <div className="mt-1">
-                          <Checkbox
-                            id={`step-${index}`}
-                            checked={checkedSteps.has(index)}
-                            onCheckedChange={() => handleToggleStep(index)}
-                            className="h-5 w-5 rounded-full border-2"
-                          />
-                        </div>
-                        <label
-                          htmlFor={`step-${index}`}
-                          className={cn(
-                            "flex-1 text-sm leading-relaxed cursor-pointer font-medium",
-                            checkedSteps.has(index) ? "line-through text-muted-foreground italic" : "text-foreground"
-                          )}
-                        >
-                          {step}
-                        </label>
-                      </div>
-                    ))}
-                    {preparationSteps.length === 0 && (
-                      <div className="text-center py-12 text-muted-foreground italic">
-                        Aucune étape de préparation renseignée.
-                      </div>
-                    )}
-                  </div>
-                )}
-              </ScrollArea>
 
               <DialogFooter className="sm:justify-between w-full shrink-0 px-4 py-4 border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 gap-4">
                 <div>
