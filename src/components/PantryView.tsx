@@ -208,7 +208,11 @@ export default function PantryView({
                               size="icon"
                               className='h-7 w-7 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors'
                               title="Supprimer"
-                              onClick={() => handleDeleteIngredient(item.id)}
+                              onClick={() => {
+                                if (window.confirm(`Êtes-vous sûr de vouloir supprimer "${item.name}" ?`)) {
+                                  handleDeleteIngredient(item.id);
+                                }
+                              }}
                             >
                               <Trash2 className="h-3.5 w-3.5" />
                             </Button>
