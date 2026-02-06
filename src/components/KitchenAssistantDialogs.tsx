@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import * as React from 'react';
@@ -66,6 +64,9 @@ interface KitchenAssistantDialogsProps {
   sharedBasketToMerge: BasketItem[] | null;
   setSharedBasketToMerge: (basket: BasketItem[] | null) => void;
   onMergeBasket: () => void;
+  sharedRecipeToView: UserRecipe | null;
+  setSharedRecipeToView: (recipe: UserRecipe | null) => void;
+  onSaveSharedRecipe: (recipeData: Omit<UserRecipe, 'id'> & { id?: string }) => void;
   isInApp?: boolean;
   pantry: Ingredient[];
   purchaseHistory: PurchaseHistory;
@@ -110,6 +111,9 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
     sharedBasketToMerge,
     setSharedBasketToMerge,
     onMergeBasket,
+    sharedRecipeToView,
+    setSharedRecipeToView,
+    onSaveSharedRecipe,
     isInApp,
     pantry,
     purchaseHistory,
@@ -178,7 +182,7 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
           {currentRecipe && (
             <div className="flex flex-col h-[85vh]">
               {/* Image Header / Title Section */}
-              <div className="relative h-64 shrink-0">
+              <div className="relative h-32 shrink-0">
                 {(currentRecipe as UserRecipe).photoDataUri ? (
                   <Image src={(currentRecipe as UserRecipe).photoDataUri!} alt={currentRecipe.title} layout="fill" objectFit="cover" className="brightness-90" />
                 ) : (
@@ -447,6 +451,57 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
               />
             )}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!sharedRecipeToView} onOpenChange={(open) => !open && setSharedRecipeToView(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Recette Partagée Reçue !</DialogTitle>
+            <DialogDescription>
+              Vous avez reçu une recette : "{sharedRecipeToView?.title}". Voulez-vous la sauvegarder dans vos recettes ?
+            </DialogDescription>
+          </DialogHeader>
+          {sharedRecipeToView && (
+            <div className="max-h-60 overflow-y-auto my-4 border rounded-md p-3 bg-muted/20">
+              <div className="space-y-2 text-sm">
+                <div>
+                  <strong>Catégorie:</strong> {sharedRecipeToView.category}
+                </div>
+                <div>
+                  <strong>Portions:</strong> {sharedRecipeToView.portions} personnes
+                </div>
+                <div>
+                  <strong>Temps de préparation:</strong> {sharedRecipeToView.preparationTime} min
+                </div>
+                {sharedRecipeToView.author && (
+                  <div>
+                    <strong>Auteur:</strong> {sharedRecipeToView.author}
+                  </div>
+                )}
+                <div>
+                  <strong>Ingrédients:</strong>
+                  <ul className="list-disc pl-5 mt-1">
+                    {sharedRecipeToView.ingredients.map((ing, idx) => (
+                      <li key={idx}>{ing.quantity} {ing.unit} de {ing.name}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSharedRecipeToView(null)}>Ignorer</Button>
+            <Button onClick={() => {
+              if (sharedRecipeToView) {
+                // Generate a new ID for the recipe
+                const recipeToSave = { ...sharedRecipeToView, id: undefined };
+                onSaveSharedRecipe(recipeToSave);
+                setSharedRecipeToView(null);
+                alert(`Recette "${sharedRecipeToView.title}" sauvegardée dans vos recettes !`);
+              }
+            }}>Sauvegarder</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>

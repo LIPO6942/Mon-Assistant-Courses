@@ -8,7 +8,7 @@ import type { SuggestRecipeOutput } from '@/ai/types';
 
 import AppHeader from './AppHeader';
 import AppNav from './AppNav';
-import { decodeBasket } from '@/lib/url-sharing';
+import { decodeBasket, encodeRecipe, decodeRecipe } from '@/lib/url-sharing';
 import KitchenAssistantDialogs from './KitchenAssistantDialogs';
 import PantryView from './PantryView';
 import RecipesView from './RecipesView';
@@ -64,6 +64,7 @@ export default function KitchenAssistantPage() {
   // Sharing State
   const [isShareBasketDialogOpen, setShareBasketDialogOpen] = useState(false);
   const [sharedBasketToMerge, setSharedBasketToMerge] = useState<BasketItem[] | null>(null);
+  const [sharedRecipeToView, setSharedRecipeToView] = useState<UserRecipe | null>(null);
 
   // Price Evolution State
   const [viewingCategoryTrends, setViewingCategoryTrends] = useState<CategoryDef | null>(null);
@@ -203,7 +204,21 @@ export default function KitchenAssistantPage() {
         }
       }
 
-      // 2. Detect Recipe Share
+      // 2. Detect Recipe Share (Deep Link Data)
+      const recipeData = params.get('recipe');
+      if (recipeData) {
+        const decodedRecipe = decodeRecipe(recipeData);
+        if (decodedRecipe) {
+          setSharedRecipeToView(decodedRecipe);
+
+          // Clean URL only if NOT in an In-App browser
+          if (!isInAppBrowser()) {
+            window.history.replaceState({}, '', window.location.pathname);
+          }
+        }
+      }
+
+      // 3. Detect Recipe Share (Internal ID)
       const sharedRecipeId = params.get('recipeId');
       if (sharedRecipeId && isDataLoaded) {
         // Try to find in discoverable first
@@ -751,19 +766,21 @@ export default function KitchenAssistantPage() {
   const handleShareUserRecipe = async (recipe: UserRecipe) => {
     const title = `Recette: ${recipe.title}`;
 
-    // Generate the App Link
-    const appLink = `${window.location.origin}${window.location.pathname}?recipeId=${recipe.id}`;
+    // Generate shareable URL with recipe data (Deep Linking)
+    const encodedRecipe = encodeRecipe(recipe);
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin + window.location.pathname : '';
+    const shareUrl = `${baseUrl}?recipe=${encodedRecipe}`;
 
     const ingredientsText = recipe.ingredients.map(ing => `- ${ing.quantity} ${ing.unit} ${ing.name}`).join('\n');
     const preparationText = recipe.preparation;
-    const fullText = `${title}\n\nAuteur: ${recipe.author || 'Non spécifié'}\nPour ${recipe.portions} personnes\nTemps: ${recipe.preparationTime} min\n\n---\n\n**Ingrédients:**\n${ingredientsText}\n\n---\n\n**Préparation:**\n${preparationText}\n\nVoir la recette dans l'app : ${appLink}`;
+    const fullText = `${title}\n\nAuteur: ${recipe.author || 'Non spécifié'}\nPour ${recipe.portions} personnes\nTemps: ${recipe.preparationTime} min\n\n---\n\n**Ingrédients:**\n${ingredientsText}\n\n---\n\n**Préparation:**\n${preparationText}\n\n---\n\nOuvrir dans l'app: ${shareUrl}`;
 
     if (navigator.share) {
       try {
         await navigator.share({
           title: title,
           text: fullText,
-          url: appLink,
+          url: shareUrl,
         });
       } catch (error) {
         console.error('Erreur lors du partage :', error);
@@ -771,7 +788,7 @@ export default function KitchenAssistantPage() {
     } else {
       try {
         await navigator.clipboard.writeText(fullText);
-        alert('Recette copiée dans le presse-papiers !');
+        alert('Recette et lien copiés dans le presse-papiers !');
       } catch (error) {
         console.error('Erreur de copie:', error);
         alert('Impossible de copier la recette.');
@@ -916,6 +933,9 @@ export default function KitchenAssistantPage() {
         onMergeBasket={handleMergeBasket}
         pantry={pantry}
         purchaseHistory={purchaseHistory}
+        sharedRecipeToView={sharedRecipeToView}
+        setSharedRecipeToView={setSharedRecipeToView}
+        onSaveSharedRecipe={handleSaveUserRecipe}
       />
 
       <CategoryPriceEvolutionDialog
@@ -942,8 +962,6 @@ export default function KitchenAssistantPage() {
             <div className="space-y-4 py-2">
               {missingIngredients.map((ing, idx) => {
                 const isCreatingNew = ing.category.startsWith("NEW:");
-                const currentCategory = isCreatingNew ? "" : ing.category;
-
                 return (
                   <div key={idx} className="bg-zinc-50 dark:bg-zinc-900/50 p-3 rounded-xl border border-zinc-100 dark:border-zinc-800 space-y-3">
                     <div className="flex items-center justify-between">
