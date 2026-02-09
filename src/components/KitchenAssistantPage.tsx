@@ -766,8 +766,12 @@ export default function KitchenAssistantPage() {
   const handleShareUserRecipe = async (recipe: UserRecipe) => {
     const title = `Recette: ${recipe.title}`;
 
+    // Create a copy of the recipe WITHOUT the photo to keep the URL short
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { photoDataUri, ...recipeWithoutPhoto } = recipe;
+
     // Generate shareable URL with recipe data (Deep Linking)
-    const encodedRecipe = encodeRecipe(recipe);
+    const encodedRecipe = encodeRecipe(recipeWithoutPhoto as UserRecipe);
     const baseUrl = typeof window !== 'undefined' ? window.location.origin + window.location.pathname : '';
     const shareUrl = `${baseUrl}?recipe=${encodedRecipe}`;
 
@@ -775,15 +779,18 @@ export default function KitchenAssistantPage() {
     const preparationText = recipe.preparation;
     const fullText = `${title}\n\nAuteur: ${recipe.author || 'Non spécifié'}\nPour ${recipe.portions} personnes\nTemps: ${recipe.preparationTime} min\n\n---\n\n**Ingrédients:**\n${ingredientsText}\n\n---\n\n**Préparation:**\n${preparationText}\n\n---\n\nOuvrir dans l'app: ${shareUrl}`;
 
-    if (navigator.share) {
+    const shareData = {
+      title: title,
+      text: fullText,
+      url: shareUrl,
+    };
+
+    if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
       try {
-        await navigator.share({
-          title: title,
-          text: fullText,
-          url: shareUrl,
-        });
+        await navigator.share(shareData);
       } catch (error) {
         console.error('Erreur lors du partage :', error);
+        // Fallback to clipboard if share fails (e.g. user cancelled)
       }
     } else {
       try {
