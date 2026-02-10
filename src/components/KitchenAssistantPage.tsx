@@ -533,29 +533,39 @@ export default function KitchenAssistantPage() {
     if (!sharedBasketToMerge) return;
     const items = sharedBasketToMerge;
 
-    // 1. Merge into basket
+    // 1. Prepare items with correct IDs (reuse pantry ID if exists)
+    const itemsWithIds = items.map(item => {
+      const existingInPantry = pantry.find(p => p.name.toLowerCase() === item.name.toLowerCase());
+      return {
+        ...item,
+        id: existingInPantry ? existingInPantry.id : self.crypto.randomUUID(),
+        purchased: false
+      };
+    });
+
+    // 2. Merge into basket
     setBasket(prev => {
       const newBasket = [...prev];
-      items.forEach(newItem => {
-        const existing = newBasket.find(i => i.name === newItem.name);
-        if (existing) {
-          existing.quantity += newItem.quantity;
+      itemsWithIds.forEach(newItem => {
+        const existingInBasket = newBasket.find(i => i.id === newItem.id);
+        if (existingInBasket) {
+          existingInBasket.quantity += newItem.quantity;
         } else {
-          newBasket.push({ ...newItem, id: self.crypto.randomUUID(), purchased: false });
+          newBasket.push(newItem);
         }
       });
       return newBasket;
     });
 
-    // 2. Check for missing ingredients in pantry and ask to add
-    const missingIngredients = items.filter(item =>
-      !pantry.some(p => p.name.toLowerCase() === item.name.toLowerCase())
+    // 3. Check for missing ingredients in pantry and ask to add
+    const missingIngredients = itemsWithIds.filter(item =>
+      !pantry.some(p => p.id === item.id)
     );
 
     if (missingIngredients.length > 0) {
       if (confirm(`Vous avez reçu ${missingIngredients.length} produits qui ne sont pas dans votre garde-manger. Voulez-vous les ajouter ?`)) {
         const newIngredients = missingIngredients.map(item => ({
-          id: self.crypto.randomUUID(),
+          id: item.id,
           name: item.name,
           category: item.category || 'Autre',
           unit: item.unit || 'pièce',
