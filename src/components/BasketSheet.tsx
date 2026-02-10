@@ -67,7 +67,7 @@ export default function BasketSheet({
                       htmlFor={item.id}
                       className={cn("text-sm font-semibold text-foreground cursor-pointer flex items-center gap-2 min-w-0", item.purchased && 'line-through text-muted-foreground')}
                     >
-                      <span className="truncate">{item.name}</span>
+                      <span>{item.name}</span>
                       {(() => {
                         const status = getProductStatus(purchaseHistory[item.id]);
                         if (!status) return null;
