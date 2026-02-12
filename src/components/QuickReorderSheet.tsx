@@ -30,18 +30,18 @@ export default function QuickReorderSheet({ purchaseHistory, pantry, onAddToBask
         .sort((a, b) => b.latestDate - a.latestDate); // Sort by most recent first for re-order
 
     return (
-        <SheetContent side="right" className="flex flex-col w-[90%] sm:max-w-md">
-            <SheetHeader>
+        <SheetContent side="right" className="flex flex-col w-[95%] sm:max-w-md px-4 sm:px-6">
+            <SheetHeader className="pr-8 sm:pr-0">
                 <div className="flex items-center gap-2">
                     <History className="h-5 w-5 text-primary" />
                     <SheetTitle>Re-commande Rapide</SheetTitle>
                 </div>
-                <SheetDescription>
+                <SheetDescription className="text-xs sm:text-sm">
                     Retrouvez vos articles récemment achetés et rajoutez-les au panier en un clic.
                 </SheetDescription>
             </SheetHeader>
 
-            <ScrollArea className="flex-grow my-4 pr-4">
+            <ScrollArea className="flex-grow my-4 -mr-2 pr-2">
                 {items.length > 0 ? (
                     <ul className="space-y-4">
                         {items.map(({ id, records, ingredient }) => {
