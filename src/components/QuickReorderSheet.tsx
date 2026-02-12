@@ -23,7 +23,7 @@ export default function QuickReorderSheet({ purchaseHistory, pantry, onAddToBask
         .filter(([id]) => pantry.some(ing => ing.id === id))
         .map(([id, records]) => ({
             id,
-            record: records[records.length - 1], // Most recent record for display
+            records,
             latestDate: new Date(records[records.length - 1].date).getTime(),
             ingredient: pantry.find(ing => ing.id === id)
         }))

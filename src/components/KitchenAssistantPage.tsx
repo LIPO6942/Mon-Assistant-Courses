@@ -493,7 +493,8 @@ export default function KitchenAssistantPage() {
         newHistory[item.id].push({
           date: now,
           quantity: item.quantity,
-          unit: item.unit
+          unit: item.unit,
+          price: item.price
         });
 
         // Add to Ch3andek if not present

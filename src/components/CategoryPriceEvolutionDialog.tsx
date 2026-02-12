@@ -39,8 +39,8 @@ export default function CategoryPriceEvolutionDialog({
                     </DialogTitle>
                 </DialogHeader>
 
-                <div className="flex-1 min-h-0 overflow-hidden">
-                    <ScrollArea className="h-full">
+                <div className="flex-grow overflow-hidden">
+                    <ScrollArea className="h-[calc(85vh-80px)]">
                         <div className="p-6 pt-0">
                             {relevantIngredients.length === 0 ? (
                                 <div className="text-center py-10 text-muted-foreground">
