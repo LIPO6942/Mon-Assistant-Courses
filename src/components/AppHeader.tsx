@@ -17,7 +17,7 @@ interface AppHeaderProps {
   basketTotal: number;
   updateBasketQuantity: (id: string, newQuantity: number) => void;
   clearBasket: () => void;
-  handleConfirmPurchase: () => void;
+  handleConfirmPurchase: (store?: string) => void;
   handleShareBasket: () => void;
   savedRecipes: Recipe[];
   onViewRecipe: (recipe: (Omit<Recipe, 'id'> & { id?: string })) => void;
@@ -55,6 +55,28 @@ export default function AppHeader({
         </div>
 
         <div className="flex items-center gap-2">
+          {/* User avatar & Sign out button - left of fridge */}
+          {user && (
+            <Button
+              variant="outline"
+              size="icon"
+              className="relative rounded-full"
+              onClick={signOut}
+              title={`Déconnecter ${user.displayName || user.email || ''}`}
+            >
+              {user.photoURL ? (
+                <img
+                  src={user.photoURL}
+                  alt="Avatar"
+                  className="w-full h-full rounded-full object-cover"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <LogOut className="h-4 w-4" />
+              )}
+            </Button>
+          )}
+
           <Sheet open={isScannerOpen} onOpenChange={setIsScannerOpen}>
             <SheetTrigger asChild>
               <Button variant="outline" size="icon" className="relative rounded-full">
@@ -97,28 +119,6 @@ export default function AppHeader({
               purchaseHistory={purchaseHistory}
             />
           </Sheet>
-
-          {/* User avatar & Sign out button */}
-          {user && (
-            <Button
-              variant="outline"
-              size="icon"
-              className="relative rounded-full"
-              onClick={signOut}
-              title={`Déconnecter ${user.displayName || user.email || ''}`}
-            >
-              {user.photoURL ? (
-                <img
-                  src={user.photoURL}
-                  alt="Avatar"
-                  className="w-full h-full rounded-full object-cover"
-                  referrerPolicy="no-referrer"
-                />
-              ) : (
-                <LogOut className="h-4 w-4" />
-              )}
-            </Button>
-          )}
         </div>
       </div>
     </header>

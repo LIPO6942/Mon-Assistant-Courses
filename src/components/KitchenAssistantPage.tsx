@@ -504,7 +504,7 @@ export default function KitchenAssistantPage() {
     setTotalSpent(0);
   };
 
-  const handleConfirmPurchase = () => {
+  const handleConfirmPurchase = (store?: string) => {
     const costOfPurchasedItems = basket.reduce((total, item) => item.purchased ? total + item.price * item.quantity : total, 0);
 
     // Update purchase history
@@ -522,7 +522,8 @@ export default function KitchenAssistantPage() {
           date: now,
           quantity: item.quantity,
           unit: item.unit,
-          price: item.price
+          price: item.price,
+          ...(store ? { store } : {}),  // enregistre le magasin si fourni
         });
 
         // Add to Ch3andek if not present

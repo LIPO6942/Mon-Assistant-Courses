@@ -74,6 +74,7 @@ export interface PurchaseRecord {
   quantity: number;
   unit: string;
   price?: number;
+  store?: string; // magasin où l'achat a été effectué (optionnel)
 }
 
 export type PurchaseHistory = Record<string, PurchaseRecord[]>;
