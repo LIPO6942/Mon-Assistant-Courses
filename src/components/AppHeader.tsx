@@ -1,7 +1,7 @@
 
 'use client';
 
-import { ChefHat, ShoppingBasket, BookHeart, Refrigerator } from 'lucide-react';
+import { ChefHat, ShoppingBasket, BookHeart, Refrigerator, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetTrigger } from '@/components/ui/sheet';
@@ -10,6 +10,7 @@ import SavedRecipesSheet from './SavedRecipesSheet';
 import type { BasketItem, Recipe, PurchaseHistory } from '@/lib/types';
 import FridgeScannerSheet from './FridgeScannerSheet';
 import { useState } from 'react';
+import { useAuth } from '@/context/AuthContext';
 
 interface AppHeaderProps {
   basket: BasketItem[];
@@ -43,6 +44,7 @@ export default function AppHeader({
   purchaseHistory,
 }: AppHeaderProps) {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const { user, signOut } = useAuth();
 
   return (
     <header className="bg-card shadow-md sticky top-0 z-20">
@@ -95,8 +97,31 @@ export default function AppHeader({
               purchaseHistory={purchaseHistory}
             />
           </Sheet>
+
+          {/* User avatar & Sign out button */}
+          {user && (
+            <Button
+              variant="outline"
+              size="icon"
+              className="relative rounded-full"
+              onClick={signOut}
+              title={`Déconnecter ${user.displayName || user.email || ''}`}
+            >
+              {user.photoURL ? (
+                <img
+                  src={user.photoURL}
+                  alt="Avatar"
+                  className="w-full h-full rounded-full object-cover"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <LogOut className="h-4 w-4" />
+              )}
+            </Button>
+          )}
         </div>
       </div>
     </header>
   );
 }
+

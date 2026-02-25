@@ -1,4 +1,6 @@
-oui# Ignorer les dossiers de cache et les dépendances volumineuses
+# Ignorer les dossiers de cache et les dépendances volumineuses
 .firebase/
 node_modules/
 .next/cache/
+.env
+.env.local

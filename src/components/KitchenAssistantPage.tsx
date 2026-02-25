@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { initialCategories, predefinedIngredients, discoverableRecipes, initialHealthConditions } from '@/lib/data';
 import type { Ingredient, Recipe, BasketItem, CategoryDef, RecipeIngredient, HealthConditionCategory, HealthCondition, UserRecipe, PurchaseHistory } from '@/lib/types';
 import { suggestRecipes } from '@/ai/flows/suggest-recipe-flow';
@@ -15,6 +15,7 @@ import RecipesView from './RecipesView';
 import ChandyekView from './ChandyekView';
 import NutritionalGuideView from './NutritionalGuideView';
 import CategoryPriceEvolutionDialog from './CategoryPriceEvolutionDialog';
+import SettingsPage from './SettingsPage';
 import { db } from '@/lib/idb';
 import { isInAppBrowser, getProductStatus } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -23,6 +24,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Plus } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import {
+  loadUserData,
+  savePantry,
+  saveBasket,
+  saveCategories,
+  saveSavedRecipes,
+  saveUserRecipes,
+  saveBudget,
+  saveHealthConditions,
+  savePurchaseHistory,
+} from '@/lib/firestore-sync';
 
 
 export default function KitchenAssistantPage() {
@@ -39,7 +52,7 @@ export default function KitchenAssistantPage() {
   const [isDataLoaded, setIsDataLoaded] = useState(false);
 
   // Ephemeral state
-  const [activeTab, setActiveTab] = useState<'pantry' | 'recipes' | 'chandyek' | 'guide'>('pantry');
+  const [activeTab, setActiveTab] = useState<'pantry' | 'recipes' | 'chandyek' | 'guide' | 'settings'>('pantry');
   const [searchQuery, setSearchQuery] = useState('');
 
   // Chandyek (AI) State
@@ -110,10 +123,21 @@ export default function KitchenAssistantPage() {
   }, []);
 
 
-  // --- INDEXEDDB PERSISTENCE ---
+  // --- Get current user ---
+  const { user } = useAuth();
+  const userUid = user?.uid;
+
+  // --- DATA PERSISTENCE (Firestore + IndexedDB) ---
   useEffect(() => {
     async function loadData() {
       try {
+        // 1. Try Firestore first if user is authenticated
+        let cloudData: any = null;
+        if (userUid) {
+          cloudData = await loadUserData(userUid);
+        }
+
+        // 2. Fallback to IndexedDB
         const [
           pantryData,
           basketData,
@@ -136,25 +160,28 @@ export default function KitchenAssistantPage() {
           db.get<PurchaseHistory>('purchaseHistory'),
         ]);
 
-        setPantry(pantryData ?? predefinedIngredients);
-        setBasket(basketData ?? []);
-        setCategories(categoriesData ?? initialCategories);
-        setSavedRecipes(savedRecipesData ?? []);
-        setUserRecipes(userRecipesData ?? []);
-        setInitialBudget(budgetData ?? 200);
-        setTotalSpent(totalSpentData ?? 0);
-        setHealthConditions(healthConditionsData ?? initialHealthConditions);
+        // Cloud data has priority over local IndexedDB data
+        setPantry(cloudData?.pantry ?? pantryData ?? predefinedIngredients);
+        setBasket(cloudData?.basket ?? basketData ?? []);
+        setCategories(cloudData?.categories ?? categoriesData ?? initialCategories);
+        setSavedRecipes(cloudData?.savedRecipes ?? savedRecipesData ?? []);
+        setUserRecipes(cloudData?.userRecipes ?? userRecipesData ?? []);
+        setInitialBudget(cloudData?.initialBudget ?? budgetData ?? 200);
+        setTotalSpent(cloudData?.totalSpent ?? totalSpentData ?? 0);
+        setHealthConditions(cloudData?.healthConditions ?? healthConditionsData ?? initialHealthConditions);
+
         // Migrate purchase history if needed
+        const rawHistory = cloudData?.purchaseHistory ?? purchaseHistoryData;
         const migratedHistory: PurchaseHistory = {};
-        if (purchaseHistoryData) {
-          Object.entries(purchaseHistoryData).forEach(([id, data]) => {
-            migratedHistory[id] = Array.isArray(data) ? data : [data];
+        if (rawHistory) {
+          Object.entries(rawHistory).forEach(([id, data]) => {
+            migratedHistory[id] = Array.isArray(data) ? data : [data as any];
           });
         }
         setPurchaseHistory(migratedHistory);
 
       } catch (error) {
-        console.error("Error loading data from IndexedDB", error);
+        console.error("Error loading data", error);
         // Fallback to initial data if loading fails
         setPantry(predefinedIngredients);
         setBasket([]);
@@ -170,22 +197,23 @@ export default function KitchenAssistantPage() {
       }
     }
     loadData();
-  }, []);
+  }, [userUid]);
 
   // New Pantry Addition Logic
   const [confirmPantryAddOpen, setConfirmPantryAddOpen] = useState(false);
   const [missingIngredients, setMissingIngredients] = useState<Omit<Ingredient, 'id'>[]>([]);
   const [pendingRecipeSave, setPendingRecipeSave] = useState<{ recipe: UserRecipe, isNew: boolean } | null>(null);
 
-  useEffect(() => { if (isDataLoaded) { try { db.set('pantry', pantry); } catch (e) { console.error(e); alert("Le stockage local est plein. Impossible de sauvegarder les modifications du garde-manger.") } } }, [pantry, isDataLoaded]);
-  useEffect(() => { if (isDataLoaded) { try { db.set('basket', basket); } catch (e) { console.error(e); alert("Le stockage local est plein. Impossible de sauvegarder les modifications du panier.") } } }, [basket, isDataLoaded]);
-  useEffect(() => { if (isDataLoaded) { try { db.set('categories', categories); } catch (e) { console.error(e); alert("Le stockage local est plein. Impossible de sauvegarder les modifications des catégories.") } } }, [categories, isDataLoaded]);
-  useEffect(() => { if (isDataLoaded) { try { db.set('savedRecipes', savedRecipes); } catch (e) { console.error(e); alert("Le stockage local est plein. Impossible de sauvegarder les recettes.") } } }, [savedRecipes, isDataLoaded]);
-  useEffect(() => { if (isDataLoaded) { try { db.set('userRecipes', userRecipes); } catch (e) { console.error(e); alert("Le stockage local est plein. Impossible de sauvegarder vos recettes personnelles.") } } }, [userRecipes, isDataLoaded]);
-  useEffect(() => { if (isDataLoaded) { try { db.set('purchaseHistory', purchaseHistory); } catch (e) { console.error(e); alert("Le stockage local est plein. Impossible de sauvegarder l'historique des achats.") } } }, [purchaseHistory, isDataLoaded]);
-  useEffect(() => { if (isDataLoaded) { try { db.set('budget', initialBudget); } catch (e) { console.error(e); alert("Le stockage local est plein. Impossible de sauvegarder le budget.") } } }, [initialBudget, isDataLoaded]);
-  useEffect(() => { if (isDataLoaded) { try { db.set('totalSpent', totalSpent); } catch (e) { console.error(e); alert("Le stockage local est plein. Impossible de sauvegarder le total dépensé.") } } }, [totalSpent, isDataLoaded]);
-  useEffect(() => { if (isDataLoaded) { try { db.set('healthConditions', healthConditions); } catch (e) { console.error(e); alert("Le stockage local est plein. Impossible de sauvegarder les conditions de santé.") } } }, [healthConditions, isDataLoaded]);
+  // --- SAVE TO INDEXEDDB + FIRESTORE ---
+  useEffect(() => { if (isDataLoaded) { try { db.set('pantry', pantry); } catch (e) { console.error(e); } if (userUid) savePantry(userUid, pantry); } }, [pantry, isDataLoaded, userUid]);
+  useEffect(() => { if (isDataLoaded) { try { db.set('basket', basket); } catch (e) { console.error(e); } if (userUid) saveBasket(userUid, basket); } }, [basket, isDataLoaded, userUid]);
+  useEffect(() => { if (isDataLoaded) { try { db.set('categories', categories); } catch (e) { console.error(e); } if (userUid) saveCategories(userUid, categories); } }, [categories, isDataLoaded, userUid]);
+  useEffect(() => { if (isDataLoaded) { try { db.set('savedRecipes', savedRecipes); } catch (e) { console.error(e); } if (userUid) saveSavedRecipes(userUid, savedRecipes); } }, [savedRecipes, isDataLoaded, userUid]);
+  useEffect(() => { if (isDataLoaded) { try { db.set('userRecipes', userRecipes); } catch (e) { console.error(e); } if (userUid) saveUserRecipes(userUid, userRecipes); } }, [userRecipes, isDataLoaded, userUid]);
+  useEffect(() => { if (isDataLoaded) { try { db.set('purchaseHistory', purchaseHistory); } catch (e) { console.error(e); } if (userUid) savePurchaseHistory(userUid, purchaseHistory); } }, [purchaseHistory, isDataLoaded, userUid]);
+  useEffect(() => { if (isDataLoaded) { try { db.set('budget', initialBudget); } catch (e) { console.error(e); } if (userUid) saveBudget(userUid, initialBudget, totalSpent); } }, [initialBudget, isDataLoaded, userUid]);
+  useEffect(() => { if (isDataLoaded) { try { db.set('totalSpent', totalSpent); } catch (e) { console.error(e); } if (userUid) saveBudget(userUid, initialBudget, totalSpent); } }, [totalSpent, isDataLoaded, userUid]);
+  useEffect(() => { if (isDataLoaded) { try { db.set('healthConditions', healthConditions); } catch (e) { console.error(e); } if (userUid) saveHealthConditions(userUid, healthConditions); } }, [healthConditions, isDataLoaded, userUid]);
 
   // --- URL SHARING DETECTION ---
   useEffect(() => {
@@ -907,6 +935,9 @@ export default function KitchenAssistantPage() {
               healthConditions={healthConditions}
               openHealthConditionManager={() => setHealthConditionManagerOpen(true)}
             />
+          )}
+          {activeTab === 'settings' && (
+            <SettingsPage />
           )}
         </div>
       </main>
