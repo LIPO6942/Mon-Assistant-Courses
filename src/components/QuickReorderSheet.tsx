@@ -95,9 +95,16 @@ export default function QuickReorderSheet({ purchaseHistory, pantry, onAddToBask
                                                     <div className="space-y-2">
                                                         {sortedRecords.slice(0, 5).map((record, idx) => (
                                                             <div key={idx} className="flex items-center justify-between text-sm p-2 rounded-xl bg-background/40 border border-border/10">
-                                                                <span className="font-medium text-muted-foreground">
-                                                                    {new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(record.date))}
-                                                                </span>
+                                                                <div className="flex flex-col">
+                                                                    <span className="font-medium text-muted-foreground">
+                                                                        {new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(record.date))}
+                                                                    </span>
+                                                                    {record.store && (
+                                                                        <span className="text-[10px] text-primary/60 font-medium italic -mt-0.5">
+                                                                            {record.store}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
                                                                 <span className="font-mono font-bold text-primary">
                                                                     {record.quantity} {record.unit}
                                                                 </span>
