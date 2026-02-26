@@ -8,6 +8,7 @@ import { History, Plus, Trash2 } from 'lucide-react';
 import type { PurchaseHistory, Ingredient } from '@/lib/types';
 import { cn, getProductStatus } from '@/lib/utils';
 import { useState } from 'react';
+import { StoreIcon } from '@/components/StoreIcon';
 
 interface QuickReorderSheetProps {
     purchaseHistory: PurchaseHistory;
@@ -100,7 +101,8 @@ export default function QuickReorderSheet({ purchaseHistory, pantry, onAddToBask
                                                                         {new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(record.date))}
                                                                     </span>
                                                                     {record.store && (
-                                                                        <span className="text-[10px] text-primary/60 font-medium italic -mt-0.5">
+                                                                        <span className="flex items-center gap-1 text-[10px] text-primary/60 font-medium italic -mt-0.5">
+                                                                            <StoreIcon storeName={record.store} size="xs" />
                                                                             {record.store}
                                                                         </span>
                                                                     )}

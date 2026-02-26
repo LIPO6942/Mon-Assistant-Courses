@@ -6,6 +6,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
 import type { BasketItem, PurchaseHistory } from '@/lib/types';
 import { Minus, Plus, Trash2, Share2, History, Store, CheckCircle2 } from 'lucide-react';
+import { STORES } from '@/lib/stores';
+import { StoreOption } from '@/components/StoreIcon';
 import { Checkbox } from './ui/checkbox';
 import { cn, getProductStatus } from '@/lib/utils';
 import {
@@ -24,7 +26,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-const STORES = ['Carrefour', 'Magasin Général', 'Aziza', 'Monoprix'];
+
 
 interface BasketSheetProps {
   basket: BasketItem[];
@@ -188,7 +190,9 @@ export default function BasketSheet({
             </SelectTrigger>
             <SelectContent>
               {STORES.map(store => (
-                <SelectItem key={store} value={store}>{store}</SelectItem>
+                <SelectItem key={store.name} value={store.name}>
+                  <StoreOption storeName={store.name} />
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
