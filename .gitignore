@@ -2,5 +2,8 @@
 .firebase/
 node_modules/
 .next/cache/
+
+# Variables d'environnement - NE JAMAIS commiter ces fichiers !
 .env
-.env.local
+.env.*
+!.env.example
