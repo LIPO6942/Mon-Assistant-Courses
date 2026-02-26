@@ -1,6 +1,6 @@
 
 
-export const units = ['pièce', 'kg', 'g', 'L', 'ml', 'boîte', 'paquet', 'Sachet', 'cuillère à soupe', 'cuillère à café'] as const;
+export const units = ['pièce', 'kg', 'g', 'L', 'ml', 'boîte', 'paquet', 'Sachet', 'Bouteille'] as const;
 
 export const recipeCategories = ['Entrée', 'Plat', 'Dessert', 'Boisson', 'Sauce', 'Accompagnement', 'Autre'] as const;
 export type RecipeCategory = typeof recipeCategories[number];

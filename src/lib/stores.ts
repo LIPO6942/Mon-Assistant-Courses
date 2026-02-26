@@ -31,6 +31,26 @@ export const STORES: StoreDef[] = [
         logo: '/stores/monoprix.png',
         color: '#8B1A1A',
     },
+    {
+        name: 'Ben Yaghlane',
+        // logo: '/stores/ben-yaghlane.png',
+        color: '#2E7D32',
+    },
+    {
+        name: 'BWAI',
+        // logo: '/stores/bwai.png',
+        color: '#1565C0',
+    },
+    {
+        name: 'D.Clean',
+        // logo: '/stores/d-clean.png',
+        color: '#6A1B9A',
+    },
+    {
+        name: 'Marché',
+        // logo: '/stores/marche.png',
+        color: '#E65100',
+    },
 ];
 
 /** Retrouve la définition d'un magasin par son nom */
