@@ -447,6 +447,19 @@ export default function KitchenAssistantPage() {
     setIsCategoryDialogOpen(true);
   };
 
+  const handleMoveCategory = (id: string, direction: 'up' | 'down') => {
+    setCategories(prev => {
+      const idx = prev.findIndex(c => c.id === id);
+      if (idx === -1) return prev;
+      if (direction === 'up' && idx === 0) return prev;
+      if (direction === 'down' && idx === prev.length - 1) return prev;
+      const newArr = [...prev];
+      const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+      [newArr[idx], newArr[swapIdx]] = [newArr[swapIdx], newArr[idx]];
+      return newArr;
+    });
+  };
+
   const handleUpdatePrices = (updates: { id: string; price: number }[]) => {
     setPantry(prev => prev.map(ing => {
       const update = updates.find(u => u.id === ing.id);
@@ -906,6 +919,7 @@ export default function KitchenAssistantPage() {
               onUpdatePrices={handleUpdatePrices}
               onAddIngredients={handleAddIngredients}
               onViewCategoryTrends={setViewingCategoryTrends}
+              onMoveCategory={handleMoveCategory}
             />
           )}
           {activeTab === 'recipes' && (
