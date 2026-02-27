@@ -1,6 +1,6 @@
 
 
-export const units = ['pièce', 'kg', 'g', 'L', 'ml', 'boîte', 'paquet', 'botte', 'cuillère à soupe', 'cuillère à café'] as const;
+export const units = ['pièce', 'kg', 'g', 'L', 'ml', 'boîte', 'paquet', 'botte', 'cuillère à soupe', 'cuillère à café', 'Sachet', 'Bouteille'] as const;
 
 export const recipeCategories = ['Entrée', 'Plat', 'Dessert', 'Boisson', 'Sauce', 'Accompagnement', 'Autre'] as const;
 export type RecipeCategory = typeof recipeCategories[number];
@@ -74,6 +74,7 @@ export interface PurchaseRecord {
   quantity: number;
   unit: string;
   price?: number;
+  store?: string; // magasin où l'achat a été effectué (optionnel)
 }
 
 export type PurchaseHistory = Record<string, PurchaseRecord[]>;

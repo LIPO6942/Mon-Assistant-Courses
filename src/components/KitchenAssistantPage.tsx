@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { initialCategories, predefinedIngredients, discoverableRecipes, initialHealthConditions } from '@/lib/data';
 import type { Ingredient, Recipe, BasketItem, CategoryDef, RecipeIngredient, HealthConditionCategory, HealthCondition, UserRecipe, PurchaseHistory } from '@/lib/types';
 import { suggestRecipes } from '@/ai/flows/suggest-recipe-flow';
@@ -15,6 +15,7 @@ import RecipesView from './RecipesView';
 import ChandyekView from './ChandyekView';
 import NutritionalGuideView from './NutritionalGuideView';
 import CategoryPriceEvolutionDialog from './CategoryPriceEvolutionDialog';
+import SettingsPage from './SettingsPage';
 import { db } from '@/lib/idb';
 import { isInAppBrowser, getProductStatus } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -23,6 +24,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Plus } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import {
+  loadUserData,
+  savePantry,
+  saveBasket,
+  saveCategories,
+  saveSavedRecipes,
+  saveUserRecipes,
+  saveBudget,
+  saveHealthConditions,
+  savePurchaseHistory,
+} from '@/lib/firestore-sync';
 
 
 export default function KitchenAssistantPage() {
@@ -39,7 +52,7 @@ export default function KitchenAssistantPage() {
   const [isDataLoaded, setIsDataLoaded] = useState(false);
 
   // Ephemeral state
-  const [activeTab, setActiveTab] = useState<'pantry' | 'recipes' | 'chandyek' | 'guide'>('pantry');
+  const [activeTab, setActiveTab] = useState<'pantry' | 'recipes' | 'chandyek' | 'guide' | 'settings'>('pantry');
   const [searchQuery, setSearchQuery] = useState('');
 
   // Chandyek (AI) State
@@ -110,10 +123,21 @@ export default function KitchenAssistantPage() {
   }, []);
 
 
-  // --- INDEXEDDB PERSISTENCE ---
+  // --- Get current user ---
+  const { user } = useAuth();
+  const userUid = user?.uid;
+
+  // --- DATA PERSISTENCE (Firestore + IndexedDB) ---
   useEffect(() => {
     async function loadData() {
       try {
+        // 1. Try Firestore first if user is authenticated
+        let cloudData: any = null;
+        if (userUid) {
+          cloudData = await loadUserData(userUid);
+        }
+
+        // 2. Fallback to IndexedDB
         const [
           pantryData,
           basketData,
@@ -136,25 +160,28 @@ export default function KitchenAssistantPage() {
           db.get<PurchaseHistory>('purchaseHistory'),
         ]);
 
-        setPantry(pantryData ?? predefinedIngredients);
-        setBasket(basketData ?? []);
-        setCategories(categoriesData ?? initialCategories);
-        setSavedRecipes(savedRecipesData ?? []);
-        setUserRecipes(userRecipesData ?? []);
-        setInitialBudget(budgetData ?? 200);
-        setTotalSpent(totalSpentData ?? 0);
-        setHealthConditions(healthConditionsData ?? initialHealthConditions);
+        // Cloud data has priority over local IndexedDB data
+        setPantry(cloudData?.pantry ?? pantryData ?? predefinedIngredients);
+        setBasket(cloudData?.basket ?? basketData ?? []);
+        setCategories(cloudData?.categories ?? categoriesData ?? initialCategories);
+        setSavedRecipes(cloudData?.savedRecipes ?? savedRecipesData ?? []);
+        setUserRecipes(cloudData?.userRecipes ?? userRecipesData ?? []);
+        setInitialBudget(cloudData?.initialBudget ?? budgetData ?? 200);
+        setTotalSpent(cloudData?.totalSpent ?? totalSpentData ?? 0);
+        setHealthConditions(cloudData?.healthConditions ?? healthConditionsData ?? initialHealthConditions);
+
         // Migrate purchase history if needed
+        const rawHistory = cloudData?.purchaseHistory ?? purchaseHistoryData;
         const migratedHistory: PurchaseHistory = {};
-        if (purchaseHistoryData) {
-          Object.entries(purchaseHistoryData).forEach(([id, data]) => {
-            migratedHistory[id] = Array.isArray(data) ? data : [data];
+        if (rawHistory) {
+          Object.entries(rawHistory).forEach(([id, data]) => {
+            migratedHistory[id] = Array.isArray(data) ? data : [data as any];
           });
         }
         setPurchaseHistory(migratedHistory);
 
       } catch (error) {
-        console.error("Error loading data from IndexedDB", error);
+        console.error("Error loading data", error);
         // Fallback to initial data if loading fails
         setPantry(predefinedIngredients);
         setBasket([]);
@@ -170,22 +197,23 @@ export default function KitchenAssistantPage() {
       }
     }
     loadData();
-  }, []);
+  }, [userUid]);
 
   // New Pantry Addition Logic
   const [confirmPantryAddOpen, setConfirmPantryAddOpen] = useState(false);
   const [missingIngredients, setMissingIngredients] = useState<Omit<Ingredient, 'id'>[]>([]);
   const [pendingRecipeSave, setPendingRecipeSave] = useState<{ recipe: UserRecipe, isNew: boolean } | null>(null);
 
-  useEffect(() => { if (isDataLoaded) { try { db.set('pantry', pantry); } catch (e) { console.error(e); alert("Le stockage local est plein. Impossible de sauvegarder les modifications du garde-manger.") } } }, [pantry, isDataLoaded]);
-  useEffect(() => { if (isDataLoaded) { try { db.set('basket', basket); } catch (e) { console.error(e); alert("Le stockage local est plein. Impossible de sauvegarder les modifications du panier.") } } }, [basket, isDataLoaded]);
-  useEffect(() => { if (isDataLoaded) { try { db.set('categories', categories); } catch (e) { console.error(e); alert("Le stockage local est plein. Impossible de sauvegarder les modifications des catégories.") } } }, [categories, isDataLoaded]);
-  useEffect(() => { if (isDataLoaded) { try { db.set('savedRecipes', savedRecipes); } catch (e) { console.error(e); alert("Le stockage local est plein. Impossible de sauvegarder les recettes.") } } }, [savedRecipes, isDataLoaded]);
-  useEffect(() => { if (isDataLoaded) { try { db.set('userRecipes', userRecipes); } catch (e) { console.error(e); alert("Le stockage local est plein. Impossible de sauvegarder vos recettes personnelles.") } } }, [userRecipes, isDataLoaded]);
-  useEffect(() => { if (isDataLoaded) { try { db.set('purchaseHistory', purchaseHistory); } catch (e) { console.error(e); alert("Le stockage local est plein. Impossible de sauvegarder l'historique des achats.") } } }, [purchaseHistory, isDataLoaded]);
-  useEffect(() => { if (isDataLoaded) { try { db.set('budget', initialBudget); } catch (e) { console.error(e); alert("Le stockage local est plein. Impossible de sauvegarder le budget.") } } }, [initialBudget, isDataLoaded]);
-  useEffect(() => { if (isDataLoaded) { try { db.set('totalSpent', totalSpent); } catch (e) { console.error(e); alert("Le stockage local est plein. Impossible de sauvegarder le total dépensé.") } } }, [totalSpent, isDataLoaded]);
-  useEffect(() => { if (isDataLoaded) { try { db.set('healthConditions', healthConditions); } catch (e) { console.error(e); alert("Le stockage local est plein. Impossible de sauvegarder les conditions de santé.") } } }, [healthConditions, isDataLoaded]);
+  // --- SAVE TO INDEXEDDB + FIRESTORE ---
+  useEffect(() => { if (isDataLoaded) { try { db.set('pantry', pantry); } catch (e) { console.error(e); } if (userUid) savePantry(userUid, pantry); } }, [pantry, isDataLoaded, userUid]);
+  useEffect(() => { if (isDataLoaded) { try { db.set('basket', basket); } catch (e) { console.error(e); } if (userUid) saveBasket(userUid, basket); } }, [basket, isDataLoaded, userUid]);
+  useEffect(() => { if (isDataLoaded) { try { db.set('categories', categories); } catch (e) { console.error(e); } if (userUid) saveCategories(userUid, categories); } }, [categories, isDataLoaded, userUid]);
+  useEffect(() => { if (isDataLoaded) { try { db.set('savedRecipes', savedRecipes); } catch (e) { console.error(e); } if (userUid) saveSavedRecipes(userUid, savedRecipes); } }, [savedRecipes, isDataLoaded, userUid]);
+  useEffect(() => { if (isDataLoaded) { try { db.set('userRecipes', userRecipes); } catch (e) { console.error(e); } if (userUid) saveUserRecipes(userUid, userRecipes); } }, [userRecipes, isDataLoaded, userUid]);
+  useEffect(() => { if (isDataLoaded) { try { db.set('purchaseHistory', purchaseHistory); } catch (e) { console.error(e); } if (userUid) savePurchaseHistory(userUid, purchaseHistory); } }, [purchaseHistory, isDataLoaded, userUid]);
+  useEffect(() => { if (isDataLoaded) { try { db.set('budget', initialBudget); } catch (e) { console.error(e); } if (userUid) saveBudget(userUid, initialBudget, totalSpent); } }, [initialBudget, isDataLoaded, userUid]);
+  useEffect(() => { if (isDataLoaded) { try { db.set('totalSpent', totalSpent); } catch (e) { console.error(e); } if (userUid) saveBudget(userUid, initialBudget, totalSpent); } }, [totalSpent, isDataLoaded, userUid]);
+  useEffect(() => { if (isDataLoaded) { try { db.set('healthConditions', healthConditions); } catch (e) { console.error(e); } if (userUid) saveHealthConditions(userUid, healthConditions); } }, [healthConditions, isDataLoaded, userUid]);
 
   // --- URL SHARING DETECTION ---
   useEffect(() => {
@@ -419,6 +447,18 @@ export default function KitchenAssistantPage() {
     setIsCategoryDialogOpen(true);
   };
 
+  const handleMoveCategory = (id: string, direction: 'up' | 'down') => {
+    setCategories(prev => {
+      const idx = prev.findIndex(c => c.id === id);
+      if (idx === -1) return prev;
+      if (direction === 'up' && idx === 0) return prev;
+      if (direction === 'down' && idx === prev.length - 1) return prev;
+      const newArr = [...prev];
+      const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+      [newArr[idx], newArr[swapIdx]] = [newArr[swapIdx], newArr[idx]];
+      return newArr;
+    });
+  };
   const handleUpdatePrices = (updates: { id: string; price: number }[]) => {
     setPantry(prev => prev.map(ing => {
       const update = updates.find(u => u.id === ing.id);
@@ -476,7 +516,7 @@ export default function KitchenAssistantPage() {
     setTotalSpent(0);
   };
 
-  const handleConfirmPurchase = () => {
+  const handleConfirmPurchase = (store?: string) => {
     const costOfPurchasedItems = basket.reduce((total, item) => item.purchased ? total + item.price * item.quantity : total, 0);
 
     // Update purchase history
@@ -493,7 +533,9 @@ export default function KitchenAssistantPage() {
         newHistory[item.id].push({
           date: now,
           quantity: item.quantity,
-          unit: item.unit
+          unit: item.unit,
+          price: item.price,
+          ...(store ? { store } : {}),  // enregistre le magasin si fourni
         });
 
         // Add to Ch3andek if not present
@@ -533,29 +575,38 @@ export default function KitchenAssistantPage() {
     if (!sharedBasketToMerge) return;
     const items = sharedBasketToMerge;
 
-    // 1. Merge into basket
+    // 1. Prepare items with correct IDs (reuse pantry ID if exists)
+    const itemsWithIds = items.map(item => {
+      const existingInPantry = pantry.find(p => p.name.toLowerCase() === item.name.toLowerCase());
+      return {
+        ...item,
+        id: existingInPantry ? existingInPantry.id : self.crypto.randomUUID(),
+        purchased: false
+      };
+    });
+
+    // 2. Merge into basket
     setBasket(prev => {
       const newBasket = [...prev];
-      items.forEach(newItem => {
-        const existing = newBasket.find(i => i.name === newItem.name);
-        if (existing) {
-          existing.quantity += newItem.quantity;
+      itemsWithIds.forEach(newItem => {
+        const existingInBasket = newBasket.find(i => i.id === newItem.id);
+        if (existingInBasket) {
+          existingInBasket.quantity += newItem.quantity;
         } else {
-          newBasket.push({ ...newItem, id: self.crypto.randomUUID(), purchased: false });
+          newBasket.push(newItem);
         }
       });
       return newBasket;
     });
-
-    // 2. Check for missing ingredients in pantry and ask to add
-    const missingIngredients = items.filter(item =>
-      !pantry.some(p => p.name.toLowerCase() === item.name.toLowerCase())
+    // 3. Check for missing ingredients in pantry and ask to add
+    const missingIngredients = itemsWithIds.filter(item =>
+      !pantry.some(p => p.id === item.id)
     );
 
     if (missingIngredients.length > 0) {
       if (confirm(`Vous avez reçu ${missingIngredients.length} produits qui ne sont pas dans votre garde-manger. Voulez-vous les ajouter ?`)) {
         const newIngredients = missingIngredients.map(item => ({
-          id: self.crypto.randomUUID(),
+          id: item.id,
           name: item.name,
           category: item.category || 'Autre',
           unit: item.unit || 'pièce',
@@ -766,8 +817,12 @@ export default function KitchenAssistantPage() {
   const handleShareUserRecipe = async (recipe: UserRecipe) => {
     const title = `Recette: ${recipe.title}`;
 
+    // Create a copy of the recipe WITHOUT the photo to keep the URL short
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { photoDataUri, ...recipeWithoutPhoto } = recipe;
+
     // Generate shareable URL with recipe data (Deep Linking)
-    const encodedRecipe = encodeRecipe(recipe);
+    const encodedRecipe = encodeRecipe(recipeWithoutPhoto as UserRecipe);
     const baseUrl = typeof window !== 'undefined' ? window.location.origin + window.location.pathname : '';
     const shareUrl = `${baseUrl}?recipe=${encodedRecipe}`;
 
@@ -775,15 +830,18 @@ export default function KitchenAssistantPage() {
     const preparationText = recipe.preparation;
     const fullText = `${title}\n\nAuteur: ${recipe.author || 'Non spécifié'}\nPour ${recipe.portions} personnes\nTemps: ${recipe.preparationTime} min\n\n---\n\n**Ingrédients:**\n${ingredientsText}\n\n---\n\n**Préparation:**\n${preparationText}\n\n---\n\nOuvrir dans l'app: ${shareUrl}`;
 
-    if (navigator.share) {
+    const shareData = {
+      title: title,
+      text: fullText,
+      url: shareUrl,
+    };
+
+    if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
       try {
-        await navigator.share({
-          title: title,
-          text: fullText,
-          url: shareUrl,
-        });
+        await navigator.share(shareData);
       } catch (error) {
         console.error('Erreur lors du partage :', error);
+        // Fallback to clipboard if share fails (e.g. user cancelled)
       }
     } else {
       try {
@@ -859,6 +917,7 @@ export default function KitchenAssistantPage() {
               onUpdatePrices={handleUpdatePrices}
               onAddIngredients={handleAddIngredients}
               onViewCategoryTrends={setViewingCategoryTrends}
+              onMoveCategory={handleMoveCategory}
             />
           )}
           {activeTab === 'recipes' && (
@@ -890,8 +949,11 @@ export default function KitchenAssistantPage() {
               openHealthConditionManager={() => setHealthConditionManagerOpen(true)}
             />
           )}
-        </div>
-      </main>
+          {activeTab === 'settings' && (
+            <SettingsPage />
+          )}
+        </div >
+      </main >
 
       <KitchenAssistantDialogs
         isAddEditDialogOpen={isAddEditDialogOpen}
@@ -1040,6 +1102,6 @@ export default function KitchenAssistantPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </div >
   );
 }

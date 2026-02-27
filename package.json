@@ -28,6 +28,7 @@
     "react-hook-form": "^7.52.0",
     "react-markdown": "^9.0.1",
     "tailwind-merge": "^2.3.0",
+    "firebase": "^11.0.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {

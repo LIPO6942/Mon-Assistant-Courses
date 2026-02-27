@@ -1,4 +1,9 @@
-oui# Ignorer les dossiers de cache et les dépendances volumineuses
+# Ignorer les dossiers de cache et les dépendances volumineuses
 .firebase/
 node_modules/
-.next/cache/
+.next/
+
+# Variables d'environnement - NE JAMAIS commiter ces fichiers !
+.env
+.env.*
+!.env.example
