@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { BasketItem } from "@/lib/types";
 import { encodeBasket } from "@/lib/url-sharing";
 import { Copy, Share2, Check, Users, Send } from "lucide-react";
-import { getAllUsers, sendBasketShare } from "@/lib/firestore-sync";
+import { getAllUsers, sendBasketShare, recordFrequentContact, getFrequentContacts } from "@/lib/firestore-sync";
 import { useAuth } from "@/context/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "./ui/scroll-area";
@@ -49,11 +49,23 @@ export function BasketShareDialog({
 
             // Fetch users for In-App sharing
             setIsSearching(true);
-            getAllUsers().then(users => {
+            Promise.all([getAllUsers(), getFrequentContacts(user.uid)]).then(([users, frequentIds]) => {
                 console.log("Membres trouvés en base:", users.length);
                 const others = users.filter(u => u.uid !== user?.uid);
-                console.log("Autres membres (excluant vous):", others.length);
-                setUsersList(others);
+
+                // Sort: frequent contacts first
+                const sortedOthers = others.sort((a, b) => {
+                    const aIdx = frequentIds.indexOf(a.uid);
+                    const bIdx = frequentIds.indexOf(b.uid);
+
+                    if (aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
+                    if (aIdx !== -1) return -1;
+                    if (bIdx !== -1) return 1;
+                    return 0;
+                });
+
+                console.log("Autres membres (excluant vous):", sortedOthers.length);
+                setUsersList(sortedOthers);
                 setIsSearching(false);
             }).catch(err => {
                 console.error("Erreur lors de la récupération des membres:", err);
@@ -66,6 +78,7 @@ export function BasketShareDialog({
         if (!user) return;
         try {
             await sendBasketShare(user.uid, user.displayName || "Un ami", recipientUid, basket);
+            await recordFrequentContact(user.uid, recipientUid);
             setSendSuccess(recipientName);
             setTimeout(() => setSendSuccess(null), 3000);
         } catch (err) {

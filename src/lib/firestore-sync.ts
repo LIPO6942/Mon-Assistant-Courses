@@ -37,6 +37,7 @@ export async function loadUserData(uid: string) {
             budgetSnap,
             healthConditionsSnap,
             purchaseHistorySnap,
+            frequentContactsSnap,
         ] = await Promise.all([
             getDoc(userDocRef(uid, 'pantry')),
             getDoc(userDocRef(uid, 'basket')),
@@ -46,6 +47,7 @@ export async function loadUserData(uid: string) {
             getDoc(userDocRef(uid, 'budget')),
             getDoc(userDocRef(uid, 'healthConditions')),
             getDoc(userDocRef(uid, 'purchaseHistory')),
+            getDoc(userDocRef(uid, 'frequentContacts')),
         ]);
 
         return {
@@ -58,6 +60,7 @@ export async function loadUserData(uid: string) {
             totalSpent: budgetSnap.exists() ? budgetSnap.data().totalSpent : null,
             healthConditions: healthConditionsSnap.exists() ? healthConditionsSnap.data().items : null,
             purchaseHistory: purchaseHistorySnap.exists() ? purchaseHistorySnap.data().data : null,
+            frequentContacts: frequentContactsSnap.exists() ? (frequentContactsSnap.data().contacts || []) : [],
         };
     } catch (error) {
         console.error('Error loading user data from Firestore:', error);
@@ -199,5 +202,34 @@ export async function updateShareStatus(shareId: string, status: 'accepted' | 'r
         }
     } catch (e) {
         console.error('Error updating share status:', e);
+    }
+}
+
+export async function recordFrequentContact(uid: string, contactUid: string) {
+    try {
+        const docRef = userDocRef(uid, 'frequentContacts');
+        const snap = await getDoc(docRef);
+        let contacts: string[] = snap.exists() ? (snap.data().contacts || []) : [];
+
+        // Remove if already exists to move to top (if we were using timestamps, but here we just pin)
+        contacts = contacts.filter(id => id !== contactUid);
+        contacts.unshift(contactUid); // Add to the beginning
+
+        // Keep only top 10
+        contacts = contacts.slice(0, 10);
+
+        await setDoc(docRef, { contacts, updatedAt: new Date().toISOString() });
+    } catch (e) {
+        console.error('Error recording frequent contact:', e);
+    }
+}
+
+export async function getFrequentContacts(uid: string): Promise<string[]> {
+    try {
+        const snap = await getDoc(userDocRef(uid, 'frequentContacts'));
+        return snap.exists() ? (snap.data().contacts || []) : [];
+    } catch (e) {
+        console.error('Error getting frequent contacts:', e);
+        return [];
     }
 }
