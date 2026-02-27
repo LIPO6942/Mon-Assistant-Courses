@@ -44,7 +44,7 @@ export default function UserRecipeForm({ initialData, onSave, formId, pantry }: 
       id: initialData?.id,
       title: initialData?.title || '',
       category: initialData?.category || 'Plat',
-      ingredients: initialData?.ingredients || [{ name: '', quantity: 1, unit: 'pièce' }],
+      ingredients: initialData?.ingredients || [],
       preparation: initialData?.preparation || '',
       preparationTime: String(initialData?.preparationTime || '30'),
       portions: String(initialData?.portions || '2'),
