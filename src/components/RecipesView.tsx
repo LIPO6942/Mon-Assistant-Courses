@@ -6,10 +6,10 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, Shuffle, Dices, Clock, Coins, Utensils, BookUser, Search, Tag } from 'lucide-react';
-import type { Recipe, UserRecipe } from '@/lib/types';
+import { PlusCircle, Shuffle, Dices, Clock, Coins, Utensils, BookUser, Search, Tag, Sparkles } from 'lucide-react';
+import type { Recipe, UserRecipe, BasketItem, PurchaseHistory } from '@/lib/types';
 import { streetFoodOptions } from '@/lib/data';
-import { cn } from '@/lib/utils';
+import { cn, getProductStatus } from '@/lib/utils';
 import Image from 'next/image';
 import {
   Accordion,
@@ -26,6 +26,8 @@ interface RecipesViewProps {
   userRecipes: UserRecipe[];
   openUserRecipeForm: (recipe?: UserRecipe) => void;
   onViewUserRecipe: (recipe: UserRecipe | null) => void;
+  basket: BasketItem[];
+  purchaseHistory: PurchaseHistory;
 }
 
 export default function RecipesView({
@@ -34,7 +36,9 @@ export default function RecipesView({
   handleSaveRecipe,
   userRecipes,
   openUserRecipeForm,
-  onViewUserRecipe
+  onViewUserRecipe,
+  basket,
+  purchaseHistory
 }: RecipesViewProps) {
   const [suggestedRecipes, setSuggestedRecipes] = useState<Recipe[]>([]);
   const [selectedStreetFood, setSelectedStreetFood] = useState<string | null>(null);
@@ -74,6 +78,47 @@ export default function RecipesView({
       }
     };
   }, []);
+
+  // --- Basket-based Recommendations ---
+  const basketBasedRecipes = useMemo(() => {
+    if ((basket.length === 0 && Object.keys(purchaseHistory).length === 0)) return [];
+
+    // Get IDs of items in basket or with green/orange status
+    const matchedIngredientNames = new Set<string>();
+
+    basket.forEach(item => matchedIngredientNames.add(item.name.toLowerCase()));
+
+    Object.entries(purchaseHistory).forEach(([ingId, history]) => {
+      const status = getProductStatus(history);
+      if (status === 'green' || status === 'orange') {
+        // We need to find the name for this ID. 
+        // In this app, sometimes ID is the name, but let's be safe.
+        // Actually, let's just use the ID if it matches any discoverable recipe ingredient name
+      }
+    });
+
+    return discoverableRecipes.map(recipe => {
+      const matches = recipe.ingredients.filter(ing => {
+        const name = ing.name.toLowerCase();
+        // Match by name in basket
+        if (matchedIngredientNames.has(name)) return true;
+        // Match by status in history (if history key is name or we can find it)
+        // Many parts of the app use name as ID for history
+        const status = getProductStatus(purchaseHistory[ing.name] || purchaseHistory[ing.name.toLowerCase()]);
+        return status === 'green' || status === 'orange';
+      });
+
+      return {
+        recipe,
+        matchCount: matches.length,
+        matchPercentage: matches.length / recipe.ingredients.length,
+        matchedNames: matches.map(m => m.name)
+      };
+    })
+      .filter(m => m.matchCount > 0)
+      .sort((a, b) => b.matchPercentage - a.matchPercentage)
+      .slice(0, 4);
+  }, [discoverableRecipes, basket, purchaseHistory]);
 
   const findRandomRecipes = () => {
     if (filteredDiscoverableRecipes.length === 0) {
@@ -205,6 +250,36 @@ export default function RecipesView({
           <Shuffle className="mr-2 h-5 w-5 shrink-0" />
           Trouver une idée de recette
         </Button>
+
+        {basketBasedRecipes.length > 0 && (
+          <div className="mt-10">
+            <h3 className="text-sm font-bold uppercase tracking-widest text-primary mb-4 flex items-center gap-2 justify-center">
+              <Sparkles className="h-4 w-4" />
+              Basé sur votre panier & achats
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {basketBasedRecipes.map(({ recipe, matchedNames }) => (
+                <Card key={recipe.id} className="cursor-pointer hover:shadow-md transition-all border-primary/20 bg-primary/5" onClick={() => setViewingRecipe(recipe)}>
+                  <CardHeader className="p-3 pb-0">
+                    <CardTitle className="text-sm">{recipe.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-3 pt-2">
+                    <p className="text-[10px] text-muted-foreground line-clamp-2 mb-2">{recipe.description}</p>
+                    <div className="flex flex-wrap gap-1">
+                      {matchedNames.slice(0, 3).map(name => (
+                        <div key={name} className="flex items-center gap-1 bg-background px-1.5 py-0.5 rounded text-[9px] border border-primary/10">
+                          <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                          {name}
+                        </div>
+                      ))}
+                      {matchedNames.length > 3 && <span className="text-[9px] text-muted-foreground">+{matchedNames.length - 3}</span>}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
 
         {suggestedRecipes.length > 0 ? (
           <div className='mt-8 max-w-4xl mx-auto text-left animate-in fade-in-50 grid grid-cols-1 md:grid-cols-2 gap-6'>

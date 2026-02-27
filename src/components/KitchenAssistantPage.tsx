@@ -957,6 +957,8 @@ export default function KitchenAssistantPage() {
               userRecipes={userRecipes}
               openUserRecipeForm={openUserRecipeForm}
               onViewUserRecipe={setViewingUserRecipe}
+              basket={basket}
+              purchaseHistory={purchaseHistory}
             />
           )}
           {activeTab === 'chandyek' && (
