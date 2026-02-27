@@ -40,7 +40,7 @@ export function BasketShareDialog({
     const [sendSuccess, setSendSuccess] = useState<string | null>(null);
 
     useEffect(() => {
-        if (isOpen && basket.length > 0) {
+        if (isOpen && basket.length > 0 && user) {
             const encoded = encodeBasket(basket);
             const url = `${window.location.origin}/?d=${encoded}`;
             setShareUrl(url);
