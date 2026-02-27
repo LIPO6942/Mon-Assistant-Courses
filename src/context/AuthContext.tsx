@@ -42,8 +42,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
             setUser(user);
+            if (user) {
+                // Ensure profile is synced on every load/login
+                await syncUserProfile(user.uid, user.displayName || user.email?.split('@')[0] || 'Utilisateur', user.email || '');
+            }
             setLoading(false);
         });
         return () => unsubscribe();

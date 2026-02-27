@@ -50,8 +50,13 @@ export function BasketShareDialog({
             // Fetch users for In-App sharing
             setIsSearching(true);
             getAllUsers().then(users => {
-                // Filter out current user
-                setUsersList(users.filter(u => u.uid !== user?.uid));
+                console.log("Membres trouvés en base:", users.length);
+                const others = users.filter(u => u.uid !== user?.uid);
+                console.log("Autres membres (excluant vous):", others.length);
+                setUsersList(others);
+                setIsSearching(false);
+            }).catch(err => {
+                console.error("Erreur lors de la récupération des membres:", err);
                 setIsSearching(false);
             });
         }
