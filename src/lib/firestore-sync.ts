@@ -15,7 +15,7 @@
  *   users/{uid}/data/purchaseHistory  → { data: PurchaseHistory }
  */
 
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, getDocs, query, where, addDoc, onSnapshot, deleteDoc } from 'firebase/firestore';
 import { firestoreDb } from '@/lib/firebase';
 
 // ---------- helpers ----------
@@ -128,5 +128,76 @@ export async function savePurchaseHistory(uid: string, data: any) {
         await setDoc(userDocRef(uid, 'purchaseHistory'), { data, updatedAt: new Date().toISOString() });
     } catch (e) {
         console.error('Error saving purchase history:', e);
+    }
+}
+
+// ---------- user profiles (global) ----------
+
+export async function syncUserProfile(uid: string, displayName: string, email: string) {
+    try {
+        await setDoc(doc(firestoreDb, 'users', uid), {
+            uid,
+            displayName,
+            email,
+            lastSeen: new Date().toISOString()
+        }, { merge: true });
+    } catch (e) {
+        console.error('Error syncing user profile:', e);
+    }
+}
+
+export async function getAllUsers() {
+    try {
+        const snap = await getDocs(collection(firestoreDb, 'users'));
+        return snap.docs.map(doc => doc.data());
+    } catch (e) {
+        console.error('Error getting users:', e);
+        return [];
+    }
+}
+
+// ---------- basket shares ----------
+
+export async function sendBasketShare(fromUid: string, fromName: string, toUid: string, items: any[]) {
+    try {
+        await addDoc(collection(firestoreDb, 'basket_shares'), {
+            fromUid,
+            fromName,
+            toUid,
+            items,
+            status: 'pending',
+            createdAt: new Date().toISOString()
+        });
+    } catch (e) {
+        console.error('Error sending basket share:', e);
+    }
+}
+
+export function listenForIncomingShares(uid: string, onShareReceived: (share: any) => void) {
+    const q = query(
+        collection(firestoreDb, 'basket_shares'),
+        where('toUid', '==', uid),
+        where('status', '==', 'pending')
+    );
+
+    return onSnapshot(q, (snap) => {
+        snap.docChanges().forEach((change) => {
+            if (change.type === 'added') {
+                onShareReceived({ id: change.doc.id, ...change.doc.data() });
+            }
+        });
+    });
+}
+
+export async function updateShareStatus(shareId: string, status: 'accepted' | 'refused') {
+    try {
+        const docRef = doc(firestoreDb, 'basket_shares', shareId);
+        await setDoc(docRef, { status }, { merge: true });
+        // Optionally delete if refused? Let's keep it for now or delete if accepted
+        if (status === 'accepted' || status === 'refused') {
+            await deleteDoc(docRef);
+        }
+    } catch (e) {
+        console.error('Error updating share status:', e);
     }
 }

@@ -12,6 +12,7 @@ import {
     GoogleAuthProvider,
 } from 'firebase/auth';
 import { auth, googleProvider } from '@/lib/firebase';
+import { syncUserProfile } from '@/lib/firestore-sync';
 
 interface AuthContextType {
     user: User | null;
@@ -53,7 +54,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const signInWithGoogle = async () => {
         try {
             setError(null);
-            await signInWithPopup(auth, googleProvider);
+            const result = await signInWithPopup(auth, googleProvider);
+            if (result.user) {
+                await syncUserProfile(result.user.uid, result.user.displayName || 'Utilisateur Google', result.user.email || '');
+            }
         } catch (err: any) {
             console.error('Google sign-in error:', err);
             if (err.code === 'auth/popup-closed-by-user') {
@@ -69,7 +73,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const signInWithEmail = async (email: string, password: string) => {
         try {
             setError(null);
-            await signInWithEmailAndPassword(auth, email, password);
+            const result = await signInWithEmailAndPassword(auth, email, password);
+            if (result.user) {
+                await syncUserProfile(result.user.uid, result.user.displayName || email.split('@')[0], result.user.email || '');
+            }
         } catch (err: any) {
             console.error('Email sign-in error:', err);
             if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
@@ -89,6 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setError(null);
             const result = await createUserWithEmailAndPassword(auth, email, password);
             await updateProfile(result.user, { displayName });
+            await syncUserProfile(result.user.uid, displayName, email);
         } catch (err: any) {
             console.error('Email sign-up error:', err);
             if (err.code === 'auth/email-already-in-use') {

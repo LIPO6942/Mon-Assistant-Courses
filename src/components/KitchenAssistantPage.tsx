@@ -23,7 +23,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
-import { Plus } from 'lucide-react';
+import { Plus, Users } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import {
   loadUserData,
@@ -35,6 +35,8 @@ import {
   saveBudget,
   saveHealthConditions,
   savePurchaseHistory,
+  listenForIncomingShares,
+  updateShareStatus,
 } from '@/lib/firestore-sync';
 
 
@@ -82,6 +84,9 @@ export default function KitchenAssistantPage() {
   // Price Evolution State
   const [viewingCategoryTrends, setViewingCategoryTrends] = useState<CategoryDef | null>(null);
 
+  // In-App Sharing Receiving State
+  const [incomingShare, setIncomingShare] = useState<any | null>(null);
+
 
 
   // --- WAKE LOCK ---
@@ -126,6 +131,30 @@ export default function KitchenAssistantPage() {
   // --- Get current user ---
   const { user } = useAuth();
   const userUid = user?.uid;
+
+  // Listen for incoming shares
+  useEffect(() => {
+    if (!userUid) return;
+
+    const unsubscribe = listenForIncomingShares(userUid, (share) => {
+      setIncomingShare(share);
+    });
+
+    return () => unsubscribe();
+  }, [userUid]);
+
+  const handleAcceptShare = async () => {
+    if (!incomingShare) return;
+    setSharedBasketToMerge(incomingShare.items);
+    await updateShareStatus(incomingShare.id, 'accepted');
+    setIncomingShare(null);
+  };
+
+  const handleRefuseShare = async () => {
+    if (!incomingShare) return;
+    await updateShareStatus(incomingShare.id, 'refused');
+    setIncomingShare(null);
+  };
 
   // --- DATA PERSISTENCE (Firestore + IndexedDB) ---
   useEffect(() => {
@@ -954,6 +983,43 @@ export default function KitchenAssistantPage() {
           )}
         </div >
       </main >
+
+      {/* In-App Share Received Notification */}
+      <Dialog open={!!incomingShare} onOpenChange={(open) => !open && handleRefuseShare()}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <Users className="h-5 w-5 text-primary" />
+              </div>
+              <DialogTitle>Panier reçu de {incomingShare?.fromName}</DialogTitle>
+            </div>
+            <DialogDescription>
+              {incomingShare?.fromName} vous a envoyé sa liste de courses ({incomingShare?.items.length} articles).
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="max-h-40 overflow-y-auto my-2 border rounded-xl p-3 bg-muted/20">
+            <ul className="space-y-1 text-sm">
+              {incomingShare?.items.map((item: any, idx: number) => (
+                <li key={idx} className="flex justify-between">
+                  <span className="font-medium">{item.name}</span>
+                  <span className="text-muted-foreground">{item.quantity} {item.unit}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <DialogFooter className="sm:justify-between gap-2 mt-4">
+            <Button variant="ghost" onClick={handleRefuseShare} className="rounded-xl">
+              Refuser
+            </Button>
+            <Button onClick={handleAcceptShare} className="rounded-xl gap-2 font-bold">
+              Accepter & Importer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <KitchenAssistantDialogs
         isAddEditDialogOpen={isAddEditDialogOpen}
