@@ -33,22 +33,22 @@ export const STORES: StoreDef[] = [
     },
     {
         name: 'Ben Yaghlane',
-        // logo: '/stores/ben-yaghlane.png',
+        logo: '/stores/ben-yaghlane.png',
         color: '#2E7D32',
     },
     {
         name: 'BWAI',
-        // logo: '/stores/bwai.png',
+        logo: '/stores/bwai.png',
         color: '#1565C0',
     },
     {
         name: 'D.Clean',
-        // logo: '/stores/d-clean.png',
+        logo: '/stores/d-clean.png',
         color: '#6A1B9A',
     },
     {
         name: 'Marché',
-        // logo: '/stores/marche.png',
+        logo: '/stores/marche.png',
         color: '#E65100',
     },
 ];
