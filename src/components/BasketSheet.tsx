@@ -1,6 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { sendBasketShare } from '@/lib/firestore-sync';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
@@ -49,6 +51,41 @@ export default function BasketSheet({
 }: BasketSheetProps) {
   const [isStoreDialogOpen, setIsStoreDialogOpen] = useState(false);
   const [selectedStore, setSelectedStore] = useState<string>('');
+  const [lastSharedUser, setLastSharedUser] = useState<{ uid: string, name: string } | null>(null);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    const loadLastShared = () => {
+      const stored = localStorage.getItem('lastSharedUser');
+      if (stored) {
+        try {
+          setLastSharedUser(JSON.parse(stored));
+        } catch (e) { }
+      }
+    };
+    loadLastShared();
+    window.addEventListener('basketSharedInternally', loadLastShared);
+    return () => window.removeEventListener('basketSharedInternally', loadLastShared);
+  }, []);
+
+  const handleQuickShare = async () => {
+    if (!lastSharedUser || !user) return;
+    const uncheckedItems = basket.filter(item => !item.purchased);
+    if (uncheckedItems.length === 0) {
+      alert("Aucun article non coché à partager.");
+      return;
+    }
+
+    if (window.confirm(`Vous allez envoyer les ${uncheckedItems.length} articles non cochés de votre panier à ${lastSharedUser.name}. Confirmer ?`)) {
+      try {
+        await sendBasketShare(user.uid, user.displayName || "Un ami", lastSharedUser.uid, uncheckedItems);
+        alert(`Panier envoyé à ${lastSharedUser.name} !`);
+      } catch (err) {
+        console.error("Quick share error:", err);
+        alert("Erreur lors de l'envoi.");
+      }
+    }
+  };
 
   const sortedBasket = basket.slice().sort((a, b) => {
     const aPurchased = a.purchased ?? false;
@@ -73,11 +110,21 @@ export default function BasketSheet({
     <>
       <SheetContent className="flex flex-col px-4 w-[90%] sm:max-w-md">
         <SheetHeader>
-          <div className="flex justify-between items-center">
+          <div className="flex items-center gap-2">
             <SheetTitle>Mon Panier</SheetTitle>
-            <Button variant="ghost" size="icon" onClick={onShareBasket} disabled={basket.length === 0} aria-label="Partager le panier">
-              <Share2 className="h-5 w-5 text-primary" />
+            <Button variant="ghost" size="icon" className="h-8 w-8 ml-2" onClick={onShareBasket} disabled={basket.length === 0} aria-label="Partager le panier">
+              <Share2 className="h-4 w-4 text-primary" />
             </Button>
+            {lastSharedUser && (
+              <Button
+                variant="outline"
+                className="h-8 w-8 rounded-full bg-primary/10 text-primary font-bold hover:bg-primary/20 p-0"
+                onClick={handleQuickShare}
+                title={`Envoyer à ${lastSharedUser.name} les articles non cochés`}
+              >
+                {lastSharedUser.name.charAt(0).toUpperCase()}
+              </Button>
+            )}
           </div>
         </SheetHeader>
 

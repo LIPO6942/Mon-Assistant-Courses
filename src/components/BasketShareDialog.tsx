@@ -80,6 +80,8 @@ export function BasketShareDialog({
             await sendBasketShare(user.uid, user.displayName || "Un ami", recipientUid, basket);
             await recordFrequentContact(user.uid, recipientUid);
             setSendSuccess(recipientName);
+            localStorage.setItem('lastSharedUser', JSON.stringify({ uid: recipientUid, name: recipientName }));
+            window.dispatchEvent(new Event('basketSharedInternally'));
             setTimeout(() => setSendSuccess(null), 3000);
         } catch (err) {
             console.error("Direct share error:", err);
