@@ -60,8 +60,10 @@ export default function BasketSheet({
       if (stored) {
         try {
           setLastSharedUser(JSON.parse(stored));
+          return;
         } catch (e) { }
       }
+      setLastSharedUser(null);
     };
     loadLastShared();
     window.addEventListener('basketSharedInternally', loadLastShared);
@@ -108,8 +110,8 @@ export default function BasketSheet({
 
   return (
     <>
-      <SheetContent className="flex flex-col px-4 w-[90vw] max-w-full sm:w-[400px] sm:max-w-md overflow-x-hidden">
-        <SheetHeader>
+      <SheetContent className="flex flex-col px-0 w-[94vw] sm:w-[400px] sm:max-w-md overflow-x-hidden border-l shadow-2xl">
+        <SheetHeader className="px-4">
           <div className="flex items-center gap-2">
             <SheetTitle>Mon Panier</SheetTitle>
             <Button variant="ghost" size="icon" className="h-8 w-8 ml-2" onClick={onShareBasket} disabled={basket.length === 0} aria-label="Partager le panier">
@@ -128,7 +130,7 @@ export default function BasketSheet({
           </div>
         </SheetHeader>
 
-        <ScrollArea className="flex-grow my-4 pr-4">
+        <ScrollArea className="flex-grow my-4 px-2">
           {sortedBasket.length > 0 ? (
             <ul className="space-y-3">
               {sortedBasket.map(item => (
@@ -211,7 +213,7 @@ export default function BasketSheet({
         </ScrollArea>
 
         {basket.length > 0 && (
-          <SheetFooter className='pt-4 border-t flex-col gap-2 w-full'>
+          <SheetFooter className='pt-4 px-4 border-t flex-col gap-2 w-full'>
             <div className="flex justify-between items-center w-full">
               <span className="text-lg font-semibold text-muted-foreground">Total à Payer</span>
               <span className="text-2xl font-bold text-primary">{basketTotal.toFixed(3)} DT</span>
