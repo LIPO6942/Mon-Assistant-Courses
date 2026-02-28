@@ -108,7 +108,7 @@ export default function BasketSheet({
 
   return (
     <>
-      <SheetContent className="flex flex-col px-4 w-[90%] sm:max-w-md">
+      <SheetContent className="flex flex-col px-4 w-[90vw] max-w-full sm:w-[400px] sm:max-w-md overflow-x-hidden">
         <SheetHeader>
           <div className="flex items-center gap-2">
             <SheetTitle>Mon Panier</SheetTitle>

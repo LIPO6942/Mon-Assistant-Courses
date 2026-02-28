@@ -1,11 +1,29 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Mail, User, Shield, LogOut, Smartphone, Cloud, ChefHat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function SettingsPage() {
     const { user, signOut } = useAuth();
+    const [lastSharedUser, setLastSharedUser] = useState<{ uid: string, name: string } | null>(null);
+
+    useEffect(() => {
+        const stored = localStorage.getItem('lastSharedUser');
+        if (stored) {
+            try {
+                setLastSharedUser(JSON.parse(stored));
+            } catch (e) { }
+        }
+    }, []);
+
+    const handleClearShortcut = () => {
+        localStorage.removeItem('lastSharedUser');
+        setLastSharedUser(null);
+        window.dispatchEvent(new Event('basketSharedInternally'));
+        alert("Raccourci de partage retiré.");
+    };
 
     if (!user) return null;
 
@@ -125,14 +143,26 @@ export default function SettingsPage() {
             </div>
 
             {/* Sign Out */}
-            <Button
-                onClick={signOut}
-                variant="outline"
-                className="w-full h-12 rounded-2xl text-destructive hover:text-destructive hover:bg-destructive/5 border-destructive/20 font-semibold gap-2"
-            >
-                <LogOut className="h-4 w-4" />
-                Se déconnecter
-            </Button>
+            <div className="space-y-4">
+                {lastSharedUser && (
+                    <Button
+                        onClick={handleClearShortcut}
+                        variant="outline"
+                        className="w-full h-12 rounded-2xl text-muted-foreground hover:bg-muted/50 border-border font-medium gap-2"
+                    >
+                        Retirer le raccourci de partage pour {lastSharedUser.name}
+                    </Button>
+                )}
+
+                <Button
+                    onClick={signOut}
+                    variant="outline"
+                    className="w-full h-12 rounded-2xl text-destructive hover:text-destructive hover:bg-destructive/5 border-destructive/20 font-semibold gap-2"
+                >
+                    <LogOut className="h-4 w-4" />
+                    Se déconnecter
+                </Button>
+            </div>
 
             <p className="text-center text-xs text-muted-foreground pb-4">
                 UID: <span className="font-mono text-[10px] select-all">{user.uid}</span>
