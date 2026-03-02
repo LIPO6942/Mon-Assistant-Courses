@@ -17,6 +17,7 @@
 
 import { doc, getDoc, setDoc, collection, getDocs, query, where, addDoc, onSnapshot, deleteDoc } from 'firebase/firestore';
 import { firestoreDb } from '@/lib/firebase';
+import { CommunityPurchase } from './types';
 export { firestoreDb };
 
 // ---------- helpers ----------
@@ -183,7 +184,7 @@ export function listenCommunityPurchases(
     );
     const unsubscribe = onSnapshot(q, snapshot => {
         const purchases = snapshot.docs
-            .map(doc => ({ id: doc.id, ...doc.data() }))
+            .map(doc => ({ id: doc.id, ...doc.data() } as CommunityPurchase))
             .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
         onUpdate(purchases);
     }, err => console.error('Community feed error:', err));
