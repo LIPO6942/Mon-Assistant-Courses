@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { Mail, User, Shield, LogOut, Smartphone, Cloud, ChefHat } from 'lucide-react';
+import { Mail, User, Shield, LogOut, Smartphone, Cloud, ChefHat, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function SettingsPage() {
@@ -14,6 +14,8 @@ export default function SettingsPage() {
     const [contactLinks, setContactLinks] = useState<Record<string, { whatsapp?: string, messenger?: string }>>({});
     const [savingContact, setSavingContact] = useState<string | null>(null);
     const [isSaving, setIsSaving] = useState(false);
+    const [isEditingProfile, setIsEditingProfile] = useState(false);
+    const [editingContacts, setEditingContacts] = useState<Set<string>>(new Set());
 
     useEffect(() => {
         const stored = localStorage.getItem('lastSharedUser');
@@ -30,6 +32,9 @@ export default function SettingsPage() {
                     if (data) {
                         setWhatsapp(data.whatsapp || '');
                         setMessenger(data.messenger || '');
+                        if (!data.whatsapp && !data.messenger) setIsEditingProfile(true);
+                    } else {
+                        setIsEditingProfile(true);
                     }
                 });
             });
@@ -55,6 +60,7 @@ export default function SettingsPage() {
         const { syncUserProfile } = await import('@/lib/firestore-sync');
         await syncUserProfile(user.uid, user.displayName || '', user.email || '', whatsapp, messenger);
         setIsSaving(false);
+        setIsEditingProfile(false);
         alert("Profil mis à jour !");
     };
 
@@ -64,6 +70,10 @@ export default function SettingsPage() {
         setContactLinks(newLinks);
         const { saveContactAssociation } = await import('@/lib/firestore-sync');
         await saveContactAssociation(user.uid, contactUid, newLinks[contactUid]);
+
+        const newEditing = new Set(editingContacts);
+        newEditing.delete(contactUid);
+        setEditingContacts(newEditing);
     };
 
     const handleRemoveContact = async (contactUid: string) => {
@@ -129,6 +139,15 @@ export default function SettingsPage() {
                     </p>
                 </div>
                 <div className="p-6 space-y-4">
+                    <div className="flex justify-between items-center bg-muted/30 p-2 rounded-xl border border-dashed text-muted-foreground">
+                        <span className="text-[10px] font-medium">Mode {isEditingProfile ? 'Modification' : 'Lecture seule'}</span>
+                        {!isEditingProfile && (
+                            <button onClick={() => setIsEditingProfile(true)} className="p-1 hover:bg-muted rounded-md transition-colors">
+                                <Pencil className="h-3 w-3" />
+                            </button>
+                        )}
+                    </div>
+
                     <div className="space-y-2">
                         <label className="text-xs font-medium flex items-center gap-2">
                             <Smartphone className="h-3 w-3 text-green-500" /> WhatsApp (ex: 55555555)
@@ -138,7 +157,8 @@ export default function SettingsPage() {
                             value={whatsapp}
                             onChange={(e) => setWhatsapp(e.target.value)}
                             placeholder="Numéro sans le +"
-                            className="w-full p-2.5 rounded-xl border bg-background text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                            disabled={!isEditingProfile}
+                            className={`w-full p-2.5 rounded-xl border bg-background text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all ${!isEditingProfile ? 'bg-muted/50 text-muted-foreground opacity-70' : ''}`}
                         />
                     </div>
                     <div className="space-y-2">
@@ -153,16 +173,19 @@ export default function SettingsPage() {
                             value={messenger}
                             onChange={(e) => setMessenger(e.target.value)}
                             placeholder="votre.pseudo"
-                            className="w-full p-2.5 rounded-xl border bg-background text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                            disabled={!isEditingProfile}
+                            className={`w-full p-2.5 rounded-xl border bg-background text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all ${!isEditingProfile ? 'bg-muted/50 text-muted-foreground opacity-70' : ''}`}
                         />
                     </div>
-                    <Button
-                        onClick={handleSaveProfile}
-                        disabled={isSaving}
-                        className="w-full rounded-xl"
-                    >
-                        {isSaving ? "Enregistrement..." : "Sauvegarder mon profil"}
-                    </Button>
+                    {isEditingProfile && (
+                        <Button
+                            onClick={handleSaveProfile}
+                            disabled={isSaving}
+                            className="w-full rounded-xl"
+                        >
+                            {isSaving ? "Enregistrement..." : "Sauvegarder mon profil"}
+                        </Button>
+                    )}
                 </div>
             </div>
 
@@ -199,38 +222,51 @@ export default function SettingsPage() {
                                 </div>
 
                                 <div className="grid grid-cols-1 gap-2">
-                                    <div className="flex flex-col sm:flex-row gap-2">
+                                    <div className="flex flex-col sm:flex-row gap-2 relative">
+                                        {!editingContacts.has(contact.uid) && (contactLinks[contact.uid]?.whatsapp || contactLinks[contact.uid]?.messenger) && (
+                                            <button
+                                                onClick={() => setEditingContacts(new Set(editingContacts).add(contact.uid))}
+                                                className="absolute right-2 top-2 z-10 p-1 hover:bg-primary/10 rounded-md text-primary transition-colors"
+                                            >
+                                                <Pencil className="h-3 w-3" />
+                                            </button>
+                                        )}
                                         <input
                                             type="text"
-                                            placeholder="WhatsApp (ex: 55555555)"
+                                            placeholder="WhatsApp"
                                             value={contactLinks[contact.uid]?.whatsapp || ''}
+                                            disabled={!editingContacts.has(contact.uid) && !!(contactLinks[contact.uid]?.whatsapp || contactLinks[contact.uid]?.messenger)}
                                             onChange={(e) => setContactLinks({ ...contactLinks, [contact.uid]: { ...contactLinks[contact.uid], whatsapp: e.target.value } })}
-                                            className="w-full text-[11px] p-2 rounded-lg border bg-background outline-none"
+                                            className={`w-full text-[11px] p-2 rounded-lg border bg-background outline-none ${(!editingContacts.has(contact.uid) && !!(contactLinks[contact.uid]?.whatsapp || contactLinks[contact.uid]?.messenger)) ? 'bg-muted/50 opacity-70' : ''}`}
                                         />
                                         <input
                                             type="text"
-                                            placeholder="Messenger (pseudo)"
+                                            placeholder="Messenger"
                                             value={contactLinks[contact.uid]?.messenger || ''}
+                                            disabled={!editingContacts.has(contact.uid) && !!(contactLinks[contact.uid]?.whatsapp || contactLinks[contact.uid]?.messenger)}
                                             onChange={(e) => setContactLinks({ ...contactLinks, [contact.uid]: { ...contactLinks[contact.uid], messenger: e.target.value } })}
-                                            className="w-full text-[11px] p-2 rounded-lg border bg-background outline-none"
+                                            className={`w-full text-[11px] p-2 rounded-lg border bg-background outline-none ${(!editingContacts.has(contact.uid) && !!(contactLinks[contact.uid]?.whatsapp || contactLinks[contact.uid]?.messenger)) ? 'bg-muted/50 opacity-70' : ''}`}
                                         />
                                     </div>
-                                    <Button
-                                        size="sm"
-                                        className="w-full text-[10px] h-7 rounded-lg bg-blue-600 hover:bg-blue-700 text-white border-none shadow-sm"
-                                        onClick={() => {
-                                            setSavingContact(contact.uid);
-                                            handleSaveContactLink(contact.uid, 'whatsapp', contactLinks[contact.uid]?.whatsapp || '')
-                                                .then(() => handleSaveContactLink(contact.uid, 'messenger', contactLinks[contact.uid]?.messenger || ''))
-                                                .finally(() => {
-                                                    setSavingContact(null);
-                                                    alert("Coordonnées de " + contact.displayName + " enregistrées !");
-                                                });
-                                        }}
-                                        disabled={savingContact === contact.uid}
-                                    >
-                                        {savingContact === contact.uid ? "Enregistrement..." : "Enregistrer les coordonnées"}
-                                    </Button>
+                                    {(editingContacts.has(contact.uid) || (!contactLinks[contact.uid]?.whatsapp && !contactLinks[contact.uid]?.messenger)) && (
+                                        <Button
+                                            size="sm"
+                                            className="w-full text-[10px] h-7 rounded-lg bg-blue-600 hover:bg-blue-700 text-white border-none shadow-sm"
+                                            onClick={() => {
+                                                setSavingContact(contact.uid);
+                                                handleSaveContactLink(contact.uid, 'whatsapp', contactLinks[contact.uid]?.whatsapp || '')
+                                                    .then(() => handleSaveContactLink(contact.uid, 'messenger', contactLinks[contact.uid]?.messenger || ''))
+                                                    .finally(() => {
+                                                        setSavingContact(null);
+                                                        // setEditingContacts state update is handled inside handleSaveContactLink (added logic there)
+                                                        alert("Coordonnées de " + contact.displayName + " enregistrées !");
+                                                    });
+                                            }}
+                                            disabled={savingContact === contact.uid}
+                                        >
+                                            {savingContact === contact.uid ? "Enregistrement..." : "Enregistrer les coordonnées"}
+                                        </Button>
+                                    )}
                                 </div>
                             </div>
                         ))}
