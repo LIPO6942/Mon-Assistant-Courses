@@ -199,26 +199,25 @@ export default function SettingsPage() {
                                 </div>
 
                                 <div className="grid grid-cols-1 gap-2">
-                                    <div className="flex gap-2">
+                                    <div className="flex flex-col sm:flex-row gap-2">
                                         <input
                                             type="text"
                                             placeholder="WhatsApp (ex: 55555555)"
                                             value={contactLinks[contact.uid]?.whatsapp || ''}
                                             onChange={(e) => setContactLinks({ ...contactLinks, [contact.uid]: { ...contactLinks[contact.uid], whatsapp: e.target.value } })}
-                                            className="flex-1 text-[11px] p-2 rounded-lg border bg-background outline-none"
+                                            className="w-full text-[11px] p-2 rounded-lg border bg-background outline-none"
                                         />
                                         <input
                                             type="text"
                                             placeholder="Messenger (pseudo)"
                                             value={contactLinks[contact.uid]?.messenger || ''}
                                             onChange={(e) => setContactLinks({ ...contactLinks, [contact.uid]: { ...contactLinks[contact.uid], messenger: e.target.value } })}
-                                            className="flex-1 text-[11px] p-2 rounded-lg border bg-background outline-none"
+                                            className="w-full text-[11px] p-2 rounded-lg border bg-background outline-none"
                                         />
                                     </div>
                                     <Button
                                         size="sm"
-                                        variant="outline"
-                                        className="w-full text-[10px] h-7 rounded-lg"
+                                        className="w-full text-[10px] h-7 rounded-lg bg-blue-600 hover:bg-blue-700 text-white border-none shadow-sm"
                                         onClick={() => {
                                             setSavingContact(contact.uid);
                                             handleSaveContactLink(contact.uid, 'whatsapp', contactLinks[contact.uid]?.whatsapp || '')
