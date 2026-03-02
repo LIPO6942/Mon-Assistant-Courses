@@ -114,6 +114,7 @@ export interface Lawra9ImportData {
 export interface CommunityPurchase {
   id: string;
   ingredientName: string;
+  normalizedName?: string; // added for name normalization
   price: number;
   unit: string;
   quantity: number;

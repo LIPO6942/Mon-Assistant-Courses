@@ -17,6 +17,7 @@
 
 import { doc, getDoc, setDoc, collection, getDocs, query, where, addDoc, onSnapshot, deleteDoc } from 'firebase/firestore';
 import { firestoreDb } from '@/lib/firebase';
+import { normalizeIngredientName } from '@/lib/normalization';
 import { CommunityPurchase } from './types';
 export { firestoreDb };
 
@@ -152,6 +153,7 @@ export async function publishCommunityPurchases(uid: string, items: any[]) {
                 const docData = {
                     id: item.id,
                     ingredientName: item.name,
+                    normalizedName: normalizeIngredientName(item.name),
                     price: item.price,
                     unit: item.unit,
                     quantity: item.quantity,
@@ -175,7 +177,7 @@ export async function publishCommunityPurchases(uid: string, items: any[]) {
  * Only purchases from the last 30 days are kept client‑side.
  */
 export function listenCommunityPurchases(
-    onUpdate: (purchases: any[]) => void
+    onUpdate: (purchases: CommunityPurchase[]) => void
 ) {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -183,12 +185,12 @@ export function listenCommunityPurchases(
         collection(firestoreDb, 'communityPurchases'),
         where('date', '>=', thirtyDaysAgo.toISOString())
     );
-    const unsubscribe = onSnapshot(q, snapshot => {
+    const unsubscribe = onSnapshot(q, (snapshot) => {
         const purchases = snapshot.docs
-            .map(doc => ({ id: doc.id, ...doc.data() } as CommunityPurchase))
+            .map((doc) => ({ id: doc.id, ...doc.data() } as CommunityPurchase))
             .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
         onUpdate(purchases);
-    }, err => console.error('Community feed error:', err));
+    }, (err) => console.error('Community feed error:', err));
     return unsubscribe;
 }
 

@@ -63,10 +63,12 @@ export default function MarketPricesView() {
     }, []);
 
     const filteredPurchases = useMemo(() => {
-        return purchases
+        // Filter and sort as before
+        const filtered = purchases
             .filter(p => {
                 const searchLower = searchQuery.toLowerCase();
-                const matchesSearch = p.ingredientName.toLowerCase().includes(searchLower) || (p.store || '').toLowerCase().includes(searchLower);
+                const nameToSearch = (p.normalizedName || p.ingredientName).toLowerCase();
+                const matchesSearch = nameToSearch.includes(searchLower) || (p.store || '').toLowerCase().includes(searchLower);
                 const matchesStore = selectedStore === 'all' || p.store === selectedStore;
                 return matchesSearch && matchesStore;
             })
@@ -76,6 +78,16 @@ export default function MarketPricesView() {
                 }
                 return new Date(b.date).getTime() - new Date(a.date).getTime();
             });
+        // Group by normalizedName to avoid duplicate ingredient entries
+        const map = new Map<string, typeof filtered[0]>();
+        filtered.forEach(p => {
+            const key = p.normalizedName || p.ingredientName;
+            const existing = map.get(key);
+            if (!existing || new Date(p.date) > new Date(existing.date)) {
+                map.set(key, p);
+            }
+        });
+        return Array.from(map.values());
     }, [purchases, searchQuery, selectedStore, sortBy]);
 
     const stores = useMemo(() => {
