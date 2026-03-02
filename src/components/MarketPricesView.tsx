@@ -9,7 +9,7 @@ import { useAuth } from '@/context/AuthContext';
 import type { CommunityPurchase } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { StoreIcon } from './StoreIcon';
+import { StoreIcon, StoreOption } from './StoreIcon';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -195,9 +195,11 @@ export default function MarketPricesView() {
                                 </div>
                             </SelectTrigger>
                             <SelectContent className="rounded-2xl border-border/50 shadow-2xl">
-                                <SelectItem value="all">Tous</SelectItem>
+                                <SelectItem value="all">Tous les magasins</SelectItem>
                                 {stores.map(store => (
-                                    <SelectItem key={store} value={store}>{store}</SelectItem>
+                                    <SelectItem key={store} value={store}>
+                                        <StoreOption storeName={store} />
+                                    </SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>

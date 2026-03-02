@@ -89,6 +89,9 @@ export default function KitchenAssistantPage() {
   // In-App Sharing Receiving State
   const [incomingShare, setIncomingShare] = useState<any | null>(null);
 
+  // Ref to track URL-based share data even after URL is cleaned
+  const lastUrlEncodedData = useRef<string | null>(null);
+
 
 
   // --- WAKE LOCK ---
@@ -139,7 +142,11 @@ export default function KitchenAssistantPage() {
     if (!userUid) return;
 
     const unsubscribe = listenForIncomingShares(userUid, (share) => {
-      setIncomingShare(share);
+      // Don't show if already handled on this device
+      const isHandled = localStorage.getItem(`handled_share_${share.id}`);
+      if (!isHandled) {
+        setIncomingShare(share);
+      }
     });
 
     return () => unsubscribe();
@@ -147,14 +154,18 @@ export default function KitchenAssistantPage() {
 
   const handleAcceptShare = async () => {
     if (!incomingShare) return;
+    const shareId = incomingShare.id;
     setSharedBasketToMerge(incomingShare.items);
-    await updateShareStatus(incomingShare.id, 'accepted');
+    await updateShareStatus(shareId, 'accepted');
+    localStorage.setItem(`handled_share_${shareId}`, 'true');
     setIncomingShare(null);
   };
 
   const handleRefuseShare = async () => {
     if (!incomingShare) return;
-    await updateShareStatus(incomingShare.id, 'refused');
+    const shareId = incomingShare.id;
+    await updateShareStatus(shareId, 'refused');
+    localStorage.setItem(`handled_share_${shareId}`, 'true');
     setIncomingShare(null);
   };
 
@@ -254,13 +265,16 @@ export default function KitchenAssistantPage() {
       // 1. Detect Basket Share
       const encodedData = params.get('d');
       if (encodedData) {
-        const decodedBasket = decodeBasket(encodedData);
-        if (decodedBasket) {
-          setSharedBasketToMerge(decodedBasket);
-          if (!isInAppBrowser()) {
-            window.history.replaceState({}, '', window.location.pathname);
+        lastUrlEncodedData.current = encodedData;
+        const isHandled = localStorage.getItem(`handled_url_share_${encodedData}`);
+        if (!isHandled) {
+          const decodedBasket = decodeBasket(encodedData);
+          if (decodedBasket) {
+            setSharedBasketToMerge(decodedBasket);
           }
         }
+        // Always try to clean URL to prevent re-triggering, even in In-App browsers
+        window.history.replaceState({}, '', window.location.pathname);
       }
 
       // 2. Detect Recipe Share (Deep Link Data)
@@ -619,7 +633,12 @@ export default function KitchenAssistantPage() {
     if (!sharedBasketToMerge) return;
     const items = sharedBasketToMerge;
 
-    // 1. Prepare items with correct IDs (reuse pantry ID if exists)
+    // 1. Mark as handled if it came from a URL
+    if (lastUrlEncodedData.current) {
+      localStorage.setItem(`handled_url_share_${lastUrlEncodedData.current}`, 'true');
+    }
+
+    // 2. Prepare items with correct IDs (reuse pantry ID if exists)
     const itemsWithIds = items.map(item => {
       const existingInPantry = pantry.find(p => p.name.toLowerCase() === item.name.toLowerCase());
       return {
@@ -1077,7 +1096,13 @@ export default function KitchenAssistantPage() {
         setShareBasketDialogOpen={setShareBasketDialogOpen}
         basket={basket}
         sharedBasketToMerge={sharedBasketToMerge}
-        setSharedBasketToMerge={setSharedBasketToMerge}
+        setSharedBasketToMerge={(basket) => {
+          // If closing/ignoring from URL
+          if (basket === null && sharedBasketToMerge && lastUrlEncodedData.current) {
+            localStorage.setItem(`handled_url_share_${lastUrlEncodedData.current}`, 'true');
+          }
+          setSharedBasketToMerge(basket);
+        }}
         onMergeBasket={handleMergeBasket}
         pantry={pantry}
         purchaseHistory={purchaseHistory}

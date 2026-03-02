@@ -26,7 +26,9 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  SelectSeparator,
 } from '@/components/ui/select';
+import { Input } from './ui/input';
 
 interface BasketSheetProps {
   basket: BasketItem[];
@@ -51,8 +53,32 @@ export default function BasketSheet({
 }: BasketSheetProps) {
   const [isStoreDialogOpen, setIsStoreDialogOpen] = useState(false);
   const [selectedStore, setSelectedStore] = useState<string>('');
+  const [customStores, setCustomStores] = useState<string[]>([]);
+  const [isAddingStore, setIsAddingStore] = useState(false);
+  const [newStoreName, setNewStoreName] = useState('');
   const [lastSharedUser, setLastSharedUser] = useState<{ uid: string, name: string } | null>(null);
   const { user } = useAuth();
+
+  useEffect(() => {
+    const saved = localStorage.getItem('custom_stores');
+    if (saved) {
+      try {
+        setCustomStores(JSON.parse(saved));
+      } catch (e) { }
+    }
+  }, []);
+
+  const saveCustomStore = (name: string) => {
+    if (!name.trim()) return;
+    const exists = STORES.some(s => s.name.toLowerCase() === name.toLowerCase()) ||
+      customStores.some(s => s.toLowerCase() === name.toLowerCase());
+
+    if (!exists) {
+      const updated = [...customStores, name.trim()];
+      setCustomStores(updated);
+      localStorage.setItem('custom_stores', JSON.stringify(updated));
+    }
+  };
 
   useEffect(() => {
     const loadLastShared = () => {
@@ -105,7 +131,14 @@ export default function BasketSheet({
 
   const handleConfirmWithStore = () => {
     setIsStoreDialogOpen(false);
-    handleConfirmPurchase(selectedStore || undefined);
+    let storeToUse = selectedStore;
+    if (selectedStore === 'ADD_NEW_STORE' && newStoreName.trim()) {
+      storeToUse = newStoreName.trim();
+      saveCustomStore(storeToUse);
+    }
+    handleConfirmPurchase(storeToUse || undefined);
+    setIsAddingStore(false);
+    setNewStoreName('');
   };
 
   return (
@@ -241,7 +274,13 @@ export default function BasketSheet({
             </DialogDescription>
           </DialogHeader>
 
-          <Select value={selectedStore} onValueChange={setSelectedStore}>
+          <Select
+            value={selectedStore}
+            onValueChange={(val) => {
+              setSelectedStore(val);
+              setIsAddingStore(val === 'ADD_NEW_STORE');
+            }}
+          >
             <SelectTrigger className="w-full rounded-xl h-11">
               <SelectValue placeholder="Choisir un magasin..." />
             </SelectTrigger>
@@ -251,20 +290,53 @@ export default function BasketSheet({
                   <StoreOption storeName={store.name} />
                 </SelectItem>
               ))}
+              {customStores.map(store => (
+                <SelectItem key={store} value={store}>
+                  <StoreOption storeName={store} />
+                </SelectItem>
+              ))}
+              <SelectSeparator />
+              <SelectItem value="ADD_NEW_STORE" className="text-primary font-bold">
+                <div className="flex items-center gap-2">
+                  <Plus className="h-4 w-4" />
+                  <span>Autre magasin...</span>
+                </div>
+              </SelectItem>
             </SelectContent>
           </Select>
+
+          {isAddingStore && (
+            <div className="space-y-2 mt-2 animate-in slide-in-from-top-2 duration-300">
+              <label className="text-xs font-bold text-muted-foreground ml-1">Nom du magasin</label>
+              <Input
+                placeholder="Ex: Épicerie du coin, Monoprix City..."
+                value={newStoreName}
+                onChange={(e) => setNewStoreName(e.target.value)}
+                className="rounded-xl h-11"
+                autoFocus
+              />
+            </div>
+          )}
 
           <DialogFooter className="flex-col gap-2 sm:flex-col mt-2">
             <Button
               onClick={handleConfirmWithStore}
               className="w-full rounded-xl gap-2"
+              disabled={isAddingStore && !newStoreName.trim()}
             >
               <CheckCircle2 className="h-4 w-4" />
-              {selectedStore ? `Confirmer — ${selectedStore}` : 'Confirmer sans magasin'}
+              {isAddingStore
+                ? `Confirmer — ${newStoreName || '...'}`
+                : selectedStore && selectedStore !== 'ADD_NEW_STORE'
+                  ? `Confirmer — ${selectedStore}`
+                  : 'Confirmer sans magasin'}
             </Button>
             <Button
               variant="ghost"
-              onClick={() => setIsStoreDialogOpen(false)}
+              onClick={() => {
+                setIsStoreDialogOpen(false);
+                setIsAddingStore(false);
+              }}
               className="w-full text-muted-foreground text-xs"
             >
               Annuler

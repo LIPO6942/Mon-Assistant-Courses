@@ -1,13 +1,34 @@
 'use client';
 
 import { getStoreDef } from '@/lib/stores';
-import { Store } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface StoreIconProps {
     storeName: string;
     size?: 'xs' | 'sm' | 'md';
     className?: string;
+}
+
+/**
+ * Génère des initiales à partir du nom du magasin (ex: "Carrefour Market" -> "CM")
+ */
+function getInitials(name: string): string {
+    const parts = name.split(/[\s-]+/).filter(Boolean);
+    if (parts.length === 0) return '?';
+    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+    return (parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase();
+}
+
+/**
+ * Génère une couleur déterministe à partir d'une chaîne
+ */
+function getDeterministicColor(str: string): string {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const h = Math.abs(hash) % 360;
+    return `hsl(${h}, 70%, 45%)`;
 }
 
 /**
@@ -36,7 +57,6 @@ export function StoreIcon({ storeName, size = 'sm', className }: StoreIconProps)
                 alt={storeName}
                 className={cn('object-contain rounded-sm shrink-0', sizeClasses[size], className)}
                 onError={(e) => {
-                    // Si l'image n'existe pas encore, afficher le fallback
                     const target = e.currentTarget;
                     target.style.display = 'none';
                     const fallback = target.nextElementSibling as HTMLElement;
@@ -54,10 +74,13 @@ export function StoreIcon({ storeName, size = 'sm', className }: StoreIconProps)
                 containerSizeClasses[size],
                 className
             )}
-            style={{ backgroundColor: store?.color ?? '#6b7280', fontSize: size === 'xs' ? '8px' : size === 'sm' ? '10px' : '13px' }}
+            style={{
+                backgroundColor: store?.color ?? getDeterministicColor(storeName),
+                fontSize: size === 'xs' ? '7px' : size === 'sm' ? '9px' : '11px'
+            }}
             title={storeName}
         >
-            {storeName.charAt(0).toUpperCase()}
+            {getInitials(storeName)}
         </div>
     );
 }
@@ -70,35 +93,37 @@ export function StoreOption({ storeName }: { storeName: string }) {
 
     return (
         <div className="flex items-center gap-2.5">
-            {store?.logo ? (
-                <div className="h-7 w-10 flex items-center justify-center">
-                    <img
-                        src={store.logo}
-                        alt={storeName}
-                        className="h-6 w-auto max-w-[40px] object-contain"
-                        onError={(e) => {
-                            const target = e.currentTarget;
-                            target.style.display = 'none';
-                            const fallback = target.nextElementSibling as HTMLElement;
-                            if (fallback) fallback.style.display = 'flex';
-                        }}
-                    />
+            <div className="h-7 w-10 flex items-center justify-center">
+                {store?.logo ? (
+                    <>
+                        <img
+                            src={store.logo}
+                            alt={storeName}
+                            className="h-6 w-auto max-w-[40px] object-contain"
+                            onError={(e) => {
+                                const target = e.currentTarget;
+                                target.style.display = 'none';
+                                const fallback = target.nextElementSibling as HTMLElement;
+                                if (fallback) fallback.style.display = 'flex';
+                            }}
+                        />
+                        <div
+                            className="hidden h-6 w-6 rounded items-center justify-center text-white text-[10px] font-bold"
+                            style={{ backgroundColor: store?.color ?? getDeterministicColor(storeName) }}
+                        >
+                            {getInitials(storeName)}
+                        </div>
+                    </>
+                ) : (
                     <div
-                        className="hidden h-6 w-6 rounded items-center justify-center text-white text-[10px] font-bold"
-                        style={{ backgroundColor: store?.color ?? '#6b7280' }}
+                        className="h-6 w-6 rounded flex items-center justify-center text-white text-[10px] font-bold shrink-0"
+                        style={{ backgroundColor: store?.color ?? getDeterministicColor(storeName) }}
                     >
-                        {storeName.charAt(0)}
+                        {getInitials(storeName)}
                     </div>
-                </div>
-            ) : (
-                <div
-                    className="h-6 w-6 rounded flex items-center justify-center text-white text-[10px] font-bold shrink-0"
-                    style={{ backgroundColor: store?.color ?? '#6b7280' }}
-                >
-                    {storeName.charAt(0)}
-                </div>
-            )}
-            <span>{storeName}</span>
+                )}
+            </div>
+            <span className="truncate">{storeName}</span>
         </div>
     );
 }
