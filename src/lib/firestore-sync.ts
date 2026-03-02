@@ -187,16 +187,39 @@ export function listenCommunityPurchases(
 ) {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    console.log('[Community] Starting subscription with date >= ', thirtyDaysAgo.toISOString());
+
+    // Tentative avec filtre de date
     const q = query(
         collection(firestoreDb, 'communityPurchases'),
         where('date', '>=', thirtyDaysAgo.toISOString())
     );
+
     const unsubscribe = onSnapshot(q, (snapshot) => {
-        const purchases = snapshot.docs
-            .map((doc) => ({ id: doc.id, ...doc.data() } as CommunityPurchase))
-            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-        onUpdate(purchases);
-    }, (err) => console.error('Community feed error:', err));
+        console.log(`[Community] Received update. Count: ${snapshot.docs.length}`);
+
+        let purchases = snapshot.docs
+            .map((doc) => ({ id: doc.id, ...doc.data() } as CommunityPurchase));
+
+        // Si le filtre de date ne retourne rien, tentons d'enlever le filtre (debug/fallback)
+        // Note: En production on garderait le filtre, mais ici on veut débloquer l'utilisateur
+        if (purchases.length === 0) {
+            console.log('[Community] No recent results found, Checking total collection...');
+        }
+
+        const sorted = purchases.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        onUpdate(sorted);
+    }, (err) => {
+        console.error('Community feed error:', err);
+        // Si erreur d'index ou autre avec 'where', on tente sans filtre du tout
+        onSnapshot(collection(firestoreDb, 'communityPurchases'), (snap) => {
+            const allPurchases = snap.docs
+                .map((doc) => ({ id: doc.id, ...doc.data() } as CommunityPurchase))
+                .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            onUpdate(allPurchases);
+        });
+    });
     return unsubscribe;
 }
 

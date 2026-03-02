@@ -63,22 +63,21 @@ export default function MarketPricesView() {
     }, []);
 
     const filteredPurchases = useMemo(() => {
-        // Filter and sort as before
+        console.log('[MarketView] Raw purchases from Firestore:', purchases.length);
         const filtered = purchases
             .filter(p => {
                 const searchLower = searchQuery.toLowerCase();
-                const nameToSearch = (p.normalizedName || p.ingredientName).toLowerCase();
+                const nameToSearch = (p.normalizedName || p.ingredientName || '').toLowerCase();
                 const matchesSearch = nameToSearch.includes(searchLower) || (p.store || '').toLowerCase().includes(searchLower);
                 const matchesStore = selectedStore === 'all' || p.store === selectedStore;
                 return matchesSearch && matchesStore;
             })
             .sort((a, b) => {
-                if (sortBy === 'price') {
-                    return a.price - b.price;
-                }
+                if (sortBy === 'price') return a.price - b.price;
                 return new Date(b.date).getTime() - new Date(a.date).getTime();
             });
-        // Group by normalizedName to avoid duplicate ingredient entries
+
+        // Group by normalized name (avoid duplicates)
         const map = new Map<string, typeof filtered[0]>();
         filtered.forEach(p => {
             const key = p.normalizedName || p.ingredientName;
@@ -87,7 +86,9 @@ export default function MarketPricesView() {
                 map.set(key, p);
             }
         });
-        return Array.from(map.values());
+        const result = Array.from(map.values());
+        console.log('[MarketView] Final displayed items count:', result.length);
+        return result;
     }, [purchases, searchQuery, selectedStore, sortBy]);
 
     const stores = useMemo(() => {
