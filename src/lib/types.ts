@@ -1,6 +1,6 @@
 
 
-export const units = ['pièce', 'kg', 'g', 'L', 'ml', 'boîte', 'paquet', 'botte', 'cuillère à soupe', 'cuillère à café', 'Sachet', 'Bouteille'] as const;
+export const units = ['pièce', 'kg', 'g', 'L', 'ml', 'boîte', 'paquet', 'Sachet', 'Bouteille', 'Pot'] as const;
 
 export const recipeCategories = ['Entrée', 'Plat', 'Dessert', 'Boisson', 'Sauce', 'Accompagnement', 'Autre'] as const;
 export type RecipeCategory = typeof recipeCategories[number];
@@ -120,4 +120,5 @@ export interface CommunityPurchase {
   store?: string;
   date: string;
   category?: string;
+  userId?: string;
 }

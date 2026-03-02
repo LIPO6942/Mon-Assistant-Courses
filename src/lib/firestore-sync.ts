@@ -158,6 +158,7 @@ export async function publishCommunityPurchases(uid: string, items: any[]) {
                     store: item.store,
                     date: new Date().toISOString(),
                     category: item.category,
+                    userId: uid, // Store uid to allow deletion by the user
                 };
                 return addDoc(collection(firestoreDb, 'communityPurchases'), docData);
             });
@@ -189,6 +190,19 @@ export function listenCommunityPurchases(
         onUpdate(purchases);
     }, err => console.error('Community feed error:', err));
     return unsubscribe;
+}
+
+/**
+ * Deletes a specific community purchase.
+ * Only intended to be called for the user's own purchases.
+ */
+export async function deleteCommunityPurchase(purchaseId: string) {
+    try {
+        await deleteDoc(doc(firestoreDb, 'communityPurchases', purchaseId));
+    } catch (e) {
+        console.error('Error deleting community purchase:', e);
+        throw e;
+    }
 }
 
 

@@ -1,25 +1,31 @@
-
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { TrendingDown, Search, Store, Calendar, ArrowUpDown, Filter, AlertCircle, RefreshCw, Zap } from 'lucide-react';
-import { listenCommunityPurchases } from '@/lib/firestore-sync';
+import { TrendingDown, Search, Store, Calendar, ArrowUpDown, Filter, AlertCircle, RefreshCw, Zap, Trash2, X } from 'lucide-react';
+import { listenCommunityPurchases, deleteCommunityPurchase } from '@/lib/firestore-sync';
+import { useAuth } from '@/context/AuthContext';
 import type { CommunityPurchase } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { StoreIcon } from './StoreIcon';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 
 export default function MarketPricesView() {
+    const { user } = useAuth();
     const [purchases, setPurchases] = useState<CommunityPurchase[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedStore, setSelectedStore] = useState<string>('all');
     const [sortBy, setSortBy] = useState<'date' | 'price'>('date');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+    // Deletion states
+    const [purchaseToDelete, setPurchaseToDelete] = useState<CommunityPurchase | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     useEffect(() => {
         let isMounted = true;
@@ -93,6 +99,20 @@ export default function MarketPricesView() {
         const diffInDays = Math.floor(diffInHours / 24);
         if (diffInDays === 1) return "Hier";
         return `Il y a ${diffInDays} jours`;
+    };
+
+    const handleDelete = async () => {
+        if (!purchaseToDelete) return;
+
+        setIsDeleting(true);
+        try {
+            await deleteCommunityPurchase(purchaseToDelete.id);
+            setPurchaseToDelete(null);
+        } catch (err) {
+            alert("Erreur lors de la suppression. Veuillez réessayer.");
+        } finally {
+            setIsDeleting(false);
+        }
     };
 
     if (error) {
@@ -198,61 +218,86 @@ export default function MarketPricesView() {
                 </div>
             ) : filteredPurchases.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in duration-500">
-                    {filteredPurchases.map((purchase) => (
-                        <Card
-                            key={purchase.id}
-                            className="overflow-hidden border-border/20 bg-gradient-to-br from-white to-zinc-50/50 dark:from-zinc-900 dark:to-zinc-950/50 backdrop-blur-md rounded-[2.5rem] hover:ring-2 hover:ring-primary/20 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/5 group relative"
-                        >
-                            {/* Accent line on top */}
-                            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    {filteredPurchases.map((purchase) => {
+                        const isOwner = user && purchase.userId === user.uid;
 
-                            <CardHeader className="p-8 pb-4 flex flex-row items-start justify-between space-y-0">
-                                <div className="space-y-3">
-                                    <div className="flex items-center gap-2">
-                                        <div className="h-10 w-10 flex items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 transition-transform group-hover:scale-110 duration-500">
-                                            <TrendingDown className="h-5 w-5" />
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <CardTitle className="text-xl font-bold tracking-tight group-hover:text-primary transition-colors">
-                                                {purchase.ingredientName}
-                                            </CardTitle>
-                                            <CardDescription className="flex items-center gap-1.5 font-bold text-primary/80">
-                                                <Calendar className="h-4 w-4" />
-                                                {formatRelativeDate(purchase.date)}
-                                            </CardDescription>
-                                        </div>
+                        return (
+                            <Card
+                                key={purchase.id}
+                                className="overflow-hidden border-border/20 bg-gradient-to-br from-white to-zinc-50/50 dark:from-zinc-900 dark:to-zinc-950/50 backdrop-blur-md rounded-[2.5rem] hover:ring-2 hover:ring-primary/20 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/5 group relative"
+                            >
+                                {/* Owner badge */}
+                                {isOwner && (
+                                    <div className="absolute top-4 right-12 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[9px] font-black uppercase tracking-wider z-10 border border-primary/20">
+                                        Ma Contribution
                                     </div>
-                                </div>
-                                <div className="text-right flex flex-col items-end">
-                                    <div className="text-3xl font-black text-foreground group-hover:text-primary transition-colors">
-                                        {purchase.price.toFixed(3)}
-                                        <span className="text-sm font-black ml-1 text-muted-foreground italic">DT</span>
-                                    </div>
-                                    <Badge variant="secondary" className="mt-1 rounded-full px-3 py-0.5 text-[10px] font-black uppercase tracking-widest bg-zinc-200 dark:bg-zinc-800 border-none">
-                                        Par {purchase.unit}
-                                    </Badge>
-                                </div>
-                            </CardHeader>
-                            <CardContent className="p-8 pt-0">
-                                <div className="flex items-center justify-between mt-6 pt-6 border-t border-border/10">
-                                    <div className="flex items-center gap-3">
-                                        {purchase.store ? (
-                                            <div className="flex items-center gap-2 px-4 py-2 bg-background/50 backdrop-blur-sm rounded-2xl border border-border/20 shadow-sm transition-transform group-hover:translate-x-1 duration-500">
-                                                <StoreIcon storeName={purchase.store} size="sm" />
-                                                <span className="text-sm font-bold tracking-tight">{purchase.store}</span>
+                                )}
+
+                                {/* Delete button for owner */}
+                                {isOwner && (
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setPurchaseToDelete(purchase);
+                                        }}
+                                        className="absolute top-4 right-4 h-7 w-7 flex items-center justify-center rounded-full bg-destructive/10 text-destructive opacity-0 group-hover:opacity-100 transition-all hover:bg-destructive hover:text-destructive-foreground z-20"
+                                        title="Retirer ma contribution"
+                                    >
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                    </button>
+                                )}
+
+                                {/* Accent line on top */}
+                                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                                <CardHeader className="p-8 pb-4 flex flex-row items-start justify-between space-y-0">
+                                    <div className="space-y-3">
+                                        <div className="flex items-center gap-2">
+                                            <div className="h-10 w-10 flex items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 transition-transform group-hover:scale-110 duration-500">
+                                                <TrendingDown className="h-5 w-5" />
                                             </div>
-                                        ) : (
-                                            <div className="text-sm text-muted-foreground/60 italic font-medium px-4 py-2">Magasin non précisé</div>
-                                        )}
+                                            <div className="flex flex-col">
+                                                <CardTitle className="text-xl font-bold tracking-tight group-hover:text-primary transition-colors">
+                                                    {purchase.ingredientName}
+                                                </CardTitle>
+                                                <CardDescription className="flex items-center gap-1.5 font-bold text-primary/80">
+                                                    <Calendar className="h-4 w-4" />
+                                                    {formatRelativeDate(purchase.date)}
+                                                </CardDescription>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className="flex flex-col items-end">
-                                        <span className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest">Achat groupé</span>
-                                        <span className="text-lg font-bold">× {purchase.quantity}</span>
+                                    <div className="text-right flex flex-col items-end pt-1">
+                                        <div className="text-3xl font-black text-foreground group-hover:text-primary transition-colors">
+                                            {purchase.price.toFixed(3)}
+                                            <span className="text-sm font-black ml-1 text-muted-foreground italic">DT</span>
+                                        </div>
+                                        <Badge variant="secondary" className="mt-1 rounded-full px-3 py-0.5 text-[10px] font-black uppercase tracking-widest bg-zinc-200 dark:bg-zinc-800 border-none">
+                                            Par {purchase.unit}
+                                        </Badge>
                                     </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ))}
+                                </CardHeader>
+                                <CardContent className="p-8 pt-0">
+                                    <div className="flex items-center justify-between mt-6 pt-6 border-t border-border/10">
+                                        <div className="flex items-center gap-3">
+                                            {purchase.store ? (
+                                                <div className="flex items-center gap-2 px-4 py-2 bg-background/50 backdrop-blur-sm rounded-2xl border border-border/20 shadow-sm transition-transform group-hover:translate-x-1 duration-500">
+                                                    <StoreIcon storeName={purchase.store} size="sm" />
+                                                    <span className="text-sm font-bold tracking-tight">{purchase.store}</span>
+                                                </div>
+                                            ) : (
+                                                <div className="text-sm text-muted-foreground/60 italic font-medium px-4 py-2">Magasin non précisé</div>
+                                            )}
+                                        </div>
+                                        <div className="flex flex-col items-end">
+                                            <span className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest">Achat groupé</span>
+                                            <span className="text-lg font-bold">× {purchase.quantity}</span>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        );
+                    })}
                 </div>
             ) : (
                 <div className="flex flex-col items-center justify-center py-32 text-center space-y-8 bg-card/10 backdrop-blur-sm rounded-[3rem] border border-dashed border-border/10 animate-in zoom-in duration-500">
@@ -271,6 +316,40 @@ export default function MarketPricesView() {
                     </Button>
                 </div>
             )}
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog open={!!purchaseToDelete} onOpenChange={(open) => !open && !isDeleting && setPurchaseToDelete(null)}>
+                <DialogContent className="rounded-[2rem] max-w-sm">
+                    <DialogHeader>
+                        <DialogTitle className="text-2xl font-black flex items-center gap-2">
+                            <AlertCircle className="h-6 w-6 text-destructive" />
+                            Retirer le prix ?
+                        </DialogTitle>
+                        <DialogDescription className="font-medium pt-2 leading-relaxed">
+                            Êtes-vous sûr de vouloir retirer votre contribution pour <strong>{purchaseToDelete?.ingredientName}</strong> ?
+                            Celle-ci disparaîtra du flux pour tout le monde.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="flex flex-row gap-2 mt-6">
+                        <Button
+                            variant="ghost"
+                            className="flex-1 h-12 rounded-xl font-bold"
+                            disabled={isDeleting}
+                            onClick={() => setPurchaseToDelete(null)}
+                        >
+                            Annuler
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            className="flex-1 h-12 rounded-xl font-bold shadow-lg shadow-destructive/20"
+                            disabled={isDeleting}
+                            onClick={handleDelete}
+                        >
+                            {isDeleting ? <RefreshCw className="h-4 w-4 animate-spin" /> : "Retirer"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
