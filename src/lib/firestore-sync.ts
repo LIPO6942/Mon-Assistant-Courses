@@ -135,6 +135,62 @@ export async function savePurchaseHistory(uid: string, data: any) {
     }
 }
 
+// ---------- community purchase feed (anonymous) ----------
+
+/**
+ * Publishes purchased items to the global community feed.
+ * Each record is stored in the collection `communityPurchases`.
+ * No user identifier is saved – the document only contains the ingredient
+ * name, price, unit, quantity, optional store and the purchase date.
+ */
+export async function publishCommunityPurchases(uid: string, items: any[]) {
+    try {
+        const batch = items
+            .filter(item => item.purchased)
+            .map(item => {
+                const docData = {
+                    id: item.id,
+                    ingredientName: item.name,
+                    price: item.price,
+                    unit: item.unit,
+                    quantity: item.quantity,
+                    store: item.store,
+                    date: new Date().toISOString(),
+                    category: item.category,
+                };
+                return addDoc(collection(firestoreDb, 'communityPurchases'), docData);
+            });
+        await Promise.all(batch);
+    } catch (e) {
+        console.error('Error publishing community purchases:', e);
+    }
+}
+
+/**
+ * Listens in real‑time to the community purchase feed.
+ * Returns a function that unsubscribes when called.
+ * The callback receives an array of CommunityPurchase sorted by newest first.
+ * Only purchases from the last 30 days are kept client‑side.
+ */
+export function listenCommunityPurchases(
+    onUpdate: (purchases: any[]) => void
+) {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const q = query(
+        collection(firestoreDb, 'communityPurchases'),
+        where('date', '>=', thirtyDaysAgo.toISOString())
+    );
+    const unsubscribe = onSnapshot(q, snapshot => {
+        const purchases = snapshot.docs
+            .map(doc => ({ id: doc.id, ...doc.data() }))
+            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        onUpdate(purchases);
+    }, err => console.error('Community feed error:', err));
+    return unsubscribe;
+}
+
+
 // ---------- user profiles (global) ----------
 
 export async function syncUserProfile(uid: string, displayName: string, email: string, whatsapp?: string, messenger?: string) {

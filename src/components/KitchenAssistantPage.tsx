@@ -14,6 +14,7 @@ import PantryView from './PantryView';
 import RecipesView from './RecipesView';
 import ChandyekView from './ChandyekView';
 import NutritionalGuideView from './NutritionalGuideView';
+import MarketPricesView from './MarketPricesView';
 import CategoryPriceEvolutionDialog from './CategoryPriceEvolutionDialog';
 import SettingsPage from './SettingsPage';
 import { db } from '@/lib/idb';
@@ -37,6 +38,7 @@ import {
   savePurchaseHistory,
   listenForIncomingShares,
   updateShareStatus,
+  publishCommunityPurchases,
 } from '@/lib/firestore-sync';
 
 
@@ -54,7 +56,7 @@ export default function KitchenAssistantPage() {
   const [isDataLoaded, setIsDataLoaded] = useState(false);
 
   // Ephemeral state
-  const [activeTab, setActiveTab] = useState<'pantry' | 'recipes' | 'chandyek' | 'guide' | 'settings'>('pantry');
+  const [activeTab, setActiveTab] = useState<'pantry' | 'recipes' | 'chandyek' | 'guide' | 'settings' | 'market'>('pantry');
   const [searchQuery, setSearchQuery] = useState('');
 
   // Chandyek (AI) State
@@ -582,6 +584,17 @@ export default function KitchenAssistantPage() {
     setPurchaseHistory(newHistory);
     setTotalSpent(prev => prev + costOfPurchasedItems);
     setBasket(prevBasket => prevBasket.filter(item => !item.purchased));
+
+    // Publier les prix dans la base de données communautaire (anonyme)
+    if (user) {
+      const purchasedItems = basket.filter(item => item.purchased).map(item => ({
+        ...item,
+        store // associer le magasin choisi pour la publication communautaire
+      }));
+      if (purchasedItems.length > 0) {
+        publishCommunityPurchases(user.uid, purchasedItems);
+      }
+    }
   };
 
   const handleDeleteFromHistory = (ingredientId: string) => {
@@ -982,6 +995,9 @@ export default function KitchenAssistantPage() {
           )}
           {activeTab === 'settings' && (
             <SettingsPage />
+          )}
+          {activeTab === 'market' && (
+            <MarketPricesView />
           )}
         </div >
       </main >

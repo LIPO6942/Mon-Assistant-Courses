@@ -110,3 +110,14 @@ export interface Lawra9ImportData {
   date: string;
   products: Lawra9Product[];
 }
+
+export interface CommunityPurchase {
+  id: string;
+  ingredientName: string;
+  price: number;
+  unit: string;
+  quantity: number;
+  store?: string;
+  date: string;
+  category?: string;
+}

@@ -2,13 +2,13 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { UtensilsCrossed, BookOpen, BrainCircuit, HeartPulse, Settings } from 'lucide-react';
+import { UtensilsCrossed, BookOpen, BrainCircuit, HeartPulse, Settings, TrendingDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from './ui/badge';
 
 interface AppNavProps {
-  activeTab: 'pantry' | 'recipes' | 'chandyek' | 'guide' | 'settings';
-  setActiveTab: (tab: 'pantry' | 'recipes' | 'chandyek' | 'guide' | 'settings') => void;
+  activeTab: 'pantry' | 'recipes' | 'chandyek' | 'guide' | 'settings' | 'market';
+  setActiveTab: (tab: 'pantry' | 'recipes' | 'chandyek' | 'guide' | 'settings' | 'market') => void;
   chandyekIngredientCount: number;
 }
 
@@ -43,6 +43,12 @@ export default function AppNav({ activeTab, setActiveTab, chandyekIngredientCoun
             activeTab === 'guide' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-primary/80'
           )}>
             <HeartPulse className="mr-2 h-4 w-4" />Guide Santé
+          </Button>
+          <Button variant="ghost" onClick={() => setActiveTab('market')} className={cn(
+            "shrink-0 rounded-none h-12 border-b-2 font-semibold px-4",
+            activeTab === 'market' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-primary/80'
+          )}>
+            <TrendingDown className="mr-2 h-4 w-4" />Prix du marché
           </Button>
           <Button variant="ghost" onClick={() => setActiveTab('settings')} className={cn(
             "shrink-0 rounded-none h-12 border-b-2 font-semibold px-4",

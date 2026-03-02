@@ -86,7 +86,7 @@ export default function QuickReorderSheet({ purchaseHistory, pantry, onAddToBask
                                                         Dernier achat: {new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(new Date(latestRecord.date))}
                                                     </p>
                                                     <p className="text-xs text-muted-foreground font-medium">
-                                                        {latestRecord.quantity} {latestRecord.unit} • {latestRecord.price?.toFixed(3) || "0.000"} DT
+                                                        {latestRecord.quantity} {latestRecord.unit} • {((latestRecord.price || 0) * (latestRecord.quantity || 1)).toFixed(3)} DT
                                                     </p>
                                                 </div>
                                             ) : (
