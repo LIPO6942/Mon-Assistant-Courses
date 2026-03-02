@@ -592,7 +592,9 @@ export default function KitchenAssistantPage() {
         store // associer le magasin choisi pour la publication communautaire
       }));
       if (purchasedItems.length > 0) {
-        publishCommunityPurchases(user.uid, purchasedItems);
+        publishCommunityPurchases(user.uid, purchasedItems)
+          .then(() => console.log('[Market] Community prices published successfully.'))
+          .catch(err => console.error('[Market] Failed to publish community prices:', err));
       }
     }
   };

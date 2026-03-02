@@ -147,26 +147,32 @@ export async function savePurchaseHistory(uid: string, data: any) {
  */
 export async function publishCommunityPurchases(uid: string, items: any[]) {
     try {
+        // items are already filtered for purchased=true by the caller
         const batch = items
-            .filter(item => item.purchased)
+            .filter(item => item.price !== undefined && item.price !== null)
             .map(item => {
-                const docData = {
-                    id: item.id,
+                // Only include defined fields to avoid Firestore rejections
+                const docData: Record<string, any> = {
                     ingredientName: item.name,
                     normalizedName: normalizeIngredientName(item.name),
-                    price: item.price,
-                    unit: item.unit,
-                    quantity: item.quantity,
-                    store: item.store,
+                    price: Number(item.price) || 0,
+                    unit: item.unit || 'pièce',
+                    quantity: Number(item.quantity) || 1,
                     date: new Date().toISOString(),
-                    category: item.category,
+                    category: item.category || 'Autre',
                     userId: uid, // Store uid to allow deletion by the user
                 };
+                // Only add optional fields if they have a real value
+                if (item.store && typeof item.store === 'string') {
+                    docData.store = item.store;
+                }
                 return addDoc(collection(firestoreDb, 'communityPurchases'), docData);
             });
         await Promise.all(batch);
+        console.log(`[Community] Published ${batch.length} items to community feed.`);
     } catch (e) {
         console.error('Error publishing community purchases:', e);
+        throw e; // Re-throw so callers can handle
     }
 }
 
