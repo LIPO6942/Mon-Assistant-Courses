@@ -24,11 +24,9 @@ export default function SettingsPage() {
 
         if (user) {
             // Load personal profile info from Firestore
-            import('@/lib/firestore-sync').then(({ firestoreDb }) => {
-                const { doc, getDoc } = require('firebase/firestore');
-                getDoc(doc(firestoreDb, 'users', user.uid)).then((snap: any) => {
-                    if (snap.exists()) {
-                        const data = snap.data();
+            import('@/lib/firestore-sync').then(({ getUserProfile }) => {
+                getUserProfile(user.uid).then((data: any) => {
+                    if (data) {
                         setWhatsapp(data.whatsapp || '');
                         setMessenger(data.messenger || '');
                     }

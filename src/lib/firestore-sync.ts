@@ -17,6 +17,7 @@
 
 import { doc, getDoc, setDoc, collection, getDocs, query, where, addDoc, onSnapshot, deleteDoc } from 'firebase/firestore';
 import { firestoreDb } from '@/lib/firebase';
+export { firestoreDb };
 
 // ---------- helpers ----------
 
@@ -148,6 +149,16 @@ export async function syncUserProfile(uid: string, displayName: string, email: s
         }, { merge: true });
     } catch (e) {
         console.error('Error syncing user profile:', e);
+    }
+}
+
+export async function getUserProfile(uid: string) {
+    try {
+        const snap = await getDoc(doc(firestoreDb, 'users', uid));
+        return snap.exists() ? snap.data() : null;
+    } catch (e) {
+        console.error('Error getting user profile:', e);
+        return null;
     }
 }
 

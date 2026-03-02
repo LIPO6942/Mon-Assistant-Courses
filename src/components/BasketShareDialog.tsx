@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { BasketItem } from "@/lib/types";
 import { encodeBasket } from "@/lib/url-sharing";
 import { Copy, Share2, Check, Users, Send } from "lucide-react";
-import { getAllUsers, sendBasketShare, recordFrequentContact, getFrequentContacts } from "@/lib/firestore-sync";
+import { getAllUsers, sendBasketShare, recordFrequentContact, getFrequentContacts, getContactLinks } from "@/lib/firestore-sync";
 import { useAuth } from "@/context/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "./ui/scroll-area";
@@ -55,8 +55,7 @@ export function BasketShareDialog({
             Promise.all([
                 getAllUsers(),
                 getFrequentContacts(user.uid),
-                // We'll dynamic import getContactLinks to avoid SSR/Initial load issues if any
-                import('@/lib/firestore-sync').then(m => m.getContactLinks(user.uid))
+                getContactLinks(user.uid)
             ]).then(([users, frequentIds, links]) => {
                 console.log("Membres trouvés en base:", users.length);
                 const others = users.filter(u => u.uid !== user?.uid);
