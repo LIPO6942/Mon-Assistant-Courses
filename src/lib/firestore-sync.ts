@@ -247,6 +247,25 @@ export async function getFrequentContacts(uid: string): Promise<string[]> {
     }
 }
 
+export async function deleteFrequentContact(uid: string, contactUid: string) {
+    try {
+        const docRef = userDocRef(uid, 'frequentContacts');
+        const snap = await getDoc(docRef);
+        if (!snap.exists()) return;
+
+        let contacts: string[] = snap.data().contacts || [];
+        // Remove if exists
+        const oldLength = contacts.length;
+        contacts = contacts.filter(id => id !== contactUid);
+
+        if (contacts.length !== oldLength) {
+            await setDoc(docRef, { contacts, updatedAt: new Date().toISOString() }, { merge: true });
+        }
+    } catch (e) {
+        console.error('Error deleting frequent contact:', e);
+    }
+}
+
 // ---------- contact associations (private) ----------
 
 export async function saveContactAssociation(uid: string, contactUid: string, data: { whatsapp?: string, messenger?: string }) {

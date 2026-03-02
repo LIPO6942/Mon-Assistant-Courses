@@ -12,6 +12,7 @@ export default function SettingsPage() {
     const [messenger, setMessenger] = useState('');
     const [frequentContacts, setFrequentContacts] = useState<any[]>([]);
     const [contactLinks, setContactLinks] = useState<Record<string, { whatsapp?: string, messenger?: string }>>({});
+    const [savingContact, setSavingContact] = useState<string | null>(null);
     const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
@@ -63,6 +64,15 @@ export default function SettingsPage() {
         setContactLinks(newLinks);
         const { saveContactAssociation } = await import('@/lib/firestore-sync');
         await saveContactAssociation(user.uid, contactUid, newLinks[contactUid]);
+    };
+
+    const handleRemoveContact = async (contactUid: string) => {
+        if (!user) return;
+        if (!confirm("Retirer ce contact de vos fréquents ?")) return;
+
+        const { deleteFrequentContact } = await import('@/lib/firestore-sync');
+        await deleteFrequentContact(user.uid, contactUid);
+        setFrequentContacts(frequentContacts.filter(c => c.uid !== contactUid));
     };
 
     const handleClearShortcut = () => {
@@ -167,9 +177,17 @@ export default function SettingsPage() {
                             Associez manuellement vos amis à leurs réseaux s'ils ne l'ont pas fait. (Privé pour vous)
                         </p>
                     </div>
-                    <div className="divide-y max-h-80 overflow-y-auto">
+                    <div className="divide-y max-h-96 overflow-y-auto">
                         {frequentContacts.map(contact => (
-                            <div key={contact.uid} className="p-4 space-y-3">
+                            <div key={contact.uid} className="p-4 space-y-3 relative group">
+                                <button
+                                    onClick={() => handleRemoveContact(contact.uid)}
+                                    className="absolute top-4 right-4 p-1.5 text-muted-foreground hover:text-destructive transition-colors rounded-lg hover:bg-destructive/10"
+                                    title="Retirer des fréquents"
+                                >
+                                    <LogOut className="h-4 w-4 rotate-180" />
+                                </button>
+
                                 <div className="flex items-center gap-3">
                                     <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
                                         {contact.displayName?.charAt(0).toUpperCase()}
@@ -179,23 +197,41 @@ export default function SettingsPage() {
                                         <span className="text-[10px] text-muted-foreground">{contact.email}</span>
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-2 gap-2">
-                                    <input
-                                        type="text"
-                                        placeholder="WhatsApp"
-                                        value={contactLinks[contact.uid]?.whatsapp || ''}
-                                        onChange={(e) => setContactLinks({ ...contactLinks, [contact.uid]: { ...contactLinks[contact.uid], whatsapp: e.target.value } })}
-                                        onBlur={(e) => handleSaveContactLink(contact.uid, 'whatsapp', e.target.value)}
-                                        className="text-[11px] p-2 rounded-lg border bg-background outline-none"
-                                    />
-                                    <input
-                                        type="text"
-                                        placeholder="Messenger"
-                                        value={contactLinks[contact.uid]?.messenger || ''}
-                                        onChange={(e) => setContactLinks({ ...contactLinks, [contact.uid]: { ...contactLinks[contact.uid], messenger: e.target.value } })}
-                                        onBlur={(e) => handleSaveContactLink(contact.uid, 'messenger', e.target.value)}
-                                        className="text-[11px] p-2 rounded-lg border bg-background outline-none"
-                                    />
+
+                                <div className="grid grid-cols-1 gap-2">
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            placeholder="WhatsApp (ex: 55555555)"
+                                            value={contactLinks[contact.uid]?.whatsapp || ''}
+                                            onChange={(e) => setContactLinks({ ...contactLinks, [contact.uid]: { ...contactLinks[contact.uid], whatsapp: e.target.value } })}
+                                            className="flex-1 text-[11px] p-2 rounded-lg border bg-background outline-none"
+                                        />
+                                        <input
+                                            type="text"
+                                            placeholder="Messenger (pseudo)"
+                                            value={contactLinks[contact.uid]?.messenger || ''}
+                                            onChange={(e) => setContactLinks({ ...contactLinks, [contact.uid]: { ...contactLinks[contact.uid], messenger: e.target.value } })}
+                                            className="flex-1 text-[11px] p-2 rounded-lg border bg-background outline-none"
+                                        />
+                                    </div>
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="w-full text-[10px] h-7 rounded-lg"
+                                        onClick={() => {
+                                            setSavingContact(contact.uid);
+                                            handleSaveContactLink(contact.uid, 'whatsapp', contactLinks[contact.uid]?.whatsapp || '')
+                                                .then(() => handleSaveContactLink(contact.uid, 'messenger', contactLinks[contact.uid]?.messenger || ''))
+                                                .finally(() => {
+                                                    setSavingContact(null);
+                                                    alert("Coordonnées de " + contact.displayName + " enregistrées !");
+                                                });
+                                        }}
+                                        disabled={savingContact === contact.uid}
+                                    >
+                                        {savingContact === contact.uid ? "Enregistrement..." : "Enregistrer les coordonnées"}
+                                    </Button>
                                 </div>
                             </div>
                         ))}
