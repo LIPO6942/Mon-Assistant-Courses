@@ -136,12 +136,14 @@ export async function savePurchaseHistory(uid: string, data: any) {
 
 // ---------- user profiles (global) ----------
 
-export async function syncUserProfile(uid: string, displayName: string, email: string) {
+export async function syncUserProfile(uid: string, displayName: string, email: string, whatsapp?: string, messenger?: string) {
     try {
         await setDoc(doc(firestoreDb, 'users', uid), {
             uid,
             displayName,
             email,
+            ...(whatsapp ? { whatsapp } : {}),
+            ...(messenger ? { messenger } : {}),
             lastSeen: new Date().toISOString()
         }, { merge: true });
     } catch (e) {
@@ -231,5 +233,34 @@ export async function getFrequentContacts(uid: string): Promise<string[]> {
     } catch (e) {
         console.error('Error getting frequent contacts:', e);
         return [];
+    }
+}
+
+// ---------- contact associations (private) ----------
+
+export async function saveContactAssociation(uid: string, contactUid: string, data: { whatsapp?: string, messenger?: string }) {
+    try {
+        const docRef = doc(firestoreDb, 'users', uid, 'contactLinks', contactUid);
+        await setDoc(docRef, {
+            ...data,
+            updatedAt: new Date().toISOString()
+        });
+    } catch (e) {
+        console.error('Error saving contact association:', e);
+    }
+}
+
+export async function getContactLinks(uid: string) {
+    try {
+        const colRef = collection(firestoreDb, 'users', uid, 'contactLinks');
+        const snap = await getDocs(colRef);
+        const links: Record<string, { whatsapp?: string, messenger?: string }> = {};
+        snap.forEach(doc => {
+            links[doc.id] = doc.data() as any;
+        });
+        return links;
+    } catch (e) {
+        console.error('Error getting contact links:', e);
+        return {};
     }
 }
