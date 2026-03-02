@@ -241,12 +241,12 @@ export default function MarketPricesView() {
                         return (
                             <Card
                                 key={purchase.id}
-                                className="overflow-hidden border-border/20 bg-gradient-to-br from-white to-zinc-50/50 dark:from-zinc-900 dark:to-zinc-950/50 backdrop-blur-md rounded-[2.5rem] hover:ring-2 hover:ring-primary/20 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/5 group relative"
+                                className="overflow-hidden border-border/20 bg-gradient-to-br from-white to-zinc-50/50 dark:from-zinc-900 dark:to-zinc-950/50 backdrop-blur-md rounded-3xl hover:ring-2 hover:ring-primary/20 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/5 group relative"
                             >
                                 {/* Owner badge */}
                                 {isOwner && (
-                                    <div className="absolute top-4 right-12 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[9px] font-black uppercase tracking-wider z-10 border border-primary/20">
-                                        Ma Contribution
+                                    <div className="absolute top-3 right-10 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[8px] font-black uppercase tracking-wider z-10 border border-primary/20">
+                                        Moi
                                     </div>
                                 )}
 
@@ -257,58 +257,55 @@ export default function MarketPricesView() {
                                             e.stopPropagation();
                                             setPurchaseToDelete(purchase);
                                         }}
-                                        className="absolute top-4 right-4 h-7 w-7 flex items-center justify-center rounded-full bg-destructive/10 text-destructive opacity-0 group-hover:opacity-100 transition-all hover:bg-destructive hover:text-destructive-foreground z-20"
-                                        title="Retirer ma contribution"
+                                        className="absolute top-3 right-3 h-6 w-6 flex items-center justify-center rounded-full bg-destructive/10 text-destructive opacity-0 group-hover:opacity-100 transition-all hover:bg-destructive hover:text-destructive-foreground z-20"
+                                        title="Retirer"
                                     >
-                                        <Trash2 className="h-3.5 w-3.5" />
+                                        <Trash2 className="h-3 w-3" />
                                     </button>
                                 )}
 
-                                {/* Accent line on top */}
-                                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-
-                                <CardHeader className="p-8 pb-4 flex flex-row items-start justify-between space-y-0">
-                                    <div className="space-y-3">
+                                <CardHeader className="p-4 sm:p-5 pb-2 flex flex-row items-start justify-between space-y-0">
+                                    <div className="space-y-2 min-w-0 flex-1">
                                         <div className="flex items-center gap-2">
-                                            <div className="h-10 w-10 flex items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 transition-transform group-hover:scale-110 duration-500">
-                                                <TrendingDown className="h-5 w-5" />
+                                            <div className="h-8 w-8 shrink-0 flex items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 group-hover:scale-105 transition-transform duration-500">
+                                                <TrendingDown className="h-4 w-4" />
                                             </div>
-                                            <div className="flex flex-col">
-                                                <CardTitle className="text-xl font-bold tracking-tight group-hover:text-primary transition-colors">
+                                            <div className="flex flex-col min-w-0">
+                                                <CardTitle className="text-base sm:text-lg font-bold tracking-tight truncate group-hover:text-primary transition-colors">
                                                     {purchase.ingredientName}
                                                 </CardTitle>
-                                                <CardDescription className="flex items-center gap-1.5 font-bold text-primary/80">
-                                                    <Calendar className="h-4 w-4" />
+                                                <CardDescription className="flex items-center gap-1 font-semibold text-[10px] sm:text-xs text-primary/80">
+                                                    <Calendar className="h-3 w-3" />
                                                     {formatRelativeDate(purchase.date)}
                                                 </CardDescription>
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="text-right flex flex-col items-end pt-1">
-                                        <div className="text-3xl font-black text-foreground group-hover:text-primary transition-colors">
+                                    <div className="text-right flex flex-col items-end pt-0.5 ml-2">
+                                        <div className="text-lg sm:text-2xl font-black text-foreground group-hover:text-primary transition-colors whitespace-nowrap">
                                             {purchase.price.toFixed(3)}
-                                            <span className="text-sm font-black ml-1 text-muted-foreground italic">DT</span>
+                                            <span className="text-[10px] font-black ml-0.5 text-muted-foreground italic">DT</span>
                                         </div>
-                                        <Badge variant="secondary" className="mt-1 rounded-full px-3 py-0.5 text-[10px] font-black uppercase tracking-widest bg-zinc-200 dark:bg-zinc-800 border-none">
-                                            Par {purchase.unit}
+                                        <Badge variant="secondary" className="mt-0.5 rounded-full px-2 py-0 text-[8px] font-black uppercase tracking-wider bg-zinc-200 dark:bg-zinc-800 border-none">
+                                            / {purchase.unit}
                                         </Badge>
                                     </div>
                                 </CardHeader>
-                                <CardContent className="p-8 pt-0">
-                                    <div className="flex items-center justify-between mt-6 pt-6 border-t border-border/10">
-                                        <div className="flex items-center gap-3">
+                                <CardContent className="p-4 sm:p-5 pt-0">
+                                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/10">
+                                        <div className="flex items-center gap-2 min-w-0">
                                             {purchase.store ? (
-                                                <div className="flex items-center gap-2 px-4 py-2 bg-background/50 backdrop-blur-sm rounded-2xl border border-border/20 shadow-sm transition-transform group-hover:translate-x-1 duration-500">
-                                                    <StoreIcon storeName={purchase.store} size="sm" />
-                                                    <span className="text-sm font-bold tracking-tight">{purchase.store}</span>
+                                                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-background/50 backdrop-blur-sm rounded-xl border border-border/20 shadow-sm min-w-0">
+                                                    <StoreIcon storeName={purchase.store} size="xs" />
+                                                    <span className="text-[10px] sm:text-xs font-bold tracking-tight truncate">{purchase.store}</span>
                                                 </div>
                                             ) : (
-                                                <div className="text-sm text-muted-foreground/60 italic font-medium px-4 py-2">Magasin non précisé</div>
+                                                <div className="text-[10px] text-muted-foreground/60 italic font-medium">Magasin non précisé</div>
                                             )}
                                         </div>
-                                        <div className="flex flex-col items-end">
-                                            <span className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest">Achat groupé</span>
-                                            <span className="text-lg font-bold">× {purchase.quantity}</span>
+                                        <div className="flex flex-col items-end shrink-0">
+                                            <span className="text-[8px] font-black text-muted-foreground/40 uppercase tracking-widest leading-none">Quantité</span>
+                                            <span className="text-sm sm:text-lg font-bold leading-tight">× {purchase.quantity}</span>
                                         </div>
                                     </div>
                                 </CardContent>
