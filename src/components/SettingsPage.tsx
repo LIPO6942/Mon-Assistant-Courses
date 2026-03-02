@@ -121,7 +121,7 @@ export default function SettingsPage() {
                 <div className="p-6 space-y-4">
                     <div className="space-y-2">
                         <label className="text-xs font-medium flex items-center gap-2">
-                            <Smartphone className="h-3 w-3 text-green-500" /> WhatsApp (ex: 33612345678)
+                            <Smartphone className="h-3 w-3 text-green-500" /> WhatsApp (ex: 55555555)
                         </label>
                         <input
                             type="text"
@@ -135,6 +135,9 @@ export default function SettingsPage() {
                         <label className="text-xs font-medium flex items-center gap-2">
                             <Smartphone className="h-3 w-3 text-blue-500" /> Messenger (Nom d'utilisateur)
                         </label>
+                        <p className="text-[10px] text-muted-foreground italic -mt-1 ml-5">
+                            Messenger {">"} Paramètres {">"} Nom d'utilisateur
+                        </p>
                         <input
                             type="text"
                             value={messenger}
