@@ -93,16 +93,39 @@ export default function RecipesView({
 
   }, [userRecipes, userRecipeTagFilter]);
 
-  // Calculate market prices from community purchases
-  const marketPrices = useMemo(() => {
-    return calculateMarketPrices(communityPurchases);
-  }, [communityPurchases]);
+  // Listen to community purchases for recipe cost calculations
+  useEffect(() => {
+    let isMounted = true;
+
+    try {
+      const unsubscribe = listenCommunityPurchases((data) => {
+        if (isMounted) {
+          setCommunityPurchases(data as CommunityPurchase[]);
+        }
+      });
+
+      return () => {
+        isMounted = false;
+        unsubscribe();
+      };
+    } catch (err) {
+      console.error("Error listening to community purchases:", err);
+    }
+  }, []);
+
+  // Cleanup interval on component unmount
+  useEffect(() => {
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
       }
     };
   }, []);
+
+  // Calculate market prices from community purchases
+  const marketPrices = useMemo(() => {
+    return calculateMarketPrices(communityPurchases);
+  }, [communityPurchases]);
 
   // --- Basket-based Recommendations ---
   const basketBasedRecipes = useMemo(() => {
