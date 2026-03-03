@@ -6,11 +6,13 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, Shuffle, Dices, Clock, Coins, Utensils, BookUser, Search, Tag, Sparkles } from 'lucide-react';
-import type { Recipe, UserRecipe, BasketItem, PurchaseHistory } from '@/lib/types';
+import { PlusCircle, Shuffle, Dices, Clock, Coins, Utensils, BookUser, Search, Tag, Sparkles, TrendingDown } from 'lucide-react';
+import type { Recipe, UserRecipe, BasketItem, PurchaseHistory, CommunityPurchase } from '@/lib/types';
 import { streetFoodOptions } from '@/lib/data';
 import { cn, getProductStatus } from '@/lib/utils';
 import Image from 'next/image';
+import { listenCommunityPurchases } from '@/lib/firestore-sync';
+import { calculateMarketPrices, calculateRecipeCost, getRecipeAvailabilityPercentage, formatPrice } from '@/lib/price-utils';
 import {
   Accordion,
   AccordionContent,
@@ -48,7 +50,28 @@ export default function RecipesView({
 
   const [filterQuick, setFilterQuick] = useState(false);
   const [filterEconomical, setFilterEconomical] = useState(false);
+  const [communityPurchases, setCommunityPurchases] = useState<CommunityPurchase[]>([]);
   const [userRecipeTagFilter, setUserRecipeTagFilter] = useState('');
+
+  // Listen to community purchases for recipe cost calculations
+  useEffect(() => {
+    let isMounted = true;
+
+    try {
+      const unsubscribe = listenCommunityPurchases((data) => {
+        if (isMounted) {
+          setCommunityPurchases(data as CommunityPurchase[]);
+        }
+      });
+
+      return () => {
+        isMounted = false;
+        unsubscribe();
+      };
+    } catch (err) {
+      console.error("Error listening to community purchases:", err);
+    }
+  }, []);
 
   const filteredDiscoverableRecipes = useMemo(() => {
     return discoverableRecipes.filter(recipe => {
@@ -70,8 +93,10 @@ export default function RecipesView({
 
   }, [userRecipes, userRecipeTagFilter]);
 
-
-  useEffect(() => {
+  // Calculate market prices from community purchases
+  const marketPrices = useMemo(() => {
+    return calculateMarketPrices(communityPurchases);
+  }, [communityPurchases]);
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
@@ -258,7 +283,11 @@ export default function RecipesView({
               {basketBasedRecipes[0].isDiscovery ? "Découverte du jour" : "Basé sur votre panier & achats"}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {basketBasedRecipes.map(({ recipe, matchedNames, isDiscovery }) => (
+              {basketBasedRecipes.map(({ recipe, matchedNames, isDiscovery }) => {
+                const recipeCost = calculateRecipeCost(recipe.ingredients, marketPrices);
+                const availabilityPercent = getRecipeAvailabilityPercentage(recipe.ingredients, marketPrices);
+                
+                return (
                 <Card
                   key={recipe.id}
                   className={cn(
@@ -289,28 +318,49 @@ export default function RecipesView({
                       )}
                       {!isDiscovery && matchedNames.length > 3 && <span className="text-[9px] text-muted-foreground">+{matchedNames.length - 3}</span>}
                     </div>
+                    {recipeCost.totalCost !== null && (
+                      <div className="mt-2 text-[9px] font-bold text-green-700 dark:text-green-400">
+                        Est. {formatPrice(recipeCost.totalCost)}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
 
         {suggestedRecipes.length > 0 ? (
           <div className='mt-8 max-w-4xl mx-auto text-left animate-in fade-in-50 grid grid-cols-1 md:grid-cols-2 gap-6'>
-            {suggestedRecipes.map(recipe => (
+            {suggestedRecipes.map(recipe => {
+              const recipeCost = calculateRecipeCost(recipe.ingredients, marketPrices);
+              const availabilityPercent = getRecipeAvailabilityPercentage(recipe.ingredients, marketPrices);
+              
+              return (
               <Card key={recipe.id} className="overflow-hidden flex flex-col bg-card shadow-lg rounded-xl border border-border/50">
                 <CardHeader>
                   <div className="flex justify-between items-start">
-                    <div className="pr-2">
+                    <div className="pr-2 flex-1">
                       <CardTitle>{recipe.title}</CardTitle>
-                      <div className="flex items-center gap-2 mt-2">
+                      <div className="flex items-center gap-2 mt-2 flex-wrap">
                         <Badge variant="secondary" className="w-fit">{recipe.country}</Badge>
                         {recipe.preparationTime !== undefined && (
                           <Badge variant="outline" className="flex items-center gap-1"><Clock className="h-3 w-3" />{recipe.preparationTime} min</Badge>
                         )}
                         {recipe.isEconomical && <Badge variant="outline" className="flex items-center gap-1"><Coins className="h-3 w-3" />Éco</Badge>}
+                        {recipeCost.totalCost !== null && (
+                          <Badge className="flex items-center gap-1 bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/30">
+                            <TrendingDown className="h-3 w-3" />
+                            {formatPrice(recipeCost.totalCost)}
+                          </Badge>
+                        )}
                       </div>
+                      {communityPurchases.length > 0 && availabilityPercent < 100 && (
+                        <p className="text-[11px] text-muted-foreground mt-1">
+                          {availabilityPercent}% d'ingrédients trouvés sur le marché
+                        </p>
+                      )}
                     </div>
                     {recipe.calories !== undefined && (
                       <Badge variant="outline" className="whitespace-nowrap">{recipe.calories} kcal</Badge>
@@ -331,7 +381,8 @@ export default function RecipesView({
                   </Button>
                 </CardFooter>
               </Card>
-            ))}
+            );
+            })}
           </div>
         ) : (
           filteredDiscoverableRecipes.length === 0 && <p className="text-muted-foreground mt-4 text-sm">Aucune recette ne correspond à vos filtres. Essayez d'en retirer un.</p>
