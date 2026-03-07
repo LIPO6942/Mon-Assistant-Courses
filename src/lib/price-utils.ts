@@ -79,11 +79,11 @@ export function findMarketPrice(
 
   for (const [_, price] of marketPrices.entries()) {
     const priceName = price.name.toLowerCase();
-    
+
     // Calculate similarity score (word overlap)
     const searchWords = searchName.split(/\s+/);
     const priceWords = priceName.split(/\s+/);
-    
+
     let score = 0;
     searchWords.forEach(word => {
       if (priceWords.some(pw => pw.includes(word) || word.includes(pw))) {
@@ -107,16 +107,16 @@ export function findMarketPrice(
 export function getUnitConversionFactor(fromUnit: string, toUnit: string): number | null {
   const conversions: Record<string, Record<string, number>> = {
     // Weight conversions (to grams)
-    kg: { g: 1000, kg: 1 },
-    g: { kg: 0.001, g: 1 },
-    
+    kg: { 'gramme (g)': 1000, kg: 1 },
+    'gramme (g)': { kg: 0.001, 'gramme (g)': 1 },
+
     // Volume conversions (to milliliters)
     L: { ml: 1000, L: 1 },
     ml: { L: 0.001, ml: 1 },
-    
+
     // Count/piece (no conversion)
     pièce: { pièce: 1 },
-    
+
     // Generic containers
     boîte: { boîte: 1 },
     paquet: { paquet: 1 },
@@ -162,7 +162,7 @@ export function calculateRecipeCost(
 
     if (marketPrice) {
       availableCount++;
-      
+
       // Try to convert units if they don't match
       let costForQuantity = ingredient.quantity * marketPrice.avgPrice;
 
@@ -221,7 +221,7 @@ export function getRecipeAvailabilityPercentage(
   marketPrices: Map<string, IngredientMarketPrice>
 ): number {
   if (ingredients.length === 0) return 100;
-  
+
   let available = 0;
   ingredients.forEach(ing => {
     if (findMarketPrice(ing.name, marketPrices, ing.unit)) {
