@@ -15,21 +15,21 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 
 interface IngredientPriceStats {
-  ingredientName: string;
-  normalizedName: string;
-  avgPrice: number;
-  unit: string;
-  count: number;
-  stores: string[];
-  minPrice: number;
-  maxPrice: number;
+    ingredientName: string;
+    normalizedName: string;
+    avgPrice: number;
+    unit: string;
+    count: number;
+    stores: string[];
+    minPrice: number;
+    maxPrice: number;
 }
 
 interface StoreStat {
-  store: string;
-  uniqueItems: number;
-  avgPricePerItem: number;
-  topItems: Array<{ name: string; avgPrice: number; count: number; unit: string }>;
+    store: string;
+    uniqueItems: number;
+    avgPricePerItem: number;
+    topItems: Array<{ name: string; avgPrice: number; count: number; unit: string }>;
 }
 
 export default function MarketPricesView() {
@@ -84,11 +84,11 @@ export default function MarketPricesView() {
     // Compute price statistics for ingredients
     const ingredientStats = useMemo(() => {
         const statsMap = new Map<string, IngredientPriceStats>();
-        
+
         purchases.forEach(p => {
             const key = `${p.normalizedName || p.ingredientName}|${p.unit}`;
             const existing = statsMap.get(key);
-            
+
             if (existing) {
                 existing.count += 1;
                 existing.avgPrice = (existing.avgPrice * (existing.count - 1) + p.price) / existing.count;
@@ -110,7 +110,7 @@ export default function MarketPricesView() {
                 });
             }
         });
-        
+
         return Array.from(statsMap.values());
     }, [purchases]);
 
@@ -118,10 +118,10 @@ export default function MarketPricesView() {
     const storeStats = useMemo(() => {
         const stats = new Map<string, StoreStat>();
         const ingredientsByStore = new Map<string, Map<string, { prices: number[]; count: number; unit: string }>>();
-        
+
         purchases.forEach(p => {
             const store = p.store || 'Sans magasin';
-            
+
             if (!stats.has(store)) {
                 stats.set(store, {
                     store,
@@ -131,24 +131,24 @@ export default function MarketPricesView() {
                 });
                 ingredientsByStore.set(store, new Map());
             }
-            
+
             const storeIngredients = ingredientsByStore.get(store)!;
             const key = p.normalizedName || p.ingredientName;
-            
+
             if (!storeIngredients.has(key)) {
                 storeIngredients.set(key, { prices: [], count: 0, unit: p.unit });
             }
-            
+
             const ing = storeIngredients.get(key)!;
             ing.prices.push(p.price);
             ing.count += 1;
         });
-        
+
         // Calculate stats for each store
         ingredientsByStore.forEach((ingredients, store) => {
             let totalPrice = 0;
             const topItems: Array<{ name: string; avgPrice: number; count: number; unit: string }> = [];
-            
+
             ingredients.forEach((data, name) => {
                 const avgPrice = data.prices.reduce((a, b) => a + b, 0) / data.prices.length;
                 totalPrice += avgPrice;
@@ -159,15 +159,15 @@ export default function MarketPricesView() {
                     unit: data.unit,
                 });
             });
-            
+
             topItems.sort((a, b) => b.count - a.count);
-            
+
             const stat = stats.get(store)!;
             stat.uniqueItems = ingredients.size;
             stat.avgPricePerItem = totalPrice / ingredients.size;
             stat.topItems = topItems.slice(0, 5);
         });
-        
+
         return Array.from(stats.values()).sort((a, b) => b.uniqueItems - a.uniqueItems);
     }, [purchases]);
 
@@ -175,7 +175,7 @@ export default function MarketPricesView() {
         if (viewMode === 'byStore') {
             return [];  // Not used in byStore mode
         }
-        
+
         console.log('[MarketView] Raw purchases from Firestore:', purchases.length);
         const filtered = purchases
             .filter(p => {
@@ -416,7 +416,7 @@ export default function MarketPricesView() {
                                                             <TrendingDown className="h-4 w-4" />
                                                         </div>
                                                         <div className="flex flex-col min-w-0">
-                                                            <CardTitle className="text-base sm:text-lg font-bold tracking-tight truncate group-hover:text-primary transition-colors">
+                                                            <CardTitle className="text-base sm:text-lg font-bold tracking-tight whitespace-normal break-words group-hover:text-primary transition-colors">
                                                                 {purchase.ingredientName}
                                                             </CardTitle>
                                                             <CardDescription className="flex items-center gap-1 font-semibold text-[10px] sm:text-xs text-primary/80">
@@ -497,7 +497,7 @@ export default function MarketPricesView() {
                                                         </CardDescription>
                                                     </div>
                                                 </div>
-                            <div className="rounded-lg bg-primary/10 px-2.5 py-1 text-center shrink-0">
+                                                <div className="rounded-lg bg-primary/10 px-2.5 py-1 text-center shrink-0">
                                                     <div className="text-xs font-bold text-muted-foreground">Moy.</div>
                                                     <div className="text-sm font-black text-primary">
                                                         {store.avgPricePerItem.toFixed(2)} DT

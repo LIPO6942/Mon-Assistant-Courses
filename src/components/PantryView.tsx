@@ -171,7 +171,7 @@ export default function PantryView({
                           <li key={item.id} className="flex items-center justify-between p-2 rounded-2xl bg-background/50 border border-border/20 shadow-sm hover:shadow-md hover:bg-background/80 transition-all duration-300 group/item">
                             <div className="flex flex-col gap-0.5 min-w-0 flex-1 mr-1">
                               <div className="flex items-center gap-1.5">
-                                <span className='font-semibold text-sm truncate leading-tight'>{item.name}</span>
+                                <span className='font-semibold text-sm whitespace-normal break-words leading-tight'>{item.name}</span>
                                 {(() => {
                                   const status = getProductStatus(purchaseHistory[item.id]);
                                   if (!status) return null;
