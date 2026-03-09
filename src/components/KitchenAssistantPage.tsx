@@ -542,6 +542,10 @@ export default function KitchenAssistantPage() {
     else setBasket(prev => prev.map(item => item.id === id ? { ...item, quantity: newQuantity } : item));
   };
 
+  const updateBasketItemPrice = (id: string, newPrice: number) => {
+    setBasket(prev => prev.map(item => item.id === id ? { ...item, price: newPrice } : item));
+  };
+
   const handleTogglePurchaseStatus = (id: string, itemPrice: number, itemQuantity: number) => {
     setBasket(prevBasket =>
       prevBasket.map(item => {
@@ -932,6 +936,7 @@ export default function KitchenAssistantPage() {
         basket={basket}
         basketTotal={basketTotalToPay}
         updateBasketQuantity={updateBasketQuantity}
+        updateBasketItemPrice={updateBasketItemPrice}
         clearBasket={clearBasket}
         handleConfirmPurchase={handleConfirmPurchase}
         handleShareBasket={handleShareBasket}

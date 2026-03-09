@@ -16,6 +16,7 @@ interface AppHeaderProps {
   basket: BasketItem[];
   basketTotal: number;
   updateBasketQuantity: (id: string, newQuantity: number) => void;
+  updateBasketItemPrice: (id: string, newPrice: number) => void;
   clearBasket: () => void;
   handleConfirmPurchase: (store?: string) => void;
   handleShareBasket: () => void;
@@ -32,6 +33,7 @@ export default function AppHeader({
   basket,
   basketTotal,
   updateBasketQuantity,
+  updateBasketItemPrice,
   clearBasket,
   handleConfirmPurchase,
   handleShareBasket,
@@ -111,6 +113,7 @@ export default function AppHeader({
               basket={basket}
               basketTotal={basketTotal}
               updateBasketQuantity={updateBasketQuantity}
+              updateBasketItemPrice={updateBasketItemPrice}
               clearBasket={clearBasket}
               handleConfirmPurchase={handleConfirmPurchase}
               onShareBasket={handleShareBasket}
