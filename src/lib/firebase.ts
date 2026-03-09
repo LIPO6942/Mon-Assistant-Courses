@@ -1,6 +1,7 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
+import { getMessaging } from 'firebase/messaging';
 
 const firebaseConfig = {
     apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -15,6 +16,7 @@ const firebaseConfig = {
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
 const firestoreDb = getFirestore(app);
+const messaging = typeof window !== 'undefined' ? getMessaging(app) : null;
 const googleProvider = new GoogleAuthProvider();
 
-export { app, auth, firestoreDb, googleProvider };
+export { app, auth, firestoreDb, messaging, googleProvider };

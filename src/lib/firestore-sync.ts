@@ -278,14 +278,31 @@ export async function getAllUsers() {
 
 export async function sendBasketShare(fromUid: string, fromName: string, toUid: string, items: any[]) {
     try {
-        await addDoc(collection(firestoreDb, 'basket_shares'), {
+        const shareDoc = {
             fromUid,
             fromName,
             toUid,
             items,
             status: 'pending',
             createdAt: new Date().toISOString()
-        });
+        };
+        const docRef = await addDoc(collection(firestoreDb, 'basket_shares'), shareDoc);
+
+        // Trigger push notification via Webhook API
+        fetch('/api/notify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                targetUserId: toUid,
+                title: '🛒 Panier partagé !',
+                body: `${fromName} vous a partagé un nouveau panier de courses.`,
+                data: {
+                    shareId: docRef.id,
+                    type: 'basket_share'
+                }
+            })
+        }).catch(err => console.error('Error triggering push notification:', err));
+
     } catch (e) {
         console.error('Error sending basket share:', e);
     }

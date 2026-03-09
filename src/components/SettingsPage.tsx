@@ -6,7 +6,7 @@ import { Mail, User, Shield, LogOut, Smartphone, Cloud, ChefHat, Pencil } from '
 import { Button } from '@/components/ui/button';
 
 export default function SettingsPage() {
-    const { user, signOut } = useAuth();
+    const { user, signOut, pushPermission, requestPushPermission } = useAuth();
     const [lastSharedUser, setLastSharedUser] = useState<{ uid: string, name: string } | null>(null);
     const [whatsapp, setWhatsapp] = useState('');
     const [messenger, setMessenger] = useState('');
@@ -186,6 +186,42 @@ export default function SettingsPage() {
                             {isSaving ? "Enregistrement..." : "Sauvegarder mon profil"}
                         </Button>
                     )}
+
+                    {/* Push Notification Toggle */}
+                    <div className="pt-4 border-t border-dashed mt-4">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className={`p-2 rounded-lg ${pushPermission === 'granted' ? 'bg-green-500/10' : 'bg-orange-500/10'}`}>
+                                    <Smartphone className={`h-4 w-4 ${pushPermission === 'granted' ? 'text-green-500' : 'text-orange-500'}`} />
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-sm font-semibold">Notifications Push</span>
+                                    <span className="text-[10px] text-muted-foreground">
+                                        {pushPermission === 'granted'
+                                            ? 'Activé sur ce navigateur'
+                                            : pushPermission === 'denied'
+                                                ? 'Bloqué (vérifiez les paramètres du navigateur)'
+                                                : 'Désactivé'}
+                                    </span>
+                                </div>
+                            </div>
+                            {pushPermission !== 'granted' && (
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="rounded-xl text-xs h-8"
+                                    onClick={requestPushPermission}
+                                >
+                                    Activer
+                                </Button>
+                            )}
+                            {pushPermission === 'granted' && (
+                                <div className="bg-green-500/10 text-green-600 p-1 px-2 rounded-lg text-[10px] font-bold">
+                                    MÉTHODE ACTIVE
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </div>
             </div>
 

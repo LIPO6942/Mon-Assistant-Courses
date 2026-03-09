@@ -13,6 +13,7 @@ import {
 } from 'firebase/auth';
 import { auth, googleProvider } from '@/lib/firebase';
 import { syncUserProfile } from '@/lib/firestore-sync';
+import { usePushNotifications } from '@/lib/usePushNotifications';
 
 interface AuthContextType {
     user: User | null;
@@ -23,6 +24,8 @@ interface AuthContextType {
     signOut: () => Promise<void>;
     error: string | null;
     clearError: () => void;
+    pushPermission: NotificationPermission;
+    requestPushPermission: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -34,12 +37,16 @@ const AuthContext = createContext<AuthContextType>({
     signOut: async () => { },
     error: null,
     clearError: () => { },
+    pushPermission: 'default',
+    requestPushPermission: async () => { },
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+    const { permission: pushPermission, requestPermission: requestPushPermission } = usePushNotifications();
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -135,6 +142,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 signOut,
                 error,
                 clearError,
+                pushPermission,
+                requestPushPermission,
             }}
         >
             {children}
