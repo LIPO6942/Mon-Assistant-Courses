@@ -31,15 +31,33 @@ export function usePushNotifications() {
             setPermission(status);
 
             if (status === 'granted') {
-                const currentToken = await getToken(messaging, {
-                    vapidKey: process.env.NEXT_PUBLIC_VAPID_KEY
-                });
+                // Register Service Worker with config as query params
+                if ('serviceWorker' in navigator) {
+                    const config = {
+                        apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+                        authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+                        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+                        storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+                        messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+                        appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+                    };
 
-                if (currentToken) {
-                    setToken(currentToken);
-                    await saveTokenToFirestore(currentToken);
-                } else {
-                    console.log('No registration token available. Request permission to generate one.');
+                    const queryString = new URLSearchParams(config as any).toString();
+                    const swUrl = `/firebase-messaging-sw.js?${queryString}`;
+
+                    const registration = await navigator.serviceWorker.register(swUrl);
+
+                    const currentToken = await getToken(messaging, {
+                        vapidKey: process.env.NEXT_PUBLIC_VAPID_KEY,
+                        serviceWorkerRegistration: registration
+                    });
+
+                    if (currentToken) {
+                        setToken(currentToken);
+                        await saveTokenToFirestore(currentToken);
+                    } else {
+                        console.log('No registration token available. Request permission to generate one.');
+                    }
                 }
             }
         } catch (error) {
