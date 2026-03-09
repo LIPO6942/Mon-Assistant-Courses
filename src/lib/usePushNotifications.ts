@@ -45,18 +45,22 @@ export function usePushNotifications() {
                     const queryString = new URLSearchParams(config as any).toString();
                     const swUrl = `/firebase-messaging-sw.js?${queryString}`;
 
+                    console.log('Registering Service Worker for FCM...');
                     const registration = await navigator.serviceWorker.register(swUrl);
+                    console.log('Service Worker registered successfully:', registration.scope);
 
+                    console.log('Requesting FCM token with VAPID Key:', process.env.NEXT_PUBLIC_VAPID_KEY ? 'Present' : 'Missing');
                     const currentToken = await getToken(messaging, {
                         vapidKey: process.env.NEXT_PUBLIC_VAPID_KEY,
                         serviceWorkerRegistration: registration
                     });
 
                     if (currentToken) {
+                        console.log('FCM Token generated successfully');
                         setToken(currentToken);
                         await saveTokenToFirestore(currentToken);
                     } else {
-                        console.log('No registration token available. Request permission to generate one.');
+                        console.warn('No registration token available. Request permission to generate one.');
                     }
                 }
             }
