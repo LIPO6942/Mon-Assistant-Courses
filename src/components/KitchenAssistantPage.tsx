@@ -544,6 +544,7 @@ export default function KitchenAssistantPage() {
 
   const updateBasketItemPrice = (id: string, newPrice: number) => {
     setBasket(prev => prev.map(item => item.id === id ? { ...item, price: newPrice } : item));
+    setPantry(prev => prev.map(item => item.id === id ? { ...item, price: newPrice } : item));
   };
 
   const handleTogglePurchaseStatus = (id: string, itemPrice: number, itemQuantity: number) => {
