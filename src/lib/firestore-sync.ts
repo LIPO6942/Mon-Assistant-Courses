@@ -327,11 +327,8 @@ export function listenForIncomingShares(uid: string, onShareReceived: (share: an
 export async function updateShareStatus(shareId: string, status: 'accepted' | 'refused') {
     try {
         const docRef = doc(firestoreDb, 'basket_shares', shareId);
-        await setDoc(docRef, { status }, { merge: true });
-        // Optionally delete if refused? Let's keep it for now or delete if accepted
-        if (status === 'accepted' || status === 'refused') {
-            await deleteDoc(docRef);
-        }
+        // Simply delete the share document – the accept/refuse status is handled locally
+        await deleteDoc(docRef);
     } catch (e) {
         console.error('Error updating share status:', e);
     }

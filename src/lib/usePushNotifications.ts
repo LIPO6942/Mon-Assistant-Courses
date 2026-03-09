@@ -49,6 +49,24 @@ export function usePushNotifications() {
                     const registration = await navigator.serviceWorker.register(swUrl);
                     console.log('Service Worker registered successfully:', registration.scope);
 
+                    // Wait for the service worker to be active before requesting token
+                    const sw = registration.installing || registration.waiting;
+                    if (sw) {
+                        await new Promise<void>((resolve) => {
+                            if (sw.state === 'activated') {
+                                resolve();
+                                return;
+                            }
+                            sw.addEventListener('statechange', function handler() {
+                                if (sw.state === 'activated') {
+                                    sw.removeEventListener('statechange', handler);
+                                    resolve();
+                                }
+                            });
+                        });
+                        console.log('Service Worker is now active.');
+                    }
+
                     console.log('Requesting FCM token with VAPID Key:', process.env.NEXT_PUBLIC_VAPID_KEY ? 'Present' : 'Missing');
                     const currentToken = await getToken(messaging, {
                         vapidKey: process.env.NEXT_PUBLIC_VAPID_KEY,
