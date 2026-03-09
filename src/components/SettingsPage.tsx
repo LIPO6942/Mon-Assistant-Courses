@@ -2,20 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { Mail, User, Shield, LogOut, Smartphone, Cloud, ChefHat, Pencil } from 'lucide-react';
+import { Mail, User, Shield, LogOut, Smartphone, Cloud, ChefHat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function SettingsPage() {
     const { user, signOut, pushPermission, requestPushPermission } = useAuth();
     const [lastSharedUser, setLastSharedUser] = useState<{ uid: string, name: string } | null>(null);
-    const [whatsapp, setWhatsapp] = useState('');
-    const [messenger, setMessenger] = useState('');
     const [frequentContacts, setFrequentContacts] = useState<any[]>([]);
-    const [contactLinks, setContactLinks] = useState<Record<string, { whatsapp?: string, messenger?: string }>>({});
-    const [savingContact, setSavingContact] = useState<string | null>(null);
-    const [isSaving, setIsSaving] = useState(false);
-    const [isEditingProfile, setIsEditingProfile] = useState(false);
-    const [editingContacts, setEditingContacts] = useState<Set<string>>(new Set());
 
     useEffect(() => {
         const stored = localStorage.getItem('lastSharedUser');
@@ -26,55 +19,18 @@ export default function SettingsPage() {
         }
 
         if (user) {
-            // Load personal profile info from Firestore
-            import('@/lib/firestore-sync').then(({ getUserProfile }) => {
-                getUserProfile(user.uid).then((data: any) => {
-                    if (data) {
-                        setWhatsapp(data.whatsapp || '');
-                        setMessenger(data.messenger || '');
-                        if (!data.whatsapp && !data.messenger) setIsEditingProfile(true);
-                    } else {
-                        setIsEditingProfile(true);
-                    }
-                });
-            });
-
-            // Load frequent contacts and their private links
-            import('@/lib/firestore-sync').then(({ getAllUsers, getFrequentContacts, getContactLinks }) => {
+            // Load frequent contacts
+            import('@/lib/firestore-sync').then(({ getAllUsers, getFrequentContacts }) => {
                 Promise.all([
                     getAllUsers(),
                     getFrequentContacts(user.uid),
-                    getContactLinks(user.uid)
-                ]).then(([allUsers, frequentIds, links]) => {
+                ]).then(([allUsers, frequentIds]) => {
                     const contacts = allUsers.filter((u: any) => frequentIds.includes(u.uid));
                     setFrequentContacts(contacts);
-                    setContactLinks(links);
                 });
             });
         }
     }, [user]);
-
-    const handleSaveProfile = async () => {
-        if (!user) return;
-        setIsSaving(true);
-        const { syncUserProfile } = await import('@/lib/firestore-sync');
-        await syncUserProfile(user.uid, user.displayName || '', user.email || '', whatsapp, messenger);
-        setIsSaving(false);
-        setIsEditingProfile(false);
-        alert("Profil mis à jour !");
-    };
-
-    const handleSaveContactLink = async (contactUid: string, type: 'whatsapp' | 'messenger', value: string) => {
-        if (!user) return;
-        const newLinks = { ...contactLinks, [contactUid]: { ...contactLinks[contactUid], [type]: value } };
-        setContactLinks(newLinks);
-        const { saveContactAssociation } = await import('@/lib/firestore-sync');
-        await saveContactAssociation(user.uid, contactUid, newLinks[contactUid]);
-
-        const newEditing = new Set(editingContacts);
-        newEditing.delete(contactUid);
-        setEditingContacts(newEditing);
-    };
 
     const handleRemoveContact = async (contactUid: string) => {
         if (!user) return;
@@ -128,104 +84,53 @@ export default function SettingsPage() {
                 </div>
             </div>
 
-            {/* Notifications & Social */}
+            {/* Notifications Push */}
             <div className="bg-card rounded-2xl border shadow-sm overflow-hidden">
                 <div className="px-6 py-4 border-b">
                     <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-                        Mon Profil & Notifications
+                        Notifications
                     </h3>
                     <p className="text-xs text-muted-foreground mt-1">
-                        Ces informations permettent à vos amis de vous notifier quand ils vous envoient un panier.
+                        Recevez une notification push quand un membre vous envoie un panier.
                     </p>
                 </div>
-                <div className="p-6 space-y-4">
-                    <div className="flex justify-between items-center bg-muted/30 p-2 rounded-xl border border-dashed text-muted-foreground">
-                        <span className="text-[10px] font-medium">Mode {isEditingProfile ? 'Modification' : 'Lecture seule'}</span>
-                        {!isEditingProfile && (
-                            <button onClick={() => setIsEditingProfile(true)} className="p-1 hover:bg-muted rounded-md transition-colors">
-                                <Pencil className="h-3 w-3" />
-                            </button>
-                        )}
-                    </div>
-
-                    <div className="space-y-2">
-                        <label className="text-xs font-medium flex items-center gap-2">
-                            <Smartphone className="h-3 w-3 text-green-500" /> WhatsApp (ex: 55555555)
-                        </label>
-                        <input
-                            type="text"
-                            value={whatsapp}
-                            onChange={(e) => setWhatsapp(e.target.value)}
-                            placeholder="Numéro sans le +"
-                            disabled={!isEditingProfile}
-                            className={`w-full p-2.5 rounded-xl border bg-background text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all ${!isEditingProfile ? 'bg-muted/50 text-muted-foreground opacity-70' : ''}`}
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <label className="text-xs font-medium flex items-center gap-2">
-                            <Smartphone className="h-3 w-3 text-blue-500" /> Messenger (Nom d'utilisateur)
-                        </label>
-                        <p className="text-[10px] text-muted-foreground italic -mt-1 ml-5">
-                            Messenger {">"} Paramètres {">"} Nom d'utilisateur
-                        </p>
-                        <input
-                            type="text"
-                            value={messenger}
-                            onChange={(e) => setMessenger(e.target.value)}
-                            placeholder="votre.pseudo"
-                            disabled={!isEditingProfile}
-                            className={`w-full p-2.5 rounded-xl border bg-background text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all ${!isEditingProfile ? 'bg-muted/50 text-muted-foreground opacity-70' : ''}`}
-                        />
-                    </div>
-                    {isEditingProfile && (
-                        <Button
-                            onClick={handleSaveProfile}
-                            disabled={isSaving}
-                            className="w-full rounded-xl"
-                        >
-                            {isSaving ? "Enregistrement..." : "Sauvegarder mon profil"}
-                        </Button>
-                    )}
-
-                    {/* Push Notification Toggle */}
-                    <div className="pt-4 border-t border-dashed mt-4">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className={`p-2 rounded-lg ${pushPermission === 'granted' ? 'bg-green-500/10' : 'bg-orange-500/10'}`}>
-                                    <Smartphone className={`h-4 w-4 ${pushPermission === 'granted' ? 'text-green-500' : 'text-orange-500'}`} />
-                                </div>
-                                <div className="flex flex-col">
-                                    <span className="text-sm font-semibold">Notifications Push</span>
-                                    <span className="text-[10px] text-muted-foreground">
-                                        {pushPermission === 'granted'
-                                            ? 'Activé sur ce navigateur'
-                                            : pushPermission === 'denied'
-                                                ? 'Bloqué (vérifiez les paramètres du navigateur)'
-                                                : 'Désactivé'}
-                                    </span>
-                                </div>
+                <div className="p-6">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className={`p-2 rounded-lg ${pushPermission === 'granted' ? 'bg-green-500/10' : 'bg-orange-500/10'}`}>
+                                <Smartphone className={`h-4 w-4 ${pushPermission === 'granted' ? 'text-green-500' : 'text-orange-500'}`} />
                             </div>
-                            {pushPermission !== 'granted' && (
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="rounded-xl text-xs h-8"
-                                    onClick={requestPushPermission}
-                                >
-                                    Activer
-                                </Button>
-                            )}
-                            {pushPermission === 'granted' && (
-                                <div className="bg-green-500/10 text-green-600 p-1 px-2 rounded-lg text-[10px] font-bold">
-                                    MÉTHODE ACTIVE
-                                </div>
-                            )}
+                            <div className="flex flex-col">
+                                <span className="text-sm font-semibold">Notifications Push</span>
+                                <span className="text-[10px] text-muted-foreground">
+                                    {pushPermission === 'granted'
+                                        ? 'Activé sur ce navigateur'
+                                        : pushPermission === 'denied'
+                                            ? 'Bloqué (vérifiez les paramètres du navigateur)'
+                                            : 'Désactivé'}
+                                </span>
+                            </div>
                         </div>
+                        {pushPermission !== 'granted' && (
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                className="rounded-xl text-xs h-8"
+                                onClick={requestPushPermission}
+                            >
+                                Activer
+                            </Button>
+                        )}
+                        {pushPermission === 'granted' && (
+                            <div className="bg-green-500/10 text-green-600 p-1 px-2 rounded-lg text-[10px] font-bold">
+                                ACTIVÉ
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
 
-            {/* Mes Contacts (Private Associations) */}
+            {/* Mes Contacts fréquents */}
             {frequentContacts.length > 0 && (
                 <div className="bg-card rounded-2xl border shadow-sm overflow-hidden">
                     <div className="px-6 py-4 border-b">
@@ -233,20 +138,12 @@ export default function SettingsPage() {
                             Mes Contacts fréquents
                         </h3>
                         <p className="text-xs text-muted-foreground mt-1">
-                            Associez manuellement vos amis à leurs réseaux s'ils ne l'ont pas fait. (Privé pour vous)
+                            Vos contacts récents pour le partage de panier.
                         </p>
                     </div>
                     <div className="divide-y max-h-96 overflow-y-auto">
                         {frequentContacts.map(contact => (
-                            <div key={contact.uid} className="p-4 space-y-3 relative group">
-                                <button
-                                    onClick={() => handleRemoveContact(contact.uid)}
-                                    className="absolute top-4 right-4 p-1.5 text-muted-foreground hover:text-destructive transition-colors rounded-lg hover:bg-destructive/10"
-                                    title="Retirer des fréquents"
-                                >
-                                    <LogOut className="h-4 w-4 rotate-180" />
-                                </button>
-
+                            <div key={contact.uid} className="p-4 flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                     <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
                                         {contact.displayName?.charAt(0).toUpperCase()}
@@ -256,61 +153,18 @@ export default function SettingsPage() {
                                         <span className="text-[10px] text-muted-foreground">{contact.email}</span>
                                     </div>
                                 </div>
-
-                                <div className="grid grid-cols-1 gap-2">
-                                    <div className="flex flex-col sm:flex-row gap-2 relative">
-                                        {!editingContacts.has(contact.uid) && (contactLinks[contact.uid]?.whatsapp || contactLinks[contact.uid]?.messenger) && (
-                                            <button
-                                                onClick={() => setEditingContacts(new Set(editingContacts).add(contact.uid))}
-                                                className="absolute right-2 top-2 z-10 p-1 hover:bg-primary/10 rounded-md text-primary transition-colors"
-                                            >
-                                                <Pencil className="h-3 w-3" />
-                                            </button>
-                                        )}
-                                        <input
-                                            type="text"
-                                            placeholder="WhatsApp"
-                                            value={contactLinks[contact.uid]?.whatsapp || ''}
-                                            disabled={!editingContacts.has(contact.uid) && !!(contactLinks[contact.uid]?.whatsapp || contactLinks[contact.uid]?.messenger)}
-                                            onChange={(e) => setContactLinks({ ...contactLinks, [contact.uid]: { ...contactLinks[contact.uid], whatsapp: e.target.value } })}
-                                            className={`w-full text-[11px] p-2 rounded-lg border bg-background outline-none ${(!editingContacts.has(contact.uid) && !!(contactLinks[contact.uid]?.whatsapp || contactLinks[contact.uid]?.messenger)) ? 'bg-muted/50 opacity-70' : ''}`}
-                                        />
-                                        <input
-                                            type="text"
-                                            placeholder="Messenger"
-                                            value={contactLinks[contact.uid]?.messenger || ''}
-                                            disabled={!editingContacts.has(contact.uid) && !!(contactLinks[contact.uid]?.whatsapp || contactLinks[contact.uid]?.messenger)}
-                                            onChange={(e) => setContactLinks({ ...contactLinks, [contact.uid]: { ...contactLinks[contact.uid], messenger: e.target.value } })}
-                                            className={`w-full text-[11px] p-2 rounded-lg border bg-background outline-none ${(!editingContacts.has(contact.uid) && !!(contactLinks[contact.uid]?.whatsapp || contactLinks[contact.uid]?.messenger)) ? 'bg-muted/50 opacity-70' : ''}`}
-                                        />
-                                    </div>
-                                    {(editingContacts.has(contact.uid) || (!contactLinks[contact.uid]?.whatsapp && !contactLinks[contact.uid]?.messenger)) && (
-                                        <Button
-                                            size="sm"
-                                            className="w-full text-[10px] h-7 rounded-lg bg-blue-600 hover:bg-blue-700 text-white border-none shadow-sm"
-                                            onClick={() => {
-                                                setSavingContact(contact.uid);
-                                                handleSaveContactLink(contact.uid, 'whatsapp', contactLinks[contact.uid]?.whatsapp || '')
-                                                    .then(() => handleSaveContactLink(contact.uid, 'messenger', contactLinks[contact.uid]?.messenger || ''))
-                                                    .finally(() => {
-                                                        setSavingContact(null);
-                                                        // setEditingContacts state update is handled inside handleSaveContactLink (added logic there)
-                                                        alert("Coordonnées de " + contact.displayName + " enregistrées !");
-                                                    });
-                                            }}
-                                            disabled={savingContact === contact.uid}
-                                        >
-                                            {savingContact === contact.uid ? "Enregistrement..." : "Enregistrer les coordonnées"}
-                                        </Button>
-                                    )}
-                                </div>
+                                <button
+                                    onClick={() => handleRemoveContact(contact.uid)}
+                                    className="p-1.5 text-muted-foreground hover:text-destructive transition-colors rounded-lg hover:bg-destructive/10"
+                                    title="Retirer des fréquents"
+                                >
+                                    <LogOut className="h-4 w-4 rotate-180" />
+                                </button>
                             </div>
                         ))}
                     </div>
                 </div>
             )}
-
-            {/* Account Info */}
 
             {/* Account Info */}
             <div className="bg-card rounded-2xl border shadow-sm divide-y">
