@@ -27,12 +27,31 @@ const messaging = firebase.messaging();
 messaging.onBackgroundMessage((payload) => {
     console.log('[firebase-messaging-sw.js] Received background message ', payload);
 
-    const notificationTitle = payload.notification?.title || 'Mon Assistant Courses';
+    // Data-only messages: title/body are in payload.data
+    const notificationTitle = payload.data?.title || 'Mon Assistant Courses';
     const notificationOptions = {
-        body: payload.notification?.body || 'Nouvelle mise à jour',
-        icon: '/icons/icon-192x192.png',
+        body: payload.data?.body || 'Nouvelle mise à jour',
+        icon: '/icon-192x192.png',
         data: payload.data
     };
 
     self.registration.showNotification(notificationTitle, notificationOptions);
+});
+
+// Open the app when the user clicks on a notification
+self.addEventListener('notificationclick', (event) => {
+    console.log('[firebase-messaging-sw.js] Notification click received.');
+    event.notification.close();
+
+    // Try to focus an existing window or open a new one
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+            for (const client of clientList) {
+                if (client.url.includes('mon-assistant-courses') && 'focus' in client) {
+                    return client.focus();
+                }
+            }
+            return clients.openWindow('/');
+        })
+    );
 });

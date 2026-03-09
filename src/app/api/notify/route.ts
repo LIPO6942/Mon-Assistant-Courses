@@ -23,13 +23,14 @@ export async function POST(request: Request) {
             return NextResponse.json({ message: 'No notification tokens found for this user' }, { status: 200 });
         }
 
-        // 2. Send notification to all tokens
+        // 2. Send data-only notification to all tokens
+        // Do NOT include a 'notification' field – FCM auto-displays it AND onBackgroundMessage also shows one = duplicates
         const message = {
-            notification: {
+            data: {
                 title: title || 'Mon Assistant Courses',
                 body: body || 'Vous avez reçu une nouvelle mise à jour.',
+                ...(data || {}),
             },
-            data: data || {},
             tokens: tokens,
         };
 
@@ -38,7 +39,7 @@ export async function POST(request: Request) {
         // 3. Optional: Cleanup invalid tokens
         if (response.failureCount > 0) {
             const failedTokens: string[] = [];
-            response.responses.forEach((resp, idx) => {
+            response.responses.forEach((resp: { success: boolean; error?: any }, idx: number) => {
                 if (!resp.success) {
                     const error = resp.error as any;
                     if (error?.code === 'messaging/invalid-registration-token' ||
