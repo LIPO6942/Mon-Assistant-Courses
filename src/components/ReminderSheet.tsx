@@ -9,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { AlarmClock, Search, CheckSquare, Square, Trash2, Bell, X, Loader2 } from 'lucide-react';
 import type { Ingredient, IngredientReminder } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { getUserReminders, deleteReminder } from '@/lib/firestore-sync';
 
 interface ReminderSheetProps {
     pantry: Ingredient[];
@@ -59,8 +58,16 @@ export default function ReminderSheet({ pantry, userId }: ReminderSheetProps) {
     useEffect(() => {
         if (activeTab === 'list' && userId) {
             setIsLoadingReminders(true);
-            getUserReminders(userId)
-                .then(data => setReminders(data as IngredientReminder[]))
+            fetch(`/api/reminders?userId=${userId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.reminders) {
+                        setReminders(data.reminders as IngredientReminder[]);
+                    } else if (data.error) {
+                        console.error('Erreur :', data.error);
+                    }
+                })
+                .catch(err => console.error('Erreur de requête:', err))
                 .finally(() => setIsLoadingReminders(false));
         }
     }, [activeTab, userId]);
@@ -133,8 +140,17 @@ export default function ReminderSheet({ pantry, userId }: ReminderSheetProps) {
     const handleDeleteReminder = async (reminderId: string) => {
         if (!userId) return;
         try {
-            await deleteReminder(userId, reminderId);
-            setReminders(prev => prev.filter(r => r.id !== reminderId));
+            const response = await fetch('/api/reminders', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, reminderId })
+            });
+            const result = await response.json();
+            if (result.success) {
+                setReminders(prev => prev.filter(r => r.id !== reminderId));
+            } else {
+                console.error(result.error);
+            }
         } catch (err) {
             console.error('Error deleting reminder:', err);
         }
