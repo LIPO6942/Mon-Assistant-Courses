@@ -38,14 +38,10 @@ export async function POST(request: Request) {
         const docRef = await colRef.add(reminderData);
         const reminderId = docRef.id;
 
-        // 3. Schedule QStash job with forced protocol and logs
-        let host = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL || 'localhost:3000';
-        
-        if (!host.startsWith('http')) {
-            host = host.includes('localhost') ? `http://${host}` : `https://${host}`;
-        }
-        
-        const targetUrl = `${host.replace(/\/$/, '')}/api/reminders/send`;
+        // 3. Schedule QStash job with dynamic host detection
+        const requestHost = request.headers.get('host') || process.env.VERCEL_URL || 'localhost:3000';
+        const protocol = requestHost.includes('localhost') ? 'http' : 'https';
+        const targetUrl = `${protocol}://${requestHost}/api/reminders/send`;
         
         console.log(`[Reminder] Scheduling QStash:`);
         console.log(` - Target URL: ${targetUrl}`);
