@@ -4,6 +4,9 @@ import { adminDb } from '@/lib/firebase-admin';
 
 const qstash = new Client({ token: process.env.QSTASH_TOKEN! });
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function POST(request: Request) {
     try {
         const { userId, ingredientNames, purchaseTime, leadTimeMinutes } = await request.json();
@@ -79,15 +82,21 @@ export async function GET(request: Request) {
             .doc(userId)
             .collection('items')
             .where('status', '==', 'pending')
-            .orderBy('notifyTime', 'asc')
             .get();
 
-        const reminders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        const reminders = snap.docs
+            .map(d => ({ id: d.id, ...d.data() }))
+            .sort((a: any, b: any) => new Date(a.notifyTime).getTime() - new Date(b.notifyTime).getTime());
+            
         return NextResponse.json({ reminders });
 
     } catch (error: any) {
         console.error('Error fetching reminders:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ 
+            error: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+            reminders: [] 
+        }, { status: 500 });
     }
 }
 

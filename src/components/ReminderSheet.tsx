@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
@@ -54,23 +54,35 @@ export default function ReminderSheet({ pantry, userId }: ReminderSheetProps) {
         setPurchaseTime(`${pad(now.getHours())}:${pad(now.getMinutes())}`);
     }, []);
 
+    const [error, setError] = useState<string | null>(null);
+
+    const loadReminders = useCallback(async () => {
+        if (!userId) return;
+        setIsLoadingReminders(true);
+        setError(null);
+        try {
+            const res = await fetch(`/api/reminders?userId=${userId}`, { cache: 'no-store' });
+            const data = await res.json();
+            if (data.reminders) {
+                setReminders(data.reminders as IngredientReminder[]);
+            } else if (data.error) {
+                setError(data.error);
+                console.error('Erreur API Reminders:', data.error);
+            }
+        } catch (err: any) {
+            setError(err.message);
+            console.error('Erreur de réseau Reminders:', err);
+        } finally {
+            setIsLoadingReminders(false);
+        }
+    }, [userId]);
+
     // Load reminders when switching to list tab
     useEffect(() => {
         if (activeTab === 'list' && userId) {
-            setIsLoadingReminders(true);
-            fetch(`/api/reminders?userId=${userId}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.reminders) {
-                        setReminders(data.reminders as IngredientReminder[]);
-                    } else if (data.error) {
-                        console.error('Erreur :', data.error);
-                    }
-                })
-                .catch(err => console.error('Erreur de requête:', err))
-                .finally(() => setIsLoadingReminders(false));
+            loadReminders();
         }
-    }, [activeTab, userId]);
+    }, [activeTab, userId, loadReminders]);
 
     const filteredPantry = useMemo(() => {
         if (!searchQuery) return pantry.slice(0, 20);
@@ -129,6 +141,9 @@ export default function ReminderSheet({ pantry, userId }: ReminderSheetProps) {
             setSavedMessage(`✅ Rappel programmé ! Vous serez notifié le ${dateStr} à ${timeStr}.`);
             setSelectedIngredients([]);
             setSearchQuery('');
+            
+            // Auto refresh list if hidden in the other tab
+            if (userId) loadReminders();
 
         } catch (err: any) {
             setSavedMessage(`❌ Erreur : ${err.message}`);
@@ -336,47 +351,70 @@ export default function ReminderSheet({ pantry, userId }: ReminderSheetProps) {
             {activeTab === 'list' && (
                 <ScrollArea className="flex-grow my-3 -mr-2 pr-2">
                     {isLoadingReminders ? (
-                        <div className="flex items-center justify-center h-32">
+                        <div className="flex items-center justify-center h-40">
                             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                         </div>
+                    ) : error ? (
+                        <div className="flex flex-col items-center justify-center h-40 text-center p-4">
+                            <p className="text-sm text-destructive font-medium mb-3">Erreur lors de la récupération : {error}</p>
+                            <Button variant="outline" size="sm" onClick={() => loadReminders()} className="rounded-xl">
+                                Recharger
+                            </Button>
+                        </div>
                     ) : reminders.length > 0 ? (
-                        <ul className="space-y-3">
-                            {reminders.map(reminder => (
-                                <li key={reminder.id} className="bg-secondary/30 p-4 rounded-3xl border border-border/50">
-                                    <div className="flex items-start justify-between gap-3">
-                                        <div className="flex-grow min-w-0">
-                                            <div className="flex flex-wrap gap-1 mb-2">
-                                                {reminder.ingredientNames.map(name => (
-                                                    <span key={name} className="text-xs bg-primary/15 text-primary font-semibold px-2 py-0.5 rounded-full">
-                                                        {name}
-                                                    </span>
-                                                ))}
+                        <div className="space-y-4">
+                            <ul className="space-y-3">
+                                {reminders.map(reminder => (
+                                    <li key={reminder.id} className="bg-secondary/30 p-4 rounded-3xl border border-border/50">
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div className="flex-grow min-w-0">
+                                                <div className="flex flex-wrap gap-1 mb-2">
+                                                    {reminder.ingredientNames.map(name => (
+                                                        <span key={name} className="text-xs bg-primary/15 text-primary font-semibold px-2 py-0.5 rounded-full">
+                                                            {name}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                                <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                                                    <Bell className="h-3 w-3" />
+                                                    Notification : {formatReminderTime(reminder.notifyTime)}
+                                                </p>
+                                                <p className="text-xs text-muted-foreground/70 mt-0.5 pl-5">
+                                                    Achat prévu : {formatReminderTime(reminder.purchaseTime)}
+                                                </p>
                                             </div>
-                                            <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                                                <Bell className="h-3 w-3" />
-                                                Notification : {formatReminderTime(reminder.notifyTime)}
-                                            </p>
-                                            <p className="text-xs text-muted-foreground/70 mt-0.5 pl-5">
-                                                Achat prévu : {formatReminderTime(reminder.purchaseTime)}
-                                            </p>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-8 w-8 rounded-xl shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                                                onClick={() => handleDeleteReminder(reminder.id)}
+                                                title="Supprimer le rappel"
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
                                         </div>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-8 w-8 rounded-xl shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                                            onClick={() => handleDeleteReminder(reminder.id)}
-                                            title="Supprimer le rappel"
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                </li>
-                            ))}
-                        </ul>
+                                    </li>
+                                ))}
+                            </ul>
+                            <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => loadReminders()} 
+                                className="w-full text-xs text-muted-foreground hover:text-primary rounded-xl"
+                            >
+                                <Loader2 className={cn("h-3 w-3 mr-2", isLoadingReminders && "animate-spin")} />
+                                Actualiser la liste
+                            </Button>
+                        </div>
                     ) : (
-                        <div className="flex flex-col items-center justify-center h-40 text-center space-y-2">
-                            <AlarmClock className="h-10 w-10 text-muted-foreground/30" />
-                            <p className="text-sm text-muted-foreground">Aucun rappel programmé.</p>
+                        <div className="flex flex-col items-center justify-center h-40 text-center space-y-4">
+                            <div className="space-y-2">
+                                <AlarmClock className="h-10 w-10 text-muted-foreground/30 mx-auto" />
+                                <p className="text-sm text-muted-foreground">Aucun rappel programmé.</p>
+                            </div>
+                            <Button variant="outline" size="sm" onClick={() => loadReminders()} className="rounded-xl">
+                                Actualiser
+                            </Button>
                         </div>
                     )}
                 </ScrollArea>
