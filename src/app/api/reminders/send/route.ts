@@ -38,10 +38,8 @@ async function handler(request: Request) {
 
         // 3. Get user FCM tokens
         const userDoc = await adminDb.collection('users').doc(userId).get();
-        if (!userDoc.exists) {
-            return NextResponse.json({ error: 'User not found' }, { status: 404 });
-        }
         const tokens: string[] = userDoc.data()?.fcmTokens || [];
+        console.log(`[Reminder] Found ${tokens.length} FCM tokens for user ${userId}`);
 
         if (tokens.length > 0) {
             // 4. Build notification content
