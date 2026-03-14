@@ -410,3 +410,62 @@ export async function getContactLinks(uid: string) {
         return {};
     }
 }
+
+// ---------- ingredient reminders ----------
+
+/**
+ * Saves a new ingredient reminder to Firestore.
+ * Collection: reminders/{userId}/items/{reminderId}
+ */
+export async function saveReminder(userId: string, reminder: any): Promise<string> {
+    try {
+        const colRef = collection(firestoreDb, 'reminders', userId, 'items');
+        const docRef = await addDoc(colRef, reminder);
+        return docRef.id;
+    } catch (e) {
+        console.error('Error saving reminder:', e);
+        throw e;
+    }
+}
+
+/**
+ * Updates a reminder document (e.g. to add qstashMessageId or update status).
+ */
+export async function updateReminder(userId: string, reminderId: string, data: Partial<any>) {
+    try {
+        const docRef = doc(firestoreDb, 'reminders', userId, 'items', reminderId);
+        const { updateDoc } = await import('firebase/firestore');
+        await updateDoc(docRef, data);
+    } catch (e) {
+        console.error('Error updating reminder:', e);
+        throw e;
+    }
+}
+
+/**
+ * Returns all pending reminders for a user.
+ */
+export async function getUserReminders(userId: string): Promise<any[]> {
+    try {
+        const colRef = collection(firestoreDb, 'reminders', userId, 'items');
+        const q = query(colRef, where('status', '==', 'pending'));
+        const snap = await getDocs(q);
+        return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (e) {
+        console.error('Error getting reminders:', e);
+        return [];
+    }
+}
+
+/**
+ * Deletes (cancels) a reminder document.
+ */
+export async function deleteReminder(userId: string, reminderId: string) {
+    try {
+        await deleteDoc(doc(firestoreDb, 'reminders', userId, 'items', reminderId));
+    } catch (e) {
+        console.error('Error deleting reminder:', e);
+        throw e;
+    }
+}
+

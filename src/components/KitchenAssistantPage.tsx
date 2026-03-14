@@ -987,6 +987,7 @@ export default function KitchenAssistantPage() {
               onAddIngredients={handleAddIngredients}
               onViewCategoryTrends={setViewingCategoryTrends}
               onMoveCategory={handleMoveCategory}
+              userId={userUid}
             />
           )}
           {activeTab === 'recipes' && (

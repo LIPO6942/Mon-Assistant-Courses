@@ -123,3 +123,15 @@ export interface CommunityPurchase {
   category?: string;
   userId?: string;
 }
+
+export interface IngredientReminder {
+  id: string;
+  userId: string;
+  ingredientNames: string[];   // ex: ["Lait", "Œufs"]
+  purchaseTime: string;        // ISO string — heure d'achat prévue
+  notifyTime: string;          // ISO string — heure de notification (purchaseTime - délai)
+  leadTimeMinutes: number;     // ex: 30
+  status: 'pending' | 'sent' | 'cancelled';
+  createdAt: string;
+  qstashMessageId?: string;    // pour référence future (annulation)
+}

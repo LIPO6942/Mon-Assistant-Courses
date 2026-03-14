@@ -5,12 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Plus, PlusCircle, Pencil, Trash2, Search, BrainCircuit, History, ChevronUp, ChevronDown } from 'lucide-react';
+import { Plus, PlusCircle, Pencil, Trash2, Search, BrainCircuit, History, ChevronUp, ChevronDown, AlarmClock } from 'lucide-react';
 import type { Ingredient, CategoryDef, PurchaseHistory } from '@/lib/types';
 import BudgetManager from './BudgetManager';
 import { cn, getProductStatus } from '@/lib/utils';
 import { Sheet, SheetTrigger } from '@/components/ui/sheet';
 import QuickReorderSheet from './QuickReorderSheet';
+import ReminderSheet from './ReminderSheet';
 import { ImportFromLawra9Dialog } from './ImportFromLawra9Dialog';
 
 interface PantryViewProps {
@@ -42,6 +43,7 @@ interface PantryViewProps {
   onAddIngredients: (newIngredients: Omit<Ingredient, 'id'>[]) => void;
   onViewCategoryTrends: (category: CategoryDef) => void;
   onMoveCategory: (id: string, direction: 'up' | 'down') => void;
+  userId?: string;
 }
 
 export default function PantryView({
@@ -73,6 +75,7 @@ export default function PantryView({
   onAddIngredients,
   onViewCategoryTrends,
   onMoveCategory,
+  userId,
 }: PantryViewProps) {
   return (
     <div>
@@ -108,6 +111,17 @@ export default function PantryView({
             pantry={pantry}
             onAddToBasket={onAddToBasket}
             onDeleteFromHistory={onDeleteFromHistory}
+          />
+        </Sheet>
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="outline" size="icon" className="h-11 w-11 rounded-full shadow-sm shrink-0" title="Programmer un rappel">
+              <AlarmClock className="h-5 w-5" />
+            </Button>
+          </SheetTrigger>
+          <ReminderSheet
+            pantry={pantry}
+            userId={userId}
           />
         </Sheet>
       </div>
