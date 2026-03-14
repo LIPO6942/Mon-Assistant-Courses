@@ -38,24 +38,27 @@ export async function POST(request: Request) {
         const docRef = await colRef.add(reminderData);
         const reminderId = docRef.id;
 
-        // 3. Schedule QStash job to call /api/reminders/send at notifyDate
-        let appUrl = process.env.NEXT_PUBLIC_APP_URL;
+        // 3. Schedule QStash job with forced protocol and logs
+        let host = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL || 'localhost:3000';
         
-        if (!appUrl && process.env.VERCEL_URL) {
-            appUrl = `https://${process.env.VERCEL_URL}`;
+        if (!host.startsWith('http')) {
+            host = host.includes('localhost') ? `http://${host}` : `https://${host}`;
         }
         
-        if (!appUrl) {
-            appUrl = 'http://localhost:3000';
-        }
-
-        const targetUrl = `${appUrl.replace(/\/$/, '')}/api/reminders/send`;
+        const targetUrl = `${host.replace(/\/$/, '')}/api/reminders/send`;
+        
+        console.log(`[Reminder] Scheduling QStash:`);
+        console.log(` - Target URL: ${targetUrl}`);
+        console.log(` - Current Server Time: ${new Date().toISOString()}`);
+        console.log(` - Scheduled Notify Time: ${notifyDate.toISOString()}`);
 
         const qstashResponse = await qstash.publishJSON({
             url: targetUrl,
             body: { reminderId, userId },
             notBefore: Math.floor(notifyDate.getTime() / 1000), // Unix timestamp in seconds
         });
+
+        console.log(` - QStash Response ID: ${qstashResponse.messageId}`);
 
         // 4. Update Firestore with qstashMessageId for reference
         await docRef.update({ qstashMessageId: qstashResponse.messageId });
