@@ -90,6 +90,17 @@ export default function PantryView({
         remainingBudget={remainingBudget}
       />
       <div className="flex gap-2 mb-6">
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="outline" size="icon" className="h-11 w-11 rounded-full shadow-sm shrink-0" title="Programmer un rappel">
+              <AlarmClock className="h-5 w-5" />
+            </Button>
+          </SheetTrigger>
+          <ReminderSheet
+            pantry={pantry}
+            userId={userId}
+          />
+        </Sheet>
         <div className="relative flex-grow">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input type="search" placeholder="Rechercher un ingrédient..." className="pl-11 rounded-full h-11 text-base" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
@@ -111,17 +122,6 @@ export default function PantryView({
             pantry={pantry}
             onAddToBasket={onAddToBasket}
             onDeleteFromHistory={onDeleteFromHistory}
-          />
-        </Sheet>
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="outline" size="icon" className="h-11 w-11 rounded-full shadow-sm shrink-0" title="Programmer un rappel">
-              <AlarmClock className="h-5 w-5" />
-            </Button>
-          </SheetTrigger>
-          <ReminderSheet
-            pantry={pantry}
-            userId={userId}
           />
         </Sheet>
       </div>
