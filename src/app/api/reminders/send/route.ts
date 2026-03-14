@@ -3,10 +3,14 @@ import { verifySignatureAppRouter } from '@upstash/qstash/nextjs';
 import { adminDb, adminMessaging } from '@/lib/firebase-admin';
 
 async function handler(request: Request) {
+    console.log('[Reminder] Received notification request from QStash');
     try {
-        const { reminderId, userId } = await request.json();
+        const body = await request.json();
+        console.log('[Reminder] Request body:', JSON.stringify(body));
+        const { reminderId, userId } = body;
 
         if (!reminderId || !userId) {
+            console.error('[Reminder] Missing reminderId or userId');
             return NextResponse.json({ error: 'Missing reminderId or userId' }, { status: 400 });
         }
 

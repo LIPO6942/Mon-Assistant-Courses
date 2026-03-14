@@ -39,11 +39,17 @@ export async function POST(request: Request) {
         const reminderId = docRef.id;
 
         // 3. Schedule QStash job to call /api/reminders/send at notifyDate
-        const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL
-            ? `https://${process.env.VERCEL_URL}`
-            : 'http://localhost:3000';
+        let appUrl = process.env.NEXT_PUBLIC_APP_URL;
+        
+        if (!appUrl && process.env.VERCEL_URL) {
+            appUrl = `https://${process.env.VERCEL_URL}`;
+        }
+        
+        if (!appUrl) {
+            appUrl = 'http://localhost:3000';
+        }
 
-        const targetUrl = `${appUrl}/api/reminders/send`;
+        const targetUrl = `${appUrl.replace(/\/$/, '')}/api/reminders/send`;
 
         const qstashResponse = await qstash.publishJSON({
             url: targetUrl,
