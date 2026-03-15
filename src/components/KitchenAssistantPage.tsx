@@ -1059,8 +1059,8 @@ export default function KitchenAssistantPage() {
               basket={basket}
               purchaseHistory={purchaseHistory}
               dbarati={dbarati}
-              onAddDbaratiItem={(text: string) => {
-                setDbarati(prev => [...prev, { id: self.crypto.randomUUID(), text: text.trim(), done: false, prepCount: 0 }]);
+              onAddDbaratiItem={(text: string, type: 'plat' | 'entree' = 'plat', tag?: 'Soupe' | 'Salade' | 'Sauce') => {
+                setDbarati(prev => [...prev, { id: self.crypto.randomUUID(), text: text.trim(), done: false, prepCount: 0, type, tag }]);
               }}
               onToggleDbaratiItem={(id: string) => {
                 setDbarati(prev => prev.map(item => {

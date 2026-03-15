@@ -85,6 +85,8 @@ export interface DbaratiItem {
   done: boolean;
   prepCount?: number;      // How many times this dish was prepared
   lastPreparedAt?: string; // ISO date string
+  type?: 'plat' | 'entree';
+  tag?: 'Soupe' | 'Salade' | 'Sauce';
 }
 
 export type BasketShareStatus = 'pending' | 'accepted' | 'rejected';

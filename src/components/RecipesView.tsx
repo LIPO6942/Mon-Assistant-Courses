@@ -39,7 +39,7 @@ interface RecipesViewProps {
   basket: BasketItem[];
   purchaseHistory: PurchaseHistory;
   dbarati: DbaratiItem[];
-  onAddDbaratiItem: (text: string) => void;
+  onAddDbaratiItem: (text: string, type?: 'plat' | 'entree', tag?: 'Soupe' | 'Salade' | 'Sauce') => void;
   onToggleDbaratiItem: (id: string) => void;
   onDeleteDbaratiItem: (id: string) => void;
   onUpdateDbaratiItem: (id: string, text: string) => void;
@@ -78,6 +78,12 @@ export default function RecipesView({
   const [dbaratiDisplayedItem, setDbaratiDisplayedItem] = useState<string | null>(null);
   const [dbaratiSelectedItem, setDbaratiSelectedItem] = useState<string | null>(null);
   const [dbaratiSelectedEmoji, setDbaratiSelectedEmoji] = useState<string>('🍳');
+
+  // Entrees state
+  const [newEntreeText, setNewEntreeText] = useState('');
+  const [newEntreeTag, setNewEntreeTag] = useState<'Soupe' | 'Salade' | 'Sauce'>('Salade');
+  const [activeEntreeFilter, setActiveEntreeFilter] = useState<'Toutes' | 'Soupe' | 'Salade' | 'Sauce'>('Toutes');
+  const [isEntreesExpanded, setIsEntreesExpanded] = useState(false);
 
   // Listen to community purchases for recipe cost calculations
   useEffect(() => {
@@ -323,6 +329,7 @@ export default function RecipesView({
               {(() => {
                 const ONE_MONTH = 30 * 24 * 60 * 60 * 1000;
                 const candidates = dbarati.filter(item => {
+                  if (item.type === 'entree') return false;
                   if (!item.done) return true;
                   if (item.lastPreparedAt) {
                     return (Date.now() - new Date(item.lastPreparedAt).getTime()) > ONE_MONTH;
@@ -420,11 +427,11 @@ export default function RecipesView({
               {/* Add new item - Stylized & Compact */}
               <div className="max-w-md mx-auto mb-6">
                 <form
-                  className="relative group"
+                  className="relative group mb-6"
                   onSubmit={(e) => {
                     e.preventDefault();
                     if (newDbaratiText.trim()) {
-                      onAddDbaratiItem(newDbaratiText);
+                      onAddDbaratiItem(newDbaratiText, 'plat');
                       setNewDbaratiText('');
                     }
                   }}
@@ -446,10 +453,10 @@ export default function RecipesView({
                 </form>
               </div>
 
-              {/* List - Premium & Compact Cards */}
-              {dbarati.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-4xl mx-auto">
-                  {[...dbarati].sort((a, b) => Number(a.done) - Number(b.done)).map((item, index) => {
+              {/* List - Premium & Compact Cards (Plats only) */}
+              {dbarati.filter(i => i.type !== 'entree').length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-4xl mx-auto mb-6">
+                  {[...dbarati].filter(i => i.type !== 'entree').sort((a, b) => Number(a.done) - Number(b.done)).map((item, index) => {
                     const normalizedItemText = normalizeString(item.text);
                     const matchedRecipe = userRecipes.find(r => normalizeString(r.title) === normalizedItemText);
                     
@@ -541,11 +548,150 @@ export default function RecipesView({
                   })}
                 </div>
               ) : (
-                <div className="text-center py-8 rounded-2xl border-2 border-dashed border-border/40 bg-muted/10">
+                <div className="text-center py-8 rounded-2xl border-2 border-dashed border-border/40 bg-muted/10 mb-6">
                   <ClipboardList className="h-8 w-8 text-muted-foreground/20 mx-auto mb-2" />
-                  <p className='text-muted-foreground font-medium text-sm'>Votre carnet est vide.</p>
+                  <p className='text-muted-foreground font-medium text-sm'>Votre carnet de plats est vide.</p>
                 </div>
               )}
+
+              {/* Entrées Section (Collapsible) */}
+              <div className="max-w-4xl mx-auto border-t border-border/40 pt-4 mt-6">
+                <button 
+                  onClick={() => setIsEntreesExpanded(!isEntreesExpanded)}
+                  className="w-full flex justify-between items-center py-2 text-sm font-semibold text-muted-foreground hover:text-primary transition-colors focus:outline-none"
+                >
+                  <span className="flex items-center gap-2">
+                    <Utensils className="h-4 w-4" /> Entrées
+                    <Badge variant="outline" className="text-[10px] py-0 px-1.5 h-4 ml-2">
+                      {dbarati.filter(i => i.type === 'entree').length}
+                    </Badge>
+                  </span>
+                  {isEntreesExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </button>
+                
+                {isEntreesExpanded && (
+                  <div className="animate-in slide-in-from-top-2 fade-in duration-300 pt-4">
+                    
+                    {/* Add new Entree */}
+                    <div className="max-w-md mx-auto mb-4 scale-95 origin-top">
+                      <form
+                        className="relative flex gap-2"
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          if (newEntreeText.trim()) {
+                            onAddDbaratiItem(newEntreeText, 'entree', newEntreeTag);
+                            setNewEntreeText('');
+                          }
+                        }}
+                      >
+                         <Input
+                          placeholder="Ajouter une entrée..."
+                          className="rounded-xl h-10 text-sm border-primary/20 bg-background/50 flex-1"
+                          value={newEntreeText}
+                          onChange={(e) => setNewEntreeText(e.target.value)}
+                        />
+                        <div className="flex border border-primary/20 rounded-xl overflow-hidden shadow-sm h-10">
+                          {(['Soupe', 'Salade', 'Sauce'] as const).map(tag => (
+                            <button
+                              key={tag}
+                              type="button"
+                              className={cn(
+                                "px-2 text-[10px] font-medium transition-colors border-r border-primary/10 last:border-r-0 hover:bg-primary/10",
+                                newEntreeTag === tag ? "bg-primary/10 text-primary font-bold" : "bg-card text-muted-foreground"
+                              )}
+                              onClick={() => setNewEntreeTag(tag)}
+                            >
+                              {tag}
+                            </button>
+                          ))}
+                        </div>
+                        <Button 
+                          type="submit" 
+                          size="icon" 
+                          className="h-10 w-10 rounded-xl shrink-0" 
+                          disabled={!newEntreeText.trim()}
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </form>
+                    </div>
+
+                    {/* Filters */}
+                    {dbarati.filter(i => i.type === 'entree').length > 0 && (
+                      <div className="flex justify-center gap-2 mb-4">
+                        {(['Toutes', 'Soupe', 'Salade', 'Sauce'] as const).map(filter => (
+                          <Badge 
+                            key={filter}
+                            variant={activeEntreeFilter === filter ? "default" : "outline"}
+                            className="cursor-pointer text-[10px] py-0.5"
+                            onClick={() => setActiveEntreeFilter(filter)}
+                          >
+                            {filter}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Entrees List */}
+                    {dbarati.filter(i => i.type === 'entree').length > 0 ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-w-4xl mx-auto scale-95 origin-top">
+                        {[...dbarati]
+                          .filter(i => i.type === 'entree')
+                          .filter(i => activeEntreeFilter === 'Toutes' || i.tag === activeEntreeFilter)
+                          .sort((a, b) => Number(a.done) - Number(b.done))
+                          .map((item) => (
+                          <div
+                            key={item.id}
+                            className={cn(
+                              "relative p-2 rounded-lg border transition-all duration-300 group flex items-center justify-between",
+                              item.done 
+                                ? "bg-muted/40 border-border/40 opacity-70" 
+                                : "bg-white dark:bg-card border-border/60 hover:border-primary/40 hover:shadow-sm"
+                            )}
+                          >
+                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                              <Checkbox
+                                id={`dbarati-${item.id}`}
+                                checked={item.done}
+                                onCheckedChange={() => onToggleDbaratiItem(item.id)}
+                                className="h-4 w-4 rounded border-primary/20 data-[state=checked]:bg-primary shrink-0"
+                              />
+                               <label
+                                htmlFor={`dbarati-${item.id}`}
+                                className={cn(
+                                  "text-xs font-semibold cursor-pointer truncate flex-1",
+                                  item.done ? "line-through text-muted-foreground" : "text-foreground"
+                                )}
+                              >
+                                {item.text}
+                              </label>
+                              {item.tag && (
+                                <Badge variant="secondary" className="text-[8px] px-1 py-0 h-3 font-medium opacity-70 shrink-0">
+                                  {item.tag}
+                                </Badge>
+                              )}
+                            </div>
+                             <div className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-2">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6 rounded text-muted-foreground hover:text-destructive"
+                                  onClick={() => onDeleteDbaratiItem(item.id)}
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-4 rounded-xl border border-dashed border-border/40 bg-muted/5 scale-95">
+                        <p className='text-muted-foreground font-medium text-[11px]'>Aucune entrée ajoutée.</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </AccordionContent>
         </AccordionItem>
