@@ -279,7 +279,9 @@ export default function BasketSheet({
               <span className="text-xl font-semibold text-primary/80">{purchasedTotal.toFixed(3)} DT</span>
             </div>
             <div className="flex justify-between items-center w-full">
-              <span className="text-lg font-semibold text-muted-foreground">Total à Payer</span>
+              <span className="text-lg font-semibold text-muted-foreground">
+                {purchasedItemCount > 0 ? "Total restant" : "Total à payer"}
+              </span>
               <span className="text-2xl font-bold text-primary">{basketTotal.toFixed(3)} DT</span>
             </div>
             <Button onClick={handleClickValidate} className="w-full" disabled={purchasedItemCount === 0}>
