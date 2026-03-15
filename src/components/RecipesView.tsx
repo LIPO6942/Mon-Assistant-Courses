@@ -6,7 +6,7 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, Shuffle, Dices, Clock, Coins, Utensils, BookUser, Search, Tag, Sparkles, TrendingDown, ClipboardList, Check, Trash2, Plus, ChevronUp, ChevronDown } from 'lucide-react';
+import { PlusCircle, Shuffle, Dices, Clock, Coins, Utensils, BookUser, Search, Tag, Sparkles, TrendingDown, ClipboardList, Check, Trash2, Plus, ChevronUp, ChevronDown, Loader2 } from 'lucide-react';
 import type { Recipe, UserRecipe, BasketItem, PurchaseHistory, CommunityPurchase, DbaratiItem } from '@/lib/types';
 import { streetFoodOptions } from '@/lib/data';
 import { cn, getProductStatus } from '@/lib/utils';
@@ -299,32 +299,12 @@ export default function RecipesView({
             </div>
           </AccordionTrigger>
           <AccordionContent>
-            <div className='py-4 px-4 rounded-xl bg-gradient-to-br from-secondary/50 via-card to-card border-2 border-border/50 shadow-lg'>
-              <p className='text-muted-foreground mb-6 text-center max-w-2xl mx-auto'>Votre liste de plats à préparer. Notez ce que vous comptez cuisiner et cochez quand c'est fait !</p>
+            <div className='py-6 px-4 sm:px-6 rounded-2xl bg-gradient-to-br from-indigo-50/50 via-white to-rose-50/50 dark:from-indigo-950/20 dark:via-background dark:to-rose-950/20 border border-border/40 shadow-xl backdrop-blur-sm'>
+              <p className='text-muted-foreground mb-8 text-center max-w-2xl mx-auto text-sm sm:text-base leading-relaxed'>
+                <span className="font-semibold text-primary">Dbarati</span> : Votre carnet de route culinaire. Notez vos envies, planifiez vos repas et gardez un œil sur vos habitudes !
+              </p>
 
-              {/* Add new item */}
-              <form
-                className="flex items-center gap-2 max-w-md mx-auto mb-6"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  if (newDbaratiText.trim()) {
-                    onAddDbaratiItem(newDbaratiText);
-                    setNewDbaratiText('');
-                  }
-                }}
-              >
-                <Input
-                  placeholder="Ex: Couscous, Lablabi, Ojja..."
-                  className="rounded-full h-10 flex-1"
-                  value={newDbaratiText}
-                  onChange={(e) => setNewDbaratiText(e.target.value)}
-                />
-                <Button type="submit" size="icon" className="rounded-full h-10 w-10 shrink-0" disabled={!newDbaratiText.trim()}>
-                  <Plus className="h-5 w-5" />
-                </Button>
-              </form>
-
-              {/* Random Wheel */}
+              {/* Random Wheel UI - Enhanced */}
               {(() => {
                 const ONE_MONTH = 30 * 24 * 60 * 60 * 1000;
                 const candidates = dbarati.filter(item => {
@@ -334,6 +314,7 @@ export default function RecipesView({
                   }
                   return true;
                 });
+                
                 if (candidates.length < 2) return null;
 
                 const handleDbaratiSpin = () => {
@@ -344,7 +325,7 @@ export default function RecipesView({
                   dbaratiIntervalRef.current = setInterval(() => {
                     const randomIdx = Math.floor(Math.random() * candidates.length);
                     setDbaratiDisplayedItem(candidates[randomIdx].text);
-                  }, 100);
+                  }, 80);
 
                   setTimeout(() => {
                     if (dbaratiIntervalRef.current) {
@@ -359,27 +340,45 @@ export default function RecipesView({
                 };
 
                 return (
-                  <div className="text-center mb-6 max-w-md mx-auto">
+                  <div className="relative mb-10 p-6 rounded-3xl bg-primary/5 border border-primary/10 overflow-hidden text-center group">
+                    <div className="absolute -top-12 -right-12 w-32 h-32 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/20 transition-all duration-700" />
+                    <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-rose-400/10 rounded-full blur-3xl group-hover:bg-rose-400/20 transition-all duration-700" />
+                    
+                    <h3 className="text-sm font-bold uppercase tracking-widest text-primary/70 mb-4 flex items-center justify-center gap-2">
+                       <Dices className="h-4 w-4" /> Le Destin Culinaire
+                    </h3>
+
                     <Button
                       onClick={handleDbaratiSpin}
                       disabled={isDbaratiSpinning}
-                      variant="outline"
-                      className="rounded-full gap-2 border-primary/30 hover:bg-primary/5"
-                      size="sm"
+                      className={cn(
+                        "rounded-full px-8 py-6 h-auto text-lg font-bold shadow-lg transition-all duration-300",
+                        isDbaratiSpinning ? "bg-muted cursor-not-allowed" : "bg-gradient-to-r from-primary to-indigo-600 hover:shadow-primary/25 hover:scale-105 active:scale-95"
+                      )}
                     >
-                      <Dices className={cn("h-4 w-4", isDbaratiSpinning && "animate-spin")} />
-                      {isDbaratiSpinning ? 'Ça tourne...' : 'Qu\'est-ce que je prépare ?'}
+                      {isDbaratiSpinning ? (
+                        <span className="flex items-center gap-2">
+                          <Loader2 className="h-5 w-5 animate-spin" /> Magie en cours...
+                        </span>
+                      ) : (
+                        "Qu'est-ce qu'on mange ?"
+                      )}
                     </Button>
-                    <div className="mt-4 h-16 flex flex-col justify-center items-center">
+
+                    <div className="mt-6 h-20 flex flex-col justify-center items-center">
                       {isDbaratiSpinning && (
-                        <p className="text-2xl font-bold text-primary transition-opacity duration-100 animate-in fade-in">
-                          {dbaratiDisplayedItem}
-                        </p>
+                        <div className="animate-in zoom-in-75 duration-200">
+                          <p className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-indigo-600 truncate max-w-[280px]">
+                            {dbaratiDisplayedItem}
+                          </p>
+                        </div>
                       )}
                       {!isDbaratiSpinning && dbaratiSelectedItem && (
-                        <div className="animate-in fade-in-50 text-center">
-                          <p className="text-muted-foreground text-sm">Aujourd'hui tu prépares...</p>
-                          <p className="text-2xl font-bold text-primary mt-1">{dbaratiSelectedItem} 🍳</p>
+                        <div className="animate-in fade-in-50 zoom-in-95 duration-500 text-center">
+                          <p className="text-muted-foreground text-xs font-semibold uppercase tracking-tighter mb-1">C'est décidé !</p>
+                          <p className="text-2xl sm:text-4xl font-black text-primary drop-shadow-sm">
+                            {dbaratiSelectedItem} <span className="inline-block animate-bounce">🍳</span>
+                          </p>
                         </div>
                       )}
                     </div>
@@ -387,102 +386,143 @@ export default function RecipesView({
                 );
               })()}
 
-              {/* List */}
+              {/* Add new item - Stylized */}
+              <div className="max-w-md mx-auto mb-10">
+                <form
+                  className="relative group"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (newDbaratiText.trim()) {
+                      onAddDbaratiItem(newDbaratiText);
+                      setNewDbaratiText('');
+                    }
+                  }}
+                >
+                  <Input
+                    placeholder="Une envie ? Couscous, Pasta, Salade..."
+                    className="rounded-2xl h-14 pl-6 pr-14 text-base border-primary/20 focus-visible:ring-primary/30 shadow-inner bg-background/50 backdrop-blur-sm transition-all"
+                    value={newDbaratiText}
+                    onChange={(e) => setNewDbaratiText(e.target.value)}
+                  />
+                  <Button 
+                    type="submit" 
+                    size="icon" 
+                    className="absolute right-2 top-2 h-10 w-10 rounded-xl shadow-md transform transition-all group-focus-within:scale-105" 
+                    disabled={!newDbaratiText.trim()}
+                  >
+                    <Plus className="h-6 w-6" />
+                  </Button>
+                </form>
+              </div>
+
+              {/* List - Premium Cards */}
               {dbarati.length > 0 ? (
-                <ul className="space-y-2 max-w-md mx-auto">
-                  {dbarati.map((item, index) => (
-                    <li
-                      key={item.id}
-                      className={cn(
-                        "flex items-start gap-3 p-3 rounded-xl border transition-all group",
-                        item.done ? "bg-muted/30 border-border/30" : "bg-card border-border/50 hover:shadow-sm"
-                      )}
-                    >
-                      <Checkbox
-                        id={`dbarati-${item.id}`}
-                        checked={item.done}
-                        onCheckedChange={() => onToggleDbaratiItem(item.id)}
-                        className="h-5 w-5 rounded-md border-primary/30 shrink-0 mt-0.5"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <label
-                            htmlFor={`dbarati-${item.id}`}
-                            className={cn(
-                              "text-sm font-medium cursor-pointer block",
-                              item.done && "line-through text-muted-foreground"
-                            )}
-                          >
-                            {item.text}
-                          </label>
-                          {(() => {
-                            const matchedRecipe = userRecipes.find(r => r.title.toLowerCase() === item.text.toLowerCase());
-                            if (!matchedRecipe) return null;
-                            return (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-6 w-6 rounded-full text-primary/60 hover:text-primary hover:bg-primary/10 -ml-1 mt-0.5"
-                                onClick={() => onViewUserRecipe(matchedRecipe)}
-                                title="Ouvrir la recette"
-                              >
-                                <BookUser className="h-3.5 w-3.5" />
-                              </Button>
-                            );
-                          })()}
-                        </div>
-                        <div className="flex items-center gap-2 flex-wrap mt-0.5">
-                          {(item.prepCount || 0) > 0 && (
-                            <span className="text-[10px] text-primary/60 font-semibold">
-                              Préparé {item.prepCount} fois
-                            </span>
-                          )}
-                          {item.lastPreparedAt && (
-                            <>
-                              {(item.prepCount || 0) > 0 && <span className="text-muted-foreground/30 text-[10px]">•</span>}
-                              <span className="text-[10px] text-muted-foreground/70 italic">
-                                Dernier: {new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(new Date(item.lastPreparedAt))}
-                              </span>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex flex-col items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-5 w-5 rounded text-muted-foreground hover:text-primary"
-                          onClick={() => onMoveDbaratiItem(item.id, 'up')}
-                          disabled={index === 0}
-                          title="Monter"
-                        >
-                          <ChevronUp className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-5 w-5 rounded text-muted-foreground hover:text-primary"
-                          onClick={() => onMoveDbaratiItem(item.id, 'down')}
-                          disabled={index === dbarati.length - 1}
-                          title="Descendre"
-                        >
-                          <ChevronDown className="h-3 w-3" />
-                        </Button>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 rounded-full opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0"
-                        onClick={() => onDeleteDbaratiItem(item.id)}
-                        title="Supprimer"
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-4xl mx-auto">
+                  {dbarati.map((item, index) => {
+                    const matchedRecipe = userRecipes.find(r => r.title.toLowerCase() === item.text.toLowerCase());
+                    
+                    return (
+                      <div
+                        key={item.id}
+                        className={cn(
+                          "relative p-4 rounded-2xl border transition-all duration-300 group flex flex-col",
+                          item.done 
+                            ? "bg-muted/40 border-border/40 opacity-80" 
+                            : "bg-white dark:bg-card border-border/60 hover:border-primary/40 hover:shadow-xl hover:-translate-y-1"
+                        )}
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
+                        <div className="flex items-start gap-3 mb-3">
+                          <Checkbox
+                            id={`dbarati-${item.id}`}
+                            checked={item.done}
+                            onCheckedChange={() => onToggleDbaratiItem(item.id)}
+                            className="h-6 w-6 rounded-lg border-2 border-primary/20 data-[state=checked]:bg-primary data-[state=checked]:border-primary shrink-0 mt-0.5 transition-all"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <label
+                                htmlFor={`dbarati-${item.id}`}
+                                className={cn(
+                                  "text-base font-bold cursor-pointer transition-all",
+                                  item.done ? "line-through text-muted-foreground" : "text-foreground"
+                                )}
+                              >
+                                {item.text}
+                              </label>
+                              {matchedRecipe && (
+                                <Badge 
+                                  variant="secondary" 
+                                  className="h-5 px-1.5 text-[9px] font-black uppercase tracking-tighter cursor-pointer hover:bg-primary hover:text-white transition-colors gap-1"
+                                  onClick={() => onViewUserRecipe(matchedRecipe)}
+                                >
+                                  <BookUser className="h-2.5 w-2.5" /> Recette
+                                </Badge>
+                              )}
+                            </div>
+                            
+                            <div className="flex items-center gap-2 flex-wrap mt-2">
+                              {(item.prepCount || 0) > 0 && (
+                                <div className="flex items-center gap-1 bg-primary/10 text-primary px-2 py-0.5 rounded-full text-[10px] font-bold">
+                                  <Utensils className="h-2.5 w-2.5" />
+                                  {item.prepCount}x
+                                </div>
+                              )}
+                              {item.lastPreparedAt && (
+                                <div className="text-[10px] text-muted-foreground italic flex items-center gap-1">
+                                  <Clock className="h-2.5 w-2.5" />
+                                  {new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(new Date(item.lastPreparedAt))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-end gap-2 mt-auto pt-2 border-t border-border/10">
+                          <div className="flex gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/5 shadow-none"
+                              onClick={() => onMoveDbaratiItem(item.id, 'up')}
+                              disabled={index === 0}
+                            >
+                              <ChevronUp className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/5 shadow-none"
+                              onClick={() => onMoveDbaratiItem(item.id, 'down')}
+                              disabled={index === dbarati.length - 1}
+                            >
+                              <ChevronDown className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/5 shadow-none ml-1"
+                            onClick={() => onDeleteDbaratiItem(item.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        
+                        {/* Decorative background element for unchecked items */}
+                        {!item.done && (
+                          <div className="absolute top-0 right-0 w-12 h-12 bg-gradient-to-br from-primary/10 to-transparent rounded-tr-2xl rounded-bl-full -z-10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               ) : (
-                <p className='text-muted-foreground text-center text-sm'>Aucun plat noté pour le moment.</p>
+                <div className="text-center py-12 rounded-3xl border-2 border-dashed border-border/40 bg-muted/20">
+                  <ClipboardList className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
+                  <p className='text-muted-foreground font-medium'>Votre carnet est vide pour le moment.</p>
+                  <p className='text-muted-foreground/60 text-sm mt-1'>Ajoutez votre premier plat ci-dessus !</p>
+                </div>
               )}
             </div>
           </AccordionContent>

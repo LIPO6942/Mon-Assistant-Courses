@@ -263,6 +263,29 @@ export default function KitchenAssistantPage() {
   useEffect(() => { if (isDataLoaded) { try { db.set('healthConditions', healthConditions); } catch (e) { console.error(e); } if (userUid) saveHealthConditions(userUid, healthConditions); } }, [healthConditions, isDataLoaded, userUid]);
   useEffect(() => { if (isDataLoaded) { try { db.set('dbarati', dbarati); } catch (e) { console.error(e); } } }, [dbarati, isDataLoaded]);
 
+  // --- AUTO-UNCHECK DBARATI ITEMS AFTER 30 DAYS ---
+  useEffect(() => {
+    if (isDataLoaded && dbarati.length > 0) {
+      const ONE_MONTH_MS = 30 * 24 * 60 * 60 * 1000;
+      const now = Date.now();
+      
+      const needsUpdate = dbarati.some(item => 
+        item.done && 
+        item.lastPreparedAt && 
+        (now - new Date(item.lastPreparedAt).getTime() > ONE_MONTH_MS)
+      );
+
+      if (needsUpdate) {
+        setDbarati(prev => prev.map(item => {
+          if (item.done && item.lastPreparedAt && (now - new Date(item.lastPreparedAt).getTime() > ONE_MONTH_MS)) {
+            return { ...item, done: false };
+          }
+          return item;
+        }));
+      }
+    }
+  }, [isDataLoaded, dbarati]);
+
   // --- URL SHARING DETECTION ---
   useEffect(() => {
     if (typeof window !== 'undefined') {
