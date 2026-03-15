@@ -464,9 +464,25 @@ export default function KitchenAssistantPage() {
 
   const handleSaveCategory = (formData: { id?: string; name: string }) => {
     if (formData.id) {
-      setCategories(prev => prev.map(cat => cat.id === formData.id ? { ...cat, name: formData.name } : cat));
+      const oldCategory = categories.find(cat => cat.id === formData.id);
+      const oldName = oldCategory?.name;
+      const newName = formData.name.trim();
+
+      setCategories(prev => prev.map(cat => cat.id === formData.id ? { ...cat, name: newName } : cat));
+
+      if (oldName && oldName !== newName) {
+        // Update ingredients in pantry
+        setPantry(prev => prev.map(ing =>
+          ing.category === oldName ? { ...ing, category: newName } : ing
+        ));
+
+        // Update items in basket
+        setBasket(prev => prev.map(item =>
+          item.category === oldName ? { ...item, category: newName } : item
+        ));
+      }
     } else {
-      setCategories(prev => [...prev, { ...formData, id: self.crypto.randomUUID() }]);
+      setCategories(prev => [...prev, { ...formData as any, id: self.crypto.randomUUID() }]);
     }
     setIsCategoryDialogOpen(false);
     setEditingCategory(null);
@@ -481,6 +497,11 @@ export default function KitchenAssistantPage() {
       setPantry(prevPantry =>
         prevPantry.map(ing =>
           ing.category === categoryToDelete.name ? { ...ing, category: 'Autre' } : ing
+        )
+      );
+      setBasket(prevBasket =>
+        prevBasket.map(item =>
+          item.category === categoryToDelete.name ? { ...item, category: 'Autre' } : item
         )
       );
       setCategories(prev => prev.filter(cat => cat.id !== id));
