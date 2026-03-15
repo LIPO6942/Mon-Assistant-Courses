@@ -47,10 +47,50 @@ export function calculateMarketPrices(purchases: CommunityPurchase[]): Map<strin
   return priceMap;
 }
 
-/**
- * Find best matching market price for an ingredient
- * Tries exact match first, then fuzzy matching
- */
+export function normalizeUnit(unit: string | undefined): string {
+  if (!unit) return '';
+  const lower = unit.toLowerCase().trim();
+  if (lower === 'g' || lower.startsWith('gram')) return 'g';
+  if (lower === 'kg' || lower.startsWith('kilo')) return 'kg';
+  if (lower === 'l' || lower.startsWith('litr')) return 'l';
+  if (lower === 'ml' || lower.startsWith('milli')) return 'ml';
+  if (lower === 'cl' || lower.startsWith('centi')) return 'cl';
+  if (lower.startsWith('c. à soupe') || lower.startsWith('cas') || lower.startsWith('cuillere a soupe') || lower.startsWith('cuillère à soupe')) return 'cas';
+  if (lower.startsWith('c. à café') || lower.startsWith('cac') || lower.startsWith('cuillere a cafe') || lower.startsWith('cuillère à café')) return 'cac';
+  if (lower.startsWith('pièce') || lower.startsWith('piece') || lower === 'pce' || lower === 'unité') return 'piece';
+  if (lower.startsWith('boît') || lower.startsWith('boit')) return 'boite';
+  if (lower.startsWith('botte')) return 'botte';
+  if (lower.startsWith('pincée') || lower.startsWith('pincee')) return 'pincee';
+  // Also common ones like 'feuilles', 'tranches'
+  if (lower.startsWith('feuille')) return 'feuille';
+  if (lower.startsWith('tranche')) return 'tranche';
+  return lower;
+}
+
+export function getUnitConversionFactor(fromUnit: string, toUnit: string): number | null {
+  const normFrom = normalizeUnit(fromUnit);
+  const normTo = normalizeUnit(toUnit);
+
+  if (normFrom === normTo && normFrom !== '') return 1;
+
+  const conversions: Record<string, Record<string, number>> = {
+    // Weight conversions
+    kg: { g: 1000 },
+    g: { kg: 0.001 },
+
+    // Volume conversions
+    l: { ml: 1000, cl: 100 },
+    ml: { l: 0.001, cl: 0.1 },
+    cl: { l: 0.01, ml: 10 },
+  };
+
+  if (conversions[normFrom] && conversions[normFrom][normTo]) {
+    return conversions[normFrom][normTo];
+  }
+
+  return null;
+}
+
 export function findMarketPrice(
   ingredientName: string,
   marketPrices: Map<string, IngredientMarketPrice>,
@@ -77,59 +117,41 @@ export function findMarketPrice(
   let bestMatch: IngredientMarketPrice | null = null;
   let bestScore = 0;
 
+  const searchWords = searchName.split(/\s+/).filter(w => w.length > 2 || w === 'ail' || w === 'riz' || w === 'sel');
+
   for (const [_, price] of marketPrices.entries()) {
     const priceName = price.name.toLowerCase();
-
-    // Calculate similarity score (word overlap)
-    const searchWords = searchName.split(/\s+/);
     const priceWords = priceName.split(/\s+/);
 
     let score = 0;
+
+    // Exact name match or singular/plural exact match gets absolute priority
+    if (priceName === searchName || priceName === searchName + 's' || priceName + 's' === searchName) {
+      score += 10;
+    }
+
     searchWords.forEach(word => {
-      if (priceWords.some(pw => pw.includes(word) || word.includes(pw))) {
+      const lowerWord = word.endsWith('s') ? word.slice(0, -1) : word;
+      if (priceWords.some(pw => {
+        const lowerPw = pw.endsWith('s') ? pw.slice(0, -1) : pw;
+        return lowerPw === lowerWord || lowerPw.includes(lowerWord) || lowerWord.includes(lowerPw);
+      })) {
         score++;
       }
     });
 
-    if (score > bestScore) {
+    // Penalize if the parsed market ingredient has many extra words (e.g., search 'tomate', found 'sauce tomate purée')
+    if (score > 0) {
+      score -= (priceWords.length - searchWords.length) * 0.1;
+    }
+
+    if (score > bestScore && score > 0.5) { // Needs a minimum valid score
       bestScore = score;
       bestMatch = price;
     }
   }
 
-  return bestScore > 0 ? bestMatch : null;
-}
-
-/**
- * Convert between compatible units (e.g., kg to g, L to ml)
- * Returns conversion factor or null if units are incompatible
- */
-export function getUnitConversionFactor(fromUnit: string, toUnit: string): number | null {
-  const conversions: Record<string, Record<string, number>> = {
-    // Weight conversions (to grams)
-    kg: { 'gramme (g)': 1000, kg: 1 },
-    'gramme (g)': { kg: 0.001, 'gramme (g)': 1 },
-
-    // Volume conversions (to milliliters)
-    L: { ml: 1000, L: 1 },
-    ml: { L: 0.001, ml: 1 },
-
-    // Count/piece (no conversion)
-    pièce: { pièce: 1 },
-
-    // Generic containers
-    boîte: { boîte: 1 },
-    paquet: { paquet: 1 },
-    Sachet: { Sachet: 1 },
-    Bouteille: { Bouteille: 1 },
-    Pot: { Pot: 1 },
-  };
-
-  if (conversions[fromUnit] && conversions[fromUnit][toUnit]) {
-    return conversions[fromUnit][toUnit];
-  }
-
-  return null;
+  return bestMatch;
 }
 
 export function calculateRecipeCost(
@@ -161,30 +183,52 @@ export function calculateRecipeCost(
     const marketPrice = findMarketPrice(ingredient.name, marketPrices, ingredient.unit);
 
     if (marketPrice) {
-      availableCount++;
-
-      // Try to convert units if they don't match
-      let costForQuantity = ingredient.quantity * marketPrice.avgPrice;
-
-      // If units don't match exactly, try conversion
-      if (ingredient.unit !== marketPrice.unit) {
-        const conversionFactor = getUnitConversionFactor(ingredient.unit, marketPrice.unit);
-        if (conversionFactor) {
-          // Convert ingredient quantity to market price unit
-          const convertedQuantity = ingredient.quantity * conversionFactor;
-          costForQuantity = convertedQuantity * marketPrice.avgPrice;
+      let costForQuantity: number | null = null;
+      let conversionFactor = getUnitConversionFactor(ingredient.unit, marketPrice.unit);
+      
+      if (conversionFactor !== null) {
+        costForQuantity = (ingredient.quantity * conversionFactor) * marketPrice.avgPrice;
+      } else {
+        // Fallback heuristics when units are inherently mismatched
+        const normIng = normalizeUnit(ingredient.unit);
+        const normMkt = normalizeUnit(marketPrice.unit);
+        
+        if (['pincee', 'cas', 'cac', 'feuille'].includes(normIng) && ['kg', 'g', 'l', 'ml', 'cl'].includes(normMkt)) {
+          costForQuantity = 0.050; // Nominal very small amount for pinches/spoons of big-bulk items
+        } else if (normIng === 'piece' && normMkt === 'kg') {
+          // Assume ~150g per average "piece" of vegetable/fruit
+          costForQuantity = (ingredient.quantity * 0.150) * marketPrice.avgPrice;
+        } else if (normIng === 'botte' && normMkt === 'kg') {
+          // Assume ~200g per average botte of herbs/aromatics
+          costForQuantity = (ingredient.quantity * 0.200) * marketPrice.avgPrice;
+        } else if (normIng === normMkt) {
+          // Both completely unknown, but identically unknown
+          costForQuantity = ingredient.quantity * marketPrice.avgPrice;
+        } else {
+          // Safest to return null rather than risk absurd $3000 price for 200g falling back to `200 * 15 $/kg`
+          costForQuantity = null;
         }
-        // If conversion fails, use original calculation
       }
 
-      totalCost += costForQuantity;
-      details.push({
-        name: ingredient.name,
-        quantity: ingredient.quantity,
-        unit: ingredient.unit,
-        estimatedCost: costForQuantity,
-        marketPrice,
-      });
+      if (costForQuantity !== null) {
+        availableCount++;
+        totalCost += costForQuantity;
+        details.push({
+          name: ingredient.name,
+          quantity: ingredient.quantity,
+          unit: ingredient.unit,
+          estimatedCost: costForQuantity,
+          marketPrice,
+        });
+      } else {
+        details.push({
+          name: ingredient.name,
+          quantity: ingredient.quantity,
+          unit: ingredient.unit,
+          estimatedCost: null,
+          marketPrice: null, // Treat as unavailable to maintain accuracy
+        });
+      }
     } else {
       details.push({
         name: ingredient.name,
@@ -199,6 +243,7 @@ export function calculateRecipeCost(
   const unavailableCount = ingredients.length - availableCount;
 
   return {
+    // Only yield total cost if we confidently priced at least a portion of it, otherwise null
     totalCost: availableCount > 0 ? totalCost : null,
     details,
     availableCount,

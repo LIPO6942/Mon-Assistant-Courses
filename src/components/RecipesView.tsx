@@ -22,6 +22,13 @@ import {
 import { Input } from './ui/input';
 import { Checkbox } from './ui/checkbox';
 
+const normalizeString = (s: string) => 
+  s.toLowerCase()
+   .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // remove accents
+   .replace(/['’\-]/g, " ") // replace apostrophes and dashes with space
+   .replace(/[^a-z0-9 ]/g, "") // remove other special chars
+   .trim();
+
 interface RecipesViewProps {
   setViewingRecipe: (recipe: (Omit<Recipe, 'id'> & { id?: string; }) | null) => void;
   discoverableRecipes: Recipe[];
@@ -70,6 +77,7 @@ export default function RecipesView({
   const [isDbaratiSpinning, setIsDbaratiSpinning] = useState(false);
   const [dbaratiDisplayedItem, setDbaratiDisplayedItem] = useState<string | null>(null);
   const [dbaratiSelectedItem, setDbaratiSelectedItem] = useState<string | null>(null);
+  const [dbaratiSelectedEmoji, setDbaratiSelectedEmoji] = useState<string>('🍳');
 
   // Listen to community purchases for recipe cost calculations
   useEffect(() => {
@@ -301,7 +309,7 @@ export default function RecipesView({
           <AccordionContent>
             <div className='py-4 px-3 sm:px-5 rounded-2xl bg-gradient-to-br from-indigo-50/50 via-white to-rose-50/50 dark:from-indigo-950/20 dark:via-background dark:to-rose-950/20 border border-border/40 shadow-xl backdrop-blur-sm'>
               <p className='text-muted-foreground mb-4 text-center max-w-2xl mx-auto text-xs sm:text-sm leading-relaxed'>
-                <span className="font-semibold text-primary">Dbarati</span> : Votre carnet de route culinaire. Notez vos envies, planifiez vos repas et gardez un œil sur vos habitudes !
+                <span className="font-semibold text-primary">Dbarati</span> : Vos idées de repas et vos habitudes culinaires.
               </p>
 
               {/* Random Wheel UI - Compact */}
@@ -322,6 +330,8 @@ export default function RecipesView({
                   setIsDbaratiSpinning(true);
                   setDbaratiSelectedItem(null);
 
+                  const foodEmojis = ['🍳', '🥗', '🍝', '🍕', '🍱', '🍔', '🥙', '🍛', '🥘', '🍲', '🍜', '🍚', '🍗', '🐟', '🍤'];
+
                   dbaratiIntervalRef.current = setInterval(() => {
                     const randomIdx = Math.floor(Math.random() * candidates.length);
                     setDbaratiDisplayedItem(candidates[randomIdx].text);
@@ -334,36 +344,37 @@ export default function RecipesView({
                     }
                     const finalChoice = candidates[Math.floor(Math.random() * candidates.length)];
                     setDbaratiSelectedItem(finalChoice.text);
+                    setDbaratiSelectedEmoji(foodEmojis[Math.floor(Math.random() * foodEmojis.length)]);
                     setDbaratiDisplayedItem(null);
                     setIsDbaratiSpinning(false);
                   }, 2500);
                 };
 
                 return (
-                  <div className="relative mb-6 p-4 rounded-2xl bg-primary/5 border border-primary/10 overflow-hidden text-center group">
-                    <div className="absolute -top-12 -right-12 w-24 h-24 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-all duration-700" />
-                    <div className="absolute -bottom-12 -left-12 w-24 h-24 bg-rose-400/10 rounded-full blur-2xl group-hover:bg-rose-400/20 transition-all duration-700" />
+                  <div className="relative mb-4 p-3 rounded-2xl bg-primary/5 border border-primary/10 overflow-hidden text-center group">
+                    <div className="absolute -top-12 -right-12 w-20 h-20 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-all duration-700" />
+                    <div className="absolute -bottom-12 -left-12 w-20 h-20 bg-rose-400/10 rounded-full blur-2xl group-hover:bg-rose-400/20 transition-all duration-700" />
                     
-                    <div className="flex flex-col items-center gap-3">
+                    <div className="flex flex-col items-center gap-2">
                       <Button
                         onClick={handleDbaratiSpin}
                         disabled={isDbaratiSpinning}
                         size="sm"
                         className={cn(
-                          "rounded-full px-6 py-2 h-9 font-bold shadow-md transition-all duration-300",
+                          "rounded-full px-4 py-1.5 h-8 font-bold shadow-sm transition-all duration-300 text-xs",
                           isDbaratiSpinning ? "bg-muted cursor-not-allowed" : "bg-gradient-to-r from-primary to-indigo-600 hover:shadow-primary/20 hover:scale-105 active:scale-95"
                         )}
                       >
                         {isDbaratiSpinning ? (
-                          <span className="flex items-center gap-2">
-                            <Loader2 className="h-4 w-4 animate-spin" /> Un instant...
+                          <span className="flex items-center gap-1.5">
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" /> Un instant...
                           </span>
                         ) : (
-                          <><Dices className="h-4 w-4 mr-2" /> Qu'est-ce qu'on mange ?</>
+                          <><Dices className="h-3.5 w-3.5 mr-1.5" /> Qu'est-ce qu'on mange ?</>
                         )}
                       </Button>
 
-                      <div className="h-10 flex flex-col justify-center items-center">
+                      <div className="h-8 flex flex-col justify-center items-center">
                         {isDbaratiSpinning && (
                           <div className="animate-in zoom-in-75 duration-200">
                             <p className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-indigo-600 truncate max-w-[240px]">
@@ -373,9 +384,24 @@ export default function RecipesView({
                         )}
                         {!isDbaratiSpinning && dbaratiSelectedItem && (
                           <div className="animate-in fade-in-50 zoom-in-95 duration-500 text-center">
-                            <p className="text-xl font-black text-primary drop-shadow-sm flex items-center gap-2">
-                               {dbaratiSelectedItem} <span className="text-lg animate-bounce">🍳</span>
-                            </p>
+                            <div className="flex items-center justify-center gap-3">
+                              <p className="text-xl font-black text-primary drop-shadow-sm flex items-center gap-2">
+                                {dbaratiSelectedItem} <span className="text-lg animate-bounce">{dbaratiSelectedEmoji}</span>
+                              </p>
+                              <Button
+                                size="icon"
+                                variant="outline"
+                                className="h-8 w-8 rounded-full border-primary/20 text-primary hover:bg-primary hover:text-white transition-all shadow-sm"
+                                title="Marquer comme préparé"
+                                onClick={() => {
+                                  const normalizedSelected = normalizeString(dbaratiSelectedItem || '');
+                                  const item = candidates.find(c => normalizeString(c.text) === normalizedSelected);
+                                  if (item) onToggleDbaratiItem(item.id);
+                                }}
+                              >
+                                <Check className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -416,8 +442,9 @@ export default function RecipesView({
               {/* List - Premium & Compact Cards */}
               {dbarati.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-4xl mx-auto">
-                  {dbarati.map((item, index) => {
-                    const matchedRecipe = userRecipes.find(r => r.title.toLowerCase() === item.text.toLowerCase());
+                  {[...dbarati].sort((a, b) => Number(a.done) - Number(b.done)).map((item, index) => {
+                    const normalizedItemText = normalizeString(item.text);
+                    const matchedRecipe = userRecipes.find(r => normalizeString(r.title) === normalizedItemText);
                     
                     return (
                       <div
@@ -474,6 +501,9 @@ export default function RecipesView({
                               {item.lastPreparedAt && (
                                 <span className="text-[9px] text-muted-foreground italic truncate">
                                   {new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(new Date(item.lastPreparedAt))}
+                                  <span className="opacity-70 ml-1">
+                                    (il y a {Math.floor((Date.now() - new Date(item.lastPreparedAt).getTime()) / (1000 * 60 * 60 * 24))} j)
+                                  </span>
                                 </span>
                               )}
                             </div>
