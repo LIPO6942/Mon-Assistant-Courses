@@ -299,12 +299,12 @@ export default function RecipesView({
             </div>
           </AccordionTrigger>
           <AccordionContent>
-            <div className='py-6 px-4 sm:px-6 rounded-2xl bg-gradient-to-br from-indigo-50/50 via-white to-rose-50/50 dark:from-indigo-950/20 dark:via-background dark:to-rose-950/20 border border-border/40 shadow-xl backdrop-blur-sm'>
-              <p className='text-muted-foreground mb-8 text-center max-w-2xl mx-auto text-sm sm:text-base leading-relaxed'>
+            <div className='py-4 px-3 sm:px-5 rounded-2xl bg-gradient-to-br from-indigo-50/50 via-white to-rose-50/50 dark:from-indigo-950/20 dark:via-background dark:to-rose-950/20 border border-border/40 shadow-xl backdrop-blur-sm'>
+              <p className='text-muted-foreground mb-4 text-center max-w-2xl mx-auto text-xs sm:text-sm leading-relaxed'>
                 <span className="font-semibold text-primary">Dbarati</span> : Votre carnet de route culinaire. Notez vos envies, planifiez vos repas et gardez un œil sur vos habitudes !
               </p>
 
-              {/* Random Wheel UI - Enhanced */}
+              {/* Random Wheel UI - Compact */}
               {(() => {
                 const ONE_MONTH = 30 * 24 * 60 * 60 * 1000;
                 const candidates = dbarati.filter(item => {
@@ -340,54 +340,52 @@ export default function RecipesView({
                 };
 
                 return (
-                  <div className="relative mb-10 p-6 rounded-3xl bg-primary/5 border border-primary/10 overflow-hidden text-center group">
-                    <div className="absolute -top-12 -right-12 w-32 h-32 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/20 transition-all duration-700" />
-                    <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-rose-400/10 rounded-full blur-3xl group-hover:bg-rose-400/20 transition-all duration-700" />
+                  <div className="relative mb-6 p-4 rounded-2xl bg-primary/5 border border-primary/10 overflow-hidden text-center group">
+                    <div className="absolute -top-12 -right-12 w-24 h-24 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-all duration-700" />
+                    <div className="absolute -bottom-12 -left-12 w-24 h-24 bg-rose-400/10 rounded-full blur-2xl group-hover:bg-rose-400/20 transition-all duration-700" />
                     
-                    <h3 className="text-sm font-bold uppercase tracking-widest text-primary/70 mb-4 flex items-center justify-center gap-2">
-                       <Dices className="h-4 w-4" /> Le Destin Culinaire
-                    </h3>
+                    <div className="flex flex-col items-center gap-3">
+                      <Button
+                        onClick={handleDbaratiSpin}
+                        disabled={isDbaratiSpinning}
+                        size="sm"
+                        className={cn(
+                          "rounded-full px-6 py-2 h-9 font-bold shadow-md transition-all duration-300",
+                          isDbaratiSpinning ? "bg-muted cursor-not-allowed" : "bg-gradient-to-r from-primary to-indigo-600 hover:shadow-primary/20 hover:scale-105 active:scale-95"
+                        )}
+                      >
+                        {isDbaratiSpinning ? (
+                          <span className="flex items-center gap-2">
+                            <Loader2 className="h-4 w-4 animate-spin" /> Un instant...
+                          </span>
+                        ) : (
+                          <><Dices className="h-4 w-4 mr-2" /> Qu'est-ce qu'on mange ?</>
+                        )}
+                      </Button>
 
-                    <Button
-                      onClick={handleDbaratiSpin}
-                      disabled={isDbaratiSpinning}
-                      className={cn(
-                        "rounded-full px-8 py-6 h-auto text-lg font-bold shadow-lg transition-all duration-300",
-                        isDbaratiSpinning ? "bg-muted cursor-not-allowed" : "bg-gradient-to-r from-primary to-indigo-600 hover:shadow-primary/25 hover:scale-105 active:scale-95"
-                      )}
-                    >
-                      {isDbaratiSpinning ? (
-                        <span className="flex items-center gap-2">
-                          <Loader2 className="h-5 w-5 animate-spin" /> Magie en cours...
-                        </span>
-                      ) : (
-                        "Qu'est-ce qu'on mange ?"
-                      )}
-                    </Button>
-
-                    <div className="mt-6 h-20 flex flex-col justify-center items-center">
-                      {isDbaratiSpinning && (
-                        <div className="animate-in zoom-in-75 duration-200">
-                          <p className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-indigo-600 truncate max-w-[280px]">
-                            {dbaratiDisplayedItem}
-                          </p>
-                        </div>
-                      )}
-                      {!isDbaratiSpinning && dbaratiSelectedItem && (
-                        <div className="animate-in fade-in-50 zoom-in-95 duration-500 text-center">
-                          <p className="text-muted-foreground text-xs font-semibold uppercase tracking-tighter mb-1">C'est décidé !</p>
-                          <p className="text-2xl sm:text-4xl font-black text-primary drop-shadow-sm">
-                            {dbaratiSelectedItem} <span className="inline-block animate-bounce">🍳</span>
-                          </p>
-                        </div>
-                      )}
+                      <div className="h-10 flex flex-col justify-center items-center">
+                        {isDbaratiSpinning && (
+                          <div className="animate-in zoom-in-75 duration-200">
+                            <p className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-indigo-600 truncate max-w-[240px]">
+                              {dbaratiDisplayedItem}
+                            </p>
+                          </div>
+                        )}
+                        {!isDbaratiSpinning && dbaratiSelectedItem && (
+                          <div className="animate-in fade-in-50 zoom-in-95 duration-500 text-center">
+                            <p className="text-xl font-black text-primary drop-shadow-sm flex items-center gap-2">
+                               {dbaratiSelectedItem} <span className="text-lg animate-bounce">🍳</span>
+                            </p>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );
               })()}
 
-              {/* Add new item - Stylized */}
-              <div className="max-w-md mx-auto mb-10">
+              {/* Add new item - Stylized & Compact */}
+              <div className="max-w-md mx-auto mb-6">
                 <form
                   className="relative group"
                   onSubmit={(e) => {
@@ -399,25 +397,25 @@ export default function RecipesView({
                   }}
                 >
                   <Input
-                    placeholder="Une envie ? Couscous, Pasta, Salade..."
-                    className="rounded-2xl h-14 pl-6 pr-14 text-base border-primary/20 focus-visible:ring-primary/30 shadow-inner bg-background/50 backdrop-blur-sm transition-all"
+                    placeholder="Une envie ? Couscous, Pasta..."
+                    className="rounded-xl h-11 pl-4 pr-12 text-sm border-primary/20 focus-visible:ring-primary/30 shadow-inner bg-background/50 backdrop-blur-sm transition-all"
                     value={newDbaratiText}
                     onChange={(e) => setNewDbaratiText(e.target.value)}
                   />
                   <Button 
                     type="submit" 
                     size="icon" 
-                    className="absolute right-2 top-2 h-10 w-10 rounded-xl shadow-md transform transition-all group-focus-within:scale-105" 
+                    className="absolute right-1 top-1 h-9 w-9 rounded-lg shadow-sm" 
                     disabled={!newDbaratiText.trim()}
                   >
-                    <Plus className="h-6 w-6" />
+                    <Plus className="h-5 w-5" />
                   </Button>
                 </form>
               </div>
 
-              {/* List - Premium Cards */}
+              {/* List - Premium & Compact Cards */}
               {dbarati.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-4xl mx-auto">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-4xl mx-auto">
                   {dbarati.map((item, index) => {
                     const matchedRecipe = userRecipes.find(r => r.title.toLowerCase() === item.text.toLowerCase());
                     
@@ -425,26 +423,33 @@ export default function RecipesView({
                       <div
                         key={item.id}
                         className={cn(
-                          "relative p-4 rounded-2xl border transition-all duration-300 group flex flex-col",
+                          "relative p-3 rounded-xl border transition-all duration-300 group flex flex-col",
                           item.done 
-                            ? "bg-muted/40 border-border/40 opacity-80" 
-                            : "bg-white dark:bg-card border-border/60 hover:border-primary/40 hover:shadow-xl hover:-translate-y-1"
+                            ? "bg-muted/40 border-border/40 opacity-70 scale-[0.98]" 
+                            : "bg-white dark:bg-card border-border/60 hover:border-primary/40 hover:shadow-lg"
                         )}
                       >
-                        <div className="flex items-start gap-3 mb-3">
+                        <div className="flex items-start gap-2.5">
                           <Checkbox
                             id={`dbarati-${item.id}`}
                             checked={item.done}
                             onCheckedChange={() => onToggleDbaratiItem(item.id)}
-                            className="h-6 w-6 rounded-lg border-2 border-primary/20 data-[state=checked]:bg-primary data-[state=checked]:border-primary shrink-0 mt-0.5 transition-all"
+                            className="h-5 w-5 rounded-md border-2 border-primary/10 data-[state=checked]:bg-primary data-[state=checked]:border-primary shrink-0 mt-0.5"
                           />
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
+                            <div className="flex items-center gap-1.5 flex-wrap">
                               <label
                                 htmlFor={`dbarati-${item.id}`}
                                 className={cn(
-                                  "text-base font-bold cursor-pointer transition-all",
-                                  item.done ? "line-through text-muted-foreground" : "text-foreground"
+                                  "text-sm font-bold cursor-pointer transition-all truncate",
+                                  (() => {
+                                    if (!item.done || !item.lastPreparedAt) return "text-foreground";
+                                    const daysSince = (Date.now() - new Date(item.lastPreparedAt).getTime()) / (1000 * 60 * 60 * 24);
+                                    if (daysSince <= 7) return "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 px-1.5 py-0.5 rounded";
+                                    if (daysSince <= 15) return "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 px-1.5 py-0.5 rounded";
+                                    if (daysSince <= 30) return "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 px-1.5 py-0.5 rounded";
+                                    return "text-muted-foreground";
+                                  })()
                                 )}
                               >
                                 {item.text}
@@ -452,76 +457,56 @@ export default function RecipesView({
                               {matchedRecipe && (
                                 <Badge 
                                   variant="secondary" 
-                                  className="h-5 px-1.5 text-[9px] font-black uppercase tracking-tighter cursor-pointer hover:bg-primary hover:text-white transition-colors gap-1"
+                                  className="h-4 px-1 text-[8px] font-black uppercase tracking-tighter cursor-pointer hover:bg-primary hover:text-white transition-colors"
                                   onClick={() => onViewUserRecipe(matchedRecipe)}
                                 >
-                                  <BookUser className="h-2.5 w-2.5" /> Recette
+                                  📖 Recette
                                 </Badge>
                               )}
                             </div>
                             
-                            <div className="flex items-center gap-2 flex-wrap mt-2">
+                            <div className="flex items-center gap-2 mt-1">
                               {(item.prepCount || 0) > 0 && (
-                                <div className="flex items-center gap-1 bg-primary/10 text-primary px-2 py-0.5 rounded-full text-[10px] font-bold">
-                                  <Utensils className="h-2.5 w-2.5" />
+                                <span className="bg-primary/5 text-primary px-1.5 py-0 rounded-full text-[9px] font-bold">
                                   {item.prepCount}x
-                                </div>
+                                </span>
                               )}
                               {item.lastPreparedAt && (
-                                <div className="text-[10px] text-muted-foreground italic flex items-center gap-1">
-                                  <Clock className="h-2.5 w-2.5" />
+                                <span className="text-[9px] text-muted-foreground italic truncate">
                                   {new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(new Date(item.lastPreparedAt))}
-                                </div>
+                                </span>
                               )}
                             </div>
                           </div>
-                        </div>
 
-                        <div className="flex items-center justify-end gap-2 mt-auto pt-2 border-t border-border/10">
-                          <div className="flex gap-1">
+                          <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/5 shadow-none"
+                              className="h-7 w-7 rounded-md text-muted-foreground hover:text-primary"
                               onClick={() => onMoveDbaratiItem(item.id, 'up')}
                               disabled={index === 0}
                             >
-                              <ChevronUp className="h-4 w-4" />
+                              <ChevronUp className="h-3.5 w-3.5" />
                             </Button>
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/5 shadow-none"
-                              onClick={() => onMoveDbaratiItem(item.id, 'down')}
-                              disabled={index === dbarati.length - 1}
+                              className="h-7 w-7 rounded-md text-muted-foreground hover:text-destructive"
+                              onClick={() => onDeleteDbaratiItem(item.id)}
                             >
-                              <ChevronDown className="h-4 w-4" />
+                              <Trash2 className="h-3.5 w-3.5" />
                             </Button>
                           </div>
-                          
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/5 shadow-none ml-1"
-                            onClick={() => onDeleteDbaratiItem(item.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
                         </div>
-                        
-                        {/* Decorative background element for unchecked items */}
-                        {!item.done && (
-                          <div className="absolute top-0 right-0 w-12 h-12 bg-gradient-to-br from-primary/10 to-transparent rounded-tr-2xl rounded-bl-full -z-10 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        )}
                       </div>
                     );
                   })}
                 </div>
               ) : (
-                <div className="text-center py-12 rounded-3xl border-2 border-dashed border-border/40 bg-muted/20">
-                  <ClipboardList className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
-                  <p className='text-muted-foreground font-medium'>Votre carnet est vide pour le moment.</p>
-                  <p className='text-muted-foreground/60 text-sm mt-1'>Ajoutez votre premier plat ci-dessus !</p>
+                <div className="text-center py-8 rounded-2xl border-2 border-dashed border-border/40 bg-muted/10">
+                  <ClipboardList className="h-8 w-8 text-muted-foreground/20 mx-auto mb-2" />
+                  <p className='text-muted-foreground font-medium text-sm'>Votre carnet est vide.</p>
                 </div>
               )}
             </div>
