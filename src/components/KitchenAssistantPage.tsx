@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { initialCategories, predefinedIngredients, discoverableRecipes, initialHealthConditions } from '@/lib/data';
-import type { Ingredient, Recipe, BasketItem, CategoryDef, RecipeIngredient, HealthConditionCategory, HealthCondition, UserRecipe, PurchaseHistory } from '@/lib/types';
+import type { Ingredient, Recipe, BasketItem, CategoryDef, RecipeIngredient, HealthConditionCategory, HealthCondition, UserRecipe, PurchaseHistory, DbaratiItem } from '@/lib/types';
 import { suggestRecipes } from '@/ai/flows/suggest-recipe-flow';
 import type { SuggestRecipeOutput } from '@/ai/types';
 
@@ -53,6 +53,7 @@ export default function KitchenAssistantPage() {
   const [totalSpent, setTotalSpent] = useState(0);
   const [healthConditions, setHealthConditions] = useState<HealthConditionCategory[]>([]);
   const [purchaseHistory, setPurchaseHistory] = useState<PurchaseHistory>({});
+  const [dbarati, setDbarati] = useState<DbaratiItem[]>([]);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
 
   // Ephemeral state
@@ -190,6 +191,7 @@ export default function KitchenAssistantPage() {
           totalSpentData,
           healthConditionsData,
           purchaseHistoryData,
+          dbaratiData,
         ] = await Promise.all([
           db.get<Ingredient[]>('pantry'),
           db.get<BasketItem[]>('basket'),
@@ -200,6 +202,7 @@ export default function KitchenAssistantPage() {
           db.get<number>('totalSpent'),
           db.get<HealthConditionCategory[]>('healthConditions'),
           db.get<PurchaseHistory>('purchaseHistory'),
+          db.get<DbaratiItem[]>('dbarati'),
         ]);
 
         // Cloud data has priority over local IndexedDB data
@@ -221,6 +224,7 @@ export default function KitchenAssistantPage() {
           });
         }
         setPurchaseHistory(migratedHistory);
+        setDbarati(cloudData?.dbarati ?? dbaratiData ?? []);
 
       } catch (error) {
         console.error("Error loading data", error);
@@ -234,6 +238,7 @@ export default function KitchenAssistantPage() {
         setTotalSpent(0);
         setHealthConditions(initialHealthConditions);
         setPurchaseHistory({});
+        setDbarati([]);
       } finally {
         setIsDataLoaded(true);
       }
@@ -256,6 +261,7 @@ export default function KitchenAssistantPage() {
   useEffect(() => { if (isDataLoaded) { try { db.set('budget', initialBudget); } catch (e) { console.error(e); } if (userUid) saveBudget(userUid, initialBudget, totalSpent); } }, [initialBudget, isDataLoaded, userUid]);
   useEffect(() => { if (isDataLoaded) { try { db.set('totalSpent', totalSpent); } catch (e) { console.error(e); } if (userUid) saveBudget(userUid, initialBudget, totalSpent); } }, [totalSpent, isDataLoaded, userUid]);
   useEffect(() => { if (isDataLoaded) { try { db.set('healthConditions', healthConditions); } catch (e) { console.error(e); } if (userUid) saveHealthConditions(userUid, healthConditions); } }, [healthConditions, isDataLoaded, userUid]);
+  useEffect(() => { if (isDataLoaded) { try { db.set('dbarati', dbarati); } catch (e) { console.error(e); } } }, [dbarati, isDataLoaded]);
 
   // --- URL SHARING DETECTION ---
   useEffect(() => {
@@ -1021,6 +1027,40 @@ export default function KitchenAssistantPage() {
               onViewUserRecipe={setViewingUserRecipe}
               basket={basket}
               purchaseHistory={purchaseHistory}
+              dbarati={dbarati}
+              onAddDbaratiItem={(text: string) => {
+                setDbarati(prev => [...prev, { id: self.crypto.randomUUID(), text: text.trim(), done: false, prepCount: 0 }]);
+              }}
+              onToggleDbaratiItem={(id: string) => {
+                setDbarati(prev => prev.map(item => {
+                  if (item.id !== id) return item;
+                  const wasDone = item.done;
+                  return {
+                    ...item,
+                    done: !wasDone,
+                    lastPreparedAt: !wasDone ? new Date().toISOString() : item.lastPreparedAt,
+                    prepCount: !wasDone ? (item.prepCount || 0) + 1 : item.prepCount,
+                  };
+                }));
+              }}
+              onDeleteDbaratiItem={(id: string) => {
+                setDbarati(prev => prev.filter(item => item.id !== id));
+              }}
+              onUpdateDbaratiItem={(id: string, text: string) => {
+                setDbarati(prev => prev.map(item => item.id === id ? { ...item, text: text.trim() } : item));
+              }}
+              onMoveDbaratiItem={(id: string, direction: 'up' | 'down') => {
+                setDbarati(prev => {
+                  const idx = prev.findIndex(i => i.id === id);
+                  if (idx === -1) return prev;
+                  if (direction === 'up' && idx === 0) return prev;
+                  if (direction === 'down' && idx === prev.length - 1) return prev;
+                  const newArr = [...prev];
+                  const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+                  [newArr[idx], newArr[swapIdx]] = [newArr[swapIdx], newArr[idx]];
+                  return newArr;
+                });
+              }}
             />
           )}
           {activeTab === 'chandyek' && (

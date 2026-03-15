@@ -2,14 +2,51 @@
 'use client';
 
 import * as React from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { BrainCircuit, Salad, X, Lightbulb, Loader2, Terminal, PlusCircle, Clock, Coins, ExternalLink } from 'lucide-react';
+import { BrainCircuit, Salad, X, Lightbulb, Loader2, Terminal, PlusCircle, Clock, Coins, ExternalLink, UtensilsCrossed } from 'lucide-react';
 import type { Recipe } from '@/lib/types';
 import type { SuggestRecipeOutput } from '@/ai/types';
 import { Alert, AlertTitle, AlertDescription } from './ui/alert';
 import { cn } from '@/lib/utils';
+
+function RecipeImage({ src, alt }: { src: string; alt: string }) {
+  const [imgError, setImgError] = useState(false);
+  const [imgLoading, setImgLoading] = useState(true);
+
+  return (
+    <div className="relative w-full h-48 bg-muted group overflow-hidden">
+      {!imgError ? (
+        <>
+          {imgLoading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/30 animate-pulse">
+              <Loader2 className="h-8 w-8 text-primary/40 animate-spin" />
+            </div>
+          )}
+          <img
+            src={src}
+            alt={alt}
+            className={cn(
+              "w-full h-full object-cover transition-all duration-500 group-hover:scale-105",
+              imgLoading && "opacity-0"
+            )}
+            onLoad={() => setImgLoading(false)}
+            onError={() => { setImgError(true); setImgLoading(false); }}
+          />
+        </>
+      ) : (
+        <div className="w-full h-full bg-gradient-to-br from-primary/10 via-secondary/20 to-accent/10 flex items-center justify-center">
+          <UtensilsCrossed className="h-12 w-12 text-primary/30" />
+        </div>
+      )}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-4">
+        <Badge className="bg-primary text-primary-foreground border-none">Chef's Choice</Badge>
+      </div>
+    </div>
+  );
+}
 
 interface ChandyekViewProps {
   selectedIngredients: string[];
@@ -133,16 +170,7 @@ export default function ChandyekView({
                 {aiSuggestions.map((recipe, index) => (
                   <Card key={index} className="flex flex-col bg-secondary/30 overflow-hidden border-primary/20 hover:border-primary/40 transition-colors">
                     {recipe.imageUrl && index === 0 && (
-                      <div className="relative w-full h-48 bg-muted group">
-                        <img
-                          src={recipe.imageUrl}
-                          alt={recipe.title}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-bottom p-4">
-                          <Badge className="mt-auto bg-primary text-primary-foreground border-none">Chef's Choice</Badge>
-                        </div>
-                      </div>
+                      <RecipeImage src={recipe.imageUrl} alt={recipe.title} />
                     )}
 
                     <CardHeader className="pb-2">

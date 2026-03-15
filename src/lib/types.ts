@@ -79,6 +79,14 @@ export interface PurchaseRecord {
 
 export type PurchaseHistory = Record<string, PurchaseRecord[]>;
 
+export interface DbaratiItem {
+  id: string;
+  text: string;
+  done: boolean;
+  prepCount?: number;      // How many times this dish was prepared
+  lastPreparedAt?: string; // ISO date string
+}
+
 export type BasketShareStatus = 'pending' | 'accepted' | 'rejected';
 
 export interface BasketShareInvitation {

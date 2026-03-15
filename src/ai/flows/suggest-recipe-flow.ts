@@ -69,8 +69,8 @@ export async function suggestRecipes(input: SuggestRecipeInput): Promise<Suggest
     throw new Error("L'IA n'a pas pu générer d'idées de recettes. Veuillez réessayer.");
   }
 
-  // Generate images and search URLs
-  const recipesWithExtras = validated.recipes.map((recipe: SuggestRecipeOutput, index: number) => {
+  // Generate images and search URLs sequentially or with Promise.all
+  const recipesWithExtras = await Promise.all(validated.recipes.map(async (recipe: SuggestRecipeOutput, index: number) => {
     const recipeTitle = encodeURIComponent(recipe.title);
     const fullQuery = encodeURIComponent(`${recipe.title} ${recipe.country} recette`);
 
@@ -84,18 +84,40 @@ export async function suggestRecipes(input: SuggestRecipeInput): Promise<Suggest
 
     const searchUrl = searchLinks[0].url; // Default to Google
 
-    // Only generate image for the first recipe
+    // Only fetch image for the first recipe
     if (index === 0) {
-      const imagePrompt = `professional food photography of ${recipe.title}, ${recipe.country} style, high quality, appetizing`;
-      const encodedPrompt = encodeURIComponent(imagePrompt);
-      const seed = Math.floor(Math.random() * 1000);
-      const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=800&height=600&nologo=true&seed=${seed}`;
+      let imageUrl: string | undefined = undefined;
 
+      const unsplashKey = process.env.UNSPLASH_ACCESS_KEY;
+      if (unsplashKey) {
+        try {
+          // Search for a relevant food image on Unsplash
+          const searchImageQuery = encodeURIComponent(`${recipe.title} food ${recipe.country}`);
+          const res = await fetch(`https://api.unsplash.com/search/photos?query=${searchImageQuery}&per_page=1&orientation=landscape`, {
+            headers: {
+              Authorization: `Client-ID ${unsplashKey}`
+            }
+          });
+          
+          if (res.ok) {
+            const data = await res.json();
+            if (data.results && data.results.length > 0) {
+              imageUrl = data.results[0].urls.regular;
+            }
+          } else {
+            console.error("Unsplash API error:", await res.text());
+          }
+        } catch (err) {
+          console.error("Failed to fetch from Unsplash:", err);
+        }
+      }
+
+      // If Unsplash fails or no key, we leave it undefined which will trigger the UI placeholder
       return { ...recipe, imageUrl, searchUrl, searchLinks };
     }
 
     return { ...recipe, imageUrl: undefined, searchUrl, searchLinks };
-  });
+  }));
 
   return recipesWithExtras;
 }

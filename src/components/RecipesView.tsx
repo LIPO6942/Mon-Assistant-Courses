@@ -6,8 +6,8 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, Shuffle, Dices, Clock, Coins, Utensils, BookUser, Search, Tag, Sparkles, TrendingDown } from 'lucide-react';
-import type { Recipe, UserRecipe, BasketItem, PurchaseHistory, CommunityPurchase } from '@/lib/types';
+import { PlusCircle, Shuffle, Dices, Clock, Coins, Utensils, BookUser, Search, Tag, Sparkles, TrendingDown, ClipboardList, Check, Trash2, Plus, ChevronUp, ChevronDown } from 'lucide-react';
+import type { Recipe, UserRecipe, BasketItem, PurchaseHistory, CommunityPurchase, DbaratiItem } from '@/lib/types';
 import { streetFoodOptions } from '@/lib/data';
 import { cn, getProductStatus } from '@/lib/utils';
 import Image from 'next/image';
@@ -20,6 +20,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion"
 import { Input } from './ui/input';
+import { Checkbox } from './ui/checkbox';
 
 interface RecipesViewProps {
   setViewingRecipe: (recipe: (Omit<Recipe, 'id'> & { id?: string; }) | null) => void;
@@ -30,6 +31,12 @@ interface RecipesViewProps {
   onViewUserRecipe: (recipe: UserRecipe | null) => void;
   basket: BasketItem[];
   purchaseHistory: PurchaseHistory;
+  dbarati: DbaratiItem[];
+  onAddDbaratiItem: (text: string) => void;
+  onToggleDbaratiItem: (id: string) => void;
+  onDeleteDbaratiItem: (id: string) => void;
+  onUpdateDbaratiItem: (id: string, text: string) => void;
+  onMoveDbaratiItem: (id: string, direction: 'up' | 'down') => void;
 }
 
 export default function RecipesView({
@@ -40,18 +47,29 @@ export default function RecipesView({
   openUserRecipeForm,
   onViewUserRecipe,
   basket,
-  purchaseHistory
+  purchaseHistory,
+  dbarati,
+  onAddDbaratiItem,
+  onToggleDbaratiItem,
+  onDeleteDbaratiItem,
+  onUpdateDbaratiItem,
+  onMoveDbaratiItem,
 }: RecipesViewProps) {
   const [suggestedRecipes, setSuggestedRecipes] = useState<Recipe[]>([]);
   const [selectedStreetFood, setSelectedStreetFood] = useState<string | null>(null);
   const [isSpinning, setIsSpinning] = useState(false);
   const [displayedFood, setDisplayedFood] = useState<string | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const dbaratiIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const [filterQuick, setFilterQuick] = useState(false);
   const [filterEconomical, setFilterEconomical] = useState(false);
   const [communityPurchases, setCommunityPurchases] = useState<CommunityPurchase[]>([]);
   const [userRecipeTagFilter, setUserRecipeTagFilter] = useState('');
+  const [newDbaratiText, setNewDbaratiText] = useState('');
+  const [isDbaratiSpinning, setIsDbaratiSpinning] = useState(false);
+  const [dbaratiDisplayedItem, setDbaratiDisplayedItem] = useState<string | null>(null);
+  const [dbaratiSelectedItem, setDbaratiSelectedItem] = useState<string | null>(null);
 
   // Listen to community purchases for recipe cost calculations
   useEffect(() => {
@@ -118,6 +136,9 @@ export default function RecipesView({
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
+      }
+      if (dbaratiIntervalRef.current) {
+        clearInterval(dbaratiIntervalRef.current);
       }
     };
   }, []);
@@ -263,6 +284,206 @@ export default function RecipesView({
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Créer ma recette
               </Button>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
+
+      {/* --- DBARATI SECTION --- */}
+      <Accordion type="single" collapsible className="w-full">
+        <AccordionItem value="dbarati">
+          <AccordionTrigger>
+            <div className="flex justify-center items-center gap-3 py-2 text-primary">
+              <ClipboardList className="h-8 w-8 text-primary" />
+              <h2 className='text-3xl font-bold'>Dbarati</h2>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className='py-4 px-4 rounded-xl bg-gradient-to-br from-secondary/50 via-card to-card border-2 border-border/50 shadow-lg'>
+              <p className='text-muted-foreground mb-6 text-center max-w-2xl mx-auto'>Votre liste de plats à préparer. Notez ce que vous comptez cuisiner et cochez quand c'est fait !</p>
+
+              {/* Add new item */}
+              <form
+                className="flex items-center gap-2 max-w-md mx-auto mb-6"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (newDbaratiText.trim()) {
+                    onAddDbaratiItem(newDbaratiText);
+                    setNewDbaratiText('');
+                  }
+                }}
+              >
+                <Input
+                  placeholder="Ex: Couscous, Lablabi, Ojja..."
+                  className="rounded-full h-10 flex-1"
+                  value={newDbaratiText}
+                  onChange={(e) => setNewDbaratiText(e.target.value)}
+                />
+                <Button type="submit" size="icon" className="rounded-full h-10 w-10 shrink-0" disabled={!newDbaratiText.trim()}>
+                  <Plus className="h-5 w-5" />
+                </Button>
+              </form>
+
+              {/* Random Wheel */}
+              {(() => {
+                const ONE_MONTH = 30 * 24 * 60 * 60 * 1000;
+                const candidates = dbarati.filter(item => {
+                  if (!item.done) return true;
+                  if (item.lastPreparedAt) {
+                    return (Date.now() - new Date(item.lastPreparedAt).getTime()) > ONE_MONTH;
+                  }
+                  return true;
+                });
+                if (candidates.length < 2) return null;
+
+                const handleDbaratiSpin = () => {
+                  if (isDbaratiSpinning) return;
+                  setIsDbaratiSpinning(true);
+                  setDbaratiSelectedItem(null);
+
+                  dbaratiIntervalRef.current = setInterval(() => {
+                    const randomIdx = Math.floor(Math.random() * candidates.length);
+                    setDbaratiDisplayedItem(candidates[randomIdx].text);
+                  }, 100);
+
+                  setTimeout(() => {
+                    if (dbaratiIntervalRef.current) {
+                      clearInterval(dbaratiIntervalRef.current);
+                      dbaratiIntervalRef.current = null;
+                    }
+                    const finalChoice = candidates[Math.floor(Math.random() * candidates.length)];
+                    setDbaratiSelectedItem(finalChoice.text);
+                    setDbaratiDisplayedItem(null);
+                    setIsDbaratiSpinning(false);
+                  }, 2500);
+                };
+
+                return (
+                  <div className="text-center mb-6 max-w-md mx-auto">
+                    <Button
+                      onClick={handleDbaratiSpin}
+                      disabled={isDbaratiSpinning}
+                      variant="outline"
+                      className="rounded-full gap-2 border-primary/30 hover:bg-primary/5"
+                      size="sm"
+                    >
+                      <Dices className={cn("h-4 w-4", isDbaratiSpinning && "animate-spin")} />
+                      {isDbaratiSpinning ? 'Ça tourne...' : 'Qu\'est-ce que je prépare ?'}
+                    </Button>
+                    <div className="mt-4 h-16 flex flex-col justify-center items-center">
+                      {isDbaratiSpinning && (
+                        <p className="text-2xl font-bold text-primary transition-opacity duration-100 animate-in fade-in">
+                          {dbaratiDisplayedItem}
+                        </p>
+                      )}
+                      {!isDbaratiSpinning && dbaratiSelectedItem && (
+                        <div className="animate-in fade-in-50 text-center">
+                          <p className="text-muted-foreground text-sm">Aujourd'hui tu prépares...</p>
+                          <p className="text-2xl font-bold text-primary mt-1">{dbaratiSelectedItem} 🍳</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* List */}
+              {dbarati.length > 0 ? (
+                <ul className="space-y-2 max-w-md mx-auto">
+                  {dbarati.map((item, index) => (
+                    <li
+                      key={item.id}
+                      className={cn(
+                        "flex items-start gap-3 p-3 rounded-xl border transition-all group",
+                        item.done ? "bg-muted/30 border-border/30" : "bg-card border-border/50 hover:shadow-sm"
+                      )}
+                    >
+                      <Checkbox
+                        id={`dbarati-${item.id}`}
+                        checked={item.done}
+                        onCheckedChange={() => onToggleDbaratiItem(item.id)}
+                        className="h-5 w-5 rounded-md border-primary/30 shrink-0 mt-0.5"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <label
+                            htmlFor={`dbarati-${item.id}`}
+                            className={cn(
+                              "text-sm font-medium cursor-pointer block",
+                              item.done && "line-through text-muted-foreground"
+                            )}
+                          >
+                            {item.text}
+                          </label>
+                          {(() => {
+                            const matchedRecipe = userRecipes.find(r => r.title.toLowerCase() === item.text.toLowerCase());
+                            if (!matchedRecipe) return null;
+                            return (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 rounded-full text-primary/60 hover:text-primary hover:bg-primary/10 -ml-1 mt-0.5"
+                                onClick={() => onViewUserRecipe(matchedRecipe)}
+                                title="Ouvrir la recette"
+                              >
+                                <BookUser className="h-3.5 w-3.5" />
+                              </Button>
+                            );
+                          })()}
+                        </div>
+                        <div className="flex items-center gap-2 flex-wrap mt-0.5">
+                          {(item.prepCount || 0) > 0 && (
+                            <span className="text-[10px] text-primary/60 font-semibold">
+                              Préparé {item.prepCount} fois
+                            </span>
+                          )}
+                          {item.lastPreparedAt && (
+                            <>
+                              {(item.prepCount || 0) > 0 && <span className="text-muted-foreground/30 text-[10px]">•</span>}
+                              <span className="text-[10px] text-muted-foreground/70 italic">
+                                Dernier: {new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(new Date(item.lastPreparedAt))}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-5 w-5 rounded text-muted-foreground hover:text-primary"
+                          onClick={() => onMoveDbaratiItem(item.id, 'up')}
+                          disabled={index === 0}
+                          title="Monter"
+                        >
+                          <ChevronUp className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-5 w-5 rounded text-muted-foreground hover:text-primary"
+                          onClick={() => onMoveDbaratiItem(item.id, 'down')}
+                          disabled={index === dbarati.length - 1}
+                          title="Descendre"
+                        >
+                          <ChevronDown className="h-3 w-3" />
+                        </Button>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 rounded-full opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0"
+                        onClick={() => onDeleteDbaratiItem(item.id)}
+                        title="Supprimer"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className='text-muted-foreground text-center text-sm'>Aucun plat noté pour le moment.</p>
+              )}
             </div>
           </AccordionContent>
         </AccordionItem>
