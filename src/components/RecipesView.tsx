@@ -325,6 +325,1119 @@ export default function RecipesView({
                 </div>
               </div>
 
+
+
+'use client';
+
+import { useState, useRef, useEffect, useMemo } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { PlusCircle, Shuffle, Dices, Clock, Coins, Utensils, BookUser, Search, Tag, Sparkles, TrendingDown, ClipboardList, Check, Trash2, Plus, ChevronUp, ChevronDown, Loader2 } from 'lucide-react';
+import type { Recipe, UserRecipe, BasketItem, PurchaseHistory, CommunityPurchase, DbaratiItem } from '@/lib/types';
+import { streetFoodOptions } from '@/lib/data';
+import { cn, getProductStatus } from '@/lib/utils';
+import Image from 'next/image';
+import { listenCommunityPurchases } from '@/lib/firestore-sync';
+import { calculateMarketPrices, calculateRecipeCost, getRecipeAvailabilityPercentage, formatPrice } from '@/lib/price-utils';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
+import { Input } from './ui/input';
+import { Checkbox } from './ui/checkbox';
+
+const normalizeString = (s: string) => 
+  s.toLowerCase()
+   .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // remove accents
+   .replace(/['’\-]/g, " ") // replace apostrophes and dashes with space
+   .replace(/[^a-z0-9 ]/g, "") // remove other special chars
+   .trim();
+
+interface RecipesViewProps {
+  setViewingRecipe: (recipe: (Omit<Recipe, 'id'> & { id?: string; }) | null) => void;
+  discoverableRecipes: Recipe[];
+  handleSaveRecipe: (recipe: Omit<Recipe, 'id'> & { id?: string; }) => void;
+  userRecipes: UserRecipe[];
+  openUserRecipeForm: (recipe?: UserRecipe) => void;
+  onViewUserRecipe: (recipe: UserRecipe | null) => void;
+  basket: BasketItem[];
+  purchaseHistory: PurchaseHistory;
+  dbarati: DbaratiItem[];
+  onAddDbaratiItem: (text: string, type?: 'plat' | 'entree', tag?: 'Soupe' | 'Salade' | 'Sauce') => void;
+  onToggleDbaratiItem: (id: string) => void;
+  onDeleteDbaratiItem: (id: string) => void;
+  onUpdateDbaratiItem: (id: string, text: string) => void;
+  onMoveDbaratiItem: (id: string, direction: 'up' | 'down') => void;
+}
+
+export default function RecipesView({
+  setViewingRecipe,
+  discoverableRecipes,
+  handleSaveRecipe,
+  userRecipes,
+  openUserRecipeForm,
+  onViewUserRecipe,
+  basket,
+  purchaseHistory,
+  dbarati,
+  onAddDbaratiItem,
+  onToggleDbaratiItem,
+  onDeleteDbaratiItem,
+  onUpdateDbaratiItem,
+  onMoveDbaratiItem,
+}: RecipesViewProps) {
+  const [suggestedRecipes, setSuggestedRecipes] = useState<Recipe[]>([]);
+  const [selectedStreetFood, setSelectedStreetFood] = useState<string | null>(null);
+  const [isSpinning, setIsSpinning] = useState(false);
+  const [displayedFood, setDisplayedFood] = useState<string | null>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const dbaratiIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const [filterQuick, setFilterQuick] = useState(false);
+  const [filterEconomical, setFilterEconomical] = useState(false);
+  const [communityPurchases, setCommunityPurchases] = useState<CommunityPurchase[]>([]);
+  const [userRecipeTagFilter, setUserRecipeTagFilter] = useState('');
+  const [newDbaratiText, setNewDbaratiText] = useState('');
+  const [isDbaratiSpinning, setIsDbaratiSpinning] = useState(false);
+  const [dbaratiDisplayedItem, setDbaratiDisplayedItem] = useState<string | null>(null);
+  const [dbaratiSelectedItem, setDbaratiSelectedItem] = useState<string | null>(null);
+  const [dbaratiSelectedEmoji, setDbaratiSelectedEmoji] = useState<string>('🍳');
+
+  // Entrees state
+  const [newEntreeText, setNewEntreeText] = useState('');
+  const [newEntreeTag, setNewEntreeTag] = useState<'Soupe' | 'Salade' | 'Sauce'>('Salade');
+  const [activeEntreeFilter, setActiveEntreeFilter] = useState<'Toutes' | 'Soupe' | 'Salade' | 'Sauce'>('Toutes');
+  const [isEntreesExpanded, setIsEntreesExpanded] = useState(false);
+
+  // Listen to community purchases for recipe cost calculations
+  useEffect(() => {
+    let isMounted = true;
+
+    try {
+      const unsubscribe = listenCommunityPurchases((data) => {
+        if (isMounted) {
+          setCommunityPurchases(data as CommunityPurchase[]);
+        }
+      });
+
+      return () => {
+        isMounted = false;
+        unsubscribe();
+      };
+    } catch (err) {
+      console.error("Error listening to community purchases:", err);
+    }
+  }, []);
+
+  const filteredDiscoverableRecipes = useMemo(() => {
+    return discoverableRecipes.filter(recipe => {
+      const quickMatch = !filterQuick || (recipe.preparationTime !== undefined && recipe.preparationTime <= 15);
+      const economicalMatch = !filterEconomical || !!recipe.isEconomical;
+      return quickMatch && economicalMatch;
+    });
+  }, [discoverableRecipes, filterQuick, filterEconomical]);
+
+  const filteredUserRecipes = useMemo(() => {
+    if (!userRecipeTagFilter) return userRecipes;
+    const filterTags = userRecipeTagFilter.toLowerCase().split(',').map(t => t.trim()).filter(Boolean);
+    if (filterTags.length === 0) return userRecipes;
+
+    return userRecipes.filter(recipe => {
+      const recipeTags = (recipe.tags || '').toLowerCase().split(',').map(t => t.trim());
+      return filterTags.every(ft => recipeTags.includes(ft));
+    });
+
+  }, [userRecipes, userRecipeTagFilter]);
+
+  // Listen to community purchases for recipe cost calculations
+  useEffect(() => {
+    let isMounted = true;
+
+    try {
+      const unsubscribe = listenCommunityPurchases((data) => {
+        if (isMounted) {
+          setCommunityPurchases(data as CommunityPurchase[]);
+        }
+      });
+
+      return () => {
+        isMounted = false;
+        unsubscribe();
+      };
+    } catch (err) {
+      console.error("Error listening to community purchases:", err);
+    }
+  }, []);
+
+  // Cleanup interval on component unmount
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+      if (dbaratiIntervalRef.current) {
+        clearInterval(dbaratiIntervalRef.current);
+      }
+    };
+  }, []);
+
+  // Calculate market prices from community purchases
+  const marketPrices = useMemo(() => {
+    return calculateMarketPrices(communityPurchases);
+  }, [communityPurchases]);
+
+  // --- Basket-based Recommendations ---
+  const basketBasedRecipes = useMemo(() => {
+    const hasHistory = basket.length > 0 || Object.keys(purchaseHistory).length > 0;
+
+    // 1. If history exists, use the matching algorithm
+    if (hasHistory) {
+      const matchedIngredientNames = new Set<string>();
+      basket.forEach(item => matchedIngredientNames.add(item.name.toLowerCase()));
+
+      return discoverableRecipes.map(recipe => {
+        const matches = recipe.ingredients.filter(ing => {
+          const name = ing.name.toLowerCase();
+          if (matchedIngredientNames.has(name)) return true;
+          const status = getProductStatus(purchaseHistory[ing.name] || purchaseHistory[ing.name.toLowerCase()]);
+          return status === 'green' || status === 'orange';
+        });
+
+        return {
+          recipe,
+          matchCount: matches.length,
+          matchPercentage: matches.length / recipe.ingredients.length,
+          matchedNames: matches.map(m => m.name),
+          isDiscovery: false
+        };
+      })
+        .filter(m => m.matchCount > 0)
+        .sort((a, b) => b.matchPercentage - a.matchPercentage)
+        .slice(0, 4);
+    }
+
+    // 2. If NO history, show discovery recipes (random subset of 4)
+    const shuffled = [...discoverableRecipes].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, 4).map(recipe => ({
+      recipe,
+      matchCount: 0,
+      matchPercentage: 0,
+      matchedNames: [],
+      isDiscovery: true
+    }));
+  }, [discoverableRecipes, basket, purchaseHistory]);
+
+  const findRandomRecipes = () => {
+    if (filteredDiscoverableRecipes.length === 0) {
+      setSuggestedRecipes([]);
+      return;
+    }
+    const shuffled = [...filteredDiscoverableRecipes].sort(() => 0.5 - Math.random());
+    setSuggestedRecipes(shuffled.slice(0, 2));
+  };
+
+  const handleSpin = () => {
+    if (isSpinning) return;
+    setIsSpinning(true);
+    setSelectedStreetFood(null);
+
+    const spinDuration = 2500;
+    const spinInterval = 100;
+
+    intervalRef.current = setInterval(() => {
+      const randomIndex = Math.floor(Math.random() * streetFoodOptions.length);
+      setDisplayedFood(streetFoodOptions[randomIndex]);
+    }, spinInterval);
+
+    setTimeout(() => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      const finalChoice = streetFoodOptions[Math.floor(Math.random() * streetFoodOptions.length)];
+      setSelectedStreetFood(finalChoice);
+      setDisplayedFood(null);
+      setIsSpinning(false);
+    }, spinDuration);
+  };
+
+  return (
+    <div className="space-y-8">
+      <Accordion type="single" collapsible className="w-full">
+        <AccordionItem value="item-1">
+          <AccordionTrigger>
+            <div className="flex justify-center items-center gap-3 py-2 text-primary">
+              <BookUser className="h-8 w-8 text-primary" />
+              <h2 className='text-3xl font-bold'>Recetteti</h2>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className='text-center py-4 px-4 rounded-xl bg-gradient-to-br from-secondary/50 via-card to-card border-2 border-border/50 shadow-lg'>
+              <p className='text-muted-foreground mb-6 max-w-2xl mx-auto'>Votre carnet de recettes personnel. Créez, modifiez et conservez vos propres créations culinaires ici-même.</p>
+
+              <div className="relative mb-6 max-w-sm mx-auto">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Filtrer par tags (ex: vegan, rapide)..."
+                  className="pl-11 rounded-full h-10"
+                  value={userRecipeTagFilter}
+                  onChange={(e) => setUserRecipeTagFilter(e.target.value)}
+                />
+              </div>
+
+              {filteredUserRecipes.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-6">
+                  {filteredUserRecipes.map(recipe => (
+                    <Card key={recipe.id} className="cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col" onClick={() => onViewUserRecipe(recipe)}>
+                      <CardContent className='p-3 flex items-center gap-3'>
+                        <div className="relative w-12 h-12 aspect-square shrink-0">
+                          {recipe.photoDataUri ? (
+                            <Image src={recipe.photoDataUri} alt={recipe.title} layout="fill" objectFit="cover" className="rounded-md" />
+                          ) : (
+                            <div className="w-full h-full bg-secondary flex items-center justify-center rounded-md">
+                              <Utensils className="h-6 w-6 text-muted-foreground" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex flex-col overflow-hidden">
+                          <CardTitle className='text-base font-semibold truncate'>{recipe.title}</CardTitle>
+                          <div className="flex flex-wrap items-center gap-1 mt-1">
+                            <Badge variant="outline" className="text-xs">{recipe.category}</Badge>
+                            <Badge variant="outline" className="flex items-center gap-1 text-xs"><Clock className="h-3 w-3" />{recipe.preparationTime} min</Badge>
+                            {recipe.tags && recipe.tags.split(',').map(tag => tag.trim() && (
+                              <Badge key={tag.trim()} variant="secondary" className="text-xs flex items-center gap-1"><Tag className="h-3 w-3" />{tag.trim()}</Badge>
+                            ))}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <p className='text-muted-foreground mb-6'>{userRecipes.length > 0 ? "Aucune recette ne correspond à votre filtre." : "Vous n'avez pas encore créé de recette."}</p>
+              )}
+
+              <Button onClick={() => openUserRecipeForm()}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Créer ma recette
+              </Button>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
+
+      {/* --- DBARATI SECTION --- */}
+      <Accordion type="single" collapsible className="w-full">
+        <AccordionItem value="dbarati">
+          <AccordionTrigger>
+            <div className="flex justify-center items-center gap-3 py-2 text-primary">
+              <ClipboardList className="h-8 w-8 text-primary" />
+              <h2 className='text-3xl font-bold'>Dbarati</h2>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className='py-4 px-3 sm:px-5 rounded-2xl bg-gradient-to-br from-indigo-50/50 via-white to-rose-50/50 dark:from-indigo-950/20 dark:via-background dark:to-rose-950/20 border border-border/40 shadow-xl backdrop-blur-sm'>
+              <div className='flex flex-col items-center mb-4'>
+                <p className='text-muted-foreground text-center max-w-2xl text-xs sm:text-sm leading-relaxed'>
+                  <span className="font-semibold text-primary">Dbarati</span> : Vos idées de repas et vos habitudes culinaires.
+                </p>
+                <div className="flex items-center gap-1.5 mt-1">
+                  <Badge variant="outline" className="text-[10px] sm:text-xs font-bold bg-white/50 dark:bg-zinc-900/50 text-muted-foreground/80 border-primary/10 px-2.5 py-0.5 rounded-full">
+                    {dbarati.length} {dbarati.length > 1 ? 'idées' : 'idée'} enregistrée{dbarati.length > 1 ? 's' : ''}
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Random Wheel UI - Compact */}
+              {(() => {
+                const ONE_MONTH = 30 * 24 * 60 * 60 * 1000;
+                const candidates = dbarati.filter(item => {
+                  if (item.type === 'entree') return false;
+                  if (!item.done) return true;
+                  if (item.lastPreparedAt) {
+                    return (Date.now() - new Date(item.lastPreparedAt).getTime()) > ONE_MONTH;
+                  }
+                  return true;
+                });
+                
+                if (candidates.length < 2) return null;
+
+                const handleDbaratiSpin = () => {
+                  if (isDbaratiSpinning) return;
+                  setIsDbaratiSpinning(true);
+                  setDbaratiSelectedItem(null);
+
+                  const foodEmojis = ['🍳', '🥗', '🍝', '🍕', '🍱', '🍔', '🥙', '🍛', '🥘', '🍲', '🍜', '🍚', '🍗', '🐟', '🍤'];
+
+                  dbaratiIntervalRef.current = setInterval(() => {
+                    const randomIdx = Math.floor(Math.random() * candidates.length);
+                    setDbaratiDisplayedItem(candidates[randomIdx].text);
+                  }, 80);
+
+                  setTimeout(() => {
+                    if (dbaratiIntervalRef.current) {
+                      clearInterval(dbaratiIntervalRef.current);
+                      dbaratiIntervalRef.current = null;
+                    }
+                    const finalChoice = candidates[Math.floor(Math.random() * candidates.length)];
+                    setDbaratiSelectedItem(finalChoice.text);
+                    setDbaratiSelectedEmoji(foodEmojis[Math.floor(Math.random() * foodEmojis.length)]);
+                    setDbaratiDisplayedItem(null);
+                    setIsDbaratiSpinning(false);
+                  }, 2500);
+                };
+
+                return (
+                  <div className="relative mb-4 p-3 rounded-2xl bg-primary/5 border border-primary/10 overflow-hidden text-center group">
+                    <div className="absolute -top-12 -right-12 w-20 h-20 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-all duration-700" />
+                    <div className="absolute -bottom-12 -left-12 w-20 h-20 bg-rose-400/10 rounded-full blur-2xl group-hover:bg-rose-400/20 transition-all duration-700" />
+                    
+                    <div className="flex flex-col items-center gap-2">
+                      <Button
+                        onClick={handleDbaratiSpin}
+                        disabled={isDbaratiSpinning}
+                        size="sm"
+                        className={cn(
+                          "rounded-full px-4 py-1.5 h-8 font-bold shadow-sm transition-all duration-300 text-xs",
+                          isDbaratiSpinning ? "bg-muted cursor-not-allowed" : "bg-gradient-to-r from-primary to-indigo-600 hover:shadow-primary/20 hover:scale-105 active:scale-95"
+                        )}
+                      >
+                        {isDbaratiSpinning ? (
+                          <span className="flex items-center gap-1.5">
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" /> Un instant...
+                          </span>
+                        ) : (
+                          <><Dices className="h-3.5 w-3.5 mr-1.5" /> Qu&apos;est-ce qu&apos;on mange ?</>
+                        )}
+                      </Button>
+
+                      <div className="h-8 flex flex-col justify-center items-center">
+                        {isDbaratiSpinning && (
+                          <div className="animate-in zoom-in-75 duration-200">
+                            <p className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-indigo-600 truncate max-w-[240px]">
+                              {dbaratiDisplayedItem}
+                            </p>
+                          </div>
+                        )}
+                        {!isDbaratiSpinning && dbaratiSelectedItem && (
+                          <div className="animate-in fade-in-50 zoom-in-95 duration-500 text-center">
+                            <div className="flex items-center justify-center gap-3">
+                              <p className="text-xl font-black text-primary drop-shadow-sm flex items-center gap-2">
+                                {dbaratiSelectedItem} <span className="text-lg animate-bounce">{dbaratiSelectedEmoji}</span>
+                              </p>
+                              <Button
+                                size="icon"
+                                variant="outline"
+                                className="h-8 w-8 rounded-full border-primary/20 text-primary hover:bg-primary hover:text-white transition-all shadow-sm"
+                                title="Marquer comme préparé"
+                                onClick={() => {
+                                  const normalizedSelected = normalizeString(dbaratiSelectedItem || '');
+                                  const item = candidates.find(c => normalizeString(c.text) === normalizedSelected);
+                                  if (item) onToggleDbaratiItem(item.id);
+                                }}
+                              >
+                                <Check className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Add new item - Stylized & Compact */}
+              <div className="max-w-md mx-auto mb-6">
+                <form
+                  className="relative group mb-6"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (newDbaratiText.trim()) {
+                      onAddDbaratiItem(newDbaratiText, 'plat');
+                      setNewDbaratiText('');
+                    }
+                  }}
+                >
+                  <Input
+                    placeholder="Une envie ? Couscous, Pasta..."
+                    className="rounded-xl h-11 pl-4 pr-12 text-sm border-primary/20 focus-visible:ring-primary/30 shadow-inner bg-background/50 backdrop-blur-sm transition-all"
+                    value={newDbaratiText}
+                    onChange={(e) => setNewDbaratiText(e.target.value)}
+                  />
+                  <Button 
+                    type="submit" 
+                    size="icon" 
+                    className="absolute right-1 top-1 h-9 w-9 rounded-lg shadow-sm" 
+                    disabled={!newDbaratiText.trim()}
+                  >
+                    <Plus className="h-5 w-5" />
+                  </Button>
+                </form>
+              </div>
+
+              {/* List - Premium & Compact Cards (Plats only) */}
+              {dbarati.filter(i => i.type !== 'entree').length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-4xl mx-auto mb-6">
+                  {[...dbarati].filter(i => i.type !== 'entree').sort((a, b) => Number(a.done) - Number(b.done)).map((item, index) => {
+                    const normalizedItemText = normalizeString(item.text);
+                    const matchedRecipe = userRecipes.find(r => normalizeString(r.title) === normalizedItemText);
+                    
+                    return (
+                      <div
+                        key={item.id}
+                        className={cn(
+                          "relative p-3 rounded-xl border transition-all duration-300 group flex flex-col",
+                          item.done 
+                            ? "bg-muted/40 border-border/40 opacity-70 scale-[0.98]" 
+                            : "bg-white dark:bg-card border-border/60 hover:border-primary/40 hover:shadow-lg"
+                        )}
+                      >
+                        <div className="flex items-start gap-2.5">
+                          <Checkbox
+                            id={`dbarati-${item.id}`}
+                            checked={item.done}
+                            onCheckedChange={() => onToggleDbaratiItem(item.id)}
+                            className="h-5 w-5 rounded-md border-2 border-primary/10 data-[state=checked]:bg-primary data-[state=checked]:border-primary shrink-0 mt-0.5"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <label
+                                htmlFor={`dbarati-${item.id}`}
+                                className={cn(
+                                  "text-sm font-bold cursor-pointer transition-all truncate",
+                                  (() => {
+                                    if (!item.done || !item.lastPreparedAt) return "text-foreground";
+                                    const daysSince = (Date.now() - new Date(item.lastPreparedAt).getTime()) / (1000 * 60 * 60 * 24);
+                                    if (daysSince <= 7) return "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 px-1.5 py-0.5 rounded";
+                                    if (daysSince <= 15) return "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 px-1.5 py-0.5 rounded";
+                                    if (daysSince <= 30) return "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 px-1.5 py-0.5 rounded";
+                                    return "text-muted-foreground";
+                                  })()
+                                )}
+                              >
+                                {item.text}
+                              </label>
+                              {matchedRecipe && (
+                                <Badge 
+                                  variant="secondary" 
+                                  className="h-4 px-1 text-[8px] font-black uppercase tracking-tighter cursor-pointer hover:bg-primary hover:text-white transition-colors"
+                                  onClick={() => onViewUserRecipe(matchedRecipe)}
+                                >
+                                  📖 Recette
+                                </Badge>
+                              )}
+                            </div>
+                            
+                            <div className="flex items-center gap-2 mt-1">
+                              {(item.prepCount || 0) > 0 && (
+                                <span className="bg-primary/5 text-primary px-1.5 py-0 rounded-full text-[9px] font-bold">
+                                  {item.prepCount}x
+                                </span>
+                              )}
+                              {item.lastPreparedAt && (
+                                <span className="text-[9px] text-muted-foreground italic truncate">
+                                  {new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(new Date(item.lastPreparedAt))}
+                                  <span className="opacity-70 ml-1">
+                                    (il y a {Math.floor((Date.now() - new Date(item.lastPreparedAt).getTime()) / (1000 * 60 * 60 * 24))} j)
+                                  </span>
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 rounded-md text-muted-foreground hover:text-primary"
+                              onClick={() => onMoveDbaratiItem(item.id, 'up')}
+                              disabled={index === 0}
+                            >
+                              <ChevronUp className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 rounded-md text-muted-foreground hover:text-destructive"
+                              onClick={() => onDeleteDbaratiItem(item.id)}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-8 rounded-2xl border-2 border-dashed border-border/40 bg-muted/10 mb-6">
+                  <ClipboardList className="h-8 w-8 text-muted-foreground/20 mx-auto mb-2" />
+                  <p className='text-muted-foreground font-medium text-sm'>Votre carnet de plats est vide.</p>
+                </div>
+              )}
+
+
+              {/* Random Wheel UI - Compact */}
+              {(() => {
+                const ONE_MONTH = 30 * 24 * 60 * 60 * 1000;
+                const candidates = dbarati.filter(item => {
+                  if (item.type === 'entree') return false;
+                  if (!item.done) return true;
+                  if (item.lastPreparedAt) {
+                    return (Date.now() - new Date(item.lastPreparedAt).getTime()) > ONE_MONTH;
+                  }
+                  return true;
+                });
+                
+                if (candidates.length < 2) return null;
+
+                const handleDbaratiSpin = () => {
+                  if (isDbaratiSpinning) return;
+                  setIsDbaratiSpinning(true);
+                  setDbaratiSelectedItem(null);
+
+                  const foodEmojis = ['🍳', '🥗', '🍝', '🍕', '🍱', '🍔', '🥙', '🍛', '🥘', '🍲', '🍜', '🍚', '🍗', '🐟', '🍤'];
+
+                  dbaratiIntervalRef.current = setInterval(() => {
+                    const randomIdx = Math.floor(Math.random() * candidates.length);
+                    setDbaratiDisplayedItem(candidates[randomIdx].text);
+                  }, 80);
+
+                  setTimeout(() => {
+                    if (dbaratiIntervalRef.current) {
+                      clearInterval(dbaratiIntervalRef.current);
+                      dbaratiIntervalRef.current = null;
+                    }
+                    const finalChoice = candidates[Math.floor(Math.random() * candidates.length)];
+                    setDbaratiSelectedItem(finalChoice.text);
+                    setDbaratiSelectedEmoji(foodEmojis[Math.floor(Math.random() * foodEmojis.length)]);
+                    setDbaratiDisplayedItem(null);
+                    setIsDbaratiSpinning(false);
+                  }, 2500);
+                };
+
+                return (
+                  <div className="relative mb-4 p-3 rounded-2xl bg-primary/5 border border-primary/10 overflow-hidden text-center group">
+                    <div className="absolute -top-12 -right-12 w-20 h-20 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-all duration-700" />
+                    <div className="absolute -bottom-12 -left-12 w-20 h-20 bg-rose-400/10 rounded-full blur-2xl group-hover:bg-rose-400/20 transition-all duration-700" />
+                    
+                    <div className="flex flex-col items-center gap-2">
+                      <Button
+                        onClick={handleDbaratiSpin}
+                        disabled={isDbaratiSpinning}
+                        size="sm"
+                        className={cn(
+                          "rounded-full px-4 py-1.5 h-8 font-bold shadow-sm transition-all duration-300 text-xs",
+                          isDbaratiSpinning ? "bg-muted cursor-not-allowed" : "bg-gradient-to-r from-primary to-indigo-600 hover:shadow-primary/20 hover:scale-105 active:scale-95"
+                        )}
+                      >
+                        {isDbaratiSpinning ? (
+                          <span className="flex items-center gap-1.5">
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" /> Un instant...
+                          </span>
+                        ) : (
+                          <><Dices className="h-3.5 w-3.5 mr-1.5" /> Qu&apos;est-ce qu&apos;on mange ?</>
+                        )}
+                      </Button>
+
+                      <div className="h-8 flex flex-col justify-center items-center">
+                        {isDbaratiSpinning && (
+                          <div className="animate-in zoom-in-75 duration-200">
+                            <p className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-indigo-600 truncate max-w-[240px]">
+                              {dbaratiDisplayedItem}
+                            </p>
+                          </div>
+                        )}
+                        {!isDbaratiSpinning && dbaratiSelectedItem && (
+                          <div className="animate-in fade-in-50 zoom-in-95 duration-500 text-center">
+                            <div className="flex items-center justify-center gap-3">
+                              <p className="text-xl font-black text-primary drop-shadow-sm flex items-center gap-2">
+                                {dbaratiSelectedItem} <span className="text-lg animate-bounce">{dbaratiSelectedEmoji}</span>
+                              </p>
+                              <Button
+                                size="icon"
+                                variant="outline"
+                                className="h-8 w-8 rounded-full border-primary/20 text-primary hover:bg-primary hover:text-white transition-all shadow-sm"
+                                title="Marquer comme préparé"
+                                onClick={() => {
+                                  const normalizedSelected = normalizeString(dbaratiSelectedItem || '');
+                                  const item = candidates.find(c => normalizeString(c.text) === normalizedSelected);
+                                  if (item) onToggleDbaratiItem(item.id);
+                                }}
+                              >
+                                <Check className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Add new item - Stylized & Compact */}
+              <div className="max-w-md mx-auto mb-6">
+                <form
+                  className="relative group mb-6"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (newDbaratiText.trim()) {
+                      onAddDbaratiItem(newDbaratiText, 'plat');
+                      setNewDbaratiText('');
+                    }
+                  }}
+                >
+                  <Input
+                    placeholder="Une envie ? Couscous, Pasta..."
+                    className="rounded-xl h-11 pl-4 pr-12 text-sm border-primary/20 focus-visible:ring-primary/30 shadow-inner bg-background/50 backdrop-blur-sm transition-all"
+                    value={newDbaratiText}
+                    onChange={(e) => setNewDbaratiText(e.target.value)}
+                  />
+                  <Button 
+                    type="submit" 
+                    size="icon" 
+                    className="absolute right-1 top-1 h-9 w-9 rounded-lg shadow-sm" 
+                    disabled={!newDbaratiText.trim()}
+                  >
+                    <Plus className="h-5 w-5" />
+                  </Button>
+                </form>
+              </div>
+
+              {/* List - Premium & Compact Cards (Plats only) */}
+              {dbarati.filter(i => i.type !== 'entree').length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-4xl mx-auto mb-6">
+                  {[...dbarati].filter(i => i.type !== 'entree').sort((a, b) => Number(a.done) - Number(b.done)).map((item, index) => {
+                    const normalizedItemText = normalizeString(item.text);
+                    const matchedRecipe = userRecipes.find(r => normalizeString(r.title) === normalizedItemText);
+                    
+                    return (
+                      <div
+                        key={item.id}
+                        className={cn(
+                          "relative p-3 rounded-xl border transition-all duration-300 group flex flex-col",
+                          item.done 
+                            ? "bg-muted/40 border-border/40 opacity-70 scale-[0.98]" 
+                            : "bg-white dark:bg-card border-border/60 hover:border-primary/40 hover:shadow-lg"
+                        )}
+                      >
+                        <div className="flex items-start gap-2.5">
+                          <Checkbox
+                            id={`dbarati-${item.id}`}
+                            checked={item.done}
+                            onCheckedChange={() => onToggleDbaratiItem(item.id)}
+                            className="h-5 w-5 rounded-md border-2 border-primary/10 data-[state=checked]:bg-primary data-[state=checked]:border-primary shrink-0 mt-0.5"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <label
+                                htmlFor={`dbarati-${item.id}`}
+                                className={cn(
+                                  "text-sm font-bold cursor-pointer transition-all truncate",
+                                  (() => {
+                                    if (!item.done || !item.lastPreparedAt) return "text-foreground";
+                                    const daysSince = (Date.now() - new Date(item.lastPreparedAt).getTime()) / (1000 * 60 * 60 * 24);
+                                    if (daysSince <= 7) return "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 px-1.5 py-0.5 rounded";
+                                    if (daysSince <= 15) return "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 px-1.5 py-0.5 rounded";
+                                    if (daysSince <= 30) return "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 px-1.5 py-0.5 rounded";
+                                    return "text-muted-foreground";
+                                  })()
+                                )}
+                              >
+                                {item.text}
+                              </label>
+                              {matchedRecipe && (
+                                <Badge 
+                                  variant="secondary" 
+                                  className="h-4 px-1 text-[8px] font-black uppercase tracking-tighter cursor-pointer hover:bg-primary hover:text-white transition-colors"
+                                  onClick={() => onViewUserRecipe(matchedRecipe)}
+                                >
+                                  📖 Recette
+                                </Badge>
+                              )}
+                            </div>
+                            
+                            <div className="flex items-center gap-2 mt-1">
+                              {(item.prepCount || 0) > 0 && (
+                                <span className="bg-primary/5 text-primary px-1.5 py-0 rounded-full text-[9px] font-bold">
+                                  {item.prepCount}x
+                                </span>
+                              )}
+                              {item.lastPreparedAt && (
+                                <span className="text-[9px] text-muted-foreground italic truncate">
+                                  {new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(new Date(item.lastPreparedAt))}
+                                  <span className="opacity-70 ml-1">
+                                    (il y a {Math.floor((Date.now() - new Date(item.lastPreparedAt).getTime()) / (1000 * 60 * 60 * 24))} j)
+                                  </span>
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 rounded-md text-muted-foreground hover:text-primary"
+                              onClick={() => onMoveDbaratiItem(item.id, 'up')}
+                              disabled={index === 0}
+                            >
+                              <ChevronUp className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 rounded-md text-muted-foreground hover:text-destructive"
+                              onClick={() => onDeleteDbaratiItem(item.id)}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-8 rounded-2xl border-2 border-dashed border-border/40 bg-muted/10 mb-6">
+                  <ClipboardList className="h-8 w-8 text-muted-foreground/20 mx-auto mb-2" />
+                  <p className='text-muted-foreground font-medium text-sm'>Votre carnet de plats est vide.</p>
+                </div>
+              )}
+
+
+
+'use client';
+
+import { useState, useRef, useEffect, useMemo } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { PlusCircle, Shuffle, Dices, Clock, Coins, Utensils, BookUser, Search, Tag, Sparkles, TrendingDown, ClipboardList, Check, Trash2, Plus, ChevronUp, ChevronDown, Loader2 } from 'lucide-react';
+import type { Recipe, UserRecipe, BasketItem, PurchaseHistory, CommunityPurchase, DbaratiItem } from '@/lib/types';
+import { streetFoodOptions } from '@/lib/data';
+import { cn, getProductStatus } from '@/lib/utils';
+import Image from 'next/image';
+import { listenCommunityPurchases } from '@/lib/firestore-sync';
+import { calculateMarketPrices, calculateRecipeCost, getRecipeAvailabilityPercentage, formatPrice } from '@/lib/price-utils';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
+import { Input } from './ui/input';
+import { Checkbox } from './ui/checkbox';
+
+const normalizeString = (s: string) => 
+  s.toLowerCase()
+   .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // remove accents
+   .replace(/['’\-]/g, " ") // replace apostrophes and dashes with space
+   .replace(/[^a-z0-9 ]/g, "") // remove other special chars
+   .trim();
+
+interface RecipesViewProps {
+  setViewingRecipe: (recipe: (Omit<Recipe, 'id'> & { id?: string; }) | null) => void;
+  discoverableRecipes: Recipe[];
+  handleSaveRecipe: (recipe: Omit<Recipe, 'id'> & { id?: string; }) => void;
+  userRecipes: UserRecipe[];
+  openUserRecipeForm: (recipe?: UserRecipe) => void;
+  onViewUserRecipe: (recipe: UserRecipe | null) => void;
+  basket: BasketItem[];
+  purchaseHistory: PurchaseHistory;
+  dbarati: DbaratiItem[];
+  onAddDbaratiItem: (text: string, type?: 'plat' | 'entree', tag?: 'Soupe' | 'Salade' | 'Sauce') => void;
+  onToggleDbaratiItem: (id: string) => void;
+  onDeleteDbaratiItem: (id: string) => void;
+  onUpdateDbaratiItem: (id: string, text: string) => void;
+  onMoveDbaratiItem: (id: string, direction: 'up' | 'down') => void;
+}
+
+export default function RecipesView({
+  setViewingRecipe,
+  discoverableRecipes,
+  handleSaveRecipe,
+  userRecipes,
+  openUserRecipeForm,
+  onViewUserRecipe,
+  basket,
+  purchaseHistory,
+  dbarati,
+  onAddDbaratiItem,
+  onToggleDbaratiItem,
+  onDeleteDbaratiItem,
+  onUpdateDbaratiItem,
+  onMoveDbaratiItem,
+}: RecipesViewProps) {
+  const [suggestedRecipes, setSuggestedRecipes] = useState<Recipe[]>([]);
+  const [selectedStreetFood, setSelectedStreetFood] = useState<string | null>(null);
+  const [isSpinning, setIsSpinning] = useState(false);
+  const [displayedFood, setDisplayedFood] = useState<string | null>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const dbaratiIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const [filterQuick, setFilterQuick] = useState(false);
+  const [filterEconomical, setFilterEconomical] = useState(false);
+  const [communityPurchases, setCommunityPurchases] = useState<CommunityPurchase[]>([]);
+  const [userRecipeTagFilter, setUserRecipeTagFilter] = useState('');
+  const [newDbaratiText, setNewDbaratiText] = useState('');
+  const [isDbaratiSpinning, setIsDbaratiSpinning] = useState(false);
+  const [dbaratiDisplayedItem, setDbaratiDisplayedItem] = useState<string | null>(null);
+  const [dbaratiSelectedItem, setDbaratiSelectedItem] = useState<string | null>(null);
+  const [dbaratiSelectedEmoji, setDbaratiSelectedEmoji] = useState<string>('🍳');
+
+  // Entrees state
+  const [newEntreeText, setNewEntreeText] = useState('');
+  const [newEntreeTag, setNewEntreeTag] = useState<'Soupe' | 'Salade' | 'Sauce'>('Salade');
+  const [activeEntreeFilter, setActiveEntreeFilter] = useState<'Toutes' | 'Soupe' | 'Salade' | 'Sauce'>('Toutes');
+  const [isEntreesExpanded, setIsEntreesExpanded] = useState(false);
+
+  // Listen to community purchases for recipe cost calculations
+  useEffect(() => {
+    let isMounted = true;
+
+    try {
+      const unsubscribe = listenCommunityPurchases((data) => {
+        if (isMounted) {
+          setCommunityPurchases(data as CommunityPurchase[]);
+        }
+      });
+
+      return () => {
+        isMounted = false;
+        unsubscribe();
+      };
+    } catch (err) {
+      console.error("Error listening to community purchases:", err);
+    }
+  }, []);
+
+  const filteredDiscoverableRecipes = useMemo(() => {
+    return discoverableRecipes.filter(recipe => {
+      const quickMatch = !filterQuick || (recipe.preparationTime !== undefined && recipe.preparationTime <= 15);
+      const economicalMatch = !filterEconomical || !!recipe.isEconomical;
+      return quickMatch && economicalMatch;
+    });
+  }, [discoverableRecipes, filterQuick, filterEconomical]);
+
+  const filteredUserRecipes = useMemo(() => {
+    if (!userRecipeTagFilter) return userRecipes;
+    const filterTags = userRecipeTagFilter.toLowerCase().split(',').map(t => t.trim()).filter(Boolean);
+    if (filterTags.length === 0) return userRecipes;
+
+    return userRecipes.filter(recipe => {
+      const recipeTags = (recipe.tags || '').toLowerCase().split(',').map(t => t.trim());
+      return filterTags.every(ft => recipeTags.includes(ft));
+    });
+
+  }, [userRecipes, userRecipeTagFilter]);
+
+  // Listen to community purchases for recipe cost calculations
+  useEffect(() => {
+    let isMounted = true;
+
+    try {
+      const unsubscribe = listenCommunityPurchases((data) => {
+        if (isMounted) {
+          setCommunityPurchases(data as CommunityPurchase[]);
+        }
+      });
+
+      return () => {
+        isMounted = false;
+        unsubscribe();
+      };
+    } catch (err) {
+      console.error("Error listening to community purchases:", err);
+    }
+  }, []);
+
+  // Cleanup interval on component unmount
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+      if (dbaratiIntervalRef.current) {
+        clearInterval(dbaratiIntervalRef.current);
+      }
+    };
+  }, []);
+
+  // Calculate market prices from community purchases
+  const marketPrices = useMemo(() => {
+    return calculateMarketPrices(communityPurchases);
+  }, [communityPurchases]);
+
+  // --- Basket-based Recommendations ---
+  const basketBasedRecipes = useMemo(() => {
+    const hasHistory = basket.length > 0 || Object.keys(purchaseHistory).length > 0;
+
+    // 1. If history exists, use the matching algorithm
+    if (hasHistory) {
+      const matchedIngredientNames = new Set<string>();
+      basket.forEach(item => matchedIngredientNames.add(item.name.toLowerCase()));
+
+      return discoverableRecipes.map(recipe => {
+        const matches = recipe.ingredients.filter(ing => {
+          const name = ing.name.toLowerCase();
+          if (matchedIngredientNames.has(name)) return true;
+          const status = getProductStatus(purchaseHistory[ing.name] || purchaseHistory[ing.name.toLowerCase()]);
+          return status === 'green' || status === 'orange';
+        });
+
+        return {
+          recipe,
+          matchCount: matches.length,
+          matchPercentage: matches.length / recipe.ingredients.length,
+          matchedNames: matches.map(m => m.name),
+          isDiscovery: false
+        };
+      })
+        .filter(m => m.matchCount > 0)
+        .sort((a, b) => b.matchPercentage - a.matchPercentage)
+        .slice(0, 4);
+    }
+
+    // 2. If NO history, show discovery recipes (random subset of 4)
+    const shuffled = [...discoverableRecipes].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, 4).map(recipe => ({
+      recipe,
+      matchCount: 0,
+      matchPercentage: 0,
+      matchedNames: [],
+      isDiscovery: true
+    }));
+  }, [discoverableRecipes, basket, purchaseHistory]);
+
+  const findRandomRecipes = () => {
+    if (filteredDiscoverableRecipes.length === 0) {
+      setSuggestedRecipes([]);
+      return;
+    }
+    const shuffled = [...filteredDiscoverableRecipes].sort(() => 0.5 - Math.random());
+    setSuggestedRecipes(shuffled.slice(0, 2));
+  };
+
+  const handleSpin = () => {
+    if (isSpinning) return;
+    setIsSpinning(true);
+    setSelectedStreetFood(null);
+
+    const spinDuration = 2500;
+    const spinInterval = 100;
+
+    intervalRef.current = setInterval(() => {
+      const randomIndex = Math.floor(Math.random() * streetFoodOptions.length);
+      setDisplayedFood(streetFoodOptions[randomIndex]);
+    }, spinInterval);
+
+    setTimeout(() => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      const finalChoice = streetFoodOptions[Math.floor(Math.random() * streetFoodOptions.length)];
+      setSelectedStreetFood(finalChoice);
+      setDisplayedFood(null);
+      setIsSpinning(false);
+    }, spinDuration);
+  };
+
+  return (
+    <div className="space-y-8">
+      <Accordion type="single" collapsible className="w-full">
+        <AccordionItem value="item-1">
+          <AccordionTrigger>
+            <div className="flex justify-center items-center gap-3 py-2 text-primary">
+              <BookUser className="h-8 w-8 text-primary" />
+              <h2 className='text-3xl font-bold'>Recetteti</h2>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className='text-center py-4 px-4 rounded-xl bg-gradient-to-br from-secondary/50 via-card to-card border-2 border-border/50 shadow-lg'>
+              <p className='text-muted-foreground mb-6 max-w-2xl mx-auto'>Votre carnet de recettes personnel. Créez, modifiez et conservez vos propres créations culinaires ici-même.</p>
+
+              <div className="relative mb-6 max-w-sm mx-auto">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Filtrer par tags (ex: vegan, rapide)..."
+                  className="pl-11 rounded-full h-10"
+                  value={userRecipeTagFilter}
+                  onChange={(e) => setUserRecipeTagFilter(e.target.value)}
+                />
+              </div>
+
+              {filteredUserRecipes.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-6">
+                  {filteredUserRecipes.map(recipe => (
+                    <Card key={recipe.id} className="cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col" onClick={() => onViewUserRecipe(recipe)}>
+                      <CardContent className='p-3 flex items-center gap-3'>
+                        <div className="relative w-12 h-12 aspect-square shrink-0">
+                          {recipe.photoDataUri ? (
+                            <Image src={recipe.photoDataUri} alt={recipe.title} layout="fill" objectFit="cover" className="rounded-md" />
+                          ) : (
+                            <div className="w-full h-full bg-secondary flex items-center justify-center rounded-md">
+                              <Utensils className="h-6 w-6 text-muted-foreground" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex flex-col overflow-hidden">
+                          <CardTitle className='text-base font-semibold truncate'>{recipe.title}</CardTitle>
+                          <div className="flex flex-wrap items-center gap-1 mt-1">
+                            <Badge variant="outline" className="text-xs">{recipe.category}</Badge>
+                            <Badge variant="outline" className="flex items-center gap-1 text-xs"><Clock className="h-3 w-3" />{recipe.preparationTime} min</Badge>
+                            {recipe.tags && recipe.tags.split(',').map(tag => tag.trim() && (
+                              <Badge key={tag.trim()} variant="secondary" className="text-xs flex items-center gap-1"><Tag className="h-3 w-3" />{tag.trim()}</Badge>
+                            ))}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <p className='text-muted-foreground mb-6'>{userRecipes.length > 0 ? "Aucune recette ne correspond à votre filtre." : "Vous n'avez pas encore créé de recette."}</p>
+              )}
+
+              <Button onClick={() => openUserRecipeForm()}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Créer ma recette
+              </Button>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
+
+      {/* --- DBARATI SECTION --- */}
+      <Accordion type="single" collapsible className="w-full">
+        <AccordionItem value="dbarati">
+          <AccordionTrigger>
+            <div className="flex justify-center items-center gap-3 py-2 text-primary">
+              <ClipboardList className="h-8 w-8 text-primary" />
+              <h2 className='text-3xl font-bold'>Dbarati</h2>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className='py-4 px-3 sm:px-5 rounded-2xl bg-gradient-to-br from-indigo-50/50 via-white to-rose-50/50 dark:from-indigo-950/20 dark:via-background dark:to-rose-950/20 border border-border/40 shadow-xl backdrop-blur-sm'>
+              <div className='flex flex-col items-center mb-4'>
+                <p className='text-muted-foreground text-center max-w-2xl text-xs sm:text-sm leading-relaxed'>
+                  <span className="font-semibold text-primary">Dbarati</span> : Vos idées de repas et vos habitudes culinaires.
+                </p>
+                <div className="flex items-center gap-1.5 mt-1">
+                  <Badge variant="outline" className="text-[10px] sm:text-xs font-bold bg-white/50 dark:bg-zinc-900/50 text-muted-foreground/80 border-primary/10 px-2.5 py-0.5 rounded-full">
+                    {dbarati.length} {dbarati.length > 1 ? 'idées' : 'idée'} enregistrée{dbarati.length > 1 ? 's' : ''}
+                  </Badge>
+                </div>
+              </div>
+
               {/* Random Wheel UI - Compact */}
               {(() => {
                 const ONE_MONTH = 30 * 24 * 60 * 60 * 1000;
