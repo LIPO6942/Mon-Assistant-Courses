@@ -128,6 +128,9 @@ export default function BasketSheet({
   });
 
   const purchasedItemCount = basket.filter(item => item.purchased).length;
+  const purchasedTotal = basket.reduce((total, item) => 
+    item.purchased ? total + item.price * item.quantity : total, 0
+  );
 
   const handleClickValidate = () => {
     setSelectedStore('');
@@ -271,6 +274,10 @@ export default function BasketSheet({
 
         {basket.length > 0 && (
           <SheetFooter className='pt-4 px-4 border-t flex-col gap-2 w-full'>
+            <div className="flex justify-between items-center w-full border-b border-dashed pb-2 mb-1">
+              <span className="text-base font-medium text-muted-foreground">Total achetés</span>
+              <span className="text-xl font-semibold text-primary/80">{purchasedTotal.toFixed(3)} DT</span>
+            </div>
             <div className="flex justify-between items-center w-full">
               <span className="text-lg font-semibold text-muted-foreground">Total à Payer</span>
               <span className="text-2xl font-bold text-primary">{basketTotal.toFixed(3)} DT</span>
