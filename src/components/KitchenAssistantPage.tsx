@@ -258,8 +258,17 @@ export default function KitchenAssistantPage() {
   useEffect(() => { if (isDataLoaded) { try { db.set('savedRecipes', savedRecipes); } catch (e) { console.error(e); } if (userUid) saveSavedRecipes(userUid, savedRecipes); } }, [savedRecipes, isDataLoaded, userUid]);
   useEffect(() => { if (isDataLoaded) { try { db.set('userRecipes', userRecipes); } catch (e) { console.error(e); } if (userUid) saveUserRecipes(userUid, userRecipes); } }, [userRecipes, isDataLoaded, userUid]);
   useEffect(() => { if (isDataLoaded) { try { db.set('purchaseHistory', purchaseHistory); } catch (e) { console.error(e); } if (userUid) savePurchaseHistory(userUid, purchaseHistory); } }, [purchaseHistory, isDataLoaded, userUid]);
-  useEffect(() => { if (isDataLoaded) { try { db.set('budget', initialBudget); } catch (e) { console.error(e); } if (userUid) saveBudget(userUid, initialBudget, totalSpent); } }, [initialBudget, isDataLoaded, userUid]);
-  useEffect(() => { if (isDataLoaded) { try { db.set('totalSpent', totalSpent); } catch (e) { console.error(e); } if (userUid) saveBudget(userUid, initialBudget, totalSpent); } }, [totalSpent, isDataLoaded, userUid]);
+  useEffect(() => { 
+    if (isDataLoaded) { 
+      try { 
+        db.set('budget', initialBudget); 
+        db.set('totalSpent', totalSpent);
+      } catch (e) { 
+        console.error(e); 
+      } 
+      if (userUid) saveBudget(userUid, initialBudget, totalSpent); 
+    } 
+  }, [initialBudget, totalSpent, isDataLoaded, userUid]);
   useEffect(() => { if (isDataLoaded) { try { db.set('healthConditions', healthConditions); } catch (e) { console.error(e); } if (userUid) saveHealthConditions(userUid, healthConditions); } }, [healthConditions, isDataLoaded, userUid]);
   useEffect(() => { if (isDataLoaded) { try { db.set('dbarati', dbarati); } catch (e) { console.error(e); } } }, [dbarati, isDataLoaded]);
 
@@ -936,8 +945,7 @@ export default function KitchenAssistantPage() {
     const title = `Recette: ${recipe.title}`;
 
     // Create a copy of the recipe WITHOUT the photo to keep the URL short
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { photoDataUri, ...recipeWithoutPhoto } = recipe;
+    const { photoDataUri: _photoDataUri, ...recipeWithoutPhoto } = recipe;
 
     // Generate shareable URL with recipe data (Deep Linking)
     const encodedRecipe = encodeRecipe(recipeWithoutPhoto as UserRecipe);

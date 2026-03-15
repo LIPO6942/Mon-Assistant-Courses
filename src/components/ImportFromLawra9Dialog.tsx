@@ -147,7 +147,7 @@ export function ImportFromLawra9Dialog({ allIngredients, categories, onUpdatePri
                             />
                             <div className="flex items-start gap-2 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-xs">
                                 <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                                <p>Dans Lawra9, cliquez sur le bouton 🛒 d'un ticket pour copier les données, puis collez-les ici.</p>
+                                <p>Dans Lawra9, cliquez sur le bouton 🛒 d&apos;un ticket pour copier les données, puis collez-les ici.</p>
                             </div>
                         </div>
                     ) : (
@@ -224,7 +224,7 @@ export function ImportFromLawra9Dialog({ allIngredients, categories, onUpdatePri
                                                                     <span className="shrink-0 font-medium text-muted-foreground">Prix identique</span>
                                                                 )}
                                                                 {p.raw.name !== p.match.name && (
-                                                                    <span className="truncate italic text-muted-foreground/70 hidden sm:inline">(Source: "{p.raw.name}")</span>
+                                                                    <span className="truncate italic text-muted-foreground/70 hidden sm:inline">(Source: &quot;{p.raw.name}&quot;)</span>
                                                                 )}
                                                             </>
                                                         ) : (

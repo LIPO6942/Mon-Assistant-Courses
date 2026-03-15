@@ -459,7 +459,7 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
           <DialogHeader>
             <DialogTitle>Recette Partagée Reçue !</DialogTitle>
             <DialogDescription>
-              Vous avez reçu une recette : "{sharedRecipeToView?.title}". Voulez-vous la sauvegarder dans vos recettes ?
+              Vous avez reçu une recette : &quot;{sharedRecipeToView?.title}&quot;. Voulez-vous la sauvegarder dans vos recettes ?
             </DialogDescription>
           </DialogHeader>
           {sharedRecipeToView && (

@@ -541,7 +541,7 @@ export default function MarketPricesView() {
                                 <div className="space-y-3 max-w-sm">
                                     <h3 className="text-2xl font-black tracking-tight">Aucune donnée par magasin</h3>
                                     <p className="text-muted-foreground text-sm font-medium leading-relaxed">
-                                        Pas assez d'informations pour afficher les statistiques par magasin.
+                                        Pas assez d&apos;informations pour afficher les statistiques par magasin.
                                     </p>
                                 </div>
                             </div>

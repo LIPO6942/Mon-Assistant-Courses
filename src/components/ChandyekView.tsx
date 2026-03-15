@@ -42,7 +42,7 @@ function RecipeImage({ src, alt }: { src: string; alt: string }) {
         </div>
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-4">
-        <Badge className="bg-primary text-primary-foreground border-none">Chef's Choice</Badge>
+        <Badge className="bg-primary text-primary-foreground border-none">Chef&apos;s Choice</Badge>
       </div>
     </div>
   );
@@ -81,7 +81,7 @@ export default function ChandyekView({
             <CardTitle className="text-3xl font-bold">Ch3andek?</CardTitle>
           </div>
           <CardDescription>
-            Sélectionnez des ingrédients dans votre garde-manger, puis laissez l'IA vous proposer des recettes créatives !
+            Sélectionnez des ingrédients dans votre garde-manger, puis laissez l&apos;IA vous proposer des recettes créatives !
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -103,7 +103,7 @@ export default function ChandyekView({
               <div className="text-center py-4 text-muted-foreground">
                 <p>Aucun ingrédient sélectionné.</p>
                 <p className="text-sm mt-1">
-                  Allez dans l'onglet "Garde-Manger" et cliquez sur l'icône <BrainCircuit className="inline h-4 w-4 mx-1" /> pour commencer.
+                  Allez dans l&apos;onglet &quot;Garde-Manger&quot; et cliquez sur l&apos;icône <BrainCircuit className="inline h-4 w-4 mx-1" /> pour commencer.
                 </p>
               </div>
             )}
@@ -142,7 +142,7 @@ export default function ChandyekView({
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      L'IA réfléchit...
+                      L&apos;IA réfléchit...
                     </>
                   ) : (
                     <>
@@ -165,7 +165,7 @@ export default function ChandyekView({
 
           {aiSuggestions.length > 0 && (
             <div className="mt-6">
-              <h3 className="font-semibold text-lg mb-3">Recettes suggérées par l'IA :</h3>
+              <h3 className="font-semibold text-lg mb-3">Recettes suggérées par l&apos;IA :</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {aiSuggestions.map((recipe, index) => (
                   <Card key={index} className="flex flex-col bg-secondary/30 overflow-hidden border-primary/20 hover:border-primary/40 transition-colors">
@@ -241,7 +241,7 @@ export default function ChandyekView({
                         onClick={() => onSaveRecipe(recipe)}
                       >
                         <PlusCircle className='h-3 w-3' />
-                        Enregistrer l'idée
+                        Enregistrer l&apos;idée
                       </Button>
                     </CardFooter>
                   </Card>

@@ -308,9 +308,16 @@ export default function RecipesView({
           </AccordionTrigger>
           <AccordionContent>
             <div className='py-4 px-3 sm:px-5 rounded-2xl bg-gradient-to-br from-indigo-50/50 via-white to-rose-50/50 dark:from-indigo-950/20 dark:via-background dark:to-rose-950/20 border border-border/40 shadow-xl backdrop-blur-sm'>
-              <p className='text-muted-foreground mb-4 text-center max-w-2xl mx-auto text-xs sm:text-sm leading-relaxed'>
-                <span className="font-semibold text-primary">Dbarati</span> : Vos idées de repas et vos habitudes culinaires.
-              </p>
+              <div className='flex flex-col items-center mb-4'>
+                <p className='text-muted-foreground text-center max-w-2xl text-xs sm:text-sm leading-relaxed'>
+                  <span className="font-semibold text-primary">Dbarati</span> : Vos idées de repas et vos habitudes culinaires.
+                </p>
+                <div className="flex items-center gap-1.5 mt-1">
+                  <Badge variant="outline" className="text-[10px] sm:text-xs font-bold bg-white/50 dark:bg-zinc-900/50 text-muted-foreground/80 border-primary/10 px-2.5 py-0.5 rounded-full">
+                    {dbarati.length} {dbarati.length > 1 ? 'idées' : 'idée'} enregistrée{dbarati.length > 1 ? 's' : ''}
+                  </Badge>
+                </div>
+              </div>
 
               {/* Random Wheel UI - Compact */}
               {(() => {
@@ -370,7 +377,7 @@ export default function RecipesView({
                             <Loader2 className="h-3.5 w-3.5 animate-spin" /> Un instant...
                           </span>
                         ) : (
-                          <><Dices className="h-3.5 w-3.5 mr-1.5" /> Qu'est-ce qu'on mange ?</>
+                          <><Dices className="h-3.5 w-3.5 mr-1.5" /> Qu&apos;est-ce qu&apos;on mange ?</>
                         )}
                       </Button>
 
@@ -545,7 +552,7 @@ export default function RecipesView({
       </Accordion>
 
       <div className='text-center py-8 px-4 rounded-xl bg-gradient-to-br from-primary/10 via-card to-card border-2 border-primary/20 shadow-lg'>
-        <h2 className='text-2xl font-bold mb-2'>À court d'idées ?</h2>
+        <h2 className='text-2xl font-bold mb-2'>À court d&apos;idées ?</h2>
         <p className='text-muted-foreground mb-4'>Utilisez les filtres pour affiner les suggestions aléatoires !</p>
 
         <div className="flex flex-wrap justify-center gap-4 mb-6">
@@ -657,7 +664,7 @@ export default function RecipesView({
                       </div>
                       {communityPurchases.length > 0 && availabilityPercent < 100 && (
                         <p className="text-[11px] text-muted-foreground mt-1">
-                          {availabilityPercent}% d'ingrédients trouvés sur le marché
+                          {availabilityPercent}% d&apos;ingrédients trouvés sur le marché
                         </p>
                       )}
                     </div>
@@ -684,7 +691,7 @@ export default function RecipesView({
             })}
           </div>
         ) : (
-          filteredDiscoverableRecipes.length === 0 && <p className="text-muted-foreground mt-4 text-sm">Aucune recette ne correspond à vos filtres. Essayez d'en retirer un.</p>
+          filteredDiscoverableRecipes.length === 0 && <p className="text-muted-foreground mt-4 text-sm">Aucune recette ne correspond à vos filtres. Essayez d&apos;en retirer un.</p>
         )}
       </div>
 

@@ -137,7 +137,7 @@ export function BasketShareDialog({
 
                     <TabsContent value="external" className="p-6 pt-2 m-0">
                         <DialogDescription className="mb-4">
-                            Partagez ce lien avec vos amis. En l'ouvrant, ils pourront ajouter vos articles à leur liste.
+                            Partagez ce lien avec vos amis. En l&apos;ouvrant, ils pourront ajouter vos articles à leur liste.
                         </DialogDescription>
 
                         <div className="flex items-center space-x-2 my-4">

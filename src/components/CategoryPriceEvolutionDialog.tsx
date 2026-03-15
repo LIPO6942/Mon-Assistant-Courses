@@ -44,9 +44,9 @@ export default function CategoryPriceEvolutionDialog({
                         <div className="p-6 pt-0">
                             {relevantIngredients.length === 0 ? (
                                 <div className="text-center py-10 text-muted-foreground">
-                                    <p>Aucun historique d'achat pour cette catégorie.</p>
+                                    <p>Aucun historique d&apos;achat pour cette catégorie.</p>
                                     <p className="text-xs mt-1">
-                                        L'historique se remplira au fur et à mesure de vos achats.
+                                        L&apos;historique se remplira au fur et à mesure de vos achats.
                                     </p>
                                 </div>
                             ) : (

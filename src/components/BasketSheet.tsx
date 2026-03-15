@@ -382,7 +382,7 @@ export default function BasketSheet({
           <DialogHeader>
             <DialogTitle>Modifier le prix</DialogTitle>
             <DialogDescription>
-              Ajuster le prix de l'article "{editingPriceItem?.name}" avant de valider.
+              Ajuster le prix de l&apos;article &quot;{editingPriceItem?.name}&quot; avant de valider.
             </DialogDescription>
           </DialogHeader>
           <div className="py-2">

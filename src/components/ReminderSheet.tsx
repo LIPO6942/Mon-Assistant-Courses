@@ -276,7 +276,7 @@ export default function ReminderSheet({ pantry, userId }: ReminderSheetProps) {
                         {/* Date & Time */}
                         <div>
                             <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 block">
-                                Quand prévoyez-vous l'achat ?
+                                Quand prévoyez-vous l&apos;achat ?
                             </label>
                             <div className="grid grid-cols-2 gap-2">
                                 <div>

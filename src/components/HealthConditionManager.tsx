@@ -122,7 +122,7 @@ export default function HealthConditionManager({
 
       {/* Conditions Column */}
       <Card>
-        <CardHeader><CardTitle>Conditions pour "{selectedCategory?.name || '...'}"</CardTitle></CardHeader>
+        <CardHeader><CardTitle>Conditions pour &quot;{selectedCategory?.name || '...'}&quot;</CardTitle></CardHeader>
         <CardContent>
           <ScrollArea className="h-72 pr-4">
             {selectedCategory ? (

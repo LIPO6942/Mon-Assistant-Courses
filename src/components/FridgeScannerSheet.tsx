@@ -149,7 +149,7 @@ export default function FridgeScannerSheet({ onIngredientsIdentified, open, onOp
             Scanner mon frigo
         </SheetTitle>
         <SheetDescription>
-            Utilisez votre caméra ou importez une photo pour que l'IA identifie vos ingrédients.
+            Utilisez votre caméra ou importez une photo pour que l&apos;IA identifie vos ingrédients.
         </SheetDescription>
       </SheetHeader>
       
