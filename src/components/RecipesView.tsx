@@ -6,7 +6,7 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, Shuffle, Dices, Clock, Coins, Utensils, BookUser, Search, Tag, Sparkles, TrendingDown, ClipboardList, Check, Trash2, Plus, ChevronUp, ChevronDown, Loader2 } from 'lucide-react';
+import { PlusCircle, Shuffle, Dices, Clock, Coins, Utensils, BookUser, Search, Tag, Sparkles, TrendingDown, ClipboardList, Check, Trash2, Plus, ChevronUp, ChevronDown, Loader2, X } from 'lucide-react';
 import type { Recipe, UserRecipe, BasketItem, PurchaseHistory, CommunityPurchase, DbaratiItem } from '@/lib/types';
 import { streetFoodOptions } from '@/lib/data';
 import { cn, getProductStatus } from '@/lib/utils';
@@ -403,12 +403,12 @@ export default function RecipesView({
 
                     {/* Filters (Always visible if entrees exist) */}
                     {dbarati.filter(i => i.type === 'entree').length > 0 && (
-                      <div className="flex justify-center gap-2 mb-4">
+                      <div className="flex gap-2 mb-4 overflow-x-auto pb-1.5 no-scrollbar px-1 snap-x scroll-smooth w-full">
                         {(['Toutes', 'Soupe', 'Salade', 'Sauce'] as const).map(filter => (
                           <Badge 
                             key={filter}
                             variant={activeEntreeFilter === filter ? "default" : "outline"}
-                            className="cursor-pointer text-[10px] py-0.5"
+                            className="shrink-0 cursor-pointer text-[10px] py-1 px-3 snap-center"
                             onClick={() => setActiveEntreeFilter(filter)}
                           >
                             {filter}
@@ -477,6 +477,106 @@ export default function RecipesView({
                   </div>
                 )}
               </div>
+
+              {/* Random Wheel UI - Compact */}
+              {(() => {
+                const ONE_MONTH = 30 * 24 * 60 * 60 * 1000;
+                const candidates = dbarati.filter(item => {
+                  if (item.type === 'entree') return false;
+                  if (!item.done) return true;
+                  if (item.lastPreparedAt) {
+                    return (Date.now() - new Date(item.lastPreparedAt).getTime()) > ONE_MONTH;
+                  }
+                  return true;
+                });
+
+                if (candidates.length < 2) return null;
+
+                const handleDbaratiSpin = () => {
+                  if (isDbaratiSpinning) return;
+                  setIsDbaratiSpinning(true);
+                  setDbaratiSelectedItem(null);
+
+                  const foodEmojis = ['🍳', '🥗', '🍝', '🍕', '🍱', '🍔', '🥙', '🍛', '🥘', '🍲', '🍜', '🍚', '🍗', '🐟', '🍤'];
+
+                  dbaratiIntervalRef.current = setInterval(() => {
+                    const randomIdx = Math.floor(Math.random() * candidates.length);
+                    setDbaratiDisplayedItem(candidates[randomIdx].text);
+                  }, 80);
+
+                  setTimeout(() => {
+                    if (dbaratiIntervalRef.current) {
+                      clearInterval(dbaratiIntervalRef.current);
+                      dbaratiIntervalRef.current = null;
+                    }
+                    const finalChoice = candidates[Math.floor(Math.random() * candidates.length)];
+                    setDbaratiSelectedItem(finalChoice.text);
+                    setDbaratiSelectedEmoji(foodEmojis[Math.floor(Math.random() * foodEmojis.length)]);
+                    setDbaratiDisplayedItem(null);
+                    setIsDbaratiSpinning(false);
+                  }, 2500);
+                };
+
+                return (
+                  <div className="relative mb-6 p-3 rounded-2xl bg-primary/5 border border-primary/10 overflow-hidden text-center group">
+                    <div className="absolute -top-12 -right-12 w-20 h-20 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-all duration-700" />
+                    <div className="absolute -bottom-12 -left-12 w-20 h-20 bg-rose-400/10 rounded-full blur-2xl group-hover:bg-rose-400/20 transition-all duration-700" />
+
+                    <div className="flex flex-col items-center gap-2">
+                      <Button
+                        onClick={handleDbaratiSpin}
+                        disabled={isDbaratiSpinning}
+                        size="sm"
+                        className={cn(
+                          "rounded-full px-4 py-1.5 h-8 font-bold shadow-sm transition-all duration-300 text-xs",
+                          isDbaratiSpinning ? "bg-muted cursor-not-allowed" : "bg-gradient-to-r from-primary to-indigo-600 hover:shadow-primary/20 hover:scale-105 active:scale-95"
+                        )}
+                      >
+                        {isDbaratiSpinning ? (
+                          <span className="flex items-center gap-1.5">
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" /> Un instant...
+                          </span>
+                        ) : (
+                          <><Dices className="h-3.5 w-3.5 mr-1.5" /> Qu&apos;est-ce qu&apos;on mange ?</>
+                        )}
+                      </Button>
+
+                      <div className="h-8 flex flex-col justify-center items-center">
+                        {isDbaratiSpinning && (
+                          <div className="animate-in zoom-in-75 duration-200">
+                            <p className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-indigo-600 truncate max-w-[240px]">
+                              {dbaratiDisplayedItem}
+                            </p>
+                          </div>
+                        )}
+                        {!isDbaratiSpinning && dbaratiSelectedItem && (
+                          <div className="animate-in fade-in-50 zoom-in-95 duration-500 text-center">
+                            <div className="flex items-center justify-center gap-3">
+                              <p className="text-xl font-black text-primary drop-shadow-sm flex items-center gap-2">
+                                {dbaratiSelectedItem} <span className="text-lg animate-bounce">{dbaratiSelectedEmoji}</span>
+                              </p>
+                              <Button
+                                size="icon"
+                                variant="outline"
+                                className="h-8 w-8 rounded-full border-primary/20 text-primary hover:bg-primary hover:text-white transition-all shadow-sm"
+                                title="Marquer comme préparé"
+                                onClick={() => {
+                                  // Find item among all, not just candidates, to safely toggle
+                                  const normalizedSelected = normalizeString(dbaratiSelectedItem || '');
+                                  const item = candidates.find(c => normalizeString(c.text) === normalizedSelected);
+                                  if (item) onToggleDbaratiItem(item.id);
+                                }}
+                              >
+                                <Check className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Plats Section (Collapsible) */}
               <div className="max-w-4xl mx-auto mb-6 bg-white/30 dark:bg-zinc-900/10 rounded-2xl p-4 border border-border/20 shadow-sm">
@@ -547,12 +647,12 @@ export default function RecipesView({
 
                     {/* Filters (Always visible if plats exist) */}
                     {dbarati.filter(i => i.type !== 'entree').length > 0 && (
-                      <div className="flex justify-center gap-2 mb-4 flex-wrap">
+                      <div className="flex gap-2 mb-4 overflow-x-auto pb-1.5 no-scrollbar px-1 snap-x scroll-smooth w-full">
                         {(['Tous', 'Pates', 'Sauces', 'Sandwich', 'Autres'] as const).map(filter => (
                           <Badge
                             key={filter}
                             variant={activePlatFilter === filter ? "default" : "outline"}
-                            className="cursor-pointer text-[10px] py-0.5"
+                            className="shrink-0 cursor-pointer text-[10px] py-1 px-3 snap-center"
                             onClick={() => setActivePlatFilter(filter)}
                           >
                             {filter}
@@ -602,31 +702,38 @@ export default function RecipesView({
                                   if (longPressTimer.current) clearTimeout(longPressTimer.current);
                                 }}
                               >
-                                {/* Long-press tag picker overlay */}
+                                {/* Long-press native tag picker overlay */}
                                 {isLongPressed && (
-                                  <div className="absolute inset-0 z-10 bg-background/95 rounded-xl flex flex-col items-center justify-center gap-2 p-3 animate-in fade-in duration-150">
-                                    <p className="text-xs font-bold text-muted-foreground mb-1">Changer le tag de ce plat :</p>
-                                    <div className="flex flex-wrap gap-1.5 justify-center">
-                                      {(['Pates', 'Sauces', 'Sandwich', 'Autres'] as const).map(tag => (
-                                        <Badge
-                                          key={tag}
-                                          variant={item.platTag === tag ? "default" : "outline"}
-                                          className="cursor-pointer text-[10px] py-1 px-2"
-                                          onClick={() => {
-                                            onUpdateDbaratiItemPlatTag(item.id, tag);
+                                  <div className="absolute inset-0 z-10 bg-background/95 rounded-xl flex items-center justify-between px-4 animate-in fade-in duration-150 border-2 border-primary/20 shadow-sm">
+                                    <div className="flex items-center gap-2 flex-1">
+                                      <Tag className="h-3.5 w-3.5 text-primary" />
+                                      <select 
+                                        className="w-full bg-transparent text-sm font-bold text-primary outline-none focus:ring-0 cursor-pointer appearance-none"
+                                        value={item.platTag || ''}
+                                        onChange={(e) => {
+                                          if(e.target.value) {
+                                            onUpdateDbaratiItemPlatTag(item.id, e.target.value as any);
                                             setLongPressItemId(null);
-                                          }}
-                                        >
-                                          {tag}
-                                        </Badge>
-                                      ))}
+                                          }
+                                        }}
+                                        onBlur={() => setLongPressItemId(null)}
+                                        autoFocus
+                                      >
+                                        <option value="" disabled hidden>Choisir un tag...</option>
+                                        <option value="Pates">Pâtes</option>
+                                        <option value="Sauces">Sauces</option>
+                                        <option value="Sandwich">Sandwich</option>
+                                        <option value="Autres">Autres</option>
+                                      </select>
                                     </div>
-                                    <button
-                                      className="text-[10px] text-muted-foreground mt-1 underline"
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon" 
+                                      className="h-8 w-8 rounded-full text-muted-foreground hover:bg-muted"
                                       onClick={() => setLongPressItemId(null)}
                                     >
-                                      Annuler
-                                    </button>
+                                      <X className="h-4 w-4" />
+                                    </Button>
                                   </div>
                                 )}
 
@@ -720,105 +827,6 @@ export default function RecipesView({
                   </div>
                 )}
               </div>
-
-              {/* Random Wheel UI - Compact */}
-              {(() => {
-                const ONE_MONTH = 30 * 24 * 60 * 60 * 1000;
-                const candidates = dbarati.filter(item => {
-                  if (item.type === 'entree') return false;
-                  if (!item.done) return true;
-                  if (item.lastPreparedAt) {
-                    return (Date.now() - new Date(item.lastPreparedAt).getTime()) > ONE_MONTH;
-                  }
-                  return true;
-                });
-
-                if (candidates.length < 2) return null;
-
-                const handleDbaratiSpin = () => {
-                  if (isDbaratiSpinning) return;
-                  setIsDbaratiSpinning(true);
-                  setDbaratiSelectedItem(null);
-
-                  const foodEmojis = ['🍳', '🥗', '🍝', '🍕', '🍱', '🍔', '🥙', '🍛', '🥘', '🍲', '🍜', '🍚', '🍗', '🐟', '🍤'];
-
-                  dbaratiIntervalRef.current = setInterval(() => {
-                    const randomIdx = Math.floor(Math.random() * candidates.length);
-                    setDbaratiDisplayedItem(candidates[randomIdx].text);
-                  }, 80);
-
-                  setTimeout(() => {
-                    if (dbaratiIntervalRef.current) {
-                      clearInterval(dbaratiIntervalRef.current);
-                      dbaratiIntervalRef.current = null;
-                    }
-                    const finalChoice = candidates[Math.floor(Math.random() * candidates.length)];
-                    setDbaratiSelectedItem(finalChoice.text);
-                    setDbaratiSelectedEmoji(foodEmojis[Math.floor(Math.random() * foodEmojis.length)]);
-                    setDbaratiDisplayedItem(null);
-                    setIsDbaratiSpinning(false);
-                  }, 2500);
-                };
-
-                return (
-                  <div className="relative mb-4 p-3 rounded-2xl bg-primary/5 border border-primary/10 overflow-hidden text-center group">
-                    <div className="absolute -top-12 -right-12 w-20 h-20 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-all duration-700" />
-                    <div className="absolute -bottom-12 -left-12 w-20 h-20 bg-rose-400/10 rounded-full blur-2xl group-hover:bg-rose-400/20 transition-all duration-700" />
-
-                    <div className="flex flex-col items-center gap-2">
-                      <Button
-                        onClick={handleDbaratiSpin}
-                        disabled={isDbaratiSpinning}
-                        size="sm"
-                        className={cn(
-                          "rounded-full px-4 py-1.5 h-8 font-bold shadow-sm transition-all duration-300 text-xs",
-                          isDbaratiSpinning ? "bg-muted cursor-not-allowed" : "bg-gradient-to-r from-primary to-indigo-600 hover:shadow-primary/20 hover:scale-105 active:scale-95"
-                        )}
-                      >
-                        {isDbaratiSpinning ? (
-                          <span className="flex items-center gap-1.5">
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" /> Un instant...
-                          </span>
-                        ) : (
-                          <><Dices className="h-3.5 w-3.5 mr-1.5" /> Qu&apos;est-ce qu&apos;on mange ?</>
-                        )}
-                      </Button>
-
-                      <div className="h-8 flex flex-col justify-center items-center">
-                        {isDbaratiSpinning && (
-                          <div className="animate-in zoom-in-75 duration-200">
-                            <p className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-indigo-600 truncate max-w-[240px]">
-                              {dbaratiDisplayedItem}
-                            </p>
-                          </div>
-                        )}
-                        {!isDbaratiSpinning && dbaratiSelectedItem && (
-                          <div className="animate-in fade-in-50 zoom-in-95 duration-500 text-center">
-                            <div className="flex items-center justify-center gap-3">
-                              <p className="text-xl font-black text-primary drop-shadow-sm flex items-center gap-2">
-                                {dbaratiSelectedItem} <span className="text-lg animate-bounce">{dbaratiSelectedEmoji}</span>
-                              </p>
-                              <Button
-                                size="icon"
-                                variant="outline"
-                                className="h-8 w-8 rounded-full border-primary/20 text-primary hover:bg-primary hover:text-white transition-all shadow-sm"
-                                title="Marquer comme préparé"
-                                onClick={() => {
-                                  const normalizedSelected = normalizeString(dbaratiSelectedItem || '');
-                                  const item = candidates.find(c => normalizeString(c.text) === normalizedSelected);
-                                  if (item) onToggleDbaratiItem(item.id);
-                                }}
-                              >
-                                <Check className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })()}
 
 
 
