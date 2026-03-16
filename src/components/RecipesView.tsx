@@ -39,11 +39,12 @@ interface RecipesViewProps {
   basket: BasketItem[];
   purchaseHistory: PurchaseHistory;
   dbarati: DbaratiItem[];
-  onAddDbaratiItem: (text: string, type?: 'plat' | 'entree', tag?: 'Soupe' | 'Salade' | 'Sauce') => void;
+  onAddDbaratiItem: (text: string, type?: 'plat' | 'entree', tag?: 'Soupe' | 'Salade' | 'Sauce', platTag?: 'Pates' | 'Sauces' | 'Sandwich' | 'Autres') => void;
   onToggleDbaratiItem: (id: string) => void;
   onDeleteDbaratiItem: (id: string) => void;
   onUpdateDbaratiItem: (id: string, text: string) => void;
   onMoveDbaratiItem: (id: string, direction: 'up' | 'down') => void;
+  onUpdateDbaratiItemPlatTag: (id: string, platTag: 'Pates' | 'Sauces' | 'Sandwich' | 'Autres') => void;
 }
 
 export default function RecipesView({
@@ -61,6 +62,7 @@ export default function RecipesView({
   onDeleteDbaratiItem,
   onUpdateDbaratiItem,
   onMoveDbaratiItem,
+  onUpdateDbaratiItemPlatTag,
 }: RecipesViewProps) {
   const [suggestedRecipes, setSuggestedRecipes] = useState<Recipe[]>([]);
   const [selectedStreetFood, setSelectedStreetFood] = useState<string | null>(null);
@@ -73,7 +75,6 @@ export default function RecipesView({
   const [filterEconomical, setFilterEconomical] = useState(false);
   const [communityPurchases, setCommunityPurchases] = useState<CommunityPurchase[]>([]);
   const [userRecipeTagFilter, setUserRecipeTagFilter] = useState('');
-  const [newDbaratiText, setNewDbaratiText] = useState('');
   const [isDbaratiSpinning, setIsDbaratiSpinning] = useState(false);
   const [dbaratiDisplayedItem, setDbaratiDisplayedItem] = useState<string | null>(null);
   const [dbaratiSelectedItem, setDbaratiSelectedItem] = useState<string | null>(null);
@@ -84,6 +85,14 @@ export default function RecipesView({
   const [newEntreeTag, setNewEntreeTag] = useState<'Soupe' | 'Salade' | 'Sauce'>('Salade');
   const [activeEntreeFilter, setActiveEntreeFilter] = useState<'Toutes' | 'Soupe' | 'Salade' | 'Sauce'>('Toutes');
   const [isEntreesExpanded, setIsEntreesExpanded] = useState(false);
+
+  // Plats state
+  const [newPlatText, setNewPlatText] = useState('');
+  const [newPlatTag, setNewPlatTag] = useState<'Pates' | 'Sauces' | 'Sandwich' | 'Autres'>('Autres');
+  const [activePlatFilter, setActivePlatFilter] = useState<'Tous' | 'Pates' | 'Sauces' | 'Sandwich' | 'Autres'>('Tous');
+  const [isPlatsExpanded, setIsPlatsExpanded] = useState(true);
+  const [longPressItemId, setLongPressItemId] = useState<string | null>(null);
+  const longPressTimer = useRef<NodeJS.Timeout | null>(null);
 
   // Listen to community purchases for recipe cost calculations
   useEffect(() => {
@@ -469,6 +478,249 @@ export default function RecipesView({
                 )}
               </div>
 
+              {/* Plats Section (Collapsible) */}
+              <div className="max-w-4xl mx-auto mb-6 bg-white/30 dark:bg-zinc-900/10 rounded-2xl p-4 border border-border/20 shadow-sm">
+                <button
+                  onClick={() => setIsPlatsExpanded(!isPlatsExpanded)}
+                  className="w-full flex justify-between items-center py-2 text-sm font-semibold text-muted-foreground hover:text-primary transition-colors focus:outline-none"
+                >
+                  <span className="flex items-center gap-2">
+                    <Utensils className="h-4 w-4" /> Plats
+                    <Badge variant="outline" className="text-[10px] py-0 px-1.5 h-4 ml-2">
+                      {dbarati.filter(i => i.type !== 'entree').length}
+                    </Badge>
+                  </span>
+                  {isPlatsExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </button>
+
+                {isPlatsExpanded && (
+                  <div className="animate-in slide-in-from-top-2 fade-in duration-300 pt-4">
+
+                    {/* Add new Plat - Multiline Layout */}
+                    <div className="max-w-md mx-auto mb-6 scale-95 origin-top">
+                      <form
+                        className="flex flex-col gap-3"
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          if (newPlatText.trim()) {
+                            onAddDbaratiItem(newPlatText, 'plat', undefined, newPlatTag);
+                            setNewPlatText('');
+                          }
+                        }}
+                      >
+                        <Input
+                          placeholder="Un plat ? Couscous, Pasta..."
+                          className="rounded-xl h-10 text-sm border-primary/20 bg-background/50 w-full"
+                          value={newPlatText}
+                          onChange={(e) => setNewPlatText(e.target.value)}
+                        />
+
+                        {newPlatText.length > 0 && (
+                          <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                            <div className="flex border border-primary/20 rounded-xl overflow-hidden shadow-sm h-10 flex-1">
+                              {(['Pates', 'Sauces', 'Sandwich', 'Autres'] as const).map(tag => (
+                                <button
+                                  key={tag}
+                                  type="button"
+                                  className={cn(
+                                    "px-2 text-[10px] font-medium transition-colors border-r border-primary/10 last:border-r-0 hover:bg-primary/10 flex-1",
+                                    newPlatTag === tag ? "bg-primary/10 text-primary font-bold" : "bg-card text-muted-foreground"
+                                  )}
+                                  onClick={() => setNewPlatTag(tag)}
+                                >
+                                  {tag}
+                                </button>
+                              ))}
+                            </div>
+                            <Button
+                              type="submit"
+                              size="icon"
+                              className="h-10 w-10 rounded-xl shrink-0"
+                              disabled={!newPlatText.trim()}
+                            >
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        )}
+                      </form>
+                    </div>
+
+                    {/* Filters (Always visible if plats exist) */}
+                    {dbarati.filter(i => i.type !== 'entree').length > 0 && (
+                      <div className="flex justify-center gap-2 mb-4 flex-wrap">
+                        {(['Tous', 'Pates', 'Sauces', 'Sandwich', 'Autres'] as const).map(filter => (
+                          <Badge
+                            key={filter}
+                            variant={activePlatFilter === filter ? "default" : "outline"}
+                            className="cursor-pointer text-[10px] py-0.5"
+                            onClick={() => setActivePlatFilter(filter)}
+                          >
+                            {filter}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Plats List */}
+                    {dbarati.filter(i => i.type !== 'entree').length > 0 ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-4xl mx-auto scale-95 origin-top">
+                        {[...dbarati]
+                          .filter(i => i.type !== 'entree')
+                          .filter(i => activePlatFilter === 'Tous' || i.platTag === activePlatFilter)
+                          .sort((a, b) => Number(a.done) - Number(b.done))
+                          .map((item, index) => {
+                            const normalizedItemText = normalizeString(item.text);
+                            const matchedRecipe = userRecipes.find(r => normalizeString(r.title) === normalizedItemText);
+                            const isLongPressed = longPressItemId === item.id;
+
+                            return (
+                              <div
+                                key={item.id}
+                                className={cn(
+                                  "relative p-3 rounded-xl border transition-all duration-300 group flex flex-col",
+                                  item.done
+                                    ? "bg-muted/40 border-border/40 opacity-70 scale-[0.98]"
+                                    : "bg-white dark:bg-card border-border/60 hover:border-primary/40 hover:shadow-lg"
+                                )}
+                                onMouseDown={() => {
+                                  longPressTimer.current = setTimeout(() => {
+                                    setLongPressItemId(item.id);
+                                  }, 500);
+                                }}
+                                onMouseUp={() => {
+                                  if (longPressTimer.current) clearTimeout(longPressTimer.current);
+                                }}
+                                onMouseLeave={() => {
+                                  if (longPressTimer.current) clearTimeout(longPressTimer.current);
+                                }}
+                                onTouchStart={() => {
+                                  longPressTimer.current = setTimeout(() => {
+                                    setLongPressItemId(item.id);
+                                  }, 500);
+                                }}
+                                onTouchEnd={() => {
+                                  if (longPressTimer.current) clearTimeout(longPressTimer.current);
+                                }}
+                              >
+                                {/* Long-press tag picker overlay */}
+                                {isLongPressed && (
+                                  <div className="absolute inset-0 z-10 bg-background/95 rounded-xl flex flex-col items-center justify-center gap-2 p-3 animate-in fade-in duration-150">
+                                    <p className="text-xs font-bold text-muted-foreground mb-1">Changer le tag de ce plat :</p>
+                                    <div className="flex flex-wrap gap-1.5 justify-center">
+                                      {(['Pates', 'Sauces', 'Sandwich', 'Autres'] as const).map(tag => (
+                                        <Badge
+                                          key={tag}
+                                          variant={item.platTag === tag ? "default" : "outline"}
+                                          className="cursor-pointer text-[10px] py-1 px-2"
+                                          onClick={() => {
+                                            onUpdateDbaratiItemPlatTag(item.id, tag);
+                                            setLongPressItemId(null);
+                                          }}
+                                        >
+                                          {tag}
+                                        </Badge>
+                                      ))}
+                                    </div>
+                                    <button
+                                      className="text-[10px] text-muted-foreground mt-1 underline"
+                                      onClick={() => setLongPressItemId(null)}
+                                    >
+                                      Annuler
+                                    </button>
+                                  </div>
+                                )}
+
+                                <div className="flex items-start gap-2.5">
+                                  <Checkbox
+                                    id={`dbarati-${item.id}`}
+                                    checked={item.done}
+                                    onCheckedChange={() => onToggleDbaratiItem(item.id)}
+                                    className="h-5 w-5 rounded-md border-2 border-primary/10 data-[state=checked]:bg-primary data-[state=checked]:border-primary shrink-0 mt-0.5"
+                                  />
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                      <label
+                                        htmlFor={`dbarati-${item.id}`}
+                                        className={cn(
+                                          "text-sm font-bold cursor-pointer transition-all truncate",
+                                          (() => {
+                                            if (!item.done || !item.lastPreparedAt) return "text-foreground";
+                                            const daysSince = (Date.now() - new Date(item.lastPreparedAt).getTime()) / (1000 * 60 * 60 * 24);
+                                            if (daysSince <= 7) return "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 px-1.5 py-0.5 rounded";
+                                            if (daysSince <= 15) return "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 px-1.5 py-0.5 rounded";
+                                            if (daysSince <= 30) return "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 px-1.5 py-0.5 rounded";
+                                            return "text-muted-foreground";
+                                          })()
+                                        )}
+                                      >
+                                        {item.text}
+                                      </label>
+                                      {item.platTag && (
+                                        <Badge variant="secondary" className="text-[8px] px-1 py-0 h-3 font-medium opacity-70 shrink-0">
+                                          {item.platTag}
+                                        </Badge>
+                                      )}
+                                      {matchedRecipe && (
+                                        <Badge
+                                          variant="secondary"
+                                          className="h-4 px-1 text-[8px] font-black uppercase tracking-tighter cursor-pointer hover:bg-primary hover:text-white transition-colors"
+                                          onClick={() => onViewUserRecipe(matchedRecipe)}
+                                        >
+                                          📖 Recette
+                                        </Badge>
+                                      )}
+                                    </div>
+
+                                    <div className="flex items-center gap-2 mt-1">
+                                      {(item.prepCount || 0) > 0 && (
+                                        <span className="bg-primary/5 text-primary px-1.5 py-0 rounded-full text-[9px] font-bold">
+                                          {item.prepCount}x
+                                        </span>
+                                      )}
+                                      {item.lastPreparedAt && (
+                                        <span className="text-[9px] text-muted-foreground italic truncate">
+                                          {new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(new Date(item.lastPreparedAt))}
+                                          <span className="opacity-70 ml-1">
+                                            (il y a {Math.floor((Date.now() - new Date(item.lastPreparedAt).getTime()) / (1000 * 60 * 60 * 24))} j)
+                                          </span>
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-7 w-7 rounded-md text-muted-foreground hover:text-primary"
+                                      onClick={() => onMoveDbaratiItem(item.id, 'up')}
+                                      disabled={index === 0}
+                                    >
+                                      <ChevronUp className="h-3.5 w-3.5" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-7 w-7 rounded-md text-muted-foreground hover:text-destructive"
+                                      onClick={() => onDeleteDbaratiItem(item.id)}
+                                    >
+                                      <Trash2 className="h-3.5 w-3.5" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                      </div>
+                    ) : (
+                      <div className="text-center py-4 rounded-xl border border-dashed border-border/40 bg-muted/5 scale-95">
+                        <p className='text-muted-foreground font-medium text-[11px]'>Aucun plat ajouté.</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
               {/* Random Wheel UI - Compact */}
               {(() => {
                 const ONE_MONTH = 30 * 24 * 60 * 60 * 1000;
@@ -480,7 +732,7 @@ export default function RecipesView({
                   }
                   return true;
                 });
-                
+
                 if (candidates.length < 2) return null;
 
                 const handleDbaratiSpin = () => {
@@ -512,7 +764,7 @@ export default function RecipesView({
                   <div className="relative mb-4 p-3 rounded-2xl bg-primary/5 border border-primary/10 overflow-hidden text-center group">
                     <div className="absolute -top-12 -right-12 w-20 h-20 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-all duration-700" />
                     <div className="absolute -bottom-12 -left-12 w-20 h-20 bg-rose-400/10 rounded-full blur-2xl group-hover:bg-rose-400/20 transition-all duration-700" />
-                    
+
                     <div className="flex flex-col items-center gap-2">
                       <Button
                         onClick={handleDbaratiSpin}
@@ -568,135 +820,7 @@ export default function RecipesView({
                 );
               })()}
 
-              {/* Add new item - Stylized & Compact */}
-              <div className="max-w-md mx-auto mb-6">
-                <form
-                  className="relative group mb-6"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    if (newDbaratiText.trim()) {
-                      onAddDbaratiItem(newDbaratiText, 'plat');
-                      setNewDbaratiText('');
-                    }
-                  }}
-                >
-                  <Input
-                    placeholder="Une envie ? Couscous, Pasta..."
-                    className="rounded-xl h-11 pl-4 pr-12 text-sm border-primary/20 focus-visible:ring-primary/30 shadow-inner bg-background/50 backdrop-blur-sm transition-all"
-                    value={newDbaratiText}
-                    onChange={(e) => setNewDbaratiText(e.target.value)}
-                  />
-                  <Button 
-                    type="submit" 
-                    size="icon" 
-                    className="absolute right-1 top-1 h-9 w-9 rounded-lg shadow-sm" 
-                    disabled={!newDbaratiText.trim()}
-                  >
-                    <Plus className="h-5 w-5" />
-                  </Button>
-                </form>
-              </div>
 
-              {/* List - Premium & Compact Cards (Plats only) */}
-              {dbarati.filter(i => i.type !== 'entree').length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-4xl mx-auto mb-6">
-                  {[...dbarati].filter(i => i.type !== 'entree').sort((a, b) => Number(a.done) - Number(b.done)).map((item, index) => {
-                    const normalizedItemText = normalizeString(item.text);
-                    const matchedRecipe = userRecipes.find(r => normalizeString(r.title) === normalizedItemText);
-                    
-                    return (
-                      <div
-                        key={item.id}
-                        className={cn(
-                          "relative p-3 rounded-xl border transition-all duration-300 group flex flex-col",
-                          item.done 
-                            ? "bg-muted/40 border-border/40 opacity-70 scale-[0.98]" 
-                            : "bg-white dark:bg-card border-border/60 hover:border-primary/40 hover:shadow-lg"
-                        )}
-                      >
-                        <div className="flex items-start gap-2.5">
-                          <Checkbox
-                            id={`dbarati-${item.id}`}
-                            checked={item.done}
-                            onCheckedChange={() => onToggleDbaratiItem(item.id)}
-                            className="h-5 w-5 rounded-md border-2 border-primary/10 data-[state=checked]:bg-primary data-[state=checked]:border-primary shrink-0 mt-0.5"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <label
-                                htmlFor={`dbarati-${item.id}`}
-                                className={cn(
-                                  "text-sm font-bold cursor-pointer transition-all truncate",
-                                  (() => {
-                                    if (!item.done || !item.lastPreparedAt) return "text-foreground";
-                                    const daysSince = (Date.now() - new Date(item.lastPreparedAt).getTime()) / (1000 * 60 * 60 * 24);
-                                    if (daysSince <= 7) return "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 px-1.5 py-0.5 rounded";
-                                    if (daysSince <= 15) return "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 px-1.5 py-0.5 rounded";
-                                    if (daysSince <= 30) return "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 px-1.5 py-0.5 rounded";
-                                    return "text-muted-foreground";
-                                  })()
-                                )}
-                              >
-                                {item.text}
-                              </label>
-                              {matchedRecipe && (
-                                <Badge 
-                                  variant="secondary" 
-                                  className="h-4 px-1 text-[8px] font-black uppercase tracking-tighter cursor-pointer hover:bg-primary hover:text-white transition-colors"
-                                  onClick={() => onViewUserRecipe(matchedRecipe)}
-                                >
-                                  📖 Recette
-                                </Badge>
-                              )}
-                            </div>
-                            
-                            <div className="flex items-center gap-2 mt-1">
-                              {(item.prepCount || 0) > 0 && (
-                                <span className="bg-primary/5 text-primary px-1.5 py-0 rounded-full text-[9px] font-bold">
-                                  {item.prepCount}x
-                                </span>
-                              )}
-                              {item.lastPreparedAt && (
-                                <span className="text-[9px] text-muted-foreground italic truncate">
-                                  {new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(new Date(item.lastPreparedAt))}
-                                  <span className="opacity-70 ml-1">
-                                    (il y a {Math.floor((Date.now() - new Date(item.lastPreparedAt).getTime()) / (1000 * 60 * 60 * 24))} j)
-                                  </span>
-                                </span>
-                              )}
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7 rounded-md text-muted-foreground hover:text-primary"
-                              onClick={() => onMoveDbaratiItem(item.id, 'up')}
-                              disabled={index === 0}
-                            >
-                              <ChevronUp className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7 rounded-md text-muted-foreground hover:text-destructive"
-                              onClick={() => onDeleteDbaratiItem(item.id)}
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="text-center py-8 rounded-2xl border-2 border-dashed border-border/40 bg-muted/10 mb-6">
-                  <ClipboardList className="h-8 w-8 text-muted-foreground/20 mx-auto mb-2" />
-                  <p className='text-muted-foreground font-medium text-sm'>Votre carnet de plats est vide.</p>
-                </div>
-              )}
 
 
             </div>

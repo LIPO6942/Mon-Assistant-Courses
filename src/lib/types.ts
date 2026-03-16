@@ -87,6 +87,7 @@ export interface DbaratiItem {
   lastPreparedAt?: string; // ISO date string
   type?: 'plat' | 'entree';
   tag?: 'Soupe' | 'Salade' | 'Sauce';
+  platTag?: 'Pates' | 'Sauces' | 'Sandwich' | 'Autres';
 }
 
 export type BasketShareStatus = 'pending' | 'accepted' | 'rejected';
