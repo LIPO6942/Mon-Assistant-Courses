@@ -36,6 +36,7 @@ import {
   saveBudget,
   saveHealthConditions,
   savePurchaseHistory,
+  saveDbarati,
   listenForIncomingShares,
   updateShareStatus,
   publishCommunityPurchases,
@@ -270,7 +271,7 @@ export default function KitchenAssistantPage() {
     } 
   }, [initialBudget, totalSpent, isDataLoaded, userUid]);
   useEffect(() => { if (isDataLoaded) { try { db.set('healthConditions', healthConditions); } catch (e) { console.error(e); } if (userUid) saveHealthConditions(userUid, healthConditions); } }, [healthConditions, isDataLoaded, userUid]);
-  useEffect(() => { if (isDataLoaded) { try { db.set('dbarati', dbarati); } catch (e) { console.error(e); } } }, [dbarati, isDataLoaded]);
+  useEffect(() => { if (isDataLoaded) { try { db.set('dbarati', dbarati); } catch (e) { console.error(e); } if (userUid) saveDbarati(userUid, dbarati); } }, [dbarati, isDataLoaded, userUid]);
 
   // --- AUTO-UNCHECK DBARATI ITEMS AFTER 30 DAYS ---
   useEffect(() => {

@@ -18,7 +18,7 @@
 import { doc, getDoc, setDoc, collection, getDocs, query, where, addDoc, onSnapshot, deleteDoc } from 'firebase/firestore';
 import { firestoreDb } from '@/lib/firebase';
 import { normalizeIngredientName } from '@/lib/normalization';
-import { CommunityPurchase } from './types';
+import { CommunityPurchase, DbaratiItem } from './types';
 export { firestoreDb };
 
 // ---------- helpers ----------
@@ -64,6 +64,7 @@ export async function loadUserData(uid: string) {
             healthConditions: healthConditionsSnap.exists() ? healthConditionsSnap.data().items : null,
             purchaseHistory: purchaseHistorySnap.exists() ? purchaseHistorySnap.data().data : null,
             frequentContacts: frequentContactsSnap.exists() ? (frequentContactsSnap.data().contacts || []) : [],
+            dbarati: (await getDoc(userDocRef(uid, 'dbarati'))).exists() ? (await getDoc(userDocRef(uid, 'dbarati'))).data()?.items : null,
         };
     } catch (error) {
         console.error('Error loading user data from Firestore:', error);
@@ -134,6 +135,14 @@ export async function savePurchaseHistory(uid: string, data: any) {
         await setDoc(userDocRef(uid, 'purchaseHistory'), { data, updatedAt: new Date().toISOString() });
     } catch (e) {
         console.error('Error saving purchase history:', e);
+    }
+}
+
+export async function saveDbarati(uid: string, items: DbaratiItem[]) {
+    try {
+        await setDoc(userDocRef(uid, 'dbarati'), { items, updatedAt: new Date().toISOString() });
+    } catch (e) {
+        console.error('Error saving dbarati:', e);
     }
 }
 
