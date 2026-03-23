@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { Mail, User, Shield, LogOut, Smartphone, Cloud, ChefHat } from 'lucide-react';
+import { Mail, User, Shield, LogOut, Smartphone, Cloud, ChefHat, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function SettingsPage() {
-    const { user, signOut, pushPermission, requestPushPermission } = useAuth();
+    const { user, signOut, pushPermission, requestPushPermission, resetPushNotifications, disablePushNotifications } = useAuth();
     const [lastSharedUser, setLastSharedUser] = useState<{ uid: string, name: string } | null>(null);
     const [frequentContacts, setFrequentContacts] = useState<any[]>([]);
 
@@ -122,8 +122,36 @@ export default function SettingsPage() {
                             </Button>
                         )}
                         {pushPermission === 'granted' && (
-                            <div className="bg-green-500/10 text-green-600 p-1 px-2 rounded-lg text-[10px] font-bold">
-                                ACTIVÉ
+                            <div className="flex items-center gap-2">
+                                <div className="bg-green-500/10 text-green-600 p-1 px-2 rounded-lg text-[10px] font-bold">
+                                    ACTIVÉ
+                                </div>
+                                <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-8 rounded-xl text-xs text-muted-foreground hover:text-destructive"
+                                    onClick={async () => {
+                                        if (confirm("Voulez-vous désactiver les notifications sur cet appareil ?")) {
+                                            await disablePushNotifications();
+                                            alert("Notifications désactivées.");
+                                        }
+                                    }}
+                                >
+                                    Désactiver
+                                </Button>
+                                <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-8 w-8 rounded-xl text-muted-foreground hover:text-primary"
+                                    onClick={async () => {
+                                        await resetPushNotifications();
+                                        alert("Notifications réinitialisées !");
+                                    }}
+                                    title="Réinitialiser les notifications"
+                                >
+                                    <RefreshCw className="h-3 w-3" />
+                                </Button>
+
                             </div>
                         )}
                     </div>

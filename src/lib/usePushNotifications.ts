@@ -50,13 +50,9 @@ export function usePushNotifications() {
                     console.log('Service Worker registered successfully:', registration.scope);
 
                     // Wait for the service worker to be active before requesting token
-                    const sw = registration.installing || registration.waiting;
-                    if (sw) {
+                    const sw = registration.installing || registration.waiting || registration.active;
+                    if (sw && sw.state !== 'activated') {
                         await new Promise<void>((resolve) => {
-                            if (sw.state === 'activated') {
-                                resolve();
-                                return;
-                            }
                             sw.addEventListener('statechange', function handler() {
                                 if (sw.state === 'activated') {
                                     sw.removeEventListener('statechange', handler);
@@ -87,6 +83,23 @@ export function usePushNotifications() {
         }
     }, [saveTokenToFirestore]);
 
+    const resetPushNotifications = useCallback(async () => {
+        const user = auth.currentUser;
+        if (!user || !token) return;
+
+        try {
+            // Firestore cleanup is tricky with arrayUnion but we can't easily arrayRemove specific token without knowing it
+            // However, we can just request a new one which will re-run saveTokenToFirestore
+            // To be thorough, we unregister the SW part if possible, or just re-request.
+            console.log('Resetting push notifications...');
+            
+            // Re-request permission (will skip if already granted but re-runs token fetch)
+            await requestPermission();
+        } catch (error) {
+            console.error('Error resetting push notifications:', error);
+        }
+    }, [token, requestPermission]);
+
     useEffect(() => {
         if (typeof window !== 'undefined' && 'Notification' in window) {
             setPermission(Notification.permission);
@@ -112,5 +125,24 @@ export function usePushNotifications() {
         return () => unsubscribe();
     }, [requestPermission]);
 
-    return { token, permission, requestPermission };
+    const disablePushNotifications = useCallback(async () => {
+        const user = auth.currentUser;
+        if (!user || !token) return;
+
+        try {
+            const { arrayRemove } = await import('firebase/firestore');
+            const userRef = doc(firestoreDb, 'users', user.uid);
+            await updateDoc(userRef, {
+                fcmTokens: arrayRemove(token)
+            });
+            setToken(null);
+            console.log('FCM Token removed from Firestore');
+        } catch (error) {
+            console.error('Error disabling push notifications:', error);
+        }
+    }, [token]);
+
+    return { token, permission, requestPermission, resetPushNotifications, disablePushNotifications };
 }
+
+

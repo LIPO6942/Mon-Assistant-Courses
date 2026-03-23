@@ -26,6 +26,8 @@ interface AuthContextType {
     clearError: () => void;
     pushPermission: NotificationPermission;
     requestPushPermission: () => Promise<void>;
+    resetPushNotifications: () => Promise<void>;
+    disablePushNotifications: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -39,6 +41,8 @@ const AuthContext = createContext<AuthContextType>({
     clearError: () => { },
     pushPermission: 'default',
     requestPushPermission: async () => { },
+    resetPushNotifications: async () => { },
+    disablePushNotifications: async () => { },
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -46,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const { permission: pushPermission, requestPermission: requestPushPermission } = usePushNotifications();
+    const { permission: pushPermission, requestPermission: requestPushPermission, resetPushNotifications, disablePushNotifications } = usePushNotifications();
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -144,6 +148,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 clearError,
                 pushPermission,
                 requestPushPermission,
+                resetPushNotifications,
+                disablePushNotifications,
             }}
         >
             {children}
