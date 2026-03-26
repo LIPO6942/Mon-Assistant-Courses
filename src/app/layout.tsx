@@ -5,6 +5,8 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { AuthProvider } from "@/context/AuthContext";
 import AuthGuard from "@/components/AuthGuard";
+import { PWAHandler } from "@/components/PWAHandler";
+
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -49,7 +51,9 @@ export default function RootLayout({
         <AuthProvider>
           <AuthGuard>
             {children}
+            <PWAHandler />
           </AuthGuard>
+
         </AuthProvider>
       </body>
     </html>

@@ -20,9 +20,6 @@ if (!firebaseConfig.apiKey) {
     console.warn('[firebase-messaging-sw.js] Firebase config missing in URL params. If this is during local development, ensure you provide the config.');
 }
 
-// Force immediate activation of the new service worker
-self.addEventListener('install', () => self.skipWaiting());
-self.addEventListener('activate', (event) => event.waitUntil(clients.claim()));
 
 // Initialize Firebase using the compat (v8) syntax inside the service worker
 const app = firebase.initializeApp(firebaseConfig);
