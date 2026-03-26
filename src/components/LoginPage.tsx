@@ -453,7 +453,7 @@ export default function LoginPage() {
                             ( vous êtes hors ligne )
                         </p>
                         <p className="text-amber-500/70 text-[11px] mt-1">
-                            L'accès est limité. Connectez-vous une fois avec internet pour activer la synchronisation.
+                            L&apos;accès est limité. Connectez-vous une fois avec internet pour activer la synchronisation.
                         </p>
                     </div>
                 )}

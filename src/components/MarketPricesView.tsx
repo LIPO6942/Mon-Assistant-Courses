@@ -79,6 +79,7 @@ export default function MarketPricesView() {
                 setLoading(false);
             }
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Compute price statistics for ingredients

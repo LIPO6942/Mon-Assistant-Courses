@@ -78,6 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             unsubscribe();
             clearTimeout(timer);
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const clearError = () => setError(null);
