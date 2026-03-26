@@ -58,6 +58,7 @@ interface ChandyekViewProps {
   onViewRecipe: (recipe: SuggestRecipeOutput) => void;
   onRemoveIngredient: (ingredient: string) => void;
   onClearIngredients: () => void;
+  isOnline: boolean;
 }
 
 export default function ChandyekView({
@@ -69,7 +70,8 @@ export default function ChandyekView({
   onSaveRecipe,
   onViewRecipe,
   onRemoveIngredient,
-  onClearIngredients
+  onClearIngredients,
+  isOnline
 }: ChandyekViewProps) {
 
   return (
@@ -138,11 +140,20 @@ export default function ChandyekView({
               </div>
 
               <div className='text-center mt-6'>
-                <Button size="lg" onClick={() => onGenerate()} disabled={isLoading}>
+                <Button 
+                  size="lg" 
+                  onClick={() => onGenerate()} 
+                  disabled={isLoading || !isOnline}
+                >
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                       L&apos;IA réfléchit...
+                    </>
+                  ) : !isOnline ? (
+                    <>
+                      <X className="mr-2 h-5 w-5" />
+                      Pas de connexion (IA indisponible)
                     </>
                   ) : (
                     <>
@@ -151,6 +162,11 @@ export default function ChandyekView({
                     </>
                   )}
                 </Button>
+                {!isOnline && (
+                  <p className="text-[10px] text-amber-600 mt-2">
+                    L&apos;intelligence artificielle nécessite une connexion internet pour fonctionner.
+                  </p>
+                )}
               </div>
             </>
           )}

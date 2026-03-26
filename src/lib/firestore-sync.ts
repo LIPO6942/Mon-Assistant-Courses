@@ -30,44 +30,59 @@ function userDocRef(uid: string, docName: string) {
 // ---------- load ----------
 
 export async function loadUserData(uid: string) {
-    try {
-        const [
-            pantrySnap,
-            basketSnap,
-            categoriesSnap,
-            savedRecipesSnap,
-            userRecipesSnap,
-            budgetSnap,
-            healthConditionsSnap,
-            purchaseHistorySnap,
-            frequentContactsSnap,
-        ] = await Promise.all([
-            getDoc(userDocRef(uid, 'pantry')),
-            getDoc(userDocRef(uid, 'basket')),
-            getDoc(userDocRef(uid, 'categories')),
-            getDoc(userDocRef(uid, 'savedRecipes')),
-            getDoc(userDocRef(uid, 'userRecipes')),
-            getDoc(userDocRef(uid, 'budget')),
-            getDoc(userDocRef(uid, 'healthConditions')),
-            getDoc(userDocRef(uid, 'purchaseHistory')),
-            getDoc(userDocRef(uid, 'frequentContacts')),
-        ]);
+    // Create a timeout promise
+    const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Cloud load timeout')), 3000)
+    );
 
-        return {
-            pantry: pantrySnap.exists() ? pantrySnap.data().items : null,
-            basket: basketSnap.exists() ? basketSnap.data().items : null,
-            categories: categoriesSnap.exists() ? categoriesSnap.data().items : null,
-            savedRecipes: savedRecipesSnap.exists() ? savedRecipesSnap.data().items : null,
-            userRecipes: userRecipesSnap.exists() ? userRecipesSnap.data().items : null,
-            initialBudget: budgetSnap.exists() ? budgetSnap.data().initialBudget : null,
-            totalSpent: budgetSnap.exists() ? budgetSnap.data().totalSpent : null,
-            healthConditions: healthConditionsSnap.exists() ? healthConditionsSnap.data().items : null,
-            purchaseHistory: purchaseHistorySnap.exists() ? purchaseHistorySnap.data().data : null,
-            frequentContacts: frequentContactsSnap.exists() ? (frequentContactsSnap.data().contacts || []) : [],
-            dbarati: (await getDoc(userDocRef(uid, 'dbarati'))).exists() ? (await getDoc(userDocRef(uid, 'dbarati'))).data()?.items : null,
-        };
+    try {
+        const loadPromise = (async () => {
+            const [
+                pantrySnap,
+                basketSnap,
+                categoriesSnap,
+                savedRecipesSnap,
+                userRecipesSnap,
+                budgetSnap,
+                healthConditionsSnap,
+                purchaseHistorySnap,
+                frequentContactsSnap,
+            ] = await Promise.all([
+                getDoc(userDocRef(uid, 'pantry')),
+                getDoc(userDocRef(uid, 'basket')),
+                getDoc(userDocRef(uid, 'categories')),
+                getDoc(userDocRef(uid, 'savedRecipes')),
+                getDoc(userDocRef(uid, 'userRecipes')),
+                getDoc(userDocRef(uid, 'budget')),
+                getDoc(userDocRef(uid, 'healthConditions')),
+                getDoc(userDocRef(uid, 'purchaseHistory')),
+                getDoc(userDocRef(uid, 'frequentContacts')),
+            ]);
+
+            return {
+                pantry: pantrySnap.exists() ? pantrySnap.data().items : null,
+                basket: basketSnap.exists() ? basketSnap.data().items : null,
+                categories: categoriesSnap.exists() ? categoriesSnap.data().items : null,
+                savedRecipes: savedRecipesSnap.exists() ? savedRecipesSnap.data().items : null,
+                userRecipes: userRecipesSnap.exists() ? userRecipesSnap.data().items : null,
+                initialBudget: budgetSnap.exists() ? budgetSnap.data().initialBudget : null,
+                totalSpent: budgetSnap.exists() ? budgetSnap.data().totalSpent : null,
+                healthConditions: healthConditionsSnap.exists() ? healthConditionsSnap.data().items : null,
+                purchaseHistory: purchaseHistorySnap.exists() ? purchaseHistorySnap.data().data : null,
+                frequentContacts: frequentContactsSnap.exists() ? (frequentContactsSnap.data().contacts || []) : [],
+                dbarati: (await getDoc(userDocRef(uid, 'dbarati'))).exists() ? (await getDoc(userDocRef(uid, 'dbarati'))).data()?.items : null,
+            };
+        })();
+
+        // Race between the load and the timeout
+        return await Promise.race([loadPromise, timeoutPromise]) as any;
+
     } catch (error) {
-        console.error('Error loading user data from Firestore:', error);
+        if (error instanceof Error && error.message === 'Cloud load timeout') {
+            console.warn('Firestore load timed out, falling back to local data.');
+        } else {
+            console.error('Error loading user data from Firestore:', error);
+        }
         return null;
     }
 }

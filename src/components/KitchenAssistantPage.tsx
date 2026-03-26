@@ -43,8 +43,12 @@ import {
 } from '@/lib/firestore-sync';
 
 
+import { useOnlineStatus } from '@/hooks/useOnlineStatus';
+
+
 export default function KitchenAssistantPage() {
   // --- STATE MANAGEMENT ---
+  const isOnline = useOnlineStatus();
   const [pantry, setPantry] = useState<Ingredient[]>([]);
   const [basket, setBasket] = useState<BasketItem[]>([]);
   const [categories, setCategories] = useState<CategoryDef[]>([]);
@@ -1109,6 +1113,7 @@ export default function KitchenAssistantPage() {
               onViewRecipe={setViewingRecipe}
               onRemoveIngredient={handleToggleChandyekIngredient}
               onClearIngredients={handleClearChandyekIngredients}
+              isOnline={isOnline}
             />
           )}
           {activeTab === 'guide' && (

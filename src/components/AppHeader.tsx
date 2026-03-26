@@ -11,6 +11,7 @@ import type { BasketItem, Recipe, PurchaseHistory } from '@/lib/types';
 import FridgeScannerSheet from './FridgeScannerSheet';
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 
 interface AppHeaderProps {
   basket: BasketItem[];
@@ -47,9 +48,16 @@ export default function AppHeader({
 }: AppHeaderProps) {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const { user, signOut } = useAuth();
+  const isOnline = useOnlineStatus();
 
   return (
-    <header className="bg-card shadow-md sticky top-0 z-20">
+    <header className="bg-card shadow-md sticky top-0 z-20 transition-colors duration-300 border-b border-transparent">
+      {!isOnline && (
+        <div className="bg-amber-500/15 backdrop-blur-md text-amber-700 dark:text-amber-400 text-[10px] md:text-xs font-medium py-1 text-center border-b border-amber-500/20 flex items-center justify-center gap-1.5 animate-in fade-in slide-in-from-top duration-500">
+          <div className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse" />
+          Mode hors ligne
+        </div>
+      )}
       <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-4 h-[69px]">
         <div className="flex items-center gap-3">
           <ChefHat className="h-8 w-8 text-primary" />
