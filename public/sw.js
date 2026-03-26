@@ -1,4 +1,4 @@
-const CACHE_NAME = 'assistant-courses-v1';
+const CACHE_NAME = 'mac-offline-v3';
 const ASSETS_TO_CACHE = [
   '/',
   '/manifest.json',
@@ -32,11 +32,9 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Only cache GET requests
   if (event.request.method !== 'GET') return;
-
-  // Skip chrome-extension, firebase, and other external calls
   const url = new URL(event.request.url);
+  
   if (
     url.origin.includes('extension') || 
     url.origin.includes('firebase') || 
@@ -46,12 +44,9 @@ self.addEventListener('fetch', (event) => {
 
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
+      if (cachedResponse) return cachedResponse;
 
       return fetch(event.request).then((response) => {
-        // Only cache successful dynamic requests from our origin
         if (!response || response.status !== 200 || response.type !== 'basic') {
           return response;
         }
@@ -63,7 +58,10 @@ self.addEventListener('fetch', (event) => {
 
         return response;
       }).catch(() => {
-        // Silent fail for now
+        // Optional fallback: return a cached root if it's a navigation
+        if (event.request.mode === 'navigate') {
+          return caches.match('/');
+        }
       });
     })
   );
