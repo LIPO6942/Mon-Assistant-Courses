@@ -53,27 +53,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { permission: pushPermission, requestPermission: requestPushPermission, resetPushNotifications, disablePushNotifications } = usePushNotifications();
 
     useEffect(() => {
-        // Set a maximum load time of 4 seconds to prevent getting stuck on the loading screen
-        const loaderTimeout = setTimeout(() => {
-            if (loading) {
-                console.warn('Auth loading timed out, forcing end of loading state');
-                setLoading(false);
-            }
-        }, 4000);
+        // Safety timeout to prevent infinite loading screen
+        const maxWait = typeof window !== 'undefined' && !navigator.onLine ? 300 : 2000;
+        const timer = setTimeout(() => {
+            if (loading) setLoading(false);
+        }, maxWait);
 
-        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
             setUser(user);
+            setLoading(false);
+            clearTimeout(timer);
+            
             if (user) {
-                // Sync profile in background without blocking the UI load
+                // Background sync
                 syncUserProfile(user.uid, user.displayName || user.email?.split('@')[0] || 'Utilisateur', user.email || '');
             }
+        }, (err) => {
+            console.error('Auth state error:', err);
             setLoading(false);
-            clearTimeout(loaderTimeout);
+            clearTimeout(timer);
         });
 
         return () => {
             unsubscribe();
-            clearTimeout(loaderTimeout);
+            clearTimeout(timer);
         };
     }, []);
 

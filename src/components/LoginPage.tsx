@@ -2,10 +2,12 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { ChefHat, Mail, Lock, User, Eye, EyeOff, ArrowRight, Sparkles } from 'lucide-react';
 
 export default function LoginPage() {
     const { signInWithGoogle, signInWithEmail, signUpWithEmail, error, clearError } = useAuth();
+    const isOnline = useOnlineStatus();
     const [isSignUp, setIsSignUp] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -444,6 +446,17 @@ export default function LoginPage() {
                         Mon Assistant de Courses
                     </div>
                 </div>
+
+                {!isOnline && (
+                    <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 mb-6 text-center">
+                        <p className="text-amber-500 text-sm font-medium">
+                            ( vous êtes hors ligne )
+                        </p>
+                        <p className="text-amber-500/70 text-[11px] mt-1">
+                            L'accès est limité. Connectez-vous une fois avec internet pour activer la synchronisation.
+                        </p>
+                    </div>
+                )}
 
                 {error && <div className="error-message">{error}</div>}
 

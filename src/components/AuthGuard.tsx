@@ -43,5 +43,9 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         return <LoginPage />;
     }
 
-    return <>{children}</>;
+    return (
+        <>
+            {children}
+        </>
+    );
 }
