@@ -43,7 +43,7 @@ export function usePushNotifications() {
                     };
 
                     const queryString = new URLSearchParams(config as any).toString();
-                    const swUrl = `/firebase-messaging-sw.js?${queryString}`;
+                    const swUrl = `/sw.js?${queryString}`;
 
                     console.log('Registering Service Worker for FCM...');
                     const registration = await navigator.serviceWorker.register(swUrl);

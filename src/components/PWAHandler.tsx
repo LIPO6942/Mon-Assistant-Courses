@@ -11,13 +11,24 @@ export function PWAHandler() {
     // 1. Service Worker Registration
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        // Register the offline service worker
-        navigator.serviceWorker.register('/sw.js').then(
+        // Build the same config query string to ensure consistent registration
+        const config = {
+          apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+          authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+          projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+          storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+          messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+          appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+        };
+        const queryString = new URLSearchParams(config as any).toString();
+        const swUrl = `/sw.js?${queryString}`;
+
+        navigator.serviceWorker.register(swUrl).then(
           (registration) => {
-            console.log('Main SW registered: ', registration.scope);
+            console.log('Master SW registered: ', registration.scope);
           },
           (registrationError) => {
-            console.log('Main SW registration failed: ', registrationError);
+            console.log('Master SW registration failed: ', registrationError);
           }
         );
       });
