@@ -18,14 +18,49 @@ export const metadata: Metadata = {
   title: "Mon assistant de courses",
   description: "Gérez votre garde-manger, planifiez vos repas et vos courses.",
   viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0",
-  themeColor: "#3B82F6",
+  themeColor: "#ffffff", // White theme color for matching splash screen
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "Assistant Courses",
+    startupImage: [
+      {
+        url: "/icon-512x512.png",
+        media: "(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)",
+      },
+      {
+        url: "/icon-512x512.png",
+        media: "(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)",
+      },
+      {
+        url: "/icon-512x512.png",
+        media: "(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3)",
+      },
+      {
+        url: "/icon-512x512.png",
+        media: "(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)",
+      },
+      {
+        url: "/icon-512x512.png",
+        media: "(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2)",
+      },
+      {
+        url: "/icon-512x512.png",
+        media: "(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3)",
+      },
+    ],
   },
   formatDetection: {
     telephone: false,
+  },
+  icons: {
+    icon: [
+      { url: "/icon-192x192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512x512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [
+      { url: "/icon-192x192.png", sizes: "192x192", type: "image/png" },
+    ],
   },
 };
 
