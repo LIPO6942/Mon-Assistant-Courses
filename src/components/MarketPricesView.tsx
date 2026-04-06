@@ -55,7 +55,38 @@ export default function MarketPricesView() {
         try {
             const unsubscribe = listenCommunityPurchases((data) => {
                 if (!isMounted) return;
-                setPurchases(data as CommunityPurchase[]);
+                
+                const typedData = data as CommunityPurchase[];
+                const storeNameMap = new Map<string, string>();
+                
+                // Normaliser les noms de magasins (regrouper les mêmes enseignes avec des casses différentes)
+                typedData.forEach(p => {
+                    if (p.store) {
+                        const cleanStoreName = p.store.trim().replace(/\s+/g, ' ');
+                        const normalized = cleanStoreName.toLowerCase();
+
+                        if (!storeNameMap.has(normalized)) {
+                            storeNameMap.set(normalized, cleanStoreName);
+                        } else {
+                            const existing = storeNameMap.get(normalized)!;
+                            // Préférer la version avec une majuscule au début
+                            if (cleanStoreName[0] && cleanStoreName[0] === cleanStoreName[0].toUpperCase() && existing[0] && existing[0] === existing[0].toLowerCase()) {
+                                storeNameMap.set(normalized, cleanStoreName);
+                            }
+                        }
+                    }
+                });
+                
+                const normalizedData = typedData.map(p => {
+                    if (p.store) {
+                        const cleanStoreName = p.store.trim().replace(/\s+/g, ' ');
+                        const normalized = cleanStoreName.toLowerCase();
+                        return { ...p, store: storeNameMap.get(normalized) || cleanStoreName };
+                    }
+                    return p;
+                });
+
+                setPurchases(normalizedData);
                 setLoading(false);
                 setError(null);
             });
