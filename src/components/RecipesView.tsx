@@ -790,11 +790,11 @@ export default function RecipesView({
                                     )}
                                   </div>
                                   <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-1.5 w-full">
+                                    <div className="flex items-start gap-1.5 flex-wrap mt-[2px]">
                                       <label
                                         htmlFor={`dbarati-${item.id}`}
                                         className={cn(
-                                          "text-sm font-bold cursor-pointer transition-all truncate",
+                                          "text-sm font-bold cursor-pointer transition-all leading-tight break-words max-w-full",
                                           (() => {
                                             if (!item.done || !item.lastPreparedAt) return "text-foreground";
                                             const daysSince = (Date.now() - new Date(item.lastPreparedAt).getTime()) / (1000 * 60 * 60 * 24);
@@ -815,7 +815,7 @@ export default function RecipesView({
                                       {matchedRecipe && (
                                         <Badge
                                           variant="secondary"
-                                          className="h-4 px-1 text-[8px] font-black uppercase tracking-tighter cursor-pointer hover:bg-primary hover:text-white transition-colors"
+                                          className="h-4 px-1 text-[8px] font-black uppercase tracking-tighter cursor-pointer hover:bg-primary hover:text-white transition-colors shrink-0 whitespace-nowrap mt-0.5"
                                           onClick={() => onViewUserRecipe(matchedRecipe)}
                                         >
                                           📖 Recette
