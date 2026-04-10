@@ -866,8 +866,13 @@ export default function RecipesView({
                                     <Button
                                       variant="ghost"
                                       size="icon"
-                                      className="h-7 w-7 rounded-md text-muted-foreground hover:text-destructive"
-                                      onClick={() => onDeleteDbaratiItem(item.id)}
+                                      className="h-7 w-7 rounded-md text-muted-foreground hover:text-destructive shrink-0"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (window.confirm("🗑️ Voulez-vous vraiment supprimer ce plat de vos Dbarati ?")) {
+                                          onDeleteDbaratiItem(item.id);
+                                        }
+                                      }}
                                     >
                                       <Trash2 className="h-3.5 w-3.5" />
                                     </Button>
