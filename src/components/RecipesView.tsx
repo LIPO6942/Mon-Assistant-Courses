@@ -823,33 +823,31 @@ export default function RecipesView({
                                       )}
                                     </div>
 
-                                      <div className="flex items-center gap-1 mt-1 flex-wrap">
+                                      <div className="flex items-center gap-1.5 mt-1 flex-nowrap whitespace-nowrap">
                                         {(item.prepCount || 0) > 0 && (
                                           <span className="bg-primary/5 text-primary px-1.5 py-0 rounded-full text-[9px] font-bold shrink-0">
                                             {item.prepCount}x
                                           </span>
                                         )}
-                                        <div className="flex items-center gap-0.5">
-                                          {item.lastPreparedAt && (
-                                            <span className="text-[10px] text-muted-foreground italic">
-                                              {new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(new Date(item.lastPreparedAt))}
-                                              <span className="opacity-70 ml-1">
-                                                (il y a {Math.floor((Date.now() - new Date(item.lastPreparedAt).getTime()) / (1000 * 60 * 60 * 24))} j)
-                                              </span>
+                                        {item.lastPreparedAt && (
+                                          <span className="text-[10px] text-muted-foreground italic truncate">
+                                            {new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(new Date(item.lastPreparedAt))}
+                                            <span className="opacity-70 ml-1">
+                                              (il y a {Math.floor((Date.now() - new Date(item.lastPreparedAt).getTime()) / (1000 * 60 * 60 * 24))} j)
                                             </span>
-                                          )}
+                                          </span>
+                                        )}
 
-                                          {/* Bouton historique : visible seulement si ≥2 préparations */}
-                                          {(item.prepHistory?.length || 0) >= 2 && (
-                                            <button
-                                              title="Voir l'historique"
-                                              onClick={(e) => { e.stopPropagation(); setOpenHistoryId(openHistoryId === item.id ? null : item.id); }}
-                                              className="inline-flex items-center justify-center text-muted-foreground hover:text-primary text-[11px] rounded-full px-1 py-0.5 transition-colors shrink-0"
-                                            >
-                                              📅
-                                            </button>
-                                          )}
-                                        </div>
+                                        {/* Bouton historique : visible seulement si ≥2 préparations */}
+                                        {(item.prepHistory?.length || 0) >= 2 && (
+                                          <button
+                                            title="Voir l'historique"
+                                            onClick={(e) => { e.stopPropagation(); setOpenHistoryId(openHistoryId === item.id ? null : item.id); }}
+                                            className="inline-flex items-center justify-center text-muted-foreground hover:text-primary text-[11px] rounded-full px-1 py-0.5 transition-colors shrink-0"
+                                          >
+                                            📅
+                                          </button>
+                                        )}
                                       </div>
                                     {/* Mini-historique inline */}
                                     {openHistoryId === item.id && item.prepHistory && item.prepHistory.length > 0 && (
