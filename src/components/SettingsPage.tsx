@@ -260,8 +260,8 @@ export default function SettingsPage() {
                 </div>
             </div>
 
-            {/* App Info */}
-            <div className="bg-card rounded-2xl border shadow-sm">
+            {/* App Info & Cache Clear */}
+            <div className="bg-card rounded-2xl border shadow-sm divide-y">
                 <div className="px-6 py-4 flex items-center gap-4">
                     <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center shrink-0">
                         <ChefHat className="h-5 w-5 text-orange-500" />
@@ -272,6 +272,34 @@ export default function SettingsPage() {
                             Version 2.0 — avec synchronisation cloud
                         </p>
                     </div>
+                </div>
+                <div className="px-6 py-4">
+                    <Button
+                        variant="outline"
+                        className="w-full h-10 rounded-xl text-xs flex items-center justify-center gap-2"
+                        onClick={() => {
+                            if ('serviceWorker' in navigator) {
+                                navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                                    for (let registration of registrations) {
+                                        registration.unregister();
+                                    }
+                                });
+                            }
+                            // Empty all caches manually
+                            if ('caches' in window) {
+                                caches.keys().then((names) => {
+                                    for (let name of names) {
+                                        caches.delete(name);
+                                    }
+                                });
+                            }
+                            alert('Cache vidé. L\\'application va redémarrer avec la toute dernière version.');
+                            window.location.href = window.location.pathname + '?v=' + new Date().getTime();
+                        }}
+                    >
+                        <RefreshCw className="h-3 w-3" />
+                        Vider le cache et forcer la mise à jour
+                    </Button>
                 </div>
             </div>
 
