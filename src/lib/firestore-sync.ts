@@ -155,7 +155,9 @@ export async function savePurchaseHistory(uid: string, data: any) {
 
 export async function saveDbarati(uid: string, items: DbaratiItem[]) {
     try {
-        await setDoc(userDocRef(uid, 'dbarati'), { items, updatedAt: new Date().toISOString() });
+        // Remove undefined properties before saving to prevent Firestore errors
+        const cleanItems = JSON.parse(JSON.stringify(items));
+        await setDoc(userDocRef(uid, 'dbarati'), { items: cleanItems, updatedAt: new Date().toISOString() });
     } catch (e) {
         console.error('Error saving dbarati:', e);
     }
