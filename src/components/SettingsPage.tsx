@@ -293,12 +293,12 @@ export default function SettingsPage() {
                                     }
                                 });
                             }
-                            alert("Cache vidé. L'application va redémarrer avec la toute dernière version.");
+                            alert("Mise à jour activée. L'application va redémarrer avec la toute dernière version.");
                             window.location.href = window.location.pathname + '?v=' + new Date().getTime();
                         }}
                     >
                         <RefreshCw className="h-3 w-3" />
-                        Vider le cache et forcer la mise à jour
+                        Forcer la mise à jour
                     </Button>
                 </div>
             </div>
