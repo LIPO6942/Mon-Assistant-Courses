@@ -293,7 +293,7 @@ export default function SettingsPage() {
                                     }
                                 });
                             }
-                            alert('Cache vidé. L\\'application va redémarrer avec la toute dernière version.');
+                            alert("Cache vidé. L'application va redémarrer avec la toute dernière version.");
                             window.location.href = window.location.pathname + '?v=' + new Date().getTime();
                         }}
                     >
