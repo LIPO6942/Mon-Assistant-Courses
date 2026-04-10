@@ -257,14 +257,22 @@ export default function KitchenAssistantPage() {
   const [pendingRecipeSave, setPendingRecipeSave] = useState<{ recipe: UserRecipe, isNew: boolean } | null>(null);
 
   // --- SAVE TO INDEXEDDB + FIRESTORE ---
-  useEffect(() => { if (isDataLoaded) { try { db.set('pantry', pantry); } catch (e) { console.error(e); } if (userUid) savePantry(userUid, pantry); } }, [pantry, isDataLoaded, userUid]);
-  useEffect(() => { if (isDataLoaded) { try { db.set('basket', basket); } catch (e) { console.error(e); } if (userUid) saveBasket(userUid, basket); } }, [basket, isDataLoaded, userUid]);
-  useEffect(() => { if (isDataLoaded) { try { db.set('categories', categories); } catch (e) { console.error(e); } if (userUid) saveCategories(userUid, categories); } }, [categories, isDataLoaded, userUid]);
-  useEffect(() => { if (isDataLoaded) { try { db.set('savedRecipes', savedRecipes); } catch (e) { console.error(e); } if (userUid) saveSavedRecipes(userUid, savedRecipes); } }, [savedRecipes, isDataLoaded, userUid]);
-  useEffect(() => { if (isDataLoaded) { try { db.set('userRecipes', userRecipes); } catch (e) { console.error(e); } if (userUid) saveUserRecipes(userUid, userRecipes); } }, [userRecipes, isDataLoaded, userUid]);
-  useEffect(() => { if (isDataLoaded) { try { db.set('purchaseHistory', purchaseHistory); } catch (e) { console.error(e); } if (userUid) savePurchaseHistory(userUid, purchaseHistory); } }, [purchaseHistory, isDataLoaded, userUid]);
+  // Use a ref to prevent saving on initial mount/auth transition
+  const isInitialMount = useRef(true);
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    if (isDataLoaded) { try { db.set('pantry', pantry); } catch (e) { console.error(e); } if (userUid) savePantry(userUid, pantry); }
+  }, [pantry]);
+  useEffect(() => { if (!isInitialMount.current && isDataLoaded) { try { db.set('basket', basket); } catch (e) { console.error(e); } if (userUid) saveBasket(userUid, basket); } }, [basket]);
+  useEffect(() => { if (!isInitialMount.current && isDataLoaded) { try { db.set('categories', categories); } catch (e) { console.error(e); } if (userUid) saveCategories(userUid, categories); } }, [categories]);
+  useEffect(() => { if (!isInitialMount.current && isDataLoaded) { try { db.set('savedRecipes', savedRecipes); } catch (e) { console.error(e); } if (userUid) saveSavedRecipes(userUid, savedRecipes); } }, [savedRecipes]);
+  useEffect(() => { if (!isInitialMount.current && isDataLoaded) { try { db.set('userRecipes', userRecipes); } catch (e) { console.error(e); } if (userUid) saveUserRecipes(userUid, userRecipes); } }, [userRecipes]);
+  useEffect(() => { if (!isInitialMount.current && isDataLoaded) { try { db.set('purchaseHistory', purchaseHistory); } catch (e) { console.error(e); } if (userUid) savePurchaseHistory(userUid, purchaseHistory); } }, [purchaseHistory]);
   useEffect(() => { 
-    if (isDataLoaded) { 
+    if (!isInitialMount.current && isDataLoaded) { 
       try { 
         db.set('budget', initialBudget); 
         db.set('totalSpent', totalSpent);
@@ -273,9 +281,9 @@ export default function KitchenAssistantPage() {
       } 
       if (userUid) saveBudget(userUid, initialBudget, totalSpent); 
     } 
-  }, [initialBudget, totalSpent, isDataLoaded, userUid]);
-  useEffect(() => { if (isDataLoaded) { try { db.set('healthConditions', healthConditions); } catch (e) { console.error(e); } if (userUid) saveHealthConditions(userUid, healthConditions); } }, [healthConditions, isDataLoaded, userUid]);
-  useEffect(() => { if (isDataLoaded) { try { db.set('dbarati', dbarati); } catch (e) { console.error(e); } if (userUid) saveDbarati(userUid, dbarati); } }, [dbarati, isDataLoaded, userUid]);
+  }, [initialBudget, totalSpent]);
+  useEffect(() => { if (!isInitialMount.current && isDataLoaded) { try { db.set('healthConditions', healthConditions); } catch (e) { console.error(e); } if (userUid) saveHealthConditions(userUid, healthConditions); } }, [healthConditions]);
+  useEffect(() => { if (!isInitialMount.current && isDataLoaded) { try { db.set('dbarati', dbarati); } catch (e) { console.error(e); } if (userUid) saveDbarati(userUid, dbarati); } }, [dbarati]);
 
   // --- AUTO-UNCHECK DBARATI ITEMS AFTER 30 DAYS ---
   useEffect(() => {
