@@ -326,7 +326,7 @@ export default function RecipesView({
             </div>
           </AccordionTrigger>
           <AccordionContent>
-            <div className='py-4 px-3 sm:px-5 rounded-2xl bg-gradient-to-br from-indigo-50/50 via-white to-rose-50/50 dark:from-indigo-950/20 dark:via-background dark:to-rose-950/20 border border-border/40 shadow-xl backdrop-blur-sm'>
+            <div className='py-4 px-1.5 sm:px-5 rounded-2xl bg-gradient-to-br from-indigo-50/50 via-white to-rose-50/50 dark:from-indigo-950/20 dark:via-background dark:to-rose-950/20 border border-border/40 shadow-xl backdrop-blur-sm'>
               <div className='flex flex-col items-center mb-4'>
                 <p className='text-muted-foreground text-center max-w-2xl text-xs sm:text-sm leading-relaxed'>
                   <span className="font-semibold text-primary">Dbarati</span> : Vos idées de repas et vos habitudes culinaires.
@@ -696,7 +696,7 @@ export default function RecipesView({
 
                     {/* Plats List */}
                     {dbarati.filter(i => i.type !== 'entree').length > 0 ? (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-4xl mx-auto scale-95 origin-top">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-4xl mx-auto">
                         {[...dbarati]
                           .filter(i => i.type !== 'entree')
                           .filter(i => activePlatFilter === 'Tous' || i.platTag === activePlatFilter)
@@ -813,13 +813,13 @@ export default function RecipesView({
                                         </Badge>
                                       )}
                                       {matchedRecipe && (
-                                        <Badge
-                                          variant="secondary"
-                                          className="h-4 px-1 text-[8px] font-black uppercase tracking-tighter cursor-pointer hover:bg-primary hover:text-white transition-colors shrink-0 whitespace-nowrap mt-0.5"
-                                          onClick={() => onViewUserRecipe(matchedRecipe)}
+                                        <button
+                                          title="Voir la recette"
+                                          className="inline-flex items-center justify-center shrink-0 w-6 h-6 rounded-full bg-primary/10 text-[12px] hover:bg-primary/20 transition-colors mt-0.5"
+                                          onClick={(e) => { e.stopPropagation(); onViewUserRecipe(matchedRecipe); }}
                                         >
-                                          📖 Recette
-                                        </Badge>
+                                          📖
+                                        </button>
                                       )}
                                     </div>
 
