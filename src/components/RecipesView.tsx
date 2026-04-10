@@ -771,12 +771,24 @@ export default function RecipesView({
                                 )}
 
                                 <div className="flex items-start gap-2.5">
-                                  <Checkbox
-                                    id={`dbarati-${item.id}`}
-                                    checked={item.done}
-                                    onCheckedChange={() => onToggleDbaratiItem(item.id)}
-                                    className="h-5 w-5 rounded-md border-2 border-primary/10 data-[state=checked]:bg-primary data-[state=checked]:border-primary shrink-0 mt-0.5"
-                                  />
+                                  <div className="flex flex-col items-center justify-start gap-2 mt-0.5">
+                                    <Checkbox
+                                      id={`dbarati-${item.id}`}
+                                      checked={item.done}
+                                      onCheckedChange={() => onToggleDbaratiItem(item.id)}
+                                      className="h-5 w-5 rounded-md border-2 border-primary/10 data-[state=checked]:bg-primary data-[state=checked]:border-primary shrink-0"
+                                    />
+                                    {/* Bouton +1 : visible dès que le plat a au moins 1 préparation enregistrée, ou est actuellement coché */}
+                                    {(item.done || (item.prepCount || 0) > 0) && (
+                                      <button
+                                        title="Marquer une nouvelle préparation"
+                                        onClick={(e) => { e.stopPropagation(); onMarkPrepared(item.id); }}
+                                        className="inline-flex items-center justify-center bg-primary/15 hover:bg-primary/30 text-primary border border-primary/30 rounded-full h-5 px-1.5 min-w-[24px] text-[9px] font-black leading-none transition-colors shadow-sm"
+                                      >
+                                        +1
+                                      </button>
+                                    )}
+                                  </div>
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-1.5 flex-wrap">
                                       <label
@@ -825,16 +837,7 @@ export default function RecipesView({
                                           </span>
                                         </span>
                                       )}
-                                      {/* Bouton +1 : visible dès que le plat a au moins 1 préparation enregistrée, ou est actuellement coché */}
-                                      {(item.done || (item.prepCount || 0) > 0) && (
-                                        <button
-                                          title="Marquer une nouvelle préparation"
-                                          onClick={(e) => { e.stopPropagation(); onMarkPrepared(item.id); }}
-                                          className="inline-flex items-center gap-0.5 bg-primary/15 hover:bg-primary/30 text-primary border border-primary/30 rounded-full px-2 py-0.5 text-[10px] font-bold leading-none transition-colors shadow-sm"
-                                        >
-                                          +1
-                                        </button>
-                                      )}
+
                                       {/* Bouton historique : visible seulement si ≥2 préparations */}
                                       {(item.prepHistory?.length || 0) >= 2 && (
                                         <button
