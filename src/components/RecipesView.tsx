@@ -712,7 +712,7 @@ export default function RecipesView({
                                 className={cn(
                                   "relative p-3 rounded-xl border transition-all duration-300 group flex flex-col",
                                   item.done
-                                    ? "bg-muted/40 border-border/40 opacity-70 scale-[0.98]"
+                                    ? "bg-muted/40 border-border/40 opacity-90 scale-[0.98]"
                                     : "bg-white dark:bg-card border-border/60 hover:border-primary/40 hover:shadow-lg"
                                 )}
                                 onMouseDown={() => {
@@ -825,12 +825,12 @@ export default function RecipesView({
                                           </span>
                                         </span>
                                       )}
-                                      {/* Bouton +1 : visible seulement si le plat est déjà coché */}
-                                      {item.done && (
+                                      {/* Bouton +1 : visible dès que le plat a au moins 1 préparation enregistrée, ou est actuellement coché */}
+                                      {(item.done || (item.prepCount || 0) > 0) && (
                                         <button
                                           title="Marquer une nouvelle préparation"
                                           onClick={(e) => { e.stopPropagation(); onMarkPrepared(item.id); }}
-                                          className="inline-flex items-center gap-0.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-full px-1.5 py-px text-[9px] font-bold leading-none transition-colors"
+                                          className="inline-flex items-center gap-0.5 bg-primary/15 hover:bg-primary/30 text-primary border border-primary/30 rounded-full px-2 py-0.5 text-[10px] font-bold leading-none transition-colors shadow-sm"
                                         >
                                           +1
                                         </button>
