@@ -41,6 +41,7 @@ interface RecipesViewProps {
   dbarati: DbaratiItem[];
   onAddDbaratiItem: (text: string, type?: 'plat' | 'entree', tag?: 'Soupe' | 'Salade' | 'Sauce', platTag?: 'Pates' | 'Sauces' | 'Sandwich' | 'Autres') => void;
   onToggleDbaratiItem: (id: string) => void;
+  onMarkPrepared: (id: string) => void;
   onDeleteDbaratiItem: (id: string) => void;
   onUpdateDbaratiItem: (id: string, text: string) => void;
   onMoveDbaratiItem: (id: string, direction: 'up' | 'down') => void;
@@ -59,6 +60,7 @@ export default function RecipesView({
   dbarati,
   onAddDbaratiItem,
   onToggleDbaratiItem,
+  onMarkPrepared,
   onDeleteDbaratiItem,
   onUpdateDbaratiItem,
   onMoveDbaratiItem,
@@ -93,6 +95,8 @@ export default function RecipesView({
   const [isPlatsExpanded, setIsPlatsExpanded] = useState(true);
   const [longPressItemId, setLongPressItemId] = useState<string | null>(null);
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
+  // ID of the plat whose history panel is open (inline)
+  const [openHistoryId, setOpenHistoryId] = useState<string | null>(null);
 
   // Listen to community purchases for recipe cost calculations
   useEffect(() => {
@@ -333,6 +337,35 @@ export default function RecipesView({
                   </Badge>
                 </div>
               </div>
+
+              {/* --- MES CLASSIQUES --- */}
+              {(() => {
+                const classiques = dbarati
+                  .filter(i => i.type !== 'entree' && (i.prepCount || 0) >= 2)
+                  .sort((a, b) => (b.prepCount || 0) - (a.prepCount || 0))
+                  .slice(0, 5);
+                if (classiques.length === 0) return null;
+                return (
+                  <div className="max-w-4xl mx-auto mb-5 bg-amber-50/60 dark:bg-amber-950/10 rounded-2xl p-3 border border-amber-200/40 dark:border-amber-700/20 shadow-sm">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-amber-700 dark:text-amber-400 mb-2 flex items-center gap-1.5">
+                      <span>🏆</span> Mes classiques
+                    </p>
+                    <div className="flex flex-col gap-1">
+                      {classiques.map(c => (
+                        <div key={c.id} className="flex items-center justify-between text-[11px]">
+                          <span className="font-semibold text-foreground truncate flex-1 mr-2">{c.text}</span>
+                          <span className="text-amber-600 dark:text-amber-400 font-bold shrink-0">{c.prepCount}x</span>
+                          {c.lastPreparedAt && (
+                            <span className="text-muted-foreground ml-2 shrink-0">
+                              {new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(new Date(c.lastPreparedAt))}
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Entrées Section (Collapsible) - Moved Above Random Wheel */}
               <div className="max-w-4xl mx-auto mb-8 bg-white/30 dark:bg-zinc-900/10 rounded-2xl p-4 border border-border/20 shadow-sm">
@@ -778,7 +811,7 @@ export default function RecipesView({
                                       )}
                                     </div>
 
-                                    <div className="flex items-center gap-2 mt-1">
+                                    <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                                       {(item.prepCount || 0) > 0 && (
                                         <span className="bg-primary/5 text-primary px-1.5 py-0 rounded-full text-[9px] font-bold">
                                           {item.prepCount}x
@@ -792,7 +825,38 @@ export default function RecipesView({
                                           </span>
                                         </span>
                                       )}
+                                      {/* Bouton +1 : visible seulement si le plat est déjà coché */}
+                                      {item.done && (
+                                        <button
+                                          title="Marquer une nouvelle préparation"
+                                          onClick={(e) => { e.stopPropagation(); onMarkPrepared(item.id); }}
+                                          className="inline-flex items-center gap-0.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-full px-1.5 py-px text-[9px] font-bold leading-none transition-colors"
+                                        >
+                                          +1
+                                        </button>
+                                      )}
+                                      {/* Bouton historique : visible seulement si ≥2 préparations */}
+                                      {(item.prepHistory?.length || 0) >= 2 && (
+                                        <button
+                                          title="Voir l'historique"
+                                          onClick={(e) => { e.stopPropagation(); setOpenHistoryId(openHistoryId === item.id ? null : item.id); }}
+                                          className="inline-flex items-center gap-0.5 text-muted-foreground hover:text-primary text-[9px] border border-transparent hover:border-primary/20 rounded-full px-1 py-px transition-colors"
+                                        >
+                                          📅
+                                        </button>
+                                      )}
                                     </div>
+                                    {/* Mini-historique inline */}
+                                    {openHistoryId === item.id && item.prepHistory && item.prepHistory.length > 0 && (
+                                      <div className="mt-1.5 text-[9px] text-muted-foreground bg-muted/30 rounded-lg px-2 py-1.5 space-y-0.5 animate-in fade-in slide-in-from-top-1 duration-200">
+                                        {[...item.prepHistory].reverse().map((date, i) => (
+                                          <div key={i} className="flex items-center gap-1">
+                                            <span className="w-1 h-1 rounded-full bg-primary/40 shrink-0" />
+                                            {new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: '2-digit' }).format(new Date(date))}
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
                                   </div>
 
                                   <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">

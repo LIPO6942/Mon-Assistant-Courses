@@ -1074,11 +1074,38 @@ export default function KitchenAssistantPage() {
                 setDbarati(prev => prev.map(item => {
                   if (item.id !== id) return item;
                   const wasDone = item.done;
+                  if (!wasDone) {
+                    // On coche : on enregistre la préparation dans l'historique
+                    const now = new Date().toISOString();
+                    const existingHistory = item.prepHistory ?? (
+                      item.lastPreparedAt ? [item.lastPreparedAt] : []
+                    );
+                    return {
+                      ...item,
+                      done: true,
+                      lastPreparedAt: now,
+                      prepCount: (item.prepCount || 0) + 1,
+                      prepHistory: [...existingHistory, now],
+                    };
+                  }
+                  // On décoche : on ne touche pas à l'historique
+                  return { ...item, done: false };
+                }));
+              }}
+              onMarkPrepared={(id: string) => {
+                setDbarati(prev => prev.map(item => {
+                  if (item.id !== id) return item;
+                  const now = new Date().toISOString();
+                  // Initialise prepHistory depuis lastPreparedAt si l'item est ancien
+                  const existingHistory = item.prepHistory ?? (
+                    item.lastPreparedAt ? [item.lastPreparedAt] : []
+                  );
                   return {
                     ...item,
-                    done: !wasDone,
-                    lastPreparedAt: !wasDone ? new Date().toISOString() : item.lastPreparedAt,
-                    prepCount: !wasDone ? (item.prepCount || 0) + 1 : item.prepCount,
+                    done: true,
+                    lastPreparedAt: now,
+                    prepCount: (item.prepCount || 0) + 1,
+                    prepHistory: [...existingHistory, now],
                   };
                 }));
               }}

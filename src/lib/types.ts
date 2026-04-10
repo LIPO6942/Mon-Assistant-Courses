@@ -84,7 +84,8 @@ export interface DbaratiItem {
   text: string;
   done: boolean;
   prepCount?: number;      // How many times this dish was prepared
-  lastPreparedAt?: string; // ISO date string
+  lastPreparedAt?: string; // ISO date string of the most recent preparation
+  prepHistory?: string[];  // Full history of all preparation dates (ISO strings)
   type?: 'plat' | 'entree';
   tag?: 'Soupe' | 'Salade' | 'Sauce';
   platTag?: 'Pates' | 'Sauces' | 'Sandwich' | 'Autres';
