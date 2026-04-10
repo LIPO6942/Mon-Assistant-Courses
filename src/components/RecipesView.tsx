@@ -790,7 +790,7 @@ export default function RecipesView({
                                     )}
                                   </div>
                                   <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                    <div className="flex items-center gap-1.5 w-full">
                                       <label
                                         htmlFor={`dbarati-${item.id}`}
                                         className={cn(
@@ -808,7 +808,7 @@ export default function RecipesView({
                                         {item.text}
                                       </label>
                                       {item.platTag && (
-                                        <Badge variant="secondary" className="text-[8px] px-1 py-0 h-3 font-medium opacity-70 shrink-0">
+                                        <Badge variant="secondary" className="text-[7.5px] px-1 py-0 h-[11px] leading-none flex items-center font-bold opacity-60 shrink-0">
                                           {item.platTag}
                                         </Badge>
                                       )}
