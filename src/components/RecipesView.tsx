@@ -790,11 +790,11 @@ export default function RecipesView({
                                     )}
                                   </div>
                                   <div className="flex-1 min-w-0">
-                                    <div className="flex items-start gap-1.5 flex-wrap mt-[2px]">
+                                    <div className="flex items-start gap-1.5 flex-nowrap mt-[2px]">
                                       <label
                                         htmlFor={`dbarati-${item.id}`}
                                         className={cn(
-                                          "text-sm font-bold cursor-pointer transition-all leading-tight break-words max-w-full",
+                                          "flex-1 min-w-0 text-sm font-bold cursor-pointer transition-all leading-tight break-words",
                                           (() => {
                                             if (!item.done || !item.lastPreparedAt) return "text-foreground";
                                             const daysSince = (Date.now() - new Date(item.lastPreparedAt).getTime()) / (1000 * 60 * 60 * 24);
@@ -863,15 +863,6 @@ export default function RecipesView({
                                   </div>
 
                                   <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-7 w-7 rounded-md text-muted-foreground hover:text-primary"
-                                      onClick={() => onMoveDbaratiItem(item.id, 'up')}
-                                      disabled={index === 0}
-                                    >
-                                      <ChevronUp className="h-3.5 w-3.5" />
-                                    </Button>
                                     <Button
                                       variant="ghost"
                                       size="icon"
