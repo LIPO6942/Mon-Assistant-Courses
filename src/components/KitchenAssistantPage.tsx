@@ -18,7 +18,7 @@ import MarketPricesView from './MarketPricesView';
 import CategoryPriceEvolutionDialog from './CategoryPriceEvolutionDialog';
 import SettingsPage from './SettingsPage';
 import { db } from '@/lib/idb';
-import { isInAppBrowser, getProductStatus } from '@/lib/utils';
+import { isInAppBrowser, getProductStatus, cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
