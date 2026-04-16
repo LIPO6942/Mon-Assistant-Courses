@@ -24,7 +24,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
-import { Plus, Users } from 'lucide-react';
+import { Plus, Users, Bell, Check } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import {
   loadUserData,
@@ -40,6 +40,7 @@ import {
   listenForIncomingShares,
   updateShareStatus,
   publishCommunityPurchases,
+  notifyShareSeen,
 } from '@/lib/firestore-sync';
 
 
@@ -97,6 +98,9 @@ export default function KitchenAssistantPage() {
 
   // Ref to track URL-based share data even after URL is cleaned
   const lastUrlEncodedData = useRef<string | null>(null);
+  
+  // Track which shares have been notified as "seen"
+  const [notifiedShares, setNotifiedShares] = useState<Set<string>>(new Set());
 
 
 
@@ -173,6 +177,15 @@ export default function KitchenAssistantPage() {
     await updateShareStatus(shareId, 'refused');
     localStorage.setItem(`handled_share_${shareId}`, 'true');
     setIncomingShare(null);
+  };
+
+  const handleNotifyReceipt = async () => {
+    if (!incomingShare || !user) return;
+    const shareId = incomingShare.id;
+    if (notifiedShares.has(shareId)) return;
+
+    await notifyShareSeen(incomingShare.fromUid, user.displayName || "Un ami", shareId);
+    setNotifiedShares(prev => new Set(prev).add(shareId));
   };
 
   // --- DATA PERSISTENCE (Firestore + IndexedDB) ---
@@ -1190,6 +1203,31 @@ export default function KitchenAssistantPage() {
                 </li>
               ))}
             </ul>
+          </div>
+
+          <div className="flex justify-center my-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className={cn(
+                "rounded-full gap-2 transition-all", 
+                notifiedShares.has(incomingShare?.id) ? "text-green-600 border-green-200 bg-green-50" : "text-primary"
+              )}
+              onClick={handleNotifyReceipt}
+              disabled={notifiedShares.has(incomingShare?.id)}
+            >
+              {notifiedShares.has(incomingShare?.id) ? (
+                <>
+                  <Check className="h-4 w-4" />
+                  Réception confirmée
+                </>
+              ) : (
+                <>
+                  <Bell className="h-4 w-4" />
+                  Confirmer la réception (optionnel)
+                </>
+              )}
+            </Button>
           </div>
 
           <DialogFooter className="sm:justify-between gap-2 mt-4">

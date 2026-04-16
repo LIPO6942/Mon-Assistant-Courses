@@ -15,7 +15,7 @@
  *   users/{uid}/data/purchaseHistory  → { data: PurchaseHistory }
  */
 
-import { doc, getDoc, setDoc, collection, getDocs, query, where, addDoc, onSnapshot, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, getDocs, query, where, addDoc, onSnapshot, deleteDoc, updateDoc } from 'firebase/firestore';
 import { firestoreDb } from '@/lib/firebase';
 import { normalizeIngredientName } from '@/lib/normalization';
 import { CommunityPurchase, DbaratiItem } from './types';
@@ -357,6 +357,31 @@ export async function updateShareStatus(shareId: string, status: 'accepted' | 'r
         await deleteDoc(docRef);
     } catch (e) {
         console.error('Error updating share status:', e);
+    }
+}
+
+export async function notifyShareSeen(fromUid: string, recipientName: string, shareId: string) {
+    try {
+        const docRef = doc(firestoreDb, 'basket_shares', shareId);
+        await updateDoc(docRef, { isSeen: true, seenAt: new Date().toISOString() });
+
+        // Trigger push notification back to sender
+        fetch('/api/notify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                targetUserId: fromUid,
+                title: '✅ Panier bien reçu !',
+                body: `${recipientName} a bien reçu votre panier.`,
+                data: {
+                    shareId,
+                    type: 'basket_receipt'
+                }
+            })
+        }).catch(err => console.error('Error triggering receipt notification:', err));
+
+    } catch (e) {
+        console.error('Error in notifyShareSeen:', e);
     }
 }
 
