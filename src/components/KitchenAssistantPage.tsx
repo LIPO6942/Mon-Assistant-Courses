@@ -41,6 +41,7 @@ import {
   updateShareStatus,
   publishCommunityPurchases,
   notifyShareSeen,
+  sendThanksForBasket,
 } from '@/lib/firestore-sync';
 
 
@@ -102,7 +103,8 @@ export default function KitchenAssistantPage() {
   // Track which shares have been notified as "seen"
   const [notifiedShares, setNotifiedShares] = useState<Set<string>>(new Set());
 
-
+  // Track which shares have been thanked with emoji
+  const [thankedShares, setThankedShares] = useState<Map<string, string>>(new Map());
 
   // --- WAKE LOCK ---
   useEffect(() => {
@@ -186,6 +188,15 @@ export default function KitchenAssistantPage() {
 
     await notifyShareSeen(incomingShare.fromUid, user.displayName || "Un ami", shareId);
     setNotifiedShares(prev => new Set(prev).add(shareId));
+  };
+
+  const handleSendThanks = async (emoji: string) => {
+    if (!incomingShare || !user) return;
+    const shareId = incomingShare.id;
+    if (thankedShares.has(shareId)) return;
+
+    await sendThanksForBasket(incomingShare.fromUid, user.displayName || "Un ami", shareId, emoji);
+    setThankedShares(prev => new Map(prev).set(shareId, emoji));
   };
 
   // --- DATA PERSISTENCE (Firestore + IndexedDB) ---
@@ -1229,6 +1240,35 @@ export default function KitchenAssistantPage() {
               )}
             </Button>
           </div>
+
+          {/* Emoji Thanks Selector - visible only after confirming receipt */}
+          {notifiedShares.has(incomingShare?.id) && !thankedShares.has(incomingShare?.id) && (
+            <div className="flex flex-col items-center my-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <p className="text-sm text-muted-foreground mb-2">Envoyer un remerciement :</p>
+              <div className="flex gap-2">
+                {['❤️', '🙏', '🎉', '👍', '🔥'].map((emoji) => (
+                  <button
+                    key={emoji}
+                    onClick={() => handleSendThanks(emoji)}
+                    className="text-2xl hover:scale-125 transition-transform p-2 rounded-full hover:bg-muted"
+                    title="Envoyer"
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Show sent thanks */}
+          {thankedShares.has(incomingShare?.id) && (
+            <div className="flex justify-center my-3 animate-in fade-in duration-300">
+              <div className="flex items-center gap-2 text-green-600 bg-green-50 px-4 py-2 rounded-full">
+                <span className="text-xl">{thankedShares.get(incomingShare?.id)}</span>
+                <span className="text-sm">Merci envoyé !</span>
+              </div>
+            </div>
+          )}
 
           <DialogFooter className="sm:justify-between gap-2 mt-4">
             <Button variant="ghost" onClick={handleRefuseShare} className="rounded-xl">

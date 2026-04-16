@@ -385,6 +385,40 @@ export async function notifyShareSeen(fromUid: string, recipientName: string, sh
     }
 }
 
+export async function sendThanksForBasket(fromUid: string, recipientName: string, shareId: string, emoji: string) {
+    try {
+        const docRef = doc(firestoreDb, 'basket_shares', shareId);
+        // Store the thanks in the share document
+        await updateDoc(docRef, {
+            thanks: {
+                emoji,
+                fromName: recipientName,
+                sentAt: new Date().toISOString()
+            }
+        });
+
+        // Trigger push notification with the reaction
+        fetch('/api/notify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                targetUserId: fromUid,
+                title: `${emoji} Remerciement reçu !`,
+                body: `${recipientName} vous remercie pour le panier`,
+                data: {
+                    shareId,
+                    type: 'basket_thanks',
+                    emoji,
+                    fromName: recipientName
+                }
+            })
+        }).catch(err => console.error('Error triggering thanks notification:', err));
+
+    } catch (e) {
+        console.error('Error in sendThanksForBasket:', e);
+    }
+}
+
 export async function recordFrequentContact(uid: string, contactUid: string) {
     try {
         const docRef = userDocRef(uid, 'frequentContacts');
