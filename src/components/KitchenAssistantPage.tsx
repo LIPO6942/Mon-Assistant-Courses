@@ -46,6 +46,7 @@ import {
 
 
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
+import { useBasketAbandonmentReminder } from '@/hooks/useBasketAbandonmentReminder';
 
 
 export default function KitchenAssistantPage() {
@@ -148,6 +149,9 @@ export default function KitchenAssistantPage() {
   // --- Get current user ---
   const { user } = useAuth();
   const userUid = user?.uid;
+
+  // Rappel d'abandon de panier : notification après 7 jours si ≥ 6 produits non achetés
+  useBasketAbandonmentReminder(basket, userUid);
 
   // Listen for incoming shares
   useEffect(() => {

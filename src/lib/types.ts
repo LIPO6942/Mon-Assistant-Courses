@@ -147,3 +147,13 @@ export interface IngredientReminder {
   createdAt: string;
   qstashMessageId?: string;    // pour référence future (annulation)
 }
+
+export interface BasketAbandonmentReminder {
+  userId: string;
+  itemNames: string[];       // noms des produits au moment du déclenchement
+  itemCount: number;         // nb de produits distincts (≥ 6)
+  scheduledAt: string;       // ISO — moment où le job a été schedulé
+  notifyAt: string;          // ISO — scheduledAt + 7 jours
+  status: 'pending' | 'sent' | 'cancelled';
+  qstashMessageId?: string;
+}
