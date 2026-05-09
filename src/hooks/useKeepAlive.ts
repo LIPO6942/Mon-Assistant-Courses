@@ -4,7 +4,8 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useOnlineStatus } from './useOnlineStatus';
 
-const KEEP_ALIVE_INTERVAL = 30000; // 30 secondes
+const KEEP_ALIVE_INTERVAL = 30000;       // 30 s quand l'onglet est actif
+const KEEP_ALIVE_INTERVAL_BG = 60000;    // 60 s quand l'onglet est en arrière-plan
 
 interface PendingShare {
     id: string;
@@ -58,14 +59,40 @@ export function useKeepAlive() {
                         new CustomEvent('basketSharePolled', { detail: share })
                     );
 
-                    // 2. Notification native si permission accordée et onglet visible ou caché
-                    if (typeof window !== 'undefined' && 'Notification' in window) {
-                        if (Notification.permission === 'granted') {
+                    // 2. Notification via Service Worker (fonctionne aussi en arrière-plan / PWA veille)
+                    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+                        if ('serviceWorker' in navigator) {
+                            navigator.serviceWorker.getRegistration().then((reg) => {
+                                if (reg) {
+                                    // Passer par le SW pour afficher la notif — visible même en veille
+                                    reg.showNotification('🛒 Panier partagé !', {
+                                        body: `${share.fromName} vous a partagé un panier de courses.`,
+                                        icon: '/icon-192x192.png',
+                                        badge: '/icon-192x192.png',
+                                        tag: share.id,
+                                        requireInteraction: true,
+                                        data: { shareId: share.id, type: 'basket_share' }
+                                    } as NotificationOptions);
+                                } else {
+                                    // Fallback si pas de SW actif (desktop)
+                                    new Notification('🛒 Panier partagé !', {
+                                        body: `${share.fromName} vous a partagé un panier de courses.`,
+                                        icon: '/icon-192x192.png',
+                                        tag: share.id,
+                                    });
+                                }
+                            }).catch(() => {
+                                new Notification('🛒 Panier partagé !', {
+                                    body: `${share.fromName} vous a partagé un panier de courses.`,
+                                    icon: '/icon-192x192.png',
+                                    tag: share.id,
+                                });
+                            });
+                        } else {
                             new Notification('🛒 Panier partagé !', {
                                 body: `${share.fromName} vous a partagé un panier de courses.`,
                                 icon: '/icon-192x192.png',
                                 tag: share.id,
-                                data: { shareId: share.id, type: 'basket_share' }
                             });
                         }
                     }
@@ -92,20 +119,24 @@ export function useKeepAlive() {
         // Poll initial
         poll();
 
-        // Démarrer l'intervalle
-        intervalRef.current = setInterval(() => {
-            if (!isHiddenRef.current) {
-                poll();
-            }
-        }, KEEP_ALIVE_INTERVAL);
+        // Si les notifications push sont activées, on ne fait pas de polling régulier (économie de batterie/data)
+        // On s'appuie sur le push FCM en background, et on rafraîchit au retour sur l'onglet
+        const hasPushEnabled = typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted';
 
-        // Gérer la visibilité de l'onglet (intelligence du polling)
+        if (!hasPushEnabled) {
+            // Démarrer l'intervalle classique pour ceux sans notifications push
+            intervalRef.current = setInterval(() => {
+                poll();
+            }, KEEP_ALIVE_INTERVAL);
+        }
+
+        // Gérer la visibilité de l'onglet
         const handleVisibilityChange = () => {
             if (document.hidden) {
                 isHiddenRef.current = true;
             } else {
                 isHiddenRef.current = false;
-                // Poll immédiatement au retour sur l'onglet
+                // Poll immédiatement au retour sur l'onglet (permet de récupérer l'état si l'app a été ouverte via une notif)
                 poll();
             }
         };

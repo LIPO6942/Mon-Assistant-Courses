@@ -1,3 +1,5 @@
+importScripts('https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-sw.js');
+
 const CACHE_NAME = 'mac-master-v3';
 const ASSETS_TO_CACHE = [
   '/',
@@ -7,7 +9,23 @@ const ASSETS_TO_CACHE = [
   '/favicon.ico',
 ];
 
-// --- 1. OFFLINE CACHING & CONTROLLER LOGIC ---
+// --- 1. BACKGROUND SYNC (OFFLINE QUEUE) ---
+if (typeof workbox !== 'undefined') {
+  const bgSyncPlugin = new workbox.backgroundSync.BackgroundSyncPlugin('mac-offline-queue', {
+    maxRetentionTime: 24 * 60, // Réessaie pendant 24h max
+  });
+
+  // Met en file d'attente les requêtes POST vers /api/notify (ex: remerciements) si hors-ligne
+  workbox.routing.registerRoute(
+    /\/api\/notify/,
+    new workbox.strategies.NetworkOnly({
+      plugins: [bgSyncPlugin],
+    }),
+    'POST'
+  );
+}
+
+// --- 2. OFFLINE CACHING & CONTROLLER LOGIC ---
 
 self.addEventListener('install', (event) => {
   event.waitUntil(

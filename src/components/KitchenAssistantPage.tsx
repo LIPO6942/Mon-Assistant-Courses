@@ -187,9 +187,19 @@ export default function KitchenAssistantPage() {
   }, [userUid]);
 
   const handleAcceptShare = async () => {
-    if (!incomingShare) return;
+    if (!incomingShare || !user) return;
     const shareId = incomingShare.id;
+
+    // 1. Fusionner le panier
     setSharedBasketToMerge(incomingShare.items);
+
+    // 2. Envoyer la notification de réception si pas encore fait
+    if (!notifiedShares.has(shareId)) {
+      await notifyShareSeen(incomingShare.fromUid, user.displayName || "Un ami", shareId);
+      setNotifiedShares(prev => new Set(prev).add(shareId));
+    }
+
+    // 3. Supprimer le document et marquer comme traité (après la notification)
     await updateShareStatus(shareId, 'accepted');
     localStorage.setItem(`handled_share_${shareId}`, 'true');
     setIncomingShare(null);
@@ -217,6 +227,7 @@ export default function KitchenAssistantPage() {
     const shareId = incomingShare.id;
     if (thankedShares.has(shareId)) return;
 
+    // Envoyer le remerciement AVANT de supprimer le document (le document doit encore exister)
     await sendThanksForBasket(incomingShare.fromUid, user.displayName || "Un ami", shareId, emoji);
     setThankedShares(prev => new Map(prev).set(shareId, emoji));
   };
@@ -1238,35 +1249,10 @@ export default function KitchenAssistantPage() {
             </ul>
           </div>
 
-          <div className="flex justify-center my-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className={cn(
-                "rounded-full gap-2 transition-all", 
-                notifiedShares.has(incomingShare?.id) ? "text-green-600 border-green-200 bg-green-50" : "text-primary"
-              )}
-              onClick={handleNotifyReceipt}
-              disabled={notifiedShares.has(incomingShare?.id)}
-            >
-              {notifiedShares.has(incomingShare?.id) ? (
-                <>
-                  <Check className="h-4 w-4" />
-                  Réception confirmée
-                </>
-              ) : (
-                <>
-                  <Bell className="h-4 w-4" />
-                  Confirmer la réception (optionnel)
-                </>
-              )}
-            </Button>
-          </div>
-
-          {/* Emoji Thanks Selector - visible only after confirming receipt */}
-          {notifiedShares.has(incomingShare?.id) && !thankedShares.has(incomingShare?.id) && (
+          {/* Emoji Thanks - toujours visible dès l'ouverture du dialog */}
+          {!thankedShares.has(incomingShare?.id) ? (
             <div className="flex flex-col items-center my-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
-              <p className="text-sm text-muted-foreground mb-2">Envoyer un remerciement :</p>
+              <p className="text-sm text-muted-foreground mb-2">Envoyer un remerciement à {incomingShare?.fromName} :</p>
               <div className="flex gap-2">
                 {['❤️', '🙏', '🎉', '👍', '🔥'].map((emoji) => (
                   <button
@@ -1280,15 +1266,23 @@ export default function KitchenAssistantPage() {
                 ))}
               </div>
             </div>
+          ) : (
+            /* Remerciement déjà envoyé */
+            <div className="flex justify-center my-3 animate-in fade-in duration-300">
+              <div className="flex items-center gap-2 text-green-600 bg-green-50 dark:bg-green-950/30 px-4 py-2 rounded-full">
+                <span className="text-xl">{thankedShares.get(incomingShare?.id)}</span>
+                <span className="text-sm font-medium">Remerciement envoyé !</span>
+              </div>
+            </div>
           )}
 
-          {/* Show sent thanks */}
-          {thankedShares.has(incomingShare?.id) && (
-            <div className="flex justify-center my-3 animate-in fade-in duration-300">
-              <div className="flex items-center gap-2 text-green-600 bg-green-50 px-4 py-2 rounded-full">
-                <span className="text-xl">{thankedShares.get(incomingShare?.id)}</span>
-                <span className="text-sm">Merci envoyé !</span>
-              </div>
+          {/* Indicateur de réception confirmée */}
+          {notifiedShares.has(incomingShare?.id) && (
+            <div className="flex justify-center">
+              <span className="text-xs text-green-600 flex items-center gap-1">
+                <Check className="h-3 w-3" />
+                {incomingShare?.fromName} a été notifié(e) de votre réception
+              </span>
             </div>
           )}
 
@@ -1297,7 +1291,7 @@ export default function KitchenAssistantPage() {
               Refuser
             </Button>
             <Button onClick={handleAcceptShare} className="rounded-xl gap-2 font-bold">
-              Accepter & Importer
+              Accepter &amp; Importer
             </Button>
           </DialogFooter>
         </DialogContent>

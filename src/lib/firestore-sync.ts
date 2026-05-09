@@ -387,24 +387,30 @@ export async function notifyShareSeen(fromUid: string, recipientName: string, sh
 
 export async function sendThanksForBasket(fromUid: string, recipientName: string, shareId: string, emoji: string) {
     try {
-        const docRef = doc(firestoreDb, 'basket_shares', shareId);
-        // Store the thanks in the share document
-        await updateDoc(docRef, {
-            thanks: {
-                emoji,
-                fromName: recipientName,
-                sentAt: new Date().toISOString()
-            }
-        });
+        // Tenter de stocker le remerciement dans le document Firestore
+        // (peut échouer si le document a déjà été supprimé - ce n'est pas bloquant)
+        try {
+            const docRef = doc(firestoreDb, 'basket_shares', shareId);
+            await updateDoc(docRef, {
+                thanks: {
+                    emoji,
+                    fromName: recipientName,
+                    sentAt: new Date().toISOString()
+                }
+            });
+        } catch (docErr: any) {
+            // Document déjà supprimé - on ignore silencieusement
+            console.warn('[sendThanksForBasket] Le document partage a déjà été supprimé, la notif push sera quand même envoyée.');
+        }
 
-        // Trigger push notification with the reaction
+        // Envoyer la notification push de remerciement (toujours, même si le doc est supprimé)
         fetch('/api/notify', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 targetUserId: fromUid,
                 title: `${emoji} Remerciement reçu !`,
-                body: `${recipientName} vous remercie pour le panier`,
+                body: `${recipientName} vous remercie pour le panier ❤️`,
                 data: {
                     shareId,
                     type: 'basket_thanks',
