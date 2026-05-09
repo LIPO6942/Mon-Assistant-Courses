@@ -124,7 +124,7 @@ try {
             const notificationOptions = {
                 body: payload.data?.body || 'Nouvelle mise à jour',
                 icon: '/icon-192x192.png',
-                badge: '/icon-192x192.png',
+                badge: '/badge-icon.png',
                 tag: payload.data?.shareId || payload.data?.type || 'default',
                 requireInteraction: true,
                 data: payload.data
@@ -162,7 +162,7 @@ self.addEventListener('push', (event) => {
         self.registration.showNotification(title, {
             body: body,
             icon: '/icon-192x192.png',
-            badge: '/icon-192x192.png',
+            badge: '/badge-icon.png',
             tag: tag,
             requireInteraction: true,
             data: payload.data || payload

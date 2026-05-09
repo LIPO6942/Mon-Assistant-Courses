@@ -26,6 +26,7 @@ if (firebaseConfig.apiKey) {
         const notificationOptions = {
             body: payload.data?.body || 'Nouvelle mise à jour',
             icon: '/icon-192x192.png',
+            badge: '/badge-icon.png',
             data: payload.data
         };
         self.registration.showNotification(notificationTitle, notificationOptions);

@@ -68,7 +68,7 @@ export function useKeepAlive() {
                                     reg.showNotification('🛒 Panier partagé !', {
                                         body: `${share.fromName} vous a partagé un panier de courses.`,
                                         icon: '/icon-192x192.png',
-                                        badge: '/icon-192x192.png',
+                                        badge: '/badge-icon.png',
                                         tag: share.id,
                                         requireInteraction: true,
                                         data: { shareId: share.id, type: 'basket_share' }
