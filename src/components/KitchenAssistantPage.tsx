@@ -153,7 +153,7 @@ export default function KitchenAssistantPage() {
   // Rappel d'abandon de panier : notification après 7 jours si ≥ 6 produits non achetés
   useBasketAbandonmentReminder(basket, userUid);
 
-  // Listen for incoming shares
+  // Listen for incoming shares (Firestore real-time)
   useEffect(() => {
     if (!userUid) return;
 
@@ -166,6 +166,24 @@ export default function KitchenAssistantPage() {
     });
 
     return () => unsubscribe();
+  }, [userUid]);
+
+  // Listen for polled shares (keep-alive fallback when tab is asleep)
+  useEffect(() => {
+    if (!userUid) return;
+
+    const handlePolledShare = (event: Event) => {
+      const share = (event as CustomEvent).detail;
+      if (!share || !share.id) return;
+
+      const isHandled = localStorage.getItem(`handled_share_${share.id}`);
+      if (!isHandled) {
+        setIncomingShare(share);
+      }
+    };
+
+    window.addEventListener('basketSharePolled', handlePolledShare);
+    return () => window.removeEventListener('basketSharePolled', handlePolledShare);
   }, [userUid]);
 
   const handleAcceptShare = async () => {

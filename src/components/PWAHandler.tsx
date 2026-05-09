@@ -3,15 +3,18 @@
 import { useEffect, useState } from 'react';
 import { Wifi, WifiOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useKeepAlive } from '@/hooks/useKeepAlive';
 
 export function PWAHandler() {
   const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
 
+  // Active le polling intelligent pour récupérer les partages de panier en attente
+  useKeepAlive();
+
   useEffect(() => {
-    // 1. Service Worker Registration
+    // 1. Service Worker Registration (critical for background push notifications)
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        // Build the same config query string to ensure consistent registration
+      const registerSW = () => {
         const config = {
           apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
           authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -23,15 +26,31 @@ export function PWAHandler() {
         const queryString = new URLSearchParams(config as any).toString();
         const swUrl = `/sw.js?${queryString}`;
 
-        navigator.serviceWorker.register(swUrl).then(
+        navigator.serviceWorker.register(swUrl, { scope: '/' }).then(
           (registration) => {
-            console.log('Master SW registered: ', registration.scope);
+            console.log('[PWAHandler] Master SW registered:', registration.scope);
+            
+            // Listen for SW updates to keep it fresh
+            registration.addEventListener('updatefound', () => {
+              const newWorker = registration.installing;
+              if (newWorker) {
+                newWorker.addEventListener('statechange', () => {
+                  console.log('[PWAHandler] SW state changed:', newWorker.state);
+                });
+              }
+            });
           },
           (registrationError) => {
-            console.log('Master SW registration failed: ', registrationError);
+            console.error('[PWAHandler] Master SW registration failed:', registrationError);
           }
         );
-      });
+      };
+
+      if (document.readyState === 'complete') {
+        registerSW();
+      } else {
+        window.addEventListener('load', registerSW);
+      }
     }
 
     // 2. Online/Offline status listeners

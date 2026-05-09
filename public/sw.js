@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mac-master-v2';
+const CACHE_NAME = 'mac-master-v3';
 const ASSETS_TO_CACHE = [
   '/',
   '/manifest.json',
@@ -12,7 +12,6 @@ const ASSETS_TO_CACHE = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      // Use { cache: 'reload' } to ensure we get fresh assets
       return Promise.all(
         ASSETS_TO_CACHE.map(url => {
             return fetch(url, { cache: 'reload' })
@@ -48,7 +47,6 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(event.request.url);
   
-  // Skip external APIs and extensions
   if (
     url.origin.includes('extension') || 
     url.origin.includes('firebase') || 
@@ -58,12 +56,9 @@ self.addEventListener('fetch', (event) => {
 
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
-      // Return cached response if found
       if (cachedResponse) return cachedResponse;
 
-      // Otherwise fetch and cache
       return fetch(event.request).then((response) => {
-        // Only cache successful same-origin responses
         if (response && response.status === 200 && response.type === 'basic') {
           const responseToCache = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
@@ -72,7 +67,6 @@ self.addEventListener('fetch', (event) => {
         }
         return response;
       }).catch(() => {
-        // On failure (offline), try to return the cached root for navigation
         if (event.request.mode === 'navigate') {
           return caches.match('/');
         }
@@ -82,6 +76,8 @@ self.addEventListener('fetch', (event) => {
 });
 
 // --- 2. FIREBASE MESSAGING LOGIC ---
+
+let firebaseLoaded = false;
 
 try {
     importScripts('https://www.gstatic.com/firebasejs/11.0.0/firebase-app-compat.js');
@@ -102,6 +98,7 @@ try {
             firebase.initializeApp(firebaseConfig);
         }
         const messaging = firebase.messaging();
+        firebaseLoaded = true;
         
         messaging.onBackgroundMessage((payload) => {
             console.log('[sw.js] Received messaging: ', payload);
@@ -109,23 +106,81 @@ try {
             const notificationOptions = {
                 body: payload.data?.body || 'Nouvelle mise à jour',
                 icon: '/icon-192x192.png',
+                badge: '/icon-192x192.png',
+                tag: payload.data?.shareId || payload.data?.type || 'default',
+                requireInteraction: true,
                 data: payload.data
             };
             self.registration.showNotification(notificationTitle, notificationOptions);
         });
     }
-
-    self.addEventListener('notificationclick', (event) => {
-        event.notification.close();
-        event.waitUntil(
-            clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-                for (const client of clientList) {
-                    if (client.url === '/' && 'focus' in client) return client.focus();
-                }
-                return clients.openWindow('/');
-            })
-        );
-    });
 } catch (e) {
     console.error('Firebase scripts failed to load in SW:', e);
 }
+
+// --- 3. NATIVE PUSH FALLBACK (ne s'exécute que si Firebase n'a pas chargé) ---
+// Cela évite les doublons : si firebaseLoaded est true, onBackgroundMessage gère tout.
+
+self.addEventListener('push', (event) => {
+    if (firebaseLoaded) {
+        // Firebase messaging gère déjà l'affichage via onBackgroundMessage
+        return;
+    }
+
+    console.log('[sw.js] Push fallback (Firebase not loaded):', event);
+    
+    let payload = {};
+    try {
+        payload = event.data ? event.data.json() : {};
+    } catch (e) {
+        payload = { data: { title: 'Mon Assistant Courses', body: event.data ? event.data.text() : 'Nouvelle mise à jour' } };
+    }
+
+    const title = payload.data?.title || payload.notification?.title || 'Mon Assistant Courses';
+    const body = payload.data?.body || payload.notification?.body || 'Nouvelle mise à jour';
+    const tag = payload.data?.shareId || payload.data?.type || 'default';
+
+    event.waitUntil(
+        self.registration.showNotification(title, {
+            body: body,
+            icon: '/icon-192x192.png',
+            badge: '/icon-192x192.png',
+            tag: tag,
+            requireInteraction: true,
+            data: payload.data || payload
+        })
+    );
+});
+
+// --- 4. NOTIFICATION CLICK (deep linking vers l'app) ---
+
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+
+    const notificationData = event.notification.data || {};
+    const type = notificationData.type || '';
+    const shareId = notificationData.shareId || '';
+    
+    // Build target URL with deep link params if it's a basket share
+    let targetUrl = '/';
+    if (type === 'basket_share' && shareId) {
+        targetUrl = `/?shareId=${shareId}`;
+    }
+
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+            // If a client (tab/PWA) is already open, focus it and navigate
+            for (const client of clientList) {
+                if (new URL(client.url).origin === self.location.origin && 'focus' in client) {
+                    client.focus();
+                    if ('navigate' in client) {
+                        client.navigate(targetUrl);
+                    }
+                    return;
+                }
+            }
+            // Otherwise open a new window
+            return clients.openWindow(targetUrl);
+        })
+    );
+});

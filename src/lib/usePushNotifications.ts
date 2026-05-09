@@ -31,37 +31,10 @@ export function usePushNotifications() {
             setPermission(status);
 
             if (status === 'granted') {
-                // Register Service Worker with config as query params
                 if ('serviceWorker' in navigator) {
-                    const config = {
-                        apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-                        authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-                        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-                        storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-                        messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-                        appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-                    };
-
-                    const queryString = new URLSearchParams(config as any).toString();
-                    const swUrl = `/sw.js?${queryString}`;
-
-                    console.log('Registering Service Worker for FCM...');
-                    const registration = await navigator.serviceWorker.register(swUrl);
-                    console.log('Service Worker registered successfully:', registration.scope);
-
-                    // Wait for the service worker to be active before requesting token
-                    const sw = registration.installing || registration.waiting || registration.active;
-                    if (sw && sw.state !== 'activated') {
-                        await new Promise<void>((resolve) => {
-                            sw.addEventListener('statechange', function handler() {
-                                if (sw.state === 'activated') {
-                                    sw.removeEventListener('statechange', handler);
-                                    resolve();
-                                }
-                            });
-                        });
-                        console.log('Service Worker is now active.');
-                    }
+                    // Reuse the existing SW registered by PWAHandler instead of registering again
+                    const registration = await navigator.serviceWorker.ready;
+                    console.log('Using existing Service Worker for FCM:', registration.scope);
 
                     console.log('Requesting FCM token with VAPID Key:', process.env.NEXT_PUBLIC_VAPID_KEY ? 'Present' : 'Missing');
                     const currentToken = await getToken(messaging, {
