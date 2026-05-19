@@ -178,25 +178,27 @@ export default function BasketSheet({
   return (
     <>
       <SheetContent className="flex flex-col px-0 w-[94vw] sm:w-[400px] sm:max-w-md overflow-x-hidden border-l shadow-2xl">
-        <SheetHeader className="px-4">
-          <div className="flex items-center gap-2">
-            <SheetTitle>Mon Panier</SheetTitle>
-            <Button variant="ghost" size="icon" className="h-8 w-8 ml-auto" onClick={handleToggleAll} disabled={basket.length === 0} aria-label="Tout sélectionner">
-              <ListChecks className="h-4 w-4 text-primary" />
-            </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8 ml-2" onClick={onShareBasket} disabled={basket.length === 0} aria-label="Partager le panier">
-              <Share2 className="h-4 w-4 text-primary" />
-            </Button>
-            {lastSharedUser && (
-              <Button
-                variant="outline"
-                className="h-8 w-8 rounded-full bg-primary/10 text-primary font-bold hover:bg-primary/20 p-0"
-                onClick={handleQuickShare}
-                title={`Envoyer à ${lastSharedUser.name} les articles non cochés`}
-              >
-                {lastSharedUser.name.charAt(0).toUpperCase()}
+        <SheetHeader className="px-4 pb-2">
+          <div className="flex items-center w-full pr-8">
+            <SheetTitle className="shrink-0">Mon Panier</SheetTitle>
+            <div className="flex-1 flex justify-center items-center gap-1">
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleToggleAll} disabled={basket.length === 0} aria-label="Tout sélectionner">
+                <ListChecks className="h-4 w-4 text-primary" />
               </Button>
-            )}
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onShareBasket} disabled={basket.length === 0} aria-label="Partager le panier">
+                <Share2 className="h-4 w-4 text-primary" />
+              </Button>
+              {lastSharedUser && (
+                <Button
+                  variant="outline"
+                  className="h-8 w-8 rounded-full bg-primary/10 text-primary font-bold hover:bg-primary/20 p-0"
+                  onClick={handleQuickShare}
+                  title={`Envoyer à ${lastSharedUser.name} les articles non cochés`}
+                >
+                  {lastSharedUser.name.charAt(0).toUpperCase()}
+                </Button>
+              )}
+            </div>
           </div>
         </SheetHeader>
 
@@ -253,6 +255,11 @@ export default function BasketSheet({
                       <span className={cn('text-xs text-muted-foreground whitespace-nowrap', item.purchased && 'line-through')}>
                         {item.price.toFixed(3)} DT / {item.unit}
                       </span>
+                      {item.remark && (
+                        <span className={cn("text-[9px] text-muted-foreground/80 italic ml-1 truncate max-w-[80px]", item.purchased && 'line-through')}>
+                          ({item.remark})
+                        </span>
+                      )}
                       {purchaseHistory[item.id]?.length > 0 && (
                         <>
                           <span className="text-muted-foreground/30">•</span>
@@ -269,6 +276,11 @@ export default function BasketSheet({
                                     {purchaseHistory[item.id][purchaseHistory[item.id].length - 1].store}
                                   </span>
                                 </div>
+                              )}
+                              {purchaseHistory[item.id][purchaseHistory[item.id].length - 1].remark && (
+                                <span className="text-[9px] text-muted-foreground/70 italic ml-1 truncate max-w-[60px]">
+                                  ({purchaseHistory[item.id][purchaseHistory[item.id].length - 1].remark})
+                                </span>
                               )}
                             </div>
                           </div>
