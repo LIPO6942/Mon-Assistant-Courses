@@ -34,7 +34,7 @@ interface BasketSheetProps {
   basket: BasketItem[];
   basketTotal: number;
   updateBasketQuantity: (id: string, newQuantity: number) => void;
-  updateBasketItemPrice: (id: string, newPrice: number) => void;
+  updateBasketItemPrice: (id: string, newPrice: number, remark?: string) => void;
   clearBasket: () => void;
   handleConfirmPurchase: (store?: string) => void;
   onShareBasket: () => void;
@@ -59,8 +59,9 @@ export default function BasketSheet({
   const [isAddingStore, setIsAddingStore] = useState(false);
   const [newStoreName, setNewStoreName] = useState('');
   const [lastSharedUser, setLastSharedUser] = useState<{ uid: string, name: string } | null>(null);
-  const [editingPriceItem, setEditingPriceItem] = useState<{ id: string; name: string; currentPrice: number } | null>(null);
+  const [editingPriceItem, setEditingPriceItem] = useState<{ id: string; name: string; currentPrice: number; unit: string; remark: string } | null>(null);
   const [newPriceStr, setNewPriceStr] = useState('');
+  const [newRemarkStr, setNewRemarkStr] = useState('');
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { user } = useAuth();
 
@@ -151,8 +152,9 @@ export default function BasketSheet({
 
   const handlePointerDown = (item: BasketItem) => {
     longPressTimerRef.current = setTimeout(() => {
-      setEditingPriceItem({ id: item.id, name: item.name, currentPrice: item.price });
+      setEditingPriceItem({ id: item.id, name: item.name, currentPrice: item.price, unit: item.unit, remark: item.remark || '' });
       setNewPriceStr(item.price.toString());
+      setNewRemarkStr(item.remark || '');
     }, 500); // 500ms long press
   };
 
@@ -387,26 +389,52 @@ export default function BasketSheet({
               Ajuster le prix de l&apos;article &quot;{editingPriceItem?.name}&quot; avant de valider.
             </DialogDescription>
           </DialogHeader>
-          <div className="py-2">
-            <label className="text-xs font-bold text-muted-foreground ml-1">Nouveau prix (DT)</label>
-            <Input
-              type="number"
-              step="0.001"
-              min="0"
-              value={newPriceStr}
-              onChange={e => setNewPriceStr(e.target.value)}
-              className="rounded-xl h-11 mt-1"
-              autoFocus
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  const num = parseFloat(newPriceStr);
-                  if (!isNaN(num) && num >= 0 && editingPriceItem) {
-                    updateBasketItemPrice(editingPriceItem.id, num);
-                    setEditingPriceItem(null);
+          <div className="py-2 space-y-4">
+            <div>
+              <label className="text-xs font-bold text-muted-foreground ml-1">Nouveau prix (DT)</label>
+              <div className="flex items-center gap-2 mt-1">
+                <Input
+                  type="number"
+                  step="0.001"
+                  min="0"
+                  value={newPriceStr}
+                  onChange={e => setNewPriceStr(e.target.value)}
+                  className="rounded-xl h-11 flex-1"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      const num = parseFloat(newPriceStr);
+                      if (!isNaN(num) && num >= 0 && editingPriceItem) {
+                        updateBasketItemPrice(editingPriceItem.id, num, newRemarkStr);
+                        setEditingPriceItem(null);
+                      }
+                    }
+                  }}
+                />
+                <span className="text-xs text-muted-foreground whitespace-nowrap bg-secondary/50 px-3 py-2.5 rounded-xl border">
+                  / {editingPriceItem?.unit}
+                </span>
+              </div>
+            </div>
+            
+            <div>
+              <label className="text-xs font-bold text-muted-foreground ml-1">Remarque (optionnelle)</label>
+              <Input
+                placeholder="Ex: Acheté à un autre endroit, promotion..."
+                value={newRemarkStr}
+                onChange={e => setNewRemarkStr(e.target.value)}
+                className="rounded-xl mt-1"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    const num = parseFloat(newPriceStr);
+                    if (!isNaN(num) && num >= 0 && editingPriceItem) {
+                      updateBasketItemPrice(editingPriceItem.id, num, newRemarkStr);
+                      setEditingPriceItem(null);
+                    }
                   }
-                }
-              }}
-            />
+                }}
+              />
+            </div>
           </div>
           <DialogFooter className="flex-col gap-2 sm:flex-col mt-2">
             <Button
@@ -415,7 +443,7 @@ export default function BasketSheet({
                 if (editingPriceItem) {
                   const num = parseFloat(newPriceStr);
                   if (!isNaN(num) && num >= 0) {
-                    updateBasketItemPrice(editingPriceItem.id, num);
+                    updateBasketItemPrice(editingPriceItem.id, num, newRemarkStr);
                     setEditingPriceItem(null);
                   }
                 }

@@ -671,8 +671,8 @@ export default function KitchenAssistantPage() {
     else setBasket(prev => prev.map(item => item.id === id ? { ...item, quantity: newQuantity } : item));
   };
 
-  const updateBasketItemPrice = (id: string, newPrice: number) => {
-    setBasket(prev => prev.map(item => item.id === id ? { ...item, price: newPrice } : item));
+  const updateBasketItemPrice = (id: string, newPrice: number, remark?: string) => {
+    setBasket(prev => prev.map(item => item.id === id ? { ...item, price: newPrice, remark } : item));
     setPantry(prev => prev.map(item => item.id === id ? { ...item, price: newPrice } : item));
   };
 
@@ -715,6 +715,7 @@ export default function KitchenAssistantPage() {
           unit: item.unit,
           price: item.price,
           ...(store ? { store } : {}),  // enregistre le magasin si fourni
+          ...(item.remark ? { remark: item.remark } : {}),
         });
 
         // Add to Ch3andek if not present

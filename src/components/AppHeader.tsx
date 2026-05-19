@@ -17,7 +17,7 @@ interface AppHeaderProps {
   basket: BasketItem[];
   basketTotal: number;
   updateBasketQuantity: (id: string, newQuantity: number) => void;
-  updateBasketItemPrice: (id: string, newPrice: number) => void;
+  updateBasketItemPrice: (id: string, newPrice: number, remark?: string) => void;
   clearBasket: () => void;
   handleConfirmPurchase: (store?: string) => void;
   handleShareBasket: () => void;
