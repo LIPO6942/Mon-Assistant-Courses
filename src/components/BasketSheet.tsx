@@ -448,11 +448,11 @@ export default function BasketSheet({
                 }}
               />
               <div className="flex flex-wrap gap-2 mt-3">
-                {["En promotion", "Autre magasin", "Achat en gros", "Marque spécifique"].map(tag => (
+                {["Demi pot", "Marque", "En Promotion"].map(tag => (
                   <Badge 
                     key={tag}
                     variant="secondary" 
-                    className="cursor-pointer hover:bg-secondary/80 text-[10px] font-normal"
+                    className="cursor-pointer hover:bg-secondary/80 text-[9px] px-1.5 py-0 font-normal"
                     onClick={() => setNewRemarkStr(prev => prev ? `${prev}, ${tag}` : tag)}
                   >
                     {tag}
