@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
 import type { BasketItem, PurchaseHistory } from '@/lib/types';
-import { Minus, Plus, Trash2, Share2, History, Store, CheckCircle2 } from 'lucide-react';
+import { Minus, Plus, Trash2, Share2, History, Store, CheckCircle2, ListChecks } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { STORES } from '@/lib/stores';
 import { StoreIcon, StoreOption } from '@/components/StoreIcon';
 import { Checkbox } from './ui/checkbox';
@@ -150,6 +151,15 @@ export default function BasketSheet({
     setNewStoreName('');
   };
 
+  const handleToggleAll = () => {
+    const allPurchased = basket.length > 0 && basket.every(item => item.purchased);
+    basket.forEach(item => {
+      if ((!!item.purchased) === allPurchased) {
+        onTogglePurchaseStatus(item.id, item.price, item.quantity);
+      }
+    });
+  };
+
   const handlePointerDown = (item: BasketItem) => {
     longPressTimerRef.current = setTimeout(() => {
       setEditingPriceItem({ id: item.id, name: item.name, currentPrice: item.price, unit: item.unit, remark: item.remark || '' });
@@ -171,6 +181,9 @@ export default function BasketSheet({
         <SheetHeader className="px-4">
           <div className="flex items-center gap-2">
             <SheetTitle>Mon Panier</SheetTitle>
+            <Button variant="ghost" size="icon" className="h-8 w-8 ml-auto" onClick={handleToggleAll} disabled={basket.length === 0} aria-label="Tout sélectionner">
+              <ListChecks className="h-4 w-4 text-primary" />
+            </Button>
             <Button variant="ghost" size="icon" className="h-8 w-8 ml-2" onClick={onShareBasket} disabled={basket.length === 0} aria-label="Partager le panier">
               <Share2 className="h-4 w-4 text-primary" />
             </Button>
@@ -420,7 +433,7 @@ export default function BasketSheet({
             <div>
               <label className="text-xs font-bold text-muted-foreground ml-1">Remarque (optionnelle)</label>
               <Input
-                placeholder="Ex: Acheté à un autre endroit, promotion..."
+                placeholder="Ex: indiquer la marque, la promotion"
                 value={newRemarkStr}
                 onChange={e => setNewRemarkStr(e.target.value)}
                 className="rounded-xl mt-1"
@@ -434,6 +447,18 @@ export default function BasketSheet({
                   }
                 }}
               />
+              <div className="flex flex-wrap gap-2 mt-3">
+                {["En promotion", "Autre magasin", "Achat en gros", "Marque spécifique"].map(tag => (
+                  <Badge 
+                    key={tag}
+                    variant="secondary" 
+                    className="cursor-pointer hover:bg-secondary/80 text-[10px] font-normal"
+                    onClick={() => setNewRemarkStr(prev => prev ? `${prev}, ${tag}` : tag)}
+                  >
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
             </div>
           </div>
           <DialogFooter className="flex-col gap-2 sm:flex-col mt-2">
