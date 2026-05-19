@@ -656,7 +656,9 @@ export default function KitchenAssistantPage() {
       if (existingItem) {
         return prev.map(item => item.id === ingredient.id ? { ...item, quantity: item.quantity + quantity } : item);
       }
-      return [...prev, { ...ingredient, quantity, purchased: false }];
+      const history = purchaseHistory[ingredient.id];
+      const lastRemark = history && history.length > 0 ? history[history.length - 1].remark : undefined;
+      return [...prev, { ...ingredient, quantity, purchased: false, remark: lastRemark }];
     });
     setQuantityDialogOpen(false);
   };

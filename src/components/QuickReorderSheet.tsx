@@ -135,6 +135,11 @@ export default function QuickReorderSheet({ purchaseHistory, pantry, onAddToBask
                                                                 </p>
                                                                 <p className="text-xs text-muted-foreground font-medium">
                                                                     {latestRecord.quantity} {latestRecord.unit} • {((latestRecord.price || 0) * (latestRecord.quantity || 1)).toFixed(3)} DT
+                                                                    {latestRecord.remark && (
+                                                                        <span className="text-[10px] text-muted-foreground/80 italic ml-1 block mt-0.5">
+                                                                            ({latestRecord.remark})
+                                                                        </span>
+                                                                    )}
                                                                 </p>
                                                             </div>
                                                         ) : (
@@ -151,6 +156,11 @@ export default function QuickReorderSheet({ purchaseHistory, pantry, onAddToBask
                                                                                     <span className="flex items-center gap-1 text-[10px] text-primary/60 font-medium italic -mt-0.5">
                                                                                         <StoreIcon storeName={record.store} size="xs" />
                                                                                         {record.store}
+                                                                                    </span>
+                                                                                )}
+                                                                                {record.remark && (
+                                                                                    <span className="text-[9px] text-muted-foreground/70 italic mt-0.5 block">
+                                                                                        ({record.remark})
                                                                                     </span>
                                                                                 )}
                                                                             </div>
