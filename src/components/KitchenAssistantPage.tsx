@@ -334,18 +334,52 @@ export default function KitchenAssistantPage() {
         setDbarati(cloudData?.dbarati ?? dbaratiData ?? []);
 
       } catch (error) {
-        console.error("Error loading data", error);
-        // Fallback to initial data if loading fails
-        setPantry(predefinedIngredients);
-        setBasket([]);
-        setCategories(initialCategories);
-        setSavedRecipes([]);
-        setUserRecipes([]);
-        setInitialBudget(200);
-        setTotalSpent(0);
-        setHealthConditions(initialHealthConditions);
-        setPurchaseHistory({});
-        setDbarati([]);
+        console.error("Error loading data from Firestore:", error);
+        // Ne PAS réinitialiser à vide — essayer IndexedDB d'abord pour éviter de perdre les données
+        try {
+          const [idbPantry, idbBasket, idbCats, idbSavedRecipes, idbUserRecipes,
+                 idbBudget, idbSpent, idbHealth, idbHistory, idbDbarati] = await Promise.all([
+            db.get<Ingredient[]>('pantry'),
+            db.get<BasketItem[]>('basket'),
+            db.get<CategoryDef[]>('categories'),
+            db.get<Recipe[]>('savedRecipes'),
+            db.get<UserRecipe[]>('userRecipes'),
+            db.get<number>('budget'),
+            db.get<number>('totalSpent'),
+            db.get<HealthConditionCategory[]>('healthConditions'),
+            db.get<PurchaseHistory>('purchaseHistory'),
+            db.get<DbaratiItem[]>('dbarati'),
+          ]);
+          setPantry(idbPantry ?? predefinedIngredients);
+          setBasket(idbBasket ?? []);
+          setCategories(idbCats ?? initialCategories);
+          setSavedRecipes(idbSavedRecipes ?? []);
+          setUserRecipes(idbUserRecipes ?? []);
+          setInitialBudget(idbBudget ?? 200);
+          setTotalSpent(idbSpent ?? 0);
+          setHealthConditions(idbHealth ?? initialHealthConditions);
+          const rawHistory = idbHistory;
+          const migratedHistory: PurchaseHistory = {};
+          if (rawHistory) {
+            Object.entries(rawHistory).forEach(([id, data]) => {
+              migratedHistory[id] = Array.isArray(data) ? data : [data as any];
+            });
+          }
+          setPurchaseHistory(migratedHistory);
+          setDbarati(idbDbarati ?? []);
+        } catch (_) {
+          // Dernier recours : données par défaut (ne devrait jamais arriver)
+          setPantry(predefinedIngredients);
+          setBasket([]);
+          setCategories(initialCategories);
+          setSavedRecipes([]);
+          setUserRecipes([]);
+          setInitialBudget(200);
+          setTotalSpent(0);
+          setHealthConditions(initialHealthConditions);
+          setPurchaseHistory({});
+          setDbarati([]);
+        }
       } finally {
         setIsDataLoaded(true);
       }
