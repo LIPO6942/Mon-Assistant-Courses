@@ -49,6 +49,24 @@ import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { useBasketAbandonmentReminder } from '@/hooks/useBasketAbandonmentReminder';
 
 
+// Catégories non-alimentaires à exclure de l'onglet Ch3andek
+const NON_FOOD_CATEGORIES = [
+  'maison',
+  'médicaments',
+  'médicament',
+  'produits de soin',
+  'produit de soin',
+  'soin',
+  'bien-être',
+  'bien être',
+  'hygiène',
+  'entretien',
+  'nettoyage',
+  'hygiene',
+  'beauté',
+  'beaute',
+];
+
 export default function KitchenAssistantPage() {
   // --- STATE MANAGEMENT ---
   const isOnline = useOnlineStatus();
@@ -242,7 +260,19 @@ export default function KitchenAssistantPage() {
           cloudData = await loadUserData(userUid);
         }
 
-        // 2. Fallback to IndexedDB
+        // 2. Lire le panier depuis localStorage (écriture synchrone = toujours à jour sur cet appareil)
+        let localStorageBasket: BasketItem[] | null = null;
+        let localStorageSavedAt = 0;
+        try {
+          const lsRaw = localStorage.getItem('mac_basket_v2');
+          if (lsRaw) {
+            const lsParsed = JSON.parse(lsRaw);
+            localStorageBasket = lsParsed.items ?? null;
+            localStorageSavedAt = lsParsed.savedAt ?? 0;
+          }
+        } catch (_) {}
+
+        // 3. Fallback to IndexedDB
         const [
           pantryData,
           basketData,
@@ -267,9 +297,24 @@ export default function KitchenAssistantPage() {
           db.get<DbaratiItem[]>('dbarati'),
         ]);
 
+        // 4. Choisir la source du panier la plus récente :
+        //    - localStorage est synchrone → toujours à jour sur cet appareil
+        //    - Firestore est la source de vérité multi-appareils
+        //    → Comparer les timestamps pour prendre le plus récent
+        const firestoreBasketTs = cloudData?.basketUpdatedAt
+          ? new Date(cloudData.basketUpdatedAt).getTime()
+          : 0;
+        let resolvedBasket: BasketItem[];
+        if (localStorageBasket && localStorageSavedAt > firestoreBasketTs) {
+          // localStorage est plus récent (ex: refresh rapide avant que Firestore ne soit à jour)
+          resolvedBasket = localStorageBasket;
+        } else {
+          resolvedBasket = cloudData?.basket ?? basketData ?? [];
+        }
+
         // Cloud data has priority over local IndexedDB data
         setPantry(cloudData?.pantry ?? pantryData ?? predefinedIngredients);
-        setBasket(cloudData?.basket ?? basketData ?? []);
+        setBasket(resolvedBasket);
         setCategories(cloudData?.categories ?? categoriesData ?? initialCategories);
         setSavedRecipes(cloudData?.savedRecipes ?? savedRecipesData ?? []);
         setUserRecipes(cloudData?.userRecipes ?? userRecipesData ?? []);
@@ -323,7 +368,17 @@ export default function KitchenAssistantPage() {
     }
     if (isDataLoaded) { try { db.set('pantry', pantry); } catch (e) { console.error(e); } if (userUid) savePantry(userUid, pantry); }
   }, [pantry]);
-  useEffect(() => { if (!isInitialMount.current && isDataLoaded) { try { db.set('basket', basket); } catch (e) { console.error(e); } if (userUid) saveBasket(userUid, basket); } }, [basket]);
+  useEffect(() => {
+    if (!isInitialMount.current && isDataLoaded) {
+      // Sauvegarde synchrone dans localStorage : toujours complète avant un rechargement de page
+      try {
+        localStorage.setItem('mac_basket_v2', JSON.stringify({ items: basket, savedAt: Date.now() }));
+      } catch (_) {}
+      // Sauvegarde asynchrone dans IndexedDB et Firestore
+      try { db.set('basket', basket); } catch (e) { console.error(e); }
+      if (userUid) saveBasket(userUid, basket);
+    }
+  }, [basket]);
   useEffect(() => { if (!isInitialMount.current && isDataLoaded) { try { db.set('categories', categories); } catch (e) { console.error(e); } if (userUid) saveCategories(userUid, categories); } }, [categories]);
   useEffect(() => { if (!isInitialMount.current && isDataLoaded) { try { db.set('savedRecipes', savedRecipes); } catch (e) { console.error(e); } if (userUid) saveSavedRecipes(userUid, savedRecipes); } }, [savedRecipes]);
   useEffect(() => { if (!isInitialMount.current && isDataLoaded) { try { db.set('userRecipes', userRecipes); } catch (e) { console.error(e); } if (userUid) saveUserRecipes(userUid, userRecipes); } }, [userRecipes]);
@@ -448,30 +503,12 @@ export default function KitchenAssistantPage() {
   useEffect(() => {
     if (!isDataLoaded) return;
 
-    // Categories to exclude from Ch3andek auto-selection
-    const excludedCategories = [
-      'maison',
-      'médicaments',
-      'médicament',
-      'produits de soin',
-      'produit de soin',
-      'soin',
-      'bien-être',
-      'bien être',
-      'hygiène',
-      'entretien',
-      'nettoyage',
-    ];
-
     const greenIngredients = pantry.filter(ingredient => {
       const status = getProductStatus(purchaseHistory[ingredient.id]);
       const categoryLower = ingredient.category.toLowerCase();
-
-      // Check if category contains any excluded keywords
-      const isExcluded = excludedCategories.some(excluded =>
+      const isExcluded = NON_FOOD_CATEGORIES.some(excluded =>
         categoryLower.includes(excluded)
       );
-
       return status === 'green' && !isExcluded;
     });
 
@@ -877,6 +914,13 @@ export default function KitchenAssistantPage() {
   };
 
   const handleToggleChandyekIngredient = (ingredientName: string) => {
+    // Bloquer les articles des catégories non-alimentaires
+    const ingredient = pantry.find(ing => ing.name === ingredientName);
+    if (ingredient) {
+      const categoryLower = ingredient.category.toLowerCase();
+      const isNonFood = NON_FOOD_CATEGORIES.some(cat => categoryLower.includes(cat));
+      if (isNonFood) return; // Ignorer silencieusement
+    }
     setChandyekIngredients(prev => {
       const ingredientsList = prev ? prev.split(', ').filter(Boolean) : [];
       if (ingredientsList.includes(ingredientName)) {

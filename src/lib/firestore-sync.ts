@@ -62,6 +62,8 @@ export async function loadUserData(uid: string) {
             return {
                 pantry: pantrySnap.exists() ? pantrySnap.data().items : null,
                 basket: basketSnap.exists() ? basketSnap.data().items : null,
+                // Timestamp Firestore du panier pour comparaison avec localStorage
+                basketUpdatedAt: basketSnap.exists() ? basketSnap.data().updatedAt : null,
                 categories: categoriesSnap.exists() ? categoriesSnap.data().items : null,
                 savedRecipes: savedRecipesSnap.exists() ? savedRecipesSnap.data().items : null,
                 userRecipes: userRecipesSnap.exists() ? userRecipesSnap.data().items : null,

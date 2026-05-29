@@ -181,6 +181,9 @@ export default function PantryView({
                     <ul className="space-y-2 pr-4">
                       {items.map(item => {
                         const isSelectedForChandyek = chandyekIngredientsList.includes(item.name);
+                        // Masquer le bouton Ch3andek pour les articles non-alimentaires
+                        const categoryLower = item.category.toLowerCase();
+                        const isNonFoodItem = ['maison','médicaments','médicament','produits de soin','produit de soin','soin','bien-être','bien être','hygiène','entretien','nettoyage','hygiene','beauté','beaute'].some(kw => categoryLower.includes(kw));
                         return (
                           <li key={item.id} className="flex items-center justify-between p-2 rounded-2xl bg-background/50 border border-border/20 shadow-sm hover:shadow-md hover:bg-background/80 transition-all duration-300 group/item">
                             <div className="flex flex-col gap-0.5 min-w-0 flex-1 mr-1">
@@ -214,20 +217,22 @@ export default function PantryView({
                               >
                                 <Plus className="h-3.5 w-3.5" />
                               </Button>
-                              <Button
-                                variant={isSelectedForChandyek ? "secondary" : "ghost"}
-                                size="icon"
-                                className={cn(
-                                  'h-7 w-7 rounded-full transition-colors',
-                                  isSelectedForChandyek
-                                    ? 'bg-primary/15 text-primary hover:bg-primary/25'
-                                    : `text-muted-foreground ${palette.buttonHover}`
-                                )}
-                                title="Ajouter/Retirer de 'Ch3andek'"
-                                onClick={() => onToggleChandyekIngredient(item.name)}
-                              >
-                                <BrainCircuit className="h-3.5 w-3.5" />
-                              </Button>
+                              {!isNonFoodItem && (
+                                <Button
+                                  variant={isSelectedForChandyek ? "secondary" : "ghost"}
+                                  size="icon"
+                                  className={cn(
+                                    'h-7 w-7 rounded-full transition-colors',
+                                    isSelectedForChandyek
+                                      ? 'bg-primary/15 text-primary hover:bg-primary/25'
+                                      : `text-muted-foreground ${palette.buttonHover}`
+                                  )}
+                                  title="Ajouter/Retirer de 'Ch3andek'"
+                                  onClick={() => onToggleChandyekIngredient(item.name)}
+                                >
+                                  <BrainCircuit className="h-3.5 w-3.5" />
+                                </Button>
+                              )}
                               <Button
                                 variant="ghost"
                                 size="icon"
