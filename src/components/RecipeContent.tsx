@@ -26,6 +26,9 @@ export default function RecipeContent({
     purchaseHistory,
 }: RecipeContentProps) {
     const [portions, setPortions] = React.useState(initialPortions);
+    React.useEffect(() => {
+        setPortions(initialPortions);
+    }, [initialPortions]);
     const [isFocusMode, setIsFocusMode] = React.useState(false);
     const [checkedSteps, setCheckedSteps] = React.useState<Set<number>>(new Set());
 

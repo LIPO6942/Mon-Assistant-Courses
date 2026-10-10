@@ -25,6 +25,7 @@ export interface Recipe {
   description: string;
   country: string;
   portions?: number;
+  targetPortions?: number;
   ingredients: RecipeIngredient[];
   preparation?: string;
   calories?: number;

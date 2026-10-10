@@ -6,7 +6,7 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, Shuffle, Dices, Clock, Coins, Utensils, BookUser, Search, Tag, Sparkles, TrendingDown, ClipboardList, Check, Trash2, Plus, ChevronUp, ChevronDown, Loader2, X } from 'lucide-react';
+import { PlusCircle, Shuffle, Dices, Clock, Coins, Utensils, BookUser, Search, Tag, Sparkles, TrendingDown, ClipboardList, Check, Trash2, Plus, Minus, Users, ChevronUp, ChevronDown, Loader2, X } from 'lucide-react';
 import type { Recipe, UserRecipe, BasketItem, PurchaseHistory, CommunityPurchase, DbaratiItem } from '@/lib/types';
 import { streetFoodOptions } from '@/lib/data';
 import { cn, getProductStatus } from '@/lib/utils';
@@ -75,6 +75,30 @@ export default function RecipesView({
 
   const [filterQuick, setFilterQuick] = useState(false);
   const [filterEconomical, setFilterEconomical] = useState(false);
+  const [ideaPortions, setIdeaPortions] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('mac_idea_portions');
+        if (saved) {
+          const parsed = parseInt(saved, 10);
+          if (!isNaN(parsed) && parsed >= 1 && parsed <= 20) return parsed;
+        }
+      } catch {}
+    }
+    return 4;
+  });
+
+  const handleSetIdeaPortions = (portionsOrUpdater: number | ((prev: number) => number)) => {
+    setIdeaPortions(prev => {
+      const next = typeof portionsOrUpdater === 'function' ? portionsOrUpdater(prev) : portionsOrUpdater;
+      const clamped = Math.max(1, Math.min(20, next));
+      try {
+        localStorage.setItem('mac_idea_portions', clamped.toString());
+      } catch {}
+      return clamped;
+    });
+  };
+
   const [communityPurchases, setCommunityPurchases] = useState<CommunityPurchase[]>([]);
   const [userRecipeTagFilter, setUserRecipeTagFilter] = useState('');
   const [isDbaratiSpinning, setIsDbaratiSpinning] = useState(false);
@@ -174,6 +198,22 @@ export default function RecipesView({
   const marketPrices = useMemo(() => {
     return calculateMarketPrices(communityPurchases);
   }, [communityPurchases]);
+
+  // Adjust recipe total cost and cost per person dynamically based on selected ideaPortions
+  const getAdjustedRecipeCost = (recipe: Recipe) => {
+    const basePortions = recipe.portions && recipe.portions > 0 ? recipe.portions : 4;
+    const rawCost = calculateRecipeCost(recipe.ingredients, marketPrices);
+    if (rawCost.totalCost === null) {
+      return { totalCost: null, perPersonCost: null, basePortions };
+    }
+    const perPersonCost = rawCost.totalCost / basePortions;
+    const totalCost = perPersonCost * ideaPortions;
+    return {
+      totalCost,
+      perPersonCost,
+      basePortions,
+    };
+  };
 
   // --- Basket-based Recommendations ---
   const basketBasedRecipes = useMemo(() => {
@@ -903,6 +943,62 @@ export default function RecipesView({
         <h2 className='text-2xl font-bold mb-2'>À court d&apos;idées ?</h2>
         <p className='text-muted-foreground mb-4'>Utilisez les filtres pour affiner les suggestions aléatoires !</p>
 
+        {/* Dynamic Portion Selector */}
+        <div className="flex flex-col items-center justify-center gap-2 mb-4">
+          <div className="inline-flex items-center gap-2 bg-background/90 dark:bg-zinc-900/90 border border-primary/25 rounded-full px-3 py-1.5 shadow-xs">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground pl-1">
+              <Users className="h-3.5 w-3.5 text-primary" />
+              <span>Pour :</span>
+            </div>
+            
+            <div className="flex items-center gap-1 bg-muted/70 dark:bg-zinc-800/70 rounded-full p-0.5">
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                className="h-6 w-6 rounded-full hover:bg-background"
+                onClick={() => handleSetIdeaPortions(p => Math.max(1, p - 1))}
+                disabled={ideaPortions <= 1}
+                aria-label="Moins de personnes"
+              >
+                <Minus className="h-3 w-3" />
+              </Button>
+              <span className="w-14 text-center text-xs font-extrabold text-foreground">
+                {ideaPortions} {ideaPortions > 1 ? 'pers.' : 'pers.'}
+              </span>
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                className="h-6 w-6 rounded-full hover:bg-background"
+                onClick={() => handleSetIdeaPortions(p => Math.min(20, p + 1))}
+                disabled={ideaPortions >= 20}
+                aria-label="Plus de personnes"
+              >
+                <Plus className="h-3 w-3" />
+              </Button>
+            </div>
+
+            <div className="flex items-center gap-1 border-l border-border/60 pl-2 pr-0.5">
+              {[2, 4, 6].map(nb => (
+                <button
+                  key={nb}
+                  type="button"
+                  onClick={() => handleSetIdeaPortions(nb)}
+                  className={cn(
+                    "px-2 py-0.5 text-[11px] font-medium rounded-full transition-all",
+                    ideaPortions === nb
+                      ? "bg-primary text-primary-foreground font-bold shadow-xs scale-105"
+                      : "text-muted-foreground hover:bg-muted"
+                  )}
+                >
+                  {nb}p
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
         <div className="flex flex-wrap justify-center gap-4 mb-6">
           <Button
             size="sm"
@@ -938,7 +1034,7 @@ export default function RecipesView({
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {basketBasedRecipes.map(({ recipe, matchedNames, isDiscovery }) => {
-                const recipeCost = calculateRecipeCost(recipe.ingredients, marketPrices);
+                const { totalCost, perPersonCost } = getAdjustedRecipeCost(recipe);
                 const availabilityPercent = getRecipeAvailabilityPercentage(recipe.ingredients, marketPrices);
                 
                 return (
@@ -948,7 +1044,7 @@ export default function RecipesView({
                     "cursor-pointer hover:shadow-md transition-all border-primary/20 bg-primary/5 group relative",
                     isDiscovery ? "border-zinc-200 bg-zinc-50/50" : "border-primary/20 bg-primary/5"
                   )}
-                  onClick={() => setViewingRecipe(recipe)}
+                  onClick={() => setViewingRecipe({ ...recipe, targetPortions: ideaPortions })}
                 >
                   <CardHeader className="p-3 pb-0">
                     <CardTitle className="text-sm group-hover:text-primary transition-colors">{recipe.title}</CardTitle>
@@ -972,9 +1068,10 @@ export default function RecipesView({
                       )}
                       {!isDiscovery && matchedNames.length > 3 && <span className="text-[9px] text-muted-foreground">+{matchedNames.length - 3}</span>}
                     </div>
-                    {recipeCost.totalCost !== null && (
-                      <div className="mt-2 text-[9px] font-bold text-green-700 dark:text-green-400">
-                        Est. {formatPrice(recipeCost.totalCost)}
+                    {totalCost !== null && (
+                      <div className="mt-2 text-[9px] font-bold text-green-700 dark:text-green-400 flex items-center justify-between bg-green-500/10 px-1.5 py-0.5 rounded border border-green-500/20">
+                        <span>Est. {formatPrice(totalCost)}</span>
+                        <span className="text-[8px] font-normal opacity-80">({ideaPortions} pers.)</span>
                       </div>
                     )}
                   </CardContent>
@@ -988,7 +1085,7 @@ export default function RecipesView({
         {suggestedRecipes.length > 0 ? (
           <div className='mt-8 max-w-4xl mx-auto text-left animate-in fade-in-50 grid grid-cols-1 md:grid-cols-2 gap-6'>
             {suggestedRecipes.map(recipe => {
-              const recipeCost = calculateRecipeCost(recipe.ingredients, marketPrices);
+              const { totalCost, perPersonCost } = getAdjustedRecipeCost(recipe);
               const availabilityPercent = getRecipeAvailabilityPercentage(recipe.ingredients, marketPrices);
               
               return (
@@ -1003,10 +1100,16 @@ export default function RecipesView({
                           <Badge variant="outline" className="flex items-center gap-1"><Clock className="h-3 w-3" />{recipe.preparationTime} min</Badge>
                         )}
                         {recipe.isEconomical && <Badge variant="outline" className="flex items-center gap-1"><Coins className="h-3 w-3" />Éco</Badge>}
-                        {recipeCost.totalCost !== null && (
-                          <Badge className="flex items-center gap-1 bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/30">
+                        {totalCost !== null && (
+                          <Badge className="flex items-center gap-1.5 bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/30">
                             <TrendingDown className="h-3 w-3" />
-                            {formatPrice(recipeCost.totalCost)}
+                            <span className="font-bold">{formatPrice(totalCost)}</span>
+                            <span className="text-[10px] font-normal opacity-85">({ideaPortions} {ideaPortions > 1 ? 'pers.' : 'pers.'})</span>
+                            {perPersonCost !== null && ideaPortions > 1 && (
+                              <span className="text-[9px] opacity-75 border-l border-green-500/30 pl-1.5 ml-0.5 font-normal">
+                                ~{formatPrice(perPersonCost)}/pers.
+                              </span>
+                            )}
                           </Badge>
                         )}
                       </div>
@@ -1025,7 +1128,7 @@ export default function RecipesView({
                   <p className="text-sm text-muted-foreground">{recipe.description}</p>
                 </CardContent>
                 <CardFooter className="flex justify-between mt-auto bg-secondary/30 pt-4 gap-2">
-                  <Button onClick={() => setViewingRecipe(recipe)}>Voir la recette</Button>
+                  <Button onClick={() => setViewingRecipe({ ...recipe, targetPortions: ideaPortions })}>Voir la recette</Button>
                   <Button
                     variant="outline"
                     size="icon"

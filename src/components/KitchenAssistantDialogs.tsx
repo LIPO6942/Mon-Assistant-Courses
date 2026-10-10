@@ -122,7 +122,7 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
   const [isPreviewPhotoOpen, setIsPreviewPhotoOpen] = React.useState(false);
 
   const [quantityInput, setQuantityInput] = React.useState('1');
-  const [portions, setPortions] = React.useState(viewingRecipe?.portions || viewingUserRecipe?.portions || 2);
+  const [portions, setPortions] = React.useState(viewingRecipe?.targetPortions || viewingRecipe?.portions || viewingUserRecipe?.portions || 2);
 
   React.useEffect(() => {
     if (isQuantityDialogOpen) {
@@ -131,7 +131,7 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
   }, [isQuantityDialogOpen]);
 
   React.useEffect(() => {
-    setPortions(viewingRecipe?.portions || viewingUserRecipe?.portions || 2);
+    setPortions(viewingRecipe?.targetPortions || viewingRecipe?.portions || viewingUserRecipe?.portions || 2);
   }, [viewingRecipe, viewingUserRecipe]);
 
 
