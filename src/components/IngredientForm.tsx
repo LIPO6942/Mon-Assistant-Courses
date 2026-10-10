@@ -111,29 +111,32 @@ export default function IngredientForm({ ingredient, categories, onSave, formId 
       </div>
 
       {!ingredient?.id && (
-        <div className="grid grid-cols-4 items-center gap-4 pt-3 border-t border-border/40">
-          <div className="col-start-2 col-span-3 flex flex-col gap-2.5">
-            <div className="flex items-center space-x-2">
+        <div className="mt-2 pt-3 border-t border-border/50">
+          <div className="rounded-xl border border-primary/25 bg-primary/5 p-3.5 flex flex-col gap-2.5 shadow-xs">
+            <label htmlFor="addToBasket" className="flex items-center gap-3 cursor-pointer select-none">
               <Checkbox
                 id="addToBasket"
                 checked={addToBasket}
                 onCheckedChange={(checked) => setAddToBasket(!!checked)}
+                className="h-5 w-5 data-[state=checked]:bg-primary"
               />
-              <Label htmlFor="addToBasket" className="text-sm font-medium cursor-pointer flex items-center gap-1.5 text-foreground">
-                <ShoppingBasket className="h-4 w-4 text-primary" />
-                Ajouter également au panier
-              </Label>
-            </div>
+              <div className="flex items-center gap-2">
+                <ShoppingBasket className="h-4 w-4 text-primary shrink-0" />
+                <span className="text-sm font-semibold text-foreground">
+                  Ajouter également au panier
+                </span>
+              </div>
+            </label>
             {addToBasket && (
-              <div className="flex items-center gap-2 pl-6 animate-in fade-in-50 duration-200">
-                <span className="text-xs text-muted-foreground whitespace-nowrap">Quantité :</span>
+              <div className="flex items-center gap-2 pl-8 pt-1 animate-in fade-in-50 duration-200">
+                <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">Quantité :</span>
                 <Input
                   type="number"
                   step="any"
                   min="0.1"
                   value={basketQuantity}
                   onChange={(e) => setBasketQuantity(e.target.value)}
-                  className="h-8 w-24 text-sm"
+                  className="h-8 w-24 bg-background text-sm font-semibold"
                 />
                 <span className="text-xs text-muted-foreground">{formData.unit}</span>
               </div>
