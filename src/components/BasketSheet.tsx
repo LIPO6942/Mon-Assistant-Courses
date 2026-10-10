@@ -289,30 +289,38 @@ export default function BasketSheet({
                         </>
                       )}
                       {(() => {
-                        const matchedDbarati = findMatchingDbaratiItem(item.name, dbarati);
-                        if (!matchedDbarati) return null;
+                        try {
+                          if (!item || !item.name || typeof item.name !== 'string') return null;
+                          const matchedDbarati = findMatchingDbaratiItem(item.name, dbarati);
+                          if (!matchedDbarati || !matchedDbarati.dishName || typeof matchedDbarati.dishName !== 'string') return null;
 
-                        const isSameName = matchedDbarati.dishName.trim().toLowerCase() === item.name.trim().toLowerCase();
-                        const labelText = isSameName
-                          ? (matchedDbarati.relativeDate ? `Prép. ${matchedDbarati.relativeDate}` : 'Non préparé')
-                          : `${matchedDbarati.dishName} : ${matchedDbarati.relativeDate || 'non préparé'}`;
+                          const dishName = String(matchedDbarati.dishName || '').trim();
+                          const itemName = String(item.name || '').trim();
+                          const isSameName = dishName.toLowerCase() === itemName.toLowerCase();
+                          const labelText = isSameName
+                            ? (matchedDbarati.relativeDate ? `Prép. ${matchedDbarati.relativeDate}` : 'Non préparé')
+                            : `${dishName} : ${matchedDbarati.relativeDate || 'non préparé'}`;
 
-                        return (
-                          <>
-                            <span className="text-muted-foreground/30">•</span>
-                            <div
-                              className={cn(
-                                "inline-flex items-center gap-1 text-[9px] font-medium leading-none px-1.5 py-0.5 rounded-full border shrink-0",
-                                item.purchased
-                                  ? "bg-muted/40 text-muted-foreground border-border/40 line-through opacity-70"
-                                  : "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20"
-                              )}
-                            >
-                              <span className="shrink-0 text-[10px]">🍳</span>
-                              <span>{labelText}</span>
-                            </div>
-                          </>
-                        );
+                          return (
+                            <>
+                              <span className="text-muted-foreground/30">•</span>
+                              <div
+                                className={cn(
+                                  "inline-flex items-center gap-1 text-[9px] font-medium leading-none px-1.5 py-0.5 rounded-full border shrink-0",
+                                  item.purchased
+                                    ? "bg-muted/40 text-muted-foreground border-border/40 line-through opacity-70"
+                                    : "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20"
+                                )}
+                              >
+                                <span className="shrink-0 text-[10px]">🍳</span>
+                                <span>{labelText}</span>
+                              </div>
+                            </>
+                          );
+                        } catch (err) {
+                          console.error("Error displaying Dbarati match:", err);
+                          return null;
+                        }
                       })()}
                     </div>
                     <div className='flex items-center gap-2 shrink-0'>

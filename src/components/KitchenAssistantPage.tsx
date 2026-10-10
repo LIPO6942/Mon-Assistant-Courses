@@ -433,19 +433,20 @@ export default function KitchenAssistantPage() {
 
   // --- AUTO-UNCHECK DBARATI ITEMS AFTER 30 DAYS ---
   useEffect(() => {
-    if (isDataLoaded && dbarati.length > 0) {
+    if (isDataLoaded && Array.isArray(dbarati) && dbarati.length > 0) {
       const ONE_MONTH_MS = 30 * 24 * 60 * 60 * 1000;
       const now = Date.now();
       
       const needsUpdate = dbarati.some(item => 
+        item &&
         item.done && 
         item.lastPreparedAt && 
         (now - new Date(item.lastPreparedAt).getTime() > ONE_MONTH_MS)
       );
 
       if (needsUpdate) {
-        setDbarati(prev => prev.map(item => {
-          if (item.done && item.lastPreparedAt && (now - new Date(item.lastPreparedAt).getTime() > ONE_MONTH_MS)) {
+        setDbarati(prev => (Array.isArray(prev) ? prev : []).map(item => {
+          if (item && item.done && item.lastPreparedAt && (now - new Date(item.lastPreparedAt).getTime() > ONE_MONTH_MS)) {
             return { ...item, done: false };
           }
           return item;
@@ -1164,7 +1165,7 @@ export default function KitchenAssistantPage() {
         onTogglePurchaseStatus={handleTogglePurchaseStatus}
         onFridgeScan={handleFridgeScan}
         purchaseHistory={purchaseHistory}
-        dbarati={dbarati}
+        dbarati={Array.isArray(dbarati) ? dbarati : []}
       />
       <AppNav
         activeTab={activeTab}

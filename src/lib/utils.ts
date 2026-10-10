@@ -58,107 +58,131 @@ const STOP_WORDS = new Set([
   'en', 'pour', 'avec', 'sans', 'sur', 'dans', 'el', 'al'
 ]);
 
-export function normalizeSearchText(str: string): string {
-  return (str || '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '') // supprime les accents
-    .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, ' ')   // remplace la ponctuation par des espaces
-    .trim()
-    .replace(/\s+/g, ' ');
+export function normalizeSearchText(str: string | undefined | null): string {
+  if (!str || typeof str !== 'string') return '';
+  try {
+    return str
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // supprime les accents
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, ' ')   // remplace la ponctuation par des espaces
+      .trim()
+      .replace(/\s+/g, ' ');
+  } catch (_) {
+    return '';
+  }
 }
 
 function stemWord(word: string): string {
-  if (word.length > 3 && (word.endsWith('s') || word.endsWith('x'))) {
+  if (typeof word === 'string' && word.length > 3 && (word.endsWith('s') || word.endsWith('x'))) {
     return word.slice(0, -1);
   }
-  return word;
+  return word || '';
 }
 
-export function extractSignificantTokens(str: string): string[] {
-  const norm = normalizeSearchText(str);
-  if (!norm) return [];
-  return norm
-    .split(' ')
-    .filter(token => token.length >= 2 && !STOP_WORDS.has(token))
-    .map(stemWord);
+export function extractSignificantTokens(str: string | undefined | null): string[] {
+  if (!str || typeof str !== 'string') return [];
+  try {
+    const norm = normalizeSearchText(str);
+    if (!norm) return [];
+    return norm
+      .split(' ')
+      .filter(token => token && token.length >= 2 && !STOP_WORDS.has(token))
+      .map(stemWord);
+  } catch (_) {
+    return [];
+  }
 }
 
 export function formatCompactRelativeDate(isoDate?: string | null): string | null {
-  if (!isoDate) return null;
-  const date = new Date(isoDate);
-  if (isNaN(date.getTime())) return null;
+  if (!isoDate || typeof isoDate !== 'string') return null;
+  try {
+    const date = new Date(isoDate);
+    if (isNaN(date.getTime())) return null;
 
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-  if (diffDays <= 0) return "auj.";
-  if (diffDays === 1) return "hier";
-  if (diffDays < 30) return `il y a ${diffDays} j`;
-  if (diffDays < 365) {
-    const months = Math.floor(diffDays / 30);
-    return `il y a ${months} mois`;
+    if (diffDays <= 0) return "auj.";
+    if (diffDays === 1) return "hier";
+    if (diffDays < 30) return `il y a ${diffDays} j`;
+    if (diffDays < 365) {
+      const months = Math.floor(diffDays / 30);
+      return `il y a ${months} mois`;
+    }
+    return new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(date);
+  } catch (_) {
+    return null;
   }
-  return new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(date);
 }
 
 export function findMatchingDbaratiItem(
-  ingredientName: string,
-  dbaratiItems: DbaratiItem[] | undefined
+  ingredientName: string | undefined | null,
+  dbaratiItems: DbaratiItem[] | undefined | null
 ): { dishName: string; lastPreparedAt?: string; relativeDate: string | null } | null {
-  if (!ingredientName || !dbaratiItems || dbaratiItems.length === 0) return null;
+  try {
+    if (!ingredientName || typeof ingredientName !== 'string') return null;
+    if (!dbaratiItems || !Array.isArray(dbaratiItems) || dbaratiItems.length === 0) return null;
 
-  const ingNorm = normalizeSearchText(ingredientName);
-  const ingTokens = extractSignificantTokens(ingredientName);
-  if (!ingNorm && ingTokens.length === 0) return null;
+    const ingNorm = normalizeSearchText(ingredientName);
+    const ingTokens = extractSignificantTokens(ingredientName);
+    if (!ingNorm && ingTokens.length === 0) return null;
 
-  const matches: DbaratiItem[] = [];
+    const matches: DbaratiItem[] = [];
 
-  for (const item of dbaratiItems) {
-    if (!item.text) continue;
-    const dishNorm = normalizeSearchText(item.text);
-    const dishTokens = extractSignificantTokens(item.text);
+    for (const item of dbaratiItems) {
+      if (!item || typeof item !== 'object' || !item.text || typeof item.text !== 'string') continue;
+      const dishNorm = normalizeSearchText(item.text);
+      const dishTokens = extractSignificantTokens(item.text);
 
-    // 1. Exact match normalisé
-    if (dishNorm === ingNorm) {
-      matches.push(item);
-      continue;
+      // 1. Exact match normalisé
+      if (dishNorm && ingNorm && dishNorm === ingNorm) {
+        matches.push(item);
+        continue;
+      }
+
+      // 2. Sous-chaîne directe (le plat contient l'ingrédient ou l'ingrédient contient le plat)
+      if ((dishNorm && ingNorm && dishNorm.includes(ingNorm)) || (ingNorm && dishNorm && ingNorm.includes(dishNorm))) {
+        matches.push(item);
+        continue;
+      }
+
+      // 3. Intersection de mots-clés significatifs
+      const hasCommonToken = ingTokens.some(ingToken =>
+        dishTokens.some(dishToken => dishToken === ingToken)
+      );
+
+      if (hasCommonToken) {
+        matches.push(item);
+      }
     }
 
-    // 2. Sous-chaîne directe (le plat contient l'ingrédient ou l'ingrédient contient le plat)
-    if (dishNorm.includes(ingNorm) || ingNorm.includes(dishNorm)) {
-      matches.push(item);
-      continue;
-    }
+    if (matches.length === 0) return null;
 
-    // 3. Intersection de mots-clés significatifs (ex: 'poulpe' dans 'couscous poulpe', 'couscous' dans 'couscous poulpe')
-    const hasCommonToken = ingTokens.some(ingToken =>
-      dishTokens.some(dishToken => dishToken === ingToken)
-    );
+    // Priorité au plat préparé le plus récemment
+    matches.sort((a, b) => {
+      if (a.lastPreparedAt && b.lastPreparedAt) {
+        const timeB = new Date(b.lastPreparedAt).getTime();
+        const timeA = new Date(a.lastPreparedAt).getTime();
+        if (!isNaN(timeB) && !isNaN(timeA)) return timeB - timeA;
+      }
+      if (a.lastPreparedAt) return -1;
+      if (b.lastPreparedAt) return 1;
+      return 0;
+    });
 
-    if (hasCommonToken) {
-      matches.push(item);
-    }
+    const bestMatch = matches[0];
+    if (!bestMatch || !bestMatch.text) return null;
+
+    return {
+      dishName: bestMatch.text,
+      lastPreparedAt: bestMatch.lastPreparedAt,
+      relativeDate: formatCompactRelativeDate(bestMatch.lastPreparedAt),
+    };
+  } catch (e) {
+    console.error("Error in findMatchingDbaratiItem:", e);
+    return null;
   }
-
-  if (matches.length === 0) return null;
-
-  // Priorité au plat préparé le plus récemment
-  matches.sort((a, b) => {
-    if (a.lastPreparedAt && b.lastPreparedAt) {
-      return new Date(b.lastPreparedAt).getTime() - new Date(a.lastPreparedAt).getTime();
-    }
-    if (a.lastPreparedAt) return -1;
-    if (b.lastPreparedAt) return 1;
-    return 0;
-  });
-
-  const bestMatch = matches[0];
-  return {
-    dishName: bestMatch.text,
-    lastPreparedAt: bestMatch.lastPreparedAt,
-    relativeDate: formatCompactRelativeDate(bestMatch.lastPreparedAt),
-  };
 }
 
