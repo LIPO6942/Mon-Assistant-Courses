@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mac-master-v4'; // Incrémenté pour forcer la mise à jour du SW
+const CACHE_NAME = 'mac-master-v5'; // Incrémenté pour forcer le nettoyage automatique des anciens caches
 
 const ASSETS_TO_CACHE = [
   '/',
@@ -57,6 +57,7 @@ self.addEventListener('activate', (event) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
+            console.log('[sw.js] Nettoyage ancien cache:', cacheName);
             return caches.delete(cacheName);
           }
         })
@@ -78,6 +79,26 @@ self.addEventListener('fetch', (event) => {
     url.origin.includes('google')
   ) return;
 
+  // 1. Pour les navigations HTML : NETWORK-FIRST
+  // Si en ligne, on télécharge la dernière version déployée. Si hors ligne, on utilise le cache.
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response && response.status === 200) {
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
+          }
+          return response;
+        })
+        .catch(() => {
+          return caches.match(event.request).then(cached => cached || caches.match('/'));
+        })
+    );
+    return;
+  }
+
+  // 2. Pour les autres assets (images, fonts, etc.) : Cache-First
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) return cachedResponse;
@@ -90,10 +111,6 @@ self.addEventListener('fetch', (event) => {
           });
         }
         return response;
-      }).catch(() => {
-        if (event.request.mode === 'navigate') {
-          return caches.match('/');
-        }
       });
     })
   );

@@ -36,6 +36,10 @@ export function PWAHandler() {
               if (newWorker) {
                 newWorker.addEventListener('statechange', () => {
                   console.log('[PWAHandler] SW state changed:', newWorker.state);
+                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    console.log('[PWAHandler] Nouvel update détecté, rechargement automatique...');
+                    window.location.reload();
+                  }
                 });
               }
             });

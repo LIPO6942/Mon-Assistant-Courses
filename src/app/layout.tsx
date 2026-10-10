@@ -76,6 +76,28 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icon-192x192.png" />
         <link rel="icon" type="image/png" sizes="512x512" href="/icon-512x512.png" />
         <link rel="icon" type="image/png" sizes="192x192" href="/icon-192x192.png" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if (typeof window !== 'undefined' && (window.location.search.includes('reset=1') || window.location.search.includes('update=1'))) {
+                try {
+                  if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(function(regs) {
+                      for (var i = 0; i < regs.length; i++) regs[i].unregister();
+                    });
+                  }
+                  if ('caches' in window) {
+                    caches.keys().then(function(names) {
+                      for (var i = 0; i < names.length; i++) caches.delete(names[i]);
+                    });
+                  }
+                } catch(e) {}
+                var cleanUrl = window.location.origin + window.location.pathname;
+                setTimeout(function() { window.location.href = cleanUrl; }, 300);
+              }
+            `,
+          }}
+        />
       </head>
       <body
         className={cn(
