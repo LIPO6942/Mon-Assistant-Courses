@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetTrigger } from '@/components/ui/sheet';
 import BasketSheet from './BasketSheet';
 import SavedRecipesSheet from './SavedRecipesSheet';
-import type { BasketItem, Recipe, PurchaseHistory } from '@/lib/types';
+import type { BasketItem, Recipe, PurchaseHistory, DbaratiItem } from '@/lib/types';
 import FridgeScannerSheet from './FridgeScannerSheet';
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -28,6 +28,7 @@ interface AppHeaderProps {
   onTogglePurchaseStatus: (id: string, itemPrice: number, itemQuantity: number) => void;
   onFridgeScan: (ingredients: string[]) => void;
   purchaseHistory: PurchaseHistory;
+  dbarati?: DbaratiItem[];
 }
 
 export default function AppHeader({
@@ -45,6 +46,7 @@ export default function AppHeader({
   onTogglePurchaseStatus,
   onFridgeScan,
   purchaseHistory,
+  dbarati,
 }: AppHeaderProps) {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const { user, signOut } = useAuth();
@@ -121,6 +123,7 @@ export default function AppHeader({
               onShareBasket={handleShareBasket}
               onTogglePurchaseStatus={onTogglePurchaseStatus}
               purchaseHistory={purchaseHistory}
+              dbarati={dbarati}
             />
           </Sheet>
         </div>

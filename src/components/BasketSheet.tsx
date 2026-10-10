@@ -6,13 +6,13 @@ import { sendBasketShare } from '@/lib/firestore-sync';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
-import type { BasketItem, PurchaseHistory } from '@/lib/types';
+import type { BasketItem, PurchaseHistory, DbaratiItem } from '@/lib/types';
 import { Minus, Plus, Trash2, Share2, History, Store, CheckCircle2, ListChecks } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { STORES } from '@/lib/stores';
 import { StoreIcon, StoreOption } from '@/components/StoreIcon';
 import { Checkbox } from './ui/checkbox';
-import { cn, getProductStatus } from '@/lib/utils';
+import { cn, getProductStatus, findMatchingDbaratiItem } from '@/lib/utils';
 import {
   Dialog,
   DialogContent,
@@ -41,6 +41,7 @@ interface BasketSheetProps {
   onShareBasket: () => void;
   onTogglePurchaseStatus: (id: string, itemPrice: number, itemQuantity: number) => void;
   purchaseHistory: PurchaseHistory;
+  dbarati?: DbaratiItem[];
 }
 
 export default function BasketSheet({
@@ -53,6 +54,7 @@ export default function BasketSheet({
   onShareBasket,
   onTogglePurchaseStatus,
   purchaseHistory,
+  dbarati = [],
 }: BasketSheetProps) {
   const [isStoreDialogOpen, setIsStoreDialogOpen] = useState(false);
   const [selectedStore, setSelectedStore] = useState<string>('');
@@ -286,6 +288,32 @@ export default function BasketSheet({
                           </div>
                         </>
                       )}
+                      {(() => {
+                        const matchedDbarati = findMatchingDbaratiItem(item.name, dbarati);
+                        if (!matchedDbarati) return null;
+
+                        const isSameName = matchedDbarati.dishName.trim().toLowerCase() === item.name.trim().toLowerCase();
+                        const labelText = isSameName
+                          ? (matchedDbarati.relativeDate ? `Prép. ${matchedDbarati.relativeDate}` : 'Non préparé')
+                          : `${matchedDbarati.dishName} : ${matchedDbarati.relativeDate || 'non préparé'}`;
+
+                        return (
+                          <>
+                            <span className="text-muted-foreground/30">•</span>
+                            <div
+                              className={cn(
+                                "inline-flex items-center gap-1 text-[9px] font-medium leading-none px-1.5 py-0.5 rounded-full border shrink-0",
+                                item.purchased
+                                  ? "bg-muted/40 text-muted-foreground border-border/40 line-through opacity-70"
+                                  : "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20"
+                              )}
+                            >
+                              <span className="shrink-0 text-[10px]">🍳</span>
+                              <span>{labelText}</span>
+                            </div>
+                          </>
+                        );
+                      })()}
                     </div>
                     <div className='flex items-center gap-2 shrink-0'>
                       <Button variant="ghost" size="icon" className='h-7 w-7 rounded-full' onClick={() => updateBasketQuantity(item.id, item.quantity - 1)} disabled={!!item.purchased}><Minus className='h-4 w-4' /></Button>

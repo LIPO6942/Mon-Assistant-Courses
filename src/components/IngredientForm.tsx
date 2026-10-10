@@ -5,14 +5,16 @@ import * as React from 'react';
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ShoppingBasket } from 'lucide-react';
 import type { Ingredient, CategoryDef } from '@/lib/types';
 import { units } from '@/lib/types';
 
 interface IngredientFormProps {
   ingredient: Partial<Ingredient> | null;
   categories: CategoryDef[];
-  onSave: (data: Omit<Ingredient, 'id'> & { id?: string }) => void;
+  onSave: (data: Omit<Ingredient, 'id'> & { id?: string; addToBasket?: boolean; basketQuantity?: number }) => void;
   formId: string;
 }
 
@@ -23,6 +25,8 @@ export default function IngredientForm({ ingredient, categories, onSave, formId 
     price: ingredient?.price !== undefined ? String(ingredient.price) : '',
     unit: ingredient?.unit || 'pièce',
   });
+  const [addToBasket, setAddToBasket] = useState(false);
+  const [basketQuantity, setBasketQuantity] = useState('1');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,6 +34,8 @@ export default function IngredientForm({ ingredient, categories, onSave, formId 
       ...formData,
       price: parseFloat(formData.price) || 0,
       id: ingredient?.id,
+      addToBasket: !ingredient?.id ? addToBasket : false,
+      basketQuantity: !ingredient?.id && addToBasket ? (parseFloat(basketQuantity) || 1) : undefined,
     });
   };
 
@@ -103,6 +109,38 @@ export default function IngredientForm({ ingredient, categories, onSave, formId 
           </SelectContent>
         </Select>
       </div>
+
+      {!ingredient?.id && (
+        <div className="grid grid-cols-4 items-center gap-4 pt-3 border-t border-border/40">
+          <div className="col-start-2 col-span-3 flex flex-col gap-2.5">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="addToBasket"
+                checked={addToBasket}
+                onCheckedChange={(checked) => setAddToBasket(!!checked)}
+              />
+              <Label htmlFor="addToBasket" className="text-sm font-medium cursor-pointer flex items-center gap-1.5 text-foreground">
+                <ShoppingBasket className="h-4 w-4 text-primary" />
+                Ajouter également au panier
+              </Label>
+            </div>
+            {addToBasket && (
+              <div className="flex items-center gap-2 pl-6 animate-in fade-in-50 duration-200">
+                <span className="text-xs text-muted-foreground whitespace-nowrap">Quantité :</span>
+                <Input
+                  type="number"
+                  step="any"
+                  min="0.1"
+                  value={basketQuantity}
+                  onChange={(e) => setBasketQuantity(e.target.value)}
+                  className="h-8 w-24 text-sm"
+                />
+                <span className="text-xs text-muted-foreground">{formData.unit}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </form>
   );
 }

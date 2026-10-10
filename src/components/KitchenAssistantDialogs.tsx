@@ -23,7 +23,7 @@ interface KitchenAssistantDialogsProps {
   setAddEditDialogOpen: (isOpen: boolean) => void;
   editingIngredient: Partial<Ingredient> | null;
   categories: CategoryDef[];
-  handleSaveIngredient: (formData: Omit<Ingredient, 'id'> & { id?: string }) => void;
+  handleSaveIngredient: (formData: Omit<Ingredient, 'id'> & { id?: string; addToBasket?: boolean; basketQuantity?: number }) => void;
 
   isCategoryDialogOpen: boolean;
   setIsCategoryDialogOpen: (isOpen: boolean) => void;

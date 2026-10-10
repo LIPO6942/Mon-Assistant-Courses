@@ -618,12 +618,19 @@ export default function KitchenAssistantPage() {
     setActiveTab('chandyek');
   }, [setChandyekIngredients, setActiveTab]);
 
-  const handleSaveIngredient = (formData: Omit<Ingredient, 'id'> & { id?: string }) => {
+  const handleSaveIngredient = (formData: Omit<Ingredient, 'id'> & { id?: string; addToBasket?: boolean; basketQuantity?: number }) => {
     if (formData.id) {
-      setPantry(prev => prev.map(ing => ing.id === formData.id ? { ...ing, ...formData } as Ingredient : ing));
+      const { addToBasket: _a, basketQuantity: _b, ...cleanData } = formData;
+      setPantry(prev => prev.map(ing => ing.id === formData.id ? { ...ing, ...cleanData } as Ingredient : ing));
     } else {
-      const newIngredient = { ...formData, id: self.crypto.randomUUID() } as Ingredient;
+      const { addToBasket: shouldAddToBasket, basketQuantity, ...cleanData } = formData;
+      const newIngredient = { ...cleanData, id: self.crypto.randomUUID() } as Ingredient;
       setPantry(prev => [...prev, newIngredient].sort((a, b) => a.name.localeCompare(b.name)));
+
+      if (shouldAddToBasket) {
+        const qty = basketQuantity && basketQuantity > 0 ? basketQuantity : 1;
+        addToBasket(newIngredient, qty);
+      }
     }
     setAddEditDialogOpen(false);
     setEditingIngredient(null);
@@ -1157,6 +1164,7 @@ export default function KitchenAssistantPage() {
         onTogglePurchaseStatus={handleTogglePurchaseStatus}
         onFridgeScan={handleFridgeScan}
         purchaseHistory={purchaseHistory}
+        dbarati={dbarati}
       />
       <AppNav
         activeTab={activeTab}
