@@ -157,10 +157,10 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
   return (
     <>
       <Dialog open={isAddEditDialogOpen} onOpenChange={setAddEditDialogOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto w-[95vw] sm:max-w-lg rounded-2xl">
-          <DialogHeader><DialogTitle>{editingIngredient?.id ? "Modifier" : "Ajouter"} un produit</DialogTitle></DialogHeader>
+        <DialogContent className="top-4 translate-y-0 sm:top-[50%] sm:-translate-y-1/2 max-h-[85dvh] sm:max-h-[90vh] overflow-y-auto w-[95vw] sm:max-w-lg p-4 sm:p-6 rounded-2xl">
+          <DialogHeader className="pb-0.5"><DialogTitle className="text-base sm:text-lg">{editingIngredient?.id ? "Modifier" : "Ajouter"} un produit</DialogTitle></DialogHeader>
           <IngredientForm key={editingIngredient?.id || 'new'} ingredient={editingIngredient} categories={categories} onSave={handleSaveIngredient} formId="ingredient-form" />
-          <DialogFooter><Button variant="outline" onClick={() => setAddEditDialogOpen(false)}>Annuler</Button><Button type="submit" form="ingredient-form">Sauvegarder</Button></DialogFooter>
+          <DialogFooter className="pt-2"><Button variant="outline" size="sm" onClick={() => setAddEditDialogOpen(false)}>Annuler</Button><Button type="submit" size="sm" form="ingredient-form">Sauvegarder</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 

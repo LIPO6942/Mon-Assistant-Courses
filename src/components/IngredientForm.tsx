@@ -40,28 +40,28 @@ export default function IngredientForm({ ingredient, categories, onSave, formId 
   };
 
   return (
-    <form id={formId} onSubmit={handleSubmit} className="grid gap-4 py-4">
-      <div className="grid grid-cols-4 items-center gap-4">
-        <Label htmlFor="name" className="text-right">
+    <form id={formId} onSubmit={handleSubmit} className="grid gap-3 py-2">
+      <div className="grid grid-cols-4 items-center gap-3">
+        <Label htmlFor="name" className="text-right text-xs sm:text-sm">
           Nom
         </Label>
         <Input
           id="name"
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          className="col-span-3"
+          className="col-span-3 h-9 text-sm"
           required
         />
       </div>
-      <div className="grid grid-cols-4 items-center gap-4">
-        <Label htmlFor="category" className="text-right">
+      <div className="grid grid-cols-4 items-center gap-3">
+        <Label htmlFor="category" className="text-right text-xs sm:text-sm">
           Catégorie
         </Label>
         <Select
           value={formData.category}
           onValueChange={(value) => setFormData({ ...formData, category: value })}
         >
-          <SelectTrigger className="col-span-3">
+          <SelectTrigger className="col-span-3 h-9 text-sm">
             <SelectValue placeholder="Choisir" />
           </SelectTrigger>
           <SelectContent>
@@ -74,8 +74,8 @@ export default function IngredientForm({ ingredient, categories, onSave, formId 
           </SelectContent>
         </Select>
       </div>
-      <div className="grid grid-cols-4 items-center gap-4">
-        <Label htmlFor="price" className="text-right">
+      <div className="grid grid-cols-4 items-center gap-3">
+        <Label htmlFor="price" className="text-right text-xs sm:text-sm">
           Prix (DT)
         </Label>
         <Input
@@ -85,19 +85,19 @@ export default function IngredientForm({ ingredient, categories, onSave, formId 
           min="0"
           value={formData.price}
           onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-          className="col-span-3"
+          className="col-span-3 h-9 text-sm"
           required
         />
       </div>
-      <div className="grid grid-cols-4 items-center gap-4">
-        <Label htmlFor="unit" className="text-right">
+      <div className="grid grid-cols-4 items-center gap-3">
+        <Label htmlFor="unit" className="text-right text-xs sm:text-sm">
           Unité
         </Label>
         <Select
           value={formData.unit}
           onValueChange={(value) => setFormData({ ...formData, unit: value })}
         >
-          <SelectTrigger className="col-span-3">
+          <SelectTrigger className="col-span-3 h-9 text-sm">
             <SelectValue placeholder="Choisir" />
           </SelectTrigger>
           <SelectContent>
@@ -111,34 +111,33 @@ export default function IngredientForm({ ingredient, categories, onSave, formId 
       </div>
 
       {!ingredient?.id && (
-        <div className="mt-2 pt-3 border-t border-border/50">
-          <div className="rounded-xl border border-primary/25 bg-primary/5 p-3.5 flex flex-col gap-2.5 shadow-xs">
-            <label htmlFor="addToBasket" className="flex items-center gap-3 cursor-pointer select-none">
+        <div className="mt-1 pt-2 border-t border-border/40">
+          <div className="rounded-xl border border-primary/25 bg-primary/5 px-3 py-2 flex items-center justify-between gap-2 shadow-xs">
+            <label htmlFor="addToBasket" className="flex items-center gap-2 cursor-pointer select-none min-w-0 flex-1">
               <Checkbox
                 id="addToBasket"
                 checked={addToBasket}
                 onCheckedChange={(checked) => setAddToBasket(!!checked)}
-                className="h-5 w-5 data-[state=checked]:bg-primary"
+                className="h-4 w-4 shrink-0 data-[state=checked]:bg-primary"
               />
-              <div className="flex items-center gap-2">
-                <ShoppingBasket className="h-4 w-4 text-primary shrink-0" />
-                <span className="text-sm font-semibold text-foreground">
-                  Ajouter également au panier
-                </span>
-              </div>
+              <ShoppingBasket className="h-4 w-4 text-primary shrink-0" />
+              <span className="text-xs sm:text-sm font-semibold text-foreground whitespace-nowrap">
+                Ajouter au panier
+              </span>
             </label>
             {addToBasket && (
-              <div className="flex items-center gap-2 pl-8 pt-1 animate-in fade-in-50 duration-200">
-                <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">Quantité :</span>
+              <div className="flex items-center gap-1.5 shrink-0 animate-in fade-in-50 duration-150">
                 <Input
                   type="number"
                   step="any"
                   min="0.1"
                   value={basketQuantity}
                   onChange={(e) => setBasketQuantity(e.target.value)}
-                  className="h-8 w-24 bg-background text-sm font-semibold"
+                  className="h-7 w-16 bg-background text-xs font-bold text-center px-1"
                 />
-                <span className="text-xs text-muted-foreground">{formData.unit}</span>
+                <span className="text-[11px] text-muted-foreground whitespace-nowrap">
+                  {formData.unit}
+                </span>
               </div>
             )}
           </div>

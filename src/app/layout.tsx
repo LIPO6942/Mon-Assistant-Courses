@@ -17,7 +17,7 @@ const poppins = Poppins({
 export const metadata: Metadata = {
   title: "Mon assistant de courses",
   description: "Gérez votre garde-manger, planifiez vos repas et vos courses.",
-  viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0",
+  viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, interactive-widget=resizes-content",
   themeColor: "#ffffff", // White theme color for matching splash screen
   appleWebApp: {
     capable: true,
