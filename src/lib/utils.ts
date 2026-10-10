@@ -186,3 +186,68 @@ export function findMatchingDbaratiItem(
   }
 }
 
+/**
+ * Calcule et arrondit de manière culinaire et réaliste la quantité d'un ingrédient
+ * selon le nombre de convives et l'unité de mesure.
+ * Évite les aberrations mathématiques comme "266.667 g" ou "1.333 pièces".
+ */
+export function calculateAdjustedQuantity(
+  baseQuantity: number,
+  basePortions: number,
+  newPortions: number,
+  unit?: string
+): number {
+  if (!basePortions || !baseQuantity) return baseQuantity;
+  const raw = (baseQuantity / basePortions) * newPortions;
+  const u = (unit || '').toLowerCase().trim();
+
+  // 1. Grammes (g) et millilitres / centilitres
+  if (u.includes('gramme') || u.includes('(g)') || u === 'g' || u.includes('ml') || u.includes('cl')) {
+    if (raw >= 100) {
+      // Au-dessus de 100g : arrondir aux 5g les plus proches (ex: 266.667g -> 265g)
+      return Math.round(raw / 5) * 5;
+    } else if (raw >= 20) {
+      // Entre 20g et 100g : arrondir aux 5g les plus proches (ex: 33.3g -> 35g)
+      return Math.round(raw / 5) * 5;
+    } else if (raw >= 5) {
+      // Entre 5g et 20g : arrondir à l'entier
+      return Math.round(raw);
+    } else {
+      // Petites pesées : au demi-gramme
+      return Math.round(raw * 2) / 2;
+    }
+  }
+
+  // 2. Kilogrammes (kg) et Litres (l)
+  if (u.includes('kg') || u.includes('kilo') || u.includes('litre') || u === 'l') {
+    const rounded = Math.round(raw * 20) / 20;
+    return parseFloat(rounded.toFixed(2));
+  }
+
+  // 3. Cuillères, sachets, gousses, pincées, tranches, bottes
+  if (
+    u.includes('cuill') ||
+    u.includes('cas') ||
+    u.includes('cac') ||
+    u.includes('gousse') ||
+    u.includes('botte') ||
+    u.includes('sachet') ||
+    u.includes('pinc') ||
+    u.includes('tranche')
+  ) {
+    const rounded = Math.round(raw * 2) / 2;
+    return rounded === 0 ? 0.5 : rounded;
+  }
+
+  // 4. Pièces, oeufs, etc.
+  if (u.includes('pi') || u.includes('oeuf') || u.includes('unit')) {
+    const rounded = Math.round(raw * 2) / 2;
+    return rounded === 0 ? 1 : rounded;
+  }
+
+  // 5. Par défaut :
+  if (raw >= 50) return Math.round(raw);
+  if (raw >= 10) return Math.round(raw * 2) / 2;
+  return parseFloat(raw.toFixed(1));
+}
+

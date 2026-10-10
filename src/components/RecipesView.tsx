@@ -944,33 +944,33 @@ export default function RecipesView({
         <p className='text-muted-foreground mb-4'>Utilisez les filtres pour affiner les suggestions aléatoires !</p>
 
         {/* Dynamic Portion Selector */}
-        <div className="flex flex-col items-center justify-center gap-2 mb-4">
-          <div className="inline-flex items-center gap-2 bg-background/90 dark:bg-zinc-900/90 border border-primary/25 rounded-full px-3 py-1.5 shadow-xs">
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground pl-1">
+        <div className="flex justify-center mb-5 w-full px-1">
+          <div className="inline-flex items-center justify-center gap-1.5 sm:gap-2.5 bg-background/95 dark:bg-zinc-900/95 border border-primary/25 rounded-full p-1 sm:px-3 sm:py-1.5 shadow-sm max-w-[95%]">
+            <div className="flex items-center gap-1 text-[11px] sm:text-xs font-semibold text-muted-foreground pl-1 shrink-0">
               <Users className="h-3.5 w-3.5 text-primary" />
-              <span>Pour :</span>
+              <span className="hidden xs:inline">Pour</span>
             </div>
             
-            <div className="flex items-center gap-1 bg-muted/70 dark:bg-zinc-800/70 rounded-full p-0.5">
+            <div className="flex items-center gap-0.5 bg-muted/80 dark:bg-zinc-800/80 rounded-full p-0.5 shrink-0">
               <Button
                 type="button"
                 size="icon"
                 variant="ghost"
-                className="h-6 w-6 rounded-full hover:bg-background"
+                className="h-6 w-6 rounded-full hover:bg-background p-0"
                 onClick={() => handleSetIdeaPortions(p => Math.max(1, p - 1))}
                 disabled={ideaPortions <= 1}
                 aria-label="Moins de personnes"
               >
                 <Minus className="h-3 w-3" />
               </Button>
-              <span className="w-14 text-center text-xs font-extrabold text-foreground">
+              <span className="w-12 text-center text-[11px] sm:text-xs font-bold text-foreground tabular-nums">
                 {ideaPortions} {ideaPortions > 1 ? 'pers.' : 'pers.'}
               </span>
               <Button
                 type="button"
                 size="icon"
                 variant="ghost"
-                className="h-6 w-6 rounded-full hover:bg-background"
+                className="h-6 w-6 rounded-full hover:bg-background p-0"
                 onClick={() => handleSetIdeaPortions(p => Math.min(20, p + 1))}
                 disabled={ideaPortions >= 20}
                 aria-label="Plus de personnes"
@@ -979,16 +979,16 @@ export default function RecipesView({
               </Button>
             </div>
 
-            <div className="flex items-center gap-1 border-l border-border/60 pl-2 pr-0.5">
+            <div className="flex items-center gap-1 border-l border-border/60 pl-1.5 pr-0.5 shrink-0">
               {[2, 4, 6].map(nb => (
                 <button
                   key={nb}
                   type="button"
                   onClick={() => handleSetIdeaPortions(nb)}
                   className={cn(
-                    "px-2 py-0.5 text-[11px] font-medium rounded-full transition-all",
+                    "h-6 w-6 text-[10px] sm:text-[11px] font-bold rounded-full transition-all flex items-center justify-center",
                     ideaPortions === nb
-                      ? "bg-primary text-primary-foreground font-bold shadow-xs scale-105"
+                      ? "bg-primary text-primary-foreground shadow-xs scale-105"
                       : "text-muted-foreground hover:bg-muted"
                   )}
                 >

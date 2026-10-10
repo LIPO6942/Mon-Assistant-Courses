@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Minus, Plus, Users, Maximize2, Minimize2, CheckCircle2, ListFilter } from 'lucide-react';
-import { cn, getProductStatus } from '@/lib/utils';
+import { cn, getProductStatus, calculateAdjustedQuantity } from '@/lib/utils';
 import type { RecipeIngredient, Ingredient, PurchaseHistory } from '@/lib/types';
 
 interface RecipeContentProps {
@@ -36,12 +36,6 @@ export default function RecipeContent({
         preparation.split('\n').filter(line => line.trim() !== ''),
         [preparation]
     );
-
-    const calculateAdjustedQuantity = (baseQuantity: number, basePortions: number, newPortions: number) => {
-        if (!basePortions) return baseQuantity;
-        const adjusted = (baseQuantity / basePortions) * newPortions;
-        return parseFloat(adjusted.toFixed(3));
-    };
 
     const handleToggleStep = (index: number) => {
         setCheckedSteps(prev => {
@@ -114,7 +108,7 @@ export default function RecipeContent({
                                                 <span className="text-sm font-medium">{ing.name}</span>
                                             </div>
                                             <span className="text-[10px] font-bold bg-white dark:bg-zinc-900 px-1.5 py-0.5 rounded border border-zinc-100 dark:border-zinc-800 shadow-xs">
-                                                {calculateAdjustedQuantity(ing.quantity, basePortions, portions)} {ing.unit}
+                                                {calculateAdjustedQuantity(ing.quantity, basePortions, portions, ing.unit)} {ing.unit}
                                             </span>
                                         </div>
                                     );

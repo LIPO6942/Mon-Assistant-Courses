@@ -142,14 +142,6 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
     }
   };
 
-  const calculateAdjustedQuantity = (baseQuantity: number, basePortions: number, newPortions: number) => {
-    if (!basePortions) return baseQuantity;
-    const adjusted = (baseQuantity / basePortions) * newPortions;
-    // Format to max 3 decimal places, and remove trailing zeros
-    return parseFloat(adjusted.toFixed(3));
-  };
-
-
   const currentRecipe = viewingRecipe || viewingUserRecipe;
   const currentIngredients = currentRecipe?.ingredients as RecipeIngredient[] | undefined;
   const basePortions = currentRecipe?.portions || 1;
