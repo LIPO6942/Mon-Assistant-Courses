@@ -202,10 +202,14 @@ self.addEventListener('notificationclick', (event) => {
     const type = notificationData.type || '';
     const shareId = notificationData.shareId || '';
     
-    // Build target URL with deep link params if it's a basket share
-    let targetUrl = '/';
-    if (type === 'basket_share' && shareId) {
-        targetUrl = `/?shareId=${shareId}`;
+    // Build target URL with deep link params if it's a basket share or recipe notification
+    let targetUrl = notificationData.url || '/';
+    if (!notificationData.url) {
+        if (type === 'basket_share' && shareId) {
+            targetUrl = `/?shareId=${shareId}`;
+        } else if (notificationData.recipeId) {
+            targetUrl = `/?recipeId=${notificationData.recipeId}`;
+        }
     }
 
     event.waitUntil(
