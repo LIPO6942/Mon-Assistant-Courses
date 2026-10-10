@@ -497,12 +497,18 @@ export default function KitchenAssistantPage() {
         if (foundDiscoverable) {
           setViewingRecipe(foundDiscoverable);
           setActiveTab('recipes');
+          if (!isInAppBrowser()) {
+            window.history.replaceState({}, '', window.location.pathname);
+          }
         } else {
           // Try to find in user recipes
           const foundUserRecipe = userRecipes.find(r => r.id === sharedRecipeId);
           if (foundUserRecipe) {
             setViewingUserRecipe(foundUserRecipe);
             setActiveTab('recipes');
+            if (!isInAppBrowser()) {
+              window.history.replaceState({}, '', window.location.pathname);
+            }
           }
         }
       }
