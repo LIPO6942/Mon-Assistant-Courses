@@ -15,7 +15,7 @@ export async function GET(request: Request) {
         // 2. Select international recipe based on year & month
         const now = new Date();
         const monthIndex = now.getFullYear() * 12 + now.getMonth();
-        const internationalRecipes = discoverableRecipes.filter(r => r.country && r.country !== 'Tunisie');
+        const internationalRecipes = discoverableRecipes.filter(r => r.country && !r.country.toLowerCase().includes('tunisie'));
 
         if (internationalRecipes.length === 0) {
             return NextResponse.json({ message: 'No international recipes found' });
