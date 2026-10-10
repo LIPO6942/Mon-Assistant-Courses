@@ -24,7 +24,7 @@ export default function ErrorBoundary({
         <div>
           <h2 className="text-xl font-bold mb-1">Mise à jour en cours</h2>
           <p className="text-sm text-muted-foreground">
-            Vos données sont conservées en toute sécurité. Cliquez sur le bouton ci-dessous pour recharger l'affichage.
+            Vos données sont conservées en toute sécurité. Cliquez sur le bouton ci-dessous pour recharger l&apos;affichage.
           </p>
         </div>
         <div className="flex gap-3 w-full">
@@ -39,7 +39,7 @@ export default function ErrorBoundary({
             className="w-full rounded-xl"
           >
             <RefreshCw className="w-4 h-4 mr-2" />
-            Recharger l'application
+            Recharger l&apos;application
           </Button>
         </div>
       </div>
