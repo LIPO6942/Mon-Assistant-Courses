@@ -1225,11 +1225,23 @@ export default function KitchenAssistantPage() {
               basket={basket}
               purchaseHistory={purchaseHistory}
               dbarati={dbarati}
-              onAddDbaratiItem={(text: string, type: 'plat' | 'entree' = 'plat', tag?: 'Soupe' | 'Salade' | 'Sauce', platTag?: 'Pates' | 'Sauces' | 'Sandwich' | 'Autres') => {
-                setDbarati(prev => [...prev, { id: self.crypto.randomUUID(), text: text.trim(), done: false, prepCount: 0, type, tag, platTag }]);
+              onAddDbaratiItem={(
+                text: string,
+                type: 'plat' | 'entree' | 'dessert' = 'plat',
+                tag?: 'Soupe' | 'Salade' | 'Sauce',
+                platTag?: 'Pates' | 'Sauces' | 'Sandwich' | 'Autres',
+                dessertTag?: 'Gâteau' | 'Crème' | 'Fruits' | 'Pâtisserie' | 'Autres'
+              ) => {
+                setDbarati(prev => [...prev, { id: self.crypto.randomUUID(), text: text.trim(), done: false, prepCount: 0, type, tag, platTag, dessertTag }]);
               }}
               onUpdateDbaratiItemPlatTag={(id: string, platTag: 'Pates' | 'Sauces' | 'Sandwich' | 'Autres') => {
                 setDbarati(prev => prev.map(item => item.id === id ? { ...item, platTag } : item));
+              }}
+              onUpdateDbaratiItemDessertTag={(id: string, dessertTag: 'Gâteau' | 'Crème' | 'Fruits' | 'Pâtisserie' | 'Autres') => {
+                setDbarati(prev => prev.map(item => item.id === id ? { ...item, dessertTag } : item));
+              }}
+              onSetDbaratiItemDone={(id: string, done: boolean) => {
+                setDbarati(prev => prev.map(item => item.id === id ? { ...item, done } : item));
               }}
               onToggleDbaratiItem={(id: string) => {
                 setDbarati(prev => prev.map(item => {
@@ -1241,32 +1253,39 @@ export default function KitchenAssistantPage() {
                     const existingHistory = item.prepHistory ?? (
                       item.lastPreparedAt ? [item.lastPreparedAt] : []
                     );
+                    const newHistory = [...existingHistory, now].sort(
+                      (a, b) => new Date(a).getTime() - new Date(b).getTime()
+                    );
                     return {
                       ...item,
                       done: true,
-                      lastPreparedAt: now,
-                      prepCount: (item.prepCount || 0) + 1,
-                      prepHistory: [...existingHistory, now],
+                      lastPreparedAt: newHistory[newHistory.length - 1],
+                      prepCount: newHistory.length,
+                      prepHistory: newHistory,
                     };
                   }
                   // On décoche : on ne touche pas à l'historique
                   return { ...item, done: false };
                 }));
               }}
-              onMarkPrepared={(id: string) => {
+              onMarkPrepared={(id: string, customDateIso?: string) => {
                 setDbarati(prev => prev.map(item => {
                   if (item.id !== id) return item;
-                  const now = new Date().toISOString();
+                  const dateToRecord = customDateIso || new Date().toISOString();
                   // Initialise prepHistory depuis lastPreparedAt si l'item est ancien
                   const existingHistory = item.prepHistory ?? (
                     item.lastPreparedAt ? [item.lastPreparedAt] : []
                   );
+                  const newHistory = [...existingHistory, dateToRecord].sort(
+                    (a, b) => new Date(a).getTime() - new Date(b).getTime()
+                  );
+                  const latestDate = newHistory[newHistory.length - 1];
                   return {
                     ...item,
                     done: true,
-                    lastPreparedAt: now,
-                    prepCount: (item.prepCount || 0) + 1,
-                    prepHistory: [...existingHistory, now],
+                    lastPreparedAt: latestDate,
+                    prepCount: newHistory.length,
+                    prepHistory: newHistory,
                   };
                 }));
               }}

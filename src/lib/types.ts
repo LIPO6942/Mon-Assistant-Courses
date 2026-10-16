@@ -89,9 +89,10 @@ export interface DbaratiItem {
   prepCount?: number;      // How many times this dish was prepared
   lastPreparedAt?: string; // ISO date string of the most recent preparation
   prepHistory?: string[];  // Full history of all preparation dates (ISO strings)
-  type?: 'plat' | 'entree';
+  type?: 'plat' | 'entree' | 'dessert';
   tag?: 'Soupe' | 'Salade' | 'Sauce';
   platTag?: 'Pates' | 'Sauces' | 'Sandwich' | 'Autres';
+  dessertTag?: 'Gâteau' | 'Crème' | 'Fruits' | 'Pâtisserie' | 'Autres';
 }
 
 export type BasketShareStatus = 'pending' | 'accepted' | 'rejected';
