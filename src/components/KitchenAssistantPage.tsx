@@ -18,7 +18,7 @@ import MarketPricesView from './MarketPricesView';
 import CategoryPriceEvolutionDialog from './CategoryPriceEvolutionDialog';
 import SettingsPage from './SettingsPage';
 import { db } from '@/lib/idb';
-import { isInAppBrowser, getProductStatus, cn } from '@/lib/utils';
+import { isInAppBrowser, getProductStatus, cn, isExcludedFromMarketPrices } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -821,12 +821,14 @@ export default function KitchenAssistantPage() {
     setTotalSpent(prev => prev + costOfPurchasedItems);
     setBasket(prevBasket => prevBasket.filter(item => !item.purchased));
 
-    // Publier les prix dans la base de données communautaire (anonyme)
+    // Publier les prix dans la base de données communautaire (anonyme, hors produits intimes/hygiène)
     if (user) {
-      const purchasedItems = basket.filter(item => item.purchased).map(item => ({
-        ...item,
-        store // associer le magasin choisi pour la publication communautaire
-      }));
+      const purchasedItems = basket
+        .filter(item => item.purchased && !isExcludedFromMarketPrices(item.name, item.category))
+        .map(item => ({
+          ...item,
+          store // associer le magasin choisi pour la publication communautaire
+        }));
       if (purchasedItems.length > 0) {
         publishCommunityPurchases(user.uid, purchasedItems)
           .then(() => console.log('[Market] Community prices published successfully.'))

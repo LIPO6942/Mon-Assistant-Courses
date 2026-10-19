@@ -19,6 +19,7 @@ import { doc, getDoc, setDoc, collection, getDocs, query, where, addDoc, onSnaps
 import { firestoreDb } from '@/lib/firebase';
 import { normalizeIngredientName } from '@/lib/normalization';
 import { CommunityPurchase, DbaratiItem } from './types';
+import { isExcludedFromMarketPrices } from './utils';
 export { firestoreDb };
 
 // ---------- helpers ----------
@@ -177,7 +178,7 @@ export async function publishCommunityPurchases(uid: string, items: any[]) {
     try {
         // items are already filtered for purchased=true by the caller
         const batch = items
-            .filter(item => item.price !== undefined && item.price !== null)
+            .filter(item => item.price !== undefined && item.price !== null && !isExcludedFromMarketPrices(item.name || item.ingredientName, item.category))
             .map(item => {
                 // Only include defined fields to avoid Firestore rejections
                 const docData: Record<string, any> = {

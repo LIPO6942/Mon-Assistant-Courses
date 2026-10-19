@@ -7,7 +7,7 @@ import { TrendingDown, Search, Store, Calendar, ArrowUpDown, Filter, AlertCircle
 import { listenCommunityPurchases, deleteCommunityPurchase } from '@/lib/firestore-sync';
 import { useAuth } from '@/context/AuthContext';
 import type { CommunityPurchase } from '@/lib/types';
-import { cn } from '@/lib/utils';
+import { cn, isExcludedFromMarketPrices } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { StoreIcon, StoreOption } from './StoreIcon';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -56,7 +56,9 @@ export default function MarketPricesView() {
             const unsubscribe = listenCommunityPurchases((data) => {
                 if (!isMounted) return;
                 
-                const typedData = data as CommunityPurchase[];
+                const typedData = (data as CommunityPurchase[]).filter(
+                    p => !isExcludedFromMarketPrices(p.ingredientName, p.category)
+                );
                 const storeNameMap = new Map<string, string>();
                 
                 // Normaliser les noms de magasins (regrouper les mêmes enseignes avec des casses différentes)
@@ -211,6 +213,7 @@ export default function MarketPricesView() {
         console.log('[MarketView] Raw purchases from Firestore:', purchases.length);
         const filtered = purchases
             .filter(p => {
+                if (isExcludedFromMarketPrices(p.ingredientName, p.category)) return false;
                 const searchLower = searchQuery.toLowerCase();
                 const nameToSearch = (p.normalizedName || p.ingredientName || '').toLowerCase();
                 const matchesSearch = nameToSearch.includes(searchLower) || (p.store || '').toLowerCase().includes(searchLower);

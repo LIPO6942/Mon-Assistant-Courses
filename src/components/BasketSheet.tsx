@@ -299,7 +299,7 @@ export default function BasketSheet({
                           const isSameName = dishName.toLowerCase() === itemName.toLowerCase();
                           const labelText = isSameName
                             ? (matchedDbarati.relativeDate ? `Prép. ${matchedDbarati.relativeDate}` : 'Non préparé')
-                            : `${dishName} : ${matchedDbarati.relativeDate || 'non préparé'}`;
+                            : `${dishName} : ${matchedDbarati.relativeDate ? `Prép. ${matchedDbarati.relativeDate}` : 'non préparé'}`;
 
                           return (
                             <>
