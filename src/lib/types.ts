@@ -11,6 +11,7 @@ export interface Ingredient {
   category: string;
   price: number;
   unit: string;
+  preferredBrand?: string;
 }
 
 export interface RecipeIngredient {
@@ -54,6 +55,7 @@ export interface BasketItem extends Ingredient {
   quantity: number;
   purchased?: boolean;
   remark?: string;
+  brand?: string;
 }
 
 export interface CategoryDef {
@@ -79,6 +81,7 @@ export interface PurchaseRecord {
   price?: number;
   store?: string; // magasin où l'achat a été effectué (optionnel)
   remark?: string; // remarque liée à cet achat
+  brand?: string; // marque du produit acheté (optionnel)
 }
 
 export type PurchaseHistory = Record<string, PurchaseRecord[]>;

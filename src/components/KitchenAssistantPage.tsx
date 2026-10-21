@@ -743,8 +743,10 @@ export default function KitchenAssistantPage() {
         return prev.map(item => item.id === ingredient.id ? { ...item, quantity: item.quantity + quantity } : item);
       }
       const history = purchaseHistory[ingredient.id];
-      const lastRemark = history && history.length > 0 ? history[history.length - 1].remark : undefined;
-      return [...prev, { ...ingredient, quantity, purchased: false, remark: lastRemark }];
+      const lastRecord = history && history.length > 0 ? history[history.length - 1] : undefined;
+      const lastRemark = lastRecord?.remark;
+      const lastBrand = lastRecord?.brand || ingredient.preferredBrand;
+      return [...prev, { ...ingredient, quantity, purchased: false, remark: lastRemark, brand: lastBrand }];
     });
     setQuantityDialogOpen(false);
   };
@@ -759,9 +761,9 @@ export default function KitchenAssistantPage() {
     else setBasket(prev => prev.map(item => item.id === id ? { ...item, quantity: newQuantity } : item));
   };
 
-  const updateBasketItemPrice = (id: string, newPrice: number, remark?: string) => {
-    setBasket(prev => prev.map(item => item.id === id ? { ...item, price: newPrice, remark } : item));
-    setPantry(prev => prev.map(item => item.id === id ? { ...item, price: newPrice } : item));
+  const updateBasketItemPrice = (id: string, newPrice: number, remark?: string, brand?: string) => {
+    setBasket(prev => prev.map(item => item.id === id ? { ...item, price: newPrice, remark, ...(brand !== undefined ? { brand } : {}) } : item));
+    setPantry(prev => prev.map(item => item.id === id ? { ...item, price: newPrice, ...(brand ? { preferredBrand: brand } : {}) } : item));
   };
 
   const handleTogglePurchaseStatus = (id: string, itemPrice: number, itemQuantity: number) => {
@@ -804,6 +806,7 @@ export default function KitchenAssistantPage() {
           price: item.price,
           ...(store ? { store } : {}),  // enregistre le magasin si fourni
           ...(item.remark ? { remark: item.remark } : {}),
+          ...(item.brand ? { brand: item.brand } : {}),
         });
 
         // Add to Ch3andek if not present and is a food item (strictly exclude home and wellness products)

@@ -7,12 +7,13 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
 import type { BasketItem, PurchaseHistory, DbaratiItem } from '@/lib/types';
-import { Minus, Plus, Trash2, Share2, History, Store, CheckCircle2, ListChecks } from 'lucide-react';
+import { Minus, Plus, Trash2, Share2, History, Store, CheckCircle2, ListChecks, Pencil } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { STORES } from '@/lib/stores';
 import { StoreIcon, StoreOption } from '@/components/StoreIcon';
 import { Checkbox } from './ui/checkbox';
 import { cn, getProductStatus, findMatchingDbaratiItem } from '@/lib/utils';
+import { getSortedBrandsForProduct, getCustomBrands, saveCustomBrand, BrandDef } from '@/lib/brand-catalog';
 import {
   Dialog,
   DialogContent,
@@ -35,7 +36,7 @@ interface BasketSheetProps {
   basket: BasketItem[];
   basketTotal: number;
   updateBasketQuantity: (id: string, newQuantity: number) => void;
-  updateBasketItemPrice: (id: string, newPrice: number, remark?: string) => void;
+  updateBasketItemPrice: (id: string, newPrice: number, remark?: string, brand?: string) => void;
   clearBasket: () => void;
   handleConfirmPurchase: (store?: string) => void;
   onShareBasket: () => void;
@@ -62,9 +63,10 @@ export default function BasketSheet({
   const [isAddingStore, setIsAddingStore] = useState(false);
   const [newStoreName, setNewStoreName] = useState('');
   const [lastSharedUser, setLastSharedUser] = useState<{ uid: string, name: string } | null>(null);
-  const [editingPriceItem, setEditingPriceItem] = useState<{ id: string; name: string; currentPrice: number; unit: string; remark: string } | null>(null);
+  const [editingPriceItem, setEditingPriceItem] = useState<{ id: string; name: string; currentPrice: number; unit: string; remark: string; brand?: string; category?: string } | null>(null);
   const [newPriceStr, setNewPriceStr] = useState('');
   const [newRemarkStr, setNewRemarkStr] = useState('');
+  const [selectedBrand, setSelectedBrand] = useState('');
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { user } = useAuth();
 
@@ -162,11 +164,36 @@ export default function BasketSheet({
     });
   };
 
+  const availableBrands = useMemo(() => {
+    if (!editingPriceItem) return [];
+    const customBrands = getCustomBrands();
+    return getSortedBrandsForProduct(
+      editingPriceItem.id,
+      editingPriceItem.name,
+      editingPriceItem.category || '',
+      purchaseHistory,
+      customBrands
+    );
+  }, [editingPriceItem, purchaseHistory]);
+
+  const openEditItemDialog = (item: BasketItem) => {
+    setEditingPriceItem({
+      id: item.id,
+      name: item.name,
+      currentPrice: item.price,
+      unit: item.unit,
+      remark: item.remark || '',
+      brand: item.brand || '',
+      category: item.category,
+    });
+    setNewPriceStr(item.price.toString());
+    setNewRemarkStr(item.remark || '');
+    setSelectedBrand(item.brand || '');
+  };
+
   const handlePointerDown = (item: BasketItem) => {
     longPressTimerRef.current = setTimeout(() => {
-      setEditingPriceItem({ id: item.id, name: item.name, currentPrice: item.price, unit: item.unit, remark: item.remark || '' });
-      setNewPriceStr(item.price.toString());
-      setNewRemarkStr(item.remark || '');
+      openEditItemDialog(item);
     }, 500); // 500ms long press
   };
 
@@ -253,15 +280,34 @@ export default function BasketSheet({
                     </span>
                   </div>
                   <div className='flex justify-between items-center gap-2 mt-1'>
-                    <div className="flex items-center gap-2 min-w-0 flex-1 flex-wrap">
+                    <div className="flex items-center gap-1.5 min-w-0 flex-1 flex-wrap">
                       <span className={cn('text-xs text-muted-foreground whitespace-nowrap', item.purchased && 'line-through')}>
                         {item.price.toFixed(3)} DT / {item.unit}
                       </span>
+                      {item.brand && (
+                        <span className={cn(
+                          "text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-primary/10 text-primary border border-primary/20 shrink-0",
+                          item.purchased && 'line-through opacity-70'
+                        )}>
+                          {item.brand}
+                        </span>
+                      )}
                       {item.remark && (
-                        <span className={cn("text-[9px] text-muted-foreground/80 italic ml-1 truncate max-w-[80px]", item.purchased && 'line-through')}>
+                        <span className={cn("text-[9px] text-muted-foreground/80 italic truncate max-w-[80px]", item.purchased && 'line-through')}>
                           ({item.remark})
                         </span>
                       )}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openEditItemDialog(item);
+                        }}
+                        className="p-1 rounded-md text-muted-foreground/60 hover:text-primary hover:bg-background/80 transition-colors shrink-0"
+                        title="Modifier le prix ou la marque"
+                      >
+                        <Pencil className="h-2.5 w-2.5" />
+                      </button>
                       {purchaseHistory[item.id]?.length > 0 && (
                         <>
                           <span className="text-muted-foreground/30">•</span>
@@ -441,16 +487,17 @@ export default function BasketSheet({
         </DialogContent>
       </Dialog>
 
-      {/* Edit Price dialog */}
+      {/* Edit Price & Brand dialog */}
       <Dialog open={!!editingPriceItem} onOpenChange={(open) => !open && setEditingPriceItem(null)}>
         <DialogContent className="max-w-sm rounded-2xl">
           <DialogHeader>
-            <DialogTitle>Modifier le prix</DialogTitle>
+            <DialogTitle>Modifier le prix & la marque</DialogTitle>
             <DialogDescription>
-              Ajuster le prix de l&apos;article &quot;{editingPriceItem?.name}&quot; avant de valider.
+              Ajuster le prix et préciser la marque de l&apos;article &quot;{editingPriceItem?.name}&quot;.
             </DialogDescription>
           </DialogHeader>
           <div className="py-2 space-y-4">
+            {/* 1. Prix */}
             <div>
               <label className="text-xs font-bold text-muted-foreground ml-1">Nouveau prix (DT)</label>
               <div className="flex items-center gap-2 mt-1">
@@ -466,7 +513,9 @@ export default function BasketSheet({
                     if (e.key === 'Enter') {
                       const num = parseFloat(newPriceStr);
                       if (!isNaN(num) && num >= 0 && editingPriceItem) {
-                        updateBasketItemPrice(editingPriceItem.id, num, newRemarkStr);
+                        const finalBrand = selectedBrand.trim() || undefined;
+                        if (finalBrand) saveCustomBrand(finalBrand);
+                        updateBasketItemPrice(editingPriceItem.id, num, newRemarkStr, finalBrand);
                         setEditingPriceItem(null);
                       }
                     }
@@ -477,26 +526,112 @@ export default function BasketSheet({
                 </span>
               </div>
             </div>
-            
+
+            {/* 2. Marque */}
             <div>
-              <label className="text-xs font-bold text-muted-foreground ml-1">Remarque (optionnelle)</label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs font-bold text-muted-foreground ml-1 flex items-center gap-1.5">
+                  <span>Marque</span>
+                  {selectedBrand && (
+                    <span className="text-primary font-bold">({selectedBrand})</span>
+                  )}
+                </label>
+                {selectedBrand && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedBrand('')}
+                    className="text-[10px] text-muted-foreground hover:text-destructive underline"
+                  >
+                    Sans marque
+                  </button>
+                )}
+              </div>
+
+              {/* Badges rapides avec mini-photos triés par fréquence (le 1er est le plus utilisé) */}
+              {availableBrands.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mb-2.5 max-h-32 overflow-y-auto p-1 bg-muted/20 rounded-xl border border-border/50">
+                  {availableBrands.map((brandDef, idx) => {
+                    const isSelected = selectedBrand.toLowerCase() === brandDef.name.toLowerCase();
+                    return (
+                      <button
+                        key={brandDef.name}
+                        type="button"
+                        onClick={() => setSelectedBrand(brandDef.name)}
+                        className={cn(
+                          "inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-semibold transition-all border shadow-2xs shrink-0 cursor-pointer",
+                          isSelected
+                            ? "bg-primary text-primary-foreground border-primary ring-2 ring-primary/30 scale-105"
+                            : "bg-background hover:bg-muted text-foreground border-border/60 hover:border-primary/40"
+                        )}
+                      >
+                        {brandDef.logoUrl ? (
+                          <img
+                            src={brandDef.logoUrl}
+                            alt={brandDef.name}
+                            className="w-4 h-4 rounded-full object-cover shrink-0 border border-black/10"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="w-4 h-4 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[9px] font-bold shrink-0">
+                            {brandDef.name.charAt(0)}
+                          </div>
+                        )}
+                        <span>{brandDef.name}</span>
+                        {idx === 0 && (
+                          <span className={cn(
+                            "text-[8px] px-1 py-0.2 rounded font-bold uppercase tracking-wider",
+                            isSelected ? "bg-white/20 text-white" : "bg-primary/10 text-primary"
+                          )}>
+                            Top
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
               <Input
-                placeholder="Ex: indiquer la marque, la promotion"
-                value={newRemarkStr}
-                onChange={e => setNewRemarkStr(e.target.value)}
-                className="rounded-xl mt-1"
+                placeholder="Ou saisir une autre marque..."
+                value={selectedBrand}
+                onChange={e => setSelectedBrand(e.target.value)}
+                className="rounded-xl text-xs h-9"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     const num = parseFloat(newPriceStr);
                     if (!isNaN(num) && num >= 0 && editingPriceItem) {
-                      updateBasketItemPrice(editingPriceItem.id, num, newRemarkStr);
+                      const finalBrand = selectedBrand.trim() || undefined;
+                      if (finalBrand) saveCustomBrand(finalBrand);
+                      updateBasketItemPrice(editingPriceItem.id, num, newRemarkStr, finalBrand);
                       setEditingPriceItem(null);
                     }
                   }
                 }}
               />
-              <div className="flex flex-wrap gap-2 mt-3">
-                {["Demi pot", "Marque", "En Promotion"].map(tag => (
+            </div>
+            
+            {/* 3. Remarque */}
+            <div>
+              <label className="text-xs font-bold text-muted-foreground ml-1">Remarque (optionnelle)</label>
+              <Input
+                placeholder="Ex: promotion, format familial"
+                value={newRemarkStr}
+                onChange={e => setNewRemarkStr(e.target.value)}
+                className="rounded-xl mt-1 text-xs h-9"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    const num = parseFloat(newPriceStr);
+                    if (!isNaN(num) && num >= 0 && editingPriceItem) {
+                      const finalBrand = selectedBrand.trim() || undefined;
+                      if (finalBrand) saveCustomBrand(finalBrand);
+                      updateBasketItemPrice(editingPriceItem.id, num, newRemarkStr, finalBrand);
+                      setEditingPriceItem(null);
+                    }
+                  }
+                }}
+              />
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {["Demi pot", "En Promotion", "Bio", "Grand format"].map(tag => (
                   <Badge 
                     key={tag}
                     variant="secondary" 
@@ -516,7 +651,9 @@ export default function BasketSheet({
                 if (editingPriceItem) {
                   const num = parseFloat(newPriceStr);
                   if (!isNaN(num) && num >= 0) {
-                    updateBasketItemPrice(editingPriceItem.id, num, newRemarkStr);
+                    const finalBrand = selectedBrand.trim() || undefined;
+                    if (finalBrand) saveCustomBrand(finalBrand);
+                    updateBasketItemPrice(editingPriceItem.id, num, newRemarkStr, finalBrand);
                     setEditingPriceItem(null);
                   }
                 }

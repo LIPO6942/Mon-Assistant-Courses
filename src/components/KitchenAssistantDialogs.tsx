@@ -17,6 +17,7 @@ import { Label } from './ui/label';
 import { Checkbox } from './ui/checkbox';
 import { cn, getProductStatus } from '@/lib/utils';
 import RecipeContent from './RecipeContent';
+import { getRecipeImageUrl } from '@/lib/recipe-images';
 
 interface KitchenAssistantDialogsProps {
   isAddEditDialogOpen: boolean;
@@ -188,20 +189,12 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
             <div className="flex flex-col h-[85dvh] max-h-[88vh] w-full max-w-full overflow-hidden">
               {/* Image Header / Title Section */}
               <div className="relative h-36 shrink-0 overflow-hidden">
-                {(currentRecipe as UserRecipe).photoDataUri ? (
-                  <Image src={(currentRecipe as UserRecipe).photoDataUri!} alt={currentRecipe.title} layout="fill" objectFit="cover" className="brightness-90" />
-                ) : ('imageUrl' in currentRecipe && currentRecipe.imageUrl) ? (
-                  <img
-                    src={currentRecipe.imageUrl}
-                    alt={currentRecipe.title}
-                    className="w-full h-full object-cover brightness-90"
-                    loading="lazy"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                    <Users className="h-16 w-16 text-primary/20" />
-                  </div>
-                )}
+                <img
+                  src={getRecipeImageUrl(currentRecipe)}
+                  alt={currentRecipe.title}
+                  className="w-full h-full object-cover brightness-90"
+                  loading="lazy"
+                />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-6">
                   <div className="flex justify-between items-end gap-4">
                     <div className="space-y-1">
@@ -249,38 +242,6 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
               {/* Action Buttons & Video Tutorials (YouTube, TikTok, Google) */}
               {currentRecipe && (
                 <div className="px-3 py-2 flex items-center gap-1.5 overflow-x-auto no-scrollbar border-b border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/80 dark:bg-zinc-900/60 shrink-0 w-full max-w-full">
-                  {/* Save to Favorites Button */}
-                  {handleSaveRecipe && viewingRecipe && (
-                    <Button
-                      variant={isAlreadySaved ? "secondary" : "default"}
-                      size="sm"
-                      className={cn(
-                        "h-7 px-3 rounded-full text-[11px] font-bold shrink-0 gap-1.5 transition-all shadow-sm",
-                        isAlreadySaved
-                          ? "bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-700/60 cursor-default"
-                          : "bg-primary hover:bg-primary/90 text-primary-foreground"
-                      )}
-                      onClick={() => {
-                        if (!isAlreadySaved && viewingRecipe) {
-                          handleSaveRecipe(viewingRecipe);
-                        }
-                      }}
-                      disabled={isAlreadySaved}
-                    >
-                      {isAlreadySaved ? (
-                        <>
-                          <Check className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
-                          <span>Favori</span>
-                        </>
-                      ) : (
-                        <>
-                          <PlusCircle className="h-3.5 w-3.5" />
-                          <span>+ Favori</span>
-                        </>
-                      )}
-                    </Button>
-                  )}
-
                   <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider shrink-0 mr-0.5 ml-1">
                     Tutos :
                   </span>
