@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CategoryDef, Ingredient, PurchaseHistory } from "@/lib/types";
-import { TrendingDown, TrendingUp, Minus, Calendar, Tag, Award } from "lucide-react";
+import { TrendingDown, TrendingUp, Minus, Calendar, Tag, Award, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface CategoryPriceEvolutionDialogProps {
@@ -98,10 +98,17 @@ export default function CategoryPriceEvolutionDialog({
                       const mostExpensive = latestByBrand[latestByBrand.length - 1];
                       const diff = mostExpensive.price - cheapest.price;
 
+                      // Écart temporel entre les deux derniers achats de ces marques
+                      const timeDiffMs = Math.abs(new Date(cheapest.date).getTime() - new Date(mostExpensive.date).getTime());
+                      const diffDays = Math.round(timeDiffMs / (1000 * 60 * 60 * 24));
+                      const isTimeComparable = diffDays <= 90; // Comparables si espacés de moins de 3 mois
+
                       return {
                         cheapest,
                         mostExpensive,
                         diff,
+                        diffDays,
+                        isTimeComparable,
                         hasSavings: diff > 0.005
                       };
                     })();
@@ -130,18 +137,27 @@ export default function CategoryPriceEvolutionDialog({
                         </div>
 
                         {/* Brand Comparison Callout if available */}
-                        {brandComparison && brandComparison.hasSavings && (
-                          <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-2.5 text-xs text-green-800 dark:text-green-300 flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-2 min-w-0">
-                              <Award className="h-4 w-4 text-green-600 dark:text-green-400 shrink-0" />
-                              <span className="truncate">
-                                <strong>{brandComparison.cheapest.brand}</strong> plus avantageux ({brandComparison.cheapest.price.toFixed(3)} DT) vs {brandComparison.mostExpensive.brand} ({brandComparison.mostExpensive.price.toFixed(3)} DT)
+                        {brandComparison && (
+                          brandComparison.isTimeComparable && brandComparison.hasSavings ? (
+                            <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-2.5 text-xs text-green-800 dark:text-green-300 flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <Award className="h-4 w-4 text-green-600 dark:text-green-400 shrink-0" />
+                                <span className="truncate">
+                                  <strong>{brandComparison.cheapest.brand}</strong> plus avantageux ({brandComparison.cheapest.price.toFixed(3)} DT) vs {brandComparison.mostExpensive.brand} ({brandComparison.mostExpensive.price.toFixed(3)} DT)
+                                </span>
+                              </div>
+                              <span className="font-bold whitespace-nowrap bg-green-500/20 px-1.5 py-0.5 rounded text-[10px]">
+                                -{brandComparison.diff.toFixed(3)} DT
                               </span>
                             </div>
-                            <span className="font-bold whitespace-nowrap bg-green-500/20 px-1.5 py-0.5 rounded text-[10px]">
-                              -{brandComparison.diff.toFixed(3)} DT
-                            </span>
-                          </div>
+                          ) : !brandComparison.isTimeComparable ? (
+                            <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-2.5 text-xs text-amber-800 dark:text-amber-300 flex items-center gap-2">
+                              <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                              <span className="text-[11px] leading-tight">
+                                Achats espacés de <strong>{Math.round(brandComparison.diffDays / 30)} mois</strong> ({brandComparison.cheapest.brand} et {brandComparison.mostExpensive.brand}). Comparaison directe non représentative en raison de l&apos;inflation.
+                              </span>
+                            </div>
+                          ) : null
                         )}
 
                         {/* Brand Filter Tabs if multiple brands exist */}
