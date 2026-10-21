@@ -531,7 +531,7 @@ export default function KitchenAssistantPage() {
     if (!isDataLoaded) return;
 
     const greenIngredients = pantry.filter(ingredient => {
-      const status = getProductStatus(purchaseHistory[ingredient.id]);
+      const status = getProductStatus(purchaseHistory[ingredient.id], ingredient.name, dbarati);
       const isExcluded = isNonFoodItem(ingredient.name, ingredient.category);
       return status === 'green' && !isExcluded;
     });
@@ -554,7 +554,7 @@ export default function KitchenAssistantPage() {
         setChandyekIngredients(cleaned);
       }
     }
-  }, [isDataLoaded, pantry, purchaseHistory, chandyekIngredients]);
+  }, [isDataLoaded, pantry, purchaseHistory, chandyekIngredients, dbarati]);
 
 
 
@@ -1214,6 +1214,7 @@ export default function KitchenAssistantPage() {
               onViewCategoryTrends={setViewingCategoryTrends}
               onMoveCategory={handleMoveCategory}
               userId={userUid}
+              dbarati={dbarati}
             />
           )}
           {activeTab === 'recipes' && (
@@ -1465,6 +1466,7 @@ export default function KitchenAssistantPage() {
         onSaveSharedRecipe={handleSaveUserRecipe}
         handleSaveRecipe={handleSaveRecipe}
         savedRecipes={savedRecipes}
+        dbarati={dbarati}
       />
 
       <CategoryPriceEvolutionDialog

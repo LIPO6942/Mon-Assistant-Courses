@@ -6,7 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Minus, Plus, Users, Maximize2, Minimize2, CheckCircle2, ListFilter } from 'lucide-react';
 import { cn, getProductStatus, calculateAdjustedQuantity } from '@/lib/utils';
-import type { RecipeIngredient, Ingredient, PurchaseHistory } from '@/lib/types';
+import type { RecipeIngredient, Ingredient, PurchaseHistory, DbaratiItem } from '@/lib/types';
 
 interface RecipeContentProps {
     ingredients: RecipeIngredient[];
@@ -15,6 +15,7 @@ interface RecipeContentProps {
     initialPortions: number;
     pantry: Ingredient[];
     purchaseHistory: PurchaseHistory;
+    dbarati?: DbaratiItem[];
 }
 
 export default function RecipeContent({
@@ -24,6 +25,7 @@ export default function RecipeContent({
     initialPortions,
     pantry,
     purchaseHistory,
+    dbarati,
 }: RecipeContentProps) {
     const [portions, setPortions] = React.useState(initialPortions);
     React.useEffect(() => {
@@ -95,19 +97,19 @@ export default function RecipeContent({
                                     let statusColor = 'bg-zinc-200 dark:bg-zinc-800';
 
                                     if (pantryItem) {
-                                        const status = getProductStatus(purchaseHistory[pantryItem.id]);
-                                        statusColor = status === 'green' ? 'bg-green-500' : 'bg-amber-500';
+                                        const status = getProductStatus(purchaseHistory[pantryItem.id], pantryItem.name, dbarati);
+                                        statusColor = status === 'green' ? 'bg-green-500' : status === 'orange' ? 'bg-amber-500' : 'bg-red-500';
                                     } else {
                                         statusColor = 'bg-red-500';
                                     }
 
                                     return (
-                                        <div key={i} className="flex items-center justify-between p-2 bg-zinc-50 dark:bg-zinc-900/50 rounded-lg border border-zinc-100 dark:border-zinc-800/50">
-                                            <div className="flex items-center gap-2">
-                                                <div className={cn("w-1.5 h-1.5 rounded-full", statusColor)} />
-                                                <span className="text-sm font-medium">{ing.name}</span>
+                                        <div key={i} className="flex items-center justify-between p-2 bg-zinc-50 dark:bg-zinc-900/50 rounded-lg border border-zinc-100 dark:border-zinc-800/50 gap-2 min-w-0">
+                                            <div className="flex items-center gap-2 min-w-0 flex-1">
+                                                <div className={cn("w-1.5 h-1.5 rounded-full shrink-0", statusColor)} />
+                                                <span className="text-xs sm:text-sm font-medium truncate">{ing.name}</span>
                                             </div>
-                                            <span className="text-[10px] font-bold bg-white dark:bg-zinc-900 px-1.5 py-0.5 rounded border border-zinc-100 dark:border-zinc-800 shadow-xs">
+                                            <span className="text-[10px] font-bold bg-white dark:bg-zinc-900 px-1.5 py-0.5 rounded border border-zinc-100 dark:border-zinc-800 shadow-xs shrink-0 whitespace-nowrap">
                                                 {calculateAdjustedQuantity(ing.quantity, basePortions, portions, ing.unit)} {ing.unit}
                                             </span>
                                         </div>
@@ -166,12 +168,12 @@ export default function RecipeContent({
                                             id={`step-${index}`}
                                             checked={checkedSteps.has(index)}
                                             onCheckedChange={() => handleToggleStep(index)}
-                                            className="mt-1 h-4 w-4 rounded-full border-2"
+                                            className="mt-1 h-4 w-4 rounded-full border-2 shrink-0"
                                         />
                                         <label
                                             htmlFor={`step-${index}`}
                                             className={cn(
-                                                "flex-1 text-sm leading-relaxed cursor-pointer font-medium",
+                                                "flex-1 text-xs sm:text-sm leading-relaxed cursor-pointer font-medium break-words min-w-0",
                                                 checkedSteps.has(index) ? "line-through text-muted-foreground" : "text-foreground"
                                             )}
                                         >

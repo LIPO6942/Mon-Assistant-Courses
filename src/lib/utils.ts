@@ -6,36 +6,122 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function getProductStatus(history: PurchaseRecord[] | undefined): 'green' | 'orange' | 'red' | null {
+/**
+ * Calcule le statut dynamique d'un produit (Vert / Orange / Rouge)
+ * en combinant le comportement d'achat (fréquence calendaire)
+ * et le comportement de préparation culinaire réel (Dbarati).
+ */
+export function getProductStatus(
+  history: PurchaseRecord[] | undefined,
+  ingredientName?: string,
+  dbaratiItems?: DbaratiItem[]
+): 'green' | 'orange' | 'red' | null {
   if (!history || history.length === 0) return null;
 
   const sortedHistory = [...history].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   const lastPurchase = new Date(sortedHistory[sortedHistory.length - 1].date);
   const now = new Date();
-  const diffDays = (now.getTime() - lastPurchase.getTime()) / (1000 * 60 * 60 * 24);
+  const diffDays = Math.max(0, (now.getTime() - lastPurchase.getTime()) / (1000 * 60 * 60 * 24));
 
-  // Vert : moins de 7 jours
-  if (diffDays < 7) return 'green';
-
-  if (sortedHistory.length < 2) return null;
-
-  // Calculer l'intervalle moyen
-  let totalDays = 0;
-  for (let i = 1; i < sortedHistory.length; i++) {
-    const prev = new Date(sortedHistory[i - 1].date);
-    const curr = new Date(sortedHistory[i].date);
-    totalDays += (curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24);
+  // Calcul de l'intervalle moyen d'achat
+  let avgInterval = 7;
+  const hasMultiplePurchases = sortedHistory.length >= 2;
+  if (hasMultiplePurchases) {
+    let totalDays = 0;
+    for (let i = 1; i < sortedHistory.length; i++) {
+      const prev = new Date(sortedHistory[i - 1].date);
+      const curr = new Date(sortedHistory[i].date);
+      totalDays += (curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24);
+    }
+    avgInterval = totalDays / (sortedHistory.length - 1);
+    if (avgInterval <= 0) avgInterval = 7;
   }
-  const avgInterval = totalDays / (sortedHistory.length - 1);
 
-  // Orange : atteint la date de fréquence habituelle
+  // --- ANALYSE CULINAIRE COMBINÉE (Dbarati) ---
+  if (ingredientName && dbaratiItems && dbaratiItems.length > 0) {
+    const ingredientTokens = extractSignificantTokens(ingredientName);
+
+    if (ingredientTokens.length > 0) {
+      // Trouver tous les plats Dbarati qui utilisent cet ingrédient
+      const matchingDishes = dbaratiItems.filter(dish => {
+        if (!dish.text) return false;
+        const dishTokens = extractSignificantTokens(dish.text);
+        if (dishTokens.length === 0) return false;
+
+        return ingredientTokens.some(ingTok => {
+          if (ingTok.length < 3) return false;
+          return dishTokens.some(dt => dt.includes(ingTok) || ingTok.includes(dt));
+        });
+      });
+
+      if (matchingDishes.length > 0) {
+        // Collecter toutes les dates de préparation de ces plats
+        const allPrepDates: Date[] = [];
+        matchingDishes.forEach(dish => {
+          const dates = dish.prepHistory && dish.prepHistory.length > 0
+            ? dish.prepHistory
+            : (dish.lastPreparedAt ? [dish.lastPreparedAt] : []);
+
+          dates.forEach(d => {
+            const parsed = new Date(d);
+            if (!isNaN(parsed.getTime())) {
+              allPrepDates.push(parsed);
+            }
+          });
+        });
+
+        // 1. Nombre de préparations depuis le dernier achat
+        const prepsSincePurchase = allPrepDates.filter(d => d.getTime() >= lastPurchase.getTime()).length;
+
+        // 2. Déterminer le ratio attendu de préparations par achat
+        let expectedPrepsPerPurchase = 3; // Réserve standard moyenne (ex: paquet ou portionnage frigo/congélo)
+        if (sortedHistory.length >= 1 && allPrepDates.length > 0) {
+          const observedRatio = allPrepDates.length / sortedHistory.length;
+          if (observedRatio >= 1) {
+            expectedPrepsPerPurchase = Math.max(1, Math.round(observedRatio));
+          }
+        }
+
+        // --- ARBITRAGE INTELLIGENT (CALENDRIER vs PRÉPARATION RÉELLE) ---
+
+        // Cas 1 : Toutes les préparations attendues ont été cuisinées
+        // -> Le stock a été consommé, même si l'achat est récent !
+        if (prepsSincePurchase >= expectedPrepsPerPurchase) {
+          return 'red';
+        }
+
+        // Cas 2 : Presque toutes les préparations ont été cuisinées (dernière portion restante)
+        if (prepsSincePurchase >= Math.max(1, expectedPrepsPerPurchase - 1) && prepsSincePurchase > 0) {
+          return 'orange';
+        }
+
+        // Cas 3 : La préparation réelle protège les produits stockés/congelés
+        // Si le calendrier est avancé (diffDays >= avgInterval), mais que l'utilisateur
+        // n'a PAS cuisiné ou très peu cuisiné ce produit (il dort au congélateur ou au placard) :
+        if (diffDays >= avgInterval * 1.5) {
+          // L'ingrédient est stocké sans avoir été épuisé en cuisine
+          // On le maintient en ORANGE (rappel intelligent) mais PAS en rupture RED !
+          return 'orange';
+        }
+
+        if (diffDays >= avgInterval) {
+          return 'orange';
+        }
+
+        // S'il reste des préparations disponibles et que le calendrier est normal
+        return 'green';
+      }
+    }
+  }
+
+  // --- MODÈLE CALENDAIRE PUR (Fallback si pas de données Dbarati correspondantes) ---
+  if (diffDays < 7) return 'green';
+  if (!hasMultiplePurchases) return null;
+
   if (diffDays >= avgInterval && diffDays < avgInterval * 1.5) return 'orange';
-
-  // Rouge : en rupture/retard (dépassé de 50% ou 4 mois si l'utilisateur l'a suggéré)
-  // On va utiliser le ratio 1.5 pour le rouge
   if (diffDays >= avgInterval * 1.5) return 'red';
 
-  return null;
+  return 'green';
 }
 
 export function isInAppBrowser(): boolean {

@@ -240,6 +240,7 @@ export const discoverableRecipes: Recipe[] = [
     portions: 6,
     preparationTime: 200,
     isEconomical: false,
+    imageUrl: 'https://images.unsplash.com/photo-1534939561126-855b8675edd7?w=800&auto=format&fit=crop&q=80',
     ingredients: [
       { name: 'Bœuf à braiser (paleron, gîte)', quantity: 1, unit: 'kg' },
       { name: 'Vin rouge de Bourgogne', quantity: 750, unit: 'ml' },
@@ -260,6 +261,7 @@ export const discoverableRecipes: Recipe[] = [
     portions: 6,
     preparationTime: 90,
     isEconomical: false,
+    imageUrl: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=800&auto=format&fit=crop&q=80',
     ingredients: [
       { name: 'Aubergine', quantity: 3, unit: 'pièce' },
       { name: 'Bœuf haché', quantity: 500, unit: 'gramme (g)' },
@@ -281,6 +283,7 @@ export const discoverableRecipes: Recipe[] = [
     portions: 4,
     preparationTime: 30,
     isEconomical: false,
+    imageUrl: 'https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?w=800&auto=format&fit=crop&q=80',
     ingredients: [
       { name: 'Filet de poulet', quantity: 400, unit: 'gramme (g)' },
       { name: 'Pâte de curry vert', quantity: 2, unit: 'cuillère à soupe' },

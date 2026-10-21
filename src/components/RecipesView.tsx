@@ -352,7 +352,7 @@ export default function RecipesView({
         const matches = recipe.ingredients.filter(ing => {
           const name = ing.name.toLowerCase();
           if (matchedIngredientNames.has(name)) return true;
-          const status = getProductStatus(purchaseHistory[ing.name] || purchaseHistory[ing.name.toLowerCase()]);
+          const status = getProductStatus(purchaseHistory[ing.name] || purchaseHistory[ing.name.toLowerCase()], ing.name, dbarati);
           return status === 'green' || status === 'orange';
         });
 
@@ -378,7 +378,7 @@ export default function RecipesView({
       matchedNames: [],
       isDiscovery: true
     }));
-  }, [discoverableRecipes, basket, purchaseHistory]);
+  }, [discoverableRecipes, basket, purchaseHistory, dbarati]);
 
   const findRandomRecipes = () => {
     if (filteredDiscoverableRecipes.length === 0) {
@@ -1448,24 +1448,14 @@ export default function RecipesView({
                 <Card
                   key={recipe.id}
                   className={cn(
-                    "cursor-pointer hover:shadow-md transition-all border-primary/20 bg-primary/5 group relative overflow-hidden flex flex-col",
+                    "cursor-pointer hover:shadow-md transition-all border-primary/20 bg-primary/5 group relative",
                     isDiscovery ? "border-zinc-200 bg-zinc-50/50" : "border-primary/20 bg-primary/5"
                   )}
                   onClick={() => setViewingRecipe({ ...recipe, targetPortions: ideaPortions })}
                 >
-                  {recipe.imageUrl && (
-                    <div className="relative h-28 w-full overflow-hidden bg-muted shrink-0">
-                      <img
-                        src={recipe.imageUrl}
-                        alt={recipe.title}
-                        loading="lazy"
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
-                  )}
-                  <CardHeader className="p-3 pb-0 relative">
-                    <CardTitle className="text-sm group-hover:text-primary transition-colors pr-10">{recipe.title}</CardTitle>
-                    <Badge variant="outline" className="text-[8px] w-fit h-4 px-1 absolute top-2 right-2 opacity-80 bg-background/80 backdrop-blur-xs">{recipe.country}</Badge>
+                  <CardHeader className="p-3 pb-0">
+                    <CardTitle className="text-sm group-hover:text-primary transition-colors">{recipe.title}</CardTitle>
+                    <Badge variant="outline" className="text-[8px] w-fit h-4 px-1 absolute top-2 right-2 opacity-50">{recipe.country}</Badge>
                   </CardHeader>
                   <CardContent className="p-3 pt-2">
                     <p className="text-[10px] text-muted-foreground line-clamp-2 mb-2">{recipe.description}</p>
@@ -1507,16 +1497,6 @@ export default function RecipesView({
               
               return (
               <Card key={recipe.id} className="overflow-hidden flex flex-col bg-card shadow-lg rounded-xl border border-border/50">
-                {recipe.imageUrl && (
-                  <div className="relative h-44 w-full overflow-hidden bg-muted shrink-0">
-                    <img
-                      src={recipe.imageUrl}
-                      alt={recipe.title}
-                      loading="lazy"
-                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-                    />
-                  </div>
-                )}
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <div className="pr-2 flex-1">

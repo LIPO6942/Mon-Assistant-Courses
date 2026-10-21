@@ -228,7 +228,7 @@ export default function BasketSheet({
                       >
                         <span className="truncate">{item.name}</span>
                         {(() => {
-                          const status = getProductStatus(purchaseHistory[item.id]);
+                          const status = getProductStatus(purchaseHistory[item.id], item.name, dbarati);
                           if (!status) return null;
                           return (
                             <span

@@ -10,7 +10,7 @@ import { Minus, Plus, Pencil, Trash2, Users, Share2, AlertTriangle, ExternalLink
 import IngredientForm from './IngredientForm';
 import CategoryForm from './CategoryForm';
 import HealthConditionManager from './HealthConditionManager';
-import type { Ingredient, Recipe, CategoryDef, HealthConditionCategory, UserRecipe, RecipeIngredient, BasketItem, PurchaseHistory } from '@/lib/types';
+import type { Ingredient, Recipe, CategoryDef, HealthConditionCategory, UserRecipe, RecipeIngredient, BasketItem, PurchaseHistory, DbaratiItem } from '@/lib/types';
 import UserRecipeForm from './UserRecipeForm';
 import Image from 'next/image';
 import { Label } from './ui/label';
@@ -72,6 +72,7 @@ interface KitchenAssistantDialogsProps {
   purchaseHistory: PurchaseHistory;
   handleSaveRecipe?: (recipe: Omit<Recipe, 'id'> & { id?: string }) => void;
   savedRecipes?: Recipe[];
+  dbarati?: DbaratiItem[];
 }
 
 export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsProps) {
@@ -182,9 +183,9 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
           setViewingUserRecipe(null);
         }
       }}>
-        <DialogContent className="max-w-md p-0 overflow-hidden bg-white dark:bg-zinc-950">
+        <DialogContent className="w-[94vw] max-w-md p-0 overflow-hidden bg-white dark:bg-zinc-950 rounded-2xl sm:rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-2xl">
           {currentRecipe && (
-            <div className="flex flex-col h-[85vh]">
+            <div className="flex flex-col h-[85dvh] max-h-[88vh] w-full max-w-full overflow-hidden">
               {/* Image Header / Title Section */}
               <div className="relative h-36 shrink-0 overflow-hidden">
                 {(currentRecipe as UserRecipe).photoDataUri ? (
@@ -247,7 +248,7 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
 
               {/* Action Buttons & Video Tutorials (YouTube, TikTok, Google) */}
               {currentRecipe && (
-                <div className="px-4 py-2 flex items-center gap-1.5 overflow-x-auto no-scrollbar border-b border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/80 dark:bg-zinc-900/60 shrink-0">
+                <div className="px-3 py-2 flex items-center gap-1.5 overflow-x-auto no-scrollbar border-b border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/80 dark:bg-zinc-900/60 shrink-0 w-full max-w-full">
                   {/* Save to Favorites Button */}
                   {handleSaveRecipe && viewingRecipe && (
                     <Button
@@ -368,10 +369,11 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
                   initialPortions={portions}
                   pantry={pantry}
                   purchaseHistory={purchaseHistory}
+                  dbarati={props.dbarati}
                 />
               </div>
 
-              <DialogFooter className="sm:justify-between w-full shrink-0 px-4 py-4 border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 gap-4">
+              <DialogFooter className="w-full shrink-0 px-3 sm:px-4 py-3 sm:py-4 border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 flex flex-row items-center justify-between gap-2">
                 <div>
                   {viewingUserRecipe && (
                     <div className='flex items-center gap-1'>
@@ -410,13 +412,13 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
                     </div>
                   )}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                   {handleSaveRecipe && viewingRecipe && (
                     <Button
                       type="button"
                       variant={isAlreadySaved ? "outline" : "secondary"}
                       className={cn(
-                        "rounded-full px-4 sm:px-5 font-bold gap-2 text-xs sm:text-sm",
+                        "rounded-full px-3 sm:px-5 font-bold gap-1.5 sm:gap-2 text-xs sm:text-sm h-8 sm:h-9",
                         isAlreadySaved && "border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40"
                       )}
                       onClick={() => {
@@ -428,12 +430,12 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
                     >
                       {isAlreadySaved ? (
                         <>
-                          <Check className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                          <Check className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
                           <span>Enregistré</span>
                         </>
                       ) : (
                         <>
-                          <PlusCircle className="h-4 w-4 text-primary" />
+                          <PlusCircle className="h-3.5 w-3.5 text-primary" />
                           <span>+ Favori</span>
                         </>
                       )}
@@ -442,7 +444,7 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
                   <Button
                     type="button"
                     variant="default"
-                    className="rounded-full px-6 sm:px-8 font-bold"
+                    className="rounded-full px-4 sm:px-8 font-bold text-xs sm:text-sm h-8 sm:h-9"
                     onClick={() => {
                       setViewingRecipe(null);
                       setViewingUserRecipe(null);

@@ -5,7 +5,7 @@ import { SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/compo
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { History, Plus, Trash2, LayoutGrid, Store } from 'lucide-react';
-import type { PurchaseHistory, Ingredient } from '@/lib/types';
+import type { PurchaseHistory, Ingredient, DbaratiItem } from '@/lib/types';
 import { cn, getProductStatus } from '@/lib/utils';
 import { useState, useMemo } from 'react';
 import { StoreIcon } from '@/components/StoreIcon';
@@ -15,9 +15,10 @@ interface QuickReorderSheetProps {
     pantry: Ingredient[];
     onAddToBasket: (ingredient: Ingredient, quantity: number) => void;
     onDeleteFromHistory: (id: string) => void;
+    dbarati?: DbaratiItem[];
 }
 
-export default function QuickReorderSheet({ purchaseHistory, pantry, onAddToBasket, onDeleteFromHistory }: QuickReorderSheetProps) {
+export default function QuickReorderSheet({ purchaseHistory, pantry, onAddToBasket, onDeleteFromHistory, dbarati }: QuickReorderSheetProps) {
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [viewByStore, setViewByStore] = useState(false);
 
@@ -113,7 +114,7 @@ export default function QuickReorderSheet({ purchaseHistory, pantry, onAddToBask
                                                         <h4 className="font-bold text-foreground leading-tight mb-2 flex items-center gap-2 text-lg">
                                                             <span className="truncate">{ingredient!.name}</span>
                                                             {(() => {
-                                                                const status = getProductStatus(purchaseHistory[id]);
+                                                                const status = getProductStatus(purchaseHistory[id], ingredient?.name, dbarati);
                                                                 if (!status) return null;
                                                                 return (
                                                                     <span

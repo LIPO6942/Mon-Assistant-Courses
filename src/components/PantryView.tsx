@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Plus, PlusCircle, Pencil, Trash2, Search, BrainCircuit, History, ChevronUp, ChevronDown, AlarmClock } from 'lucide-react';
-import type { Ingredient, CategoryDef, PurchaseHistory } from '@/lib/types';
+import type { Ingredient, CategoryDef, PurchaseHistory, DbaratiItem } from '@/lib/types';
 import BudgetManager from './BudgetManager';
 import { cn, getProductStatus, isNonFoodItem } from '@/lib/utils';
 import { Sheet, SheetTrigger } from '@/components/ui/sheet';
@@ -15,6 +15,7 @@ import ReminderSheet from './ReminderSheet';
 import { ImportFromLawra9Dialog } from './ImportFromLawra9Dialog';
 
 interface PantryViewProps {
+  dbarati?: DbaratiItem[];
   groupedIngredients: Record<string, Ingredient[]>;
   categories: CategoryDef[];
   searchQuery: string;
@@ -76,6 +77,7 @@ export default function PantryView({
   onViewCategoryTrends,
   onMoveCategory,
   userId,
+  dbarati,
 }: PantryViewProps) {
   return (
     <div>
@@ -122,6 +124,7 @@ export default function PantryView({
             pantry={pantry}
             onAddToBasket={onAddToBasket}
             onDeleteFromHistory={onDeleteFromHistory}
+            dbarati={dbarati}
           />
         </Sheet>
       </div>
@@ -189,7 +192,7 @@ export default function PantryView({
                               <div className="flex items-center gap-1.5">
                                 <span className='font-semibold text-sm whitespace-normal break-words leading-tight'>{item.name}</span>
                                 {(() => {
-                                  const status = getProductStatus(purchaseHistory[item.id]);
+                                  const status = getProductStatus(purchaseHistory[item.id], item.name, dbarati);
                                   if (!status) return null;
                                   return (
                                     <span
