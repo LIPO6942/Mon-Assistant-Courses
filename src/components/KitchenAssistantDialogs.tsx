@@ -6,7 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { BasketShareDialog } from './BasketShareDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Minus, Plus, Pencil, Trash2, Users, Share2, AlertTriangle, ExternalLink, Search } from 'lucide-react';
+import { Minus, Plus, Pencil, Trash2, Users, Share2, AlertTriangle, ExternalLink, Search, PlusCircle, Check } from 'lucide-react';
 import IngredientForm from './IngredientForm';
 import CategoryForm from './CategoryForm';
 import HealthConditionManager from './HealthConditionManager';
@@ -70,6 +70,8 @@ interface KitchenAssistantDialogsProps {
   isInApp?: boolean;
   pantry: Ingredient[];
   purchaseHistory: PurchaseHistory;
+  handleSaveRecipe?: (recipe: Omit<Recipe, 'id'> & { id?: string }) => void;
+  savedRecipes?: Recipe[];
 }
 
 export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsProps) {
@@ -117,6 +119,8 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
     isInApp,
     pantry,
     purchaseHistory,
+    handleSaveRecipe,
+    savedRecipes = [],
   } = props;
 
   const [isPreviewPhotoOpen, setIsPreviewPhotoOpen] = React.useState(false);
@@ -146,6 +150,14 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
   const currentIngredients = currentRecipe?.ingredients as RecipeIngredient[] | undefined;
   const basePortions = currentRecipe?.portions || 1;
 
+  const isAlreadySaved = React.useMemo(() => {
+    if (!currentRecipe || !savedRecipes) return false;
+    return savedRecipes.some(
+      r => (currentRecipe.id && r.id === currentRecipe.id) ||
+           (r.title && currentRecipe.title && r.title.trim().toLowerCase() === currentRecipe.title.trim().toLowerCase())
+    );
+  }, [currentRecipe, savedRecipes]);
+
   return (
     <>
       <Dialog open={isAddEditDialogOpen} onOpenChange={setAddEditDialogOpen}>
@@ -174,9 +186,16 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
           {currentRecipe && (
             <div className="flex flex-col h-[85vh]">
               {/* Image Header / Title Section */}
-              <div className="relative h-32 shrink-0">
+              <div className="relative h-36 shrink-0 overflow-hidden">
                 {(currentRecipe as UserRecipe).photoDataUri ? (
                   <Image src={(currentRecipe as UserRecipe).photoDataUri!} alt={currentRecipe.title} layout="fill" objectFit="cover" className="brightness-90" />
+                ) : ('imageUrl' in currentRecipe && currentRecipe.imageUrl) ? (
+                  <img
+                    src={currentRecipe.imageUrl}
+                    alt={currentRecipe.title}
+                    className="w-full h-full object-cover brightness-90"
+                    loading="lazy"
+                  />
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
                     <Users className="h-16 w-16 text-primary/20" />
@@ -229,7 +248,39 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
               {/* Action Buttons & Video Tutorials (YouTube, TikTok, Google) */}
               {currentRecipe && (
                 <div className="px-4 py-2 flex items-center gap-1.5 overflow-x-auto no-scrollbar border-b border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/80 dark:bg-zinc-900/60 shrink-0">
-                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider shrink-0 mr-0.5">
+                  {/* Save to Favorites Button */}
+                  {handleSaveRecipe && viewingRecipe && (
+                    <Button
+                      variant={isAlreadySaved ? "secondary" : "default"}
+                      size="sm"
+                      className={cn(
+                        "h-7 px-3 rounded-full text-[11px] font-bold shrink-0 gap-1.5 transition-all shadow-sm",
+                        isAlreadySaved
+                          ? "bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-700/60 cursor-default"
+                          : "bg-primary hover:bg-primary/90 text-primary-foreground"
+                      )}
+                      onClick={() => {
+                        if (!isAlreadySaved && viewingRecipe) {
+                          handleSaveRecipe(viewingRecipe);
+                        }
+                      }}
+                      disabled={isAlreadySaved}
+                    >
+                      {isAlreadySaved ? (
+                        <>
+                          <Check className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                          <span>Favori</span>
+                        </>
+                      ) : (
+                        <>
+                          <PlusCircle className="h-3.5 w-3.5" />
+                          <span>+ Favori</span>
+                        </>
+                      )}
+                    </Button>
+                  )}
+
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider shrink-0 mr-0.5 ml-1">
                     Tutos :
                   </span>
 
@@ -359,17 +410,47 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
                     </div>
                   )}
                 </div>
-                <Button
-                  type="button"
-                  variant="default"
-                  className="rounded-full px-8 font-bold"
-                  onClick={() => {
-                    setViewingRecipe(null);
-                    setViewingUserRecipe(null);
-                  }}
-                >
-                  Fermer
-                </Button>
+                <div className="flex items-center gap-2">
+                  {handleSaveRecipe && viewingRecipe && (
+                    <Button
+                      type="button"
+                      variant={isAlreadySaved ? "outline" : "secondary"}
+                      className={cn(
+                        "rounded-full px-4 sm:px-5 font-bold gap-2 text-xs sm:text-sm",
+                        isAlreadySaved && "border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40"
+                      )}
+                      onClick={() => {
+                        if (!isAlreadySaved && viewingRecipe) {
+                          handleSaveRecipe(viewingRecipe);
+                        }
+                      }}
+                      disabled={isAlreadySaved}
+                    >
+                      {isAlreadySaved ? (
+                        <>
+                          <Check className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                          <span>Enregistré</span>
+                        </>
+                      ) : (
+                        <>
+                          <PlusCircle className="h-4 w-4 text-primary" />
+                          <span>+ Favori</span>
+                        </>
+                      )}
+                    </Button>
+                  )}
+                  <Button
+                    type="button"
+                    variant="default"
+                    className="rounded-full px-6 sm:px-8 font-bold"
+                    onClick={() => {
+                      setViewingRecipe(null);
+                      setViewingUserRecipe(null);
+                    }}
+                  >
+                    Fermer
+                  </Button>
+                </div>
               </DialogFooter>
             </div>
           )}

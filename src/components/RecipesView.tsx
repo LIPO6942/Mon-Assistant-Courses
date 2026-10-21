@@ -249,8 +249,24 @@ export default function RecipesView({
     }
   }, []);
 
+  const isTunisianRecipe = (r: Recipe): boolean => {
+    const country = (r.country || '').toLowerCase().trim();
+    const title = (r.title || '').toLowerCase().trim();
+    const desc = (r.description || '').toLowerCase().trim();
+
+    if (country.includes('tunis')) return true;
+    if (title.includes('tunis') || desc.includes('tunis')) return true;
+
+    const tunisianKeywords = [
+      'mechouia', 'ojja', 'chorba frik', 'makarouna bel allouch',
+      'brik', 'lablabi', 'kafteji', 'kamounia', 'rouz jerbi'
+    ];
+    return tunisianKeywords.some(kw => title.includes(kw));
+  };
+
   const filteredDiscoverableRecipes = useMemo(() => {
     return discoverableRecipes.filter(recipe => {
+      if (isTunisianRecipe(recipe)) return false;
       const quickMatch = !filterQuick || (recipe.preparationTime !== undefined && recipe.preparationTime <= 15);
       const economicalMatch = !filterEconomical || !!recipe.isEconomical;
       return quickMatch && economicalMatch;
@@ -324,6 +340,7 @@ export default function RecipesView({
 
   // --- Basket-based Recommendations ---
   const basketBasedRecipes = useMemo(() => {
+    const nonTunisianDiscoverables = discoverableRecipes.filter(r => !isTunisianRecipe(r));
     const hasHistory = basket.length > 0 || Object.keys(purchaseHistory).length > 0;
 
     // 1. If history exists, use the matching algorithm
@@ -331,7 +348,7 @@ export default function RecipesView({
       const matchedIngredientNames = new Set<string>();
       basket.forEach(item => matchedIngredientNames.add(item.name.toLowerCase()));
 
-      return discoverableRecipes.map(recipe => {
+      return nonTunisianDiscoverables.map(recipe => {
         const matches = recipe.ingredients.filter(ing => {
           const name = ing.name.toLowerCase();
           if (matchedIngredientNames.has(name)) return true;
@@ -353,7 +370,7 @@ export default function RecipesView({
     }
 
     // 2. If NO history, show discovery recipes (random subset of 4)
-    const shuffled = [...discoverableRecipes].sort(() => 0.5 - Math.random());
+    const shuffled = [...nonTunisianDiscoverables].sort(() => 0.5 - Math.random());
     return shuffled.slice(0, 4).map(recipe => ({
       recipe,
       matchCount: 0,
@@ -1431,14 +1448,24 @@ export default function RecipesView({
                 <Card
                   key={recipe.id}
                   className={cn(
-                    "cursor-pointer hover:shadow-md transition-all border-primary/20 bg-primary/5 group relative",
+                    "cursor-pointer hover:shadow-md transition-all border-primary/20 bg-primary/5 group relative overflow-hidden flex flex-col",
                     isDiscovery ? "border-zinc-200 bg-zinc-50/50" : "border-primary/20 bg-primary/5"
                   )}
                   onClick={() => setViewingRecipe({ ...recipe, targetPortions: ideaPortions })}
                 >
-                  <CardHeader className="p-3 pb-0">
-                    <CardTitle className="text-sm group-hover:text-primary transition-colors">{recipe.title}</CardTitle>
-                    <Badge variant="outline" className="text-[8px] w-fit h-4 px-1 absolute top-2 right-2 opacity-50">{recipe.country}</Badge>
+                  {recipe.imageUrl && (
+                    <div className="relative h-28 w-full overflow-hidden bg-muted shrink-0">
+                      <img
+                        src={recipe.imageUrl}
+                        alt={recipe.title}
+                        loading="lazy"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+                  )}
+                  <CardHeader className="p-3 pb-0 relative">
+                    <CardTitle className="text-sm group-hover:text-primary transition-colors pr-10">{recipe.title}</CardTitle>
+                    <Badge variant="outline" className="text-[8px] w-fit h-4 px-1 absolute top-2 right-2 opacity-80 bg-background/80 backdrop-blur-xs">{recipe.country}</Badge>
                   </CardHeader>
                   <CardContent className="p-3 pt-2">
                     <p className="text-[10px] text-muted-foreground line-clamp-2 mb-2">{recipe.description}</p>
@@ -1480,6 +1507,16 @@ export default function RecipesView({
               
               return (
               <Card key={recipe.id} className="overflow-hidden flex flex-col bg-card shadow-lg rounded-xl border border-border/50">
+                {recipe.imageUrl && (
+                  <div className="relative h-44 w-full overflow-hidden bg-muted shrink-0">
+                    <img
+                      src={recipe.imageUrl}
+                      alt={recipe.title}
+                      loading="lazy"
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                    />
+                  </div>
+                )}
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <div className="pr-2 flex-1">

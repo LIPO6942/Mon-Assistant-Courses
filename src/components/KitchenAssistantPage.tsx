@@ -18,7 +18,7 @@ import MarketPricesView from './MarketPricesView';
 import CategoryPriceEvolutionDialog from './CategoryPriceEvolutionDialog';
 import SettingsPage from './SettingsPage';
 import { db } from '@/lib/idb';
-import { isInAppBrowser, getProductStatus, cn, isExcludedFromMarketPrices } from '@/lib/utils';
+import { isInAppBrowser, getProductStatus, cn, isExcludedFromMarketPrices, isNonFoodItem } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -44,28 +44,8 @@ import {
   sendThanksForBasket,
 } from '@/lib/firestore-sync';
 
-
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { useBasketAbandonmentReminder } from '@/hooks/useBasketAbandonmentReminder';
-
-
-// Catégories non-alimentaires à exclure de l'onglet Ch3andek
-const NON_FOOD_CATEGORIES = [
-  'maison',
-  'médicaments',
-  'médicament',
-  'produits de soin',
-  'produit de soin',
-  'soin',
-  'bien-être',
-  'bien être',
-  'hygiène',
-  'entretien',
-  'nettoyage',
-  'hygiene',
-  'beauté',
-  'beaute',
-];
 
 export default function KitchenAssistantPage() {
   // --- STATE MANAGEMENT ---
@@ -537,19 +517,22 @@ export default function KitchenAssistantPage() {
   }, [filteredPantry, categories]);
 
   const chandyekIngredientsList = useMemo(() => {
-    return chandyekIngredients.split(', ').filter(Boolean);
-  }, [chandyekIngredients]);
+    return chandyekIngredients
+      .split(', ')
+      .filter(Boolean)
+      .filter(name => {
+        const item = pantry.find(p => p.name.toLowerCase() === name.toLowerCase());
+        return !isNonFoodItem(name, item?.category);
+      });
+  }, [chandyekIngredients, pantry]);
 
-  // Auto-add ingredients with green status to Ch3andek
+  // Auto-add ingredients with green status to Ch3andek (en excluant strictement les produits bien-être et maison comme les piles)
   useEffect(() => {
     if (!isDataLoaded) return;
 
     const greenIngredients = pantry.filter(ingredient => {
       const status = getProductStatus(purchaseHistory[ingredient.id]);
-      const categoryLower = ingredient.category.toLowerCase();
-      const isExcluded = NON_FOOD_CATEGORIES.some(excluded =>
-        categoryLower.includes(excluded)
-      );
+      const isExcluded = isNonFoodItem(ingredient.name, ingredient.category);
       return status === 'green' && !isExcluded;
     });
 
@@ -557,6 +540,19 @@ export default function KitchenAssistantPage() {
     if (greenIngredients.length > 0 && !chandyekIngredients) {
       const ingredientNames = greenIngredients.map(ing => ing.name).join(', ');
       setChandyekIngredients(ingredientNames);
+    } else if (chandyekIngredients) {
+      // Nettoyer automatiquement si des articles non-alimentaires étaient déjà enregistrés
+      const cleaned = chandyekIngredients
+        .split(', ')
+        .filter(Boolean)
+        .filter(name => {
+          const item = pantry.find(p => p.name.toLowerCase() === name.toLowerCase());
+          return !isNonFoodItem(name, item?.category);
+        })
+        .join(', ');
+      if (cleaned !== chandyekIngredients) {
+        setChandyekIngredients(cleaned);
+      }
     }
   }, [isDataLoaded, pantry, purchaseHistory, chandyekIngredients]);
 
@@ -567,7 +563,10 @@ export default function KitchenAssistantPage() {
     let currentIngredients = [...chandyekIngredientsList];
 
     if (extraIngredient) {
-      if (!currentIngredients.some(ing => ing.toLowerCase() === extraIngredient.toLowerCase())) {
+      if (
+        !isNonFoodItem(extraIngredient) &&
+        !currentIngredients.some(ing => ing.toLowerCase() === extraIngredient.toLowerCase())
+      ) {
         currentIngredients.push(extraIngredient);
         // Sync back to the main search string state
         setChandyekIngredients(prev => {
@@ -603,13 +602,15 @@ export default function KitchenAssistantPage() {
       });
       setAiSuggestions(results);
     } catch (err) {
-      console.error(err);
+      console.error("Erreur lors de la génération des recettes (Ch3andek):", err);
       let errorMessage = "Une erreur inattendue est survenue lors de la génération des recettes.";
       if (err instanceof Error) {
         if (err.message.includes('503')) {
-          errorMessage = "Le service est actuellement surchargé. Veuillez réessayer dans quelques instants.";
-        } else if (err.message.includes('400')) {
-          errorMessage = "La demande est invalide. Veuillez vérifier les ingrédients et réessayer.";
+          errorMessage = "Le service Groq est actuellement surchargé (503). Veuillez réessayer dans un instant.";
+        } else if (err.message.includes('GROQ_API_KEY')) {
+          errorMessage = err.message;
+        } else if (err.message.trim().length > 0) {
+          errorMessage = err.message;
         } else {
           errorMessage = "L'IA n'a pas pu générer de recettes. Veuillez réessayer.";
         }
@@ -805,8 +806,11 @@ export default function KitchenAssistantPage() {
           ...(item.remark ? { remark: item.remark } : {}),
         });
 
-        // Add to Ch3andek if not present
-        if (!newChandyekIngredients.some(ingName => ingName.toLowerCase() === item.name.toLowerCase())) {
+        // Add to Ch3andek if not present and is a food item (strictly exclude home and wellness products)
+        if (
+          !isNonFoodItem(item.name, item.category) &&
+          !newChandyekIngredients.some(ingName => ingName.toLowerCase() === item.name.toLowerCase())
+        ) {
           newChandyekIngredients.push(item.name);
           hasChandyekUpdates = true;
         }
@@ -964,13 +968,9 @@ export default function KitchenAssistantPage() {
   };
 
   const handleToggleChandyekIngredient = (ingredientName: string) => {
-    // Bloquer les articles des catégories non-alimentaires
+    // Bloquer les articles des catégories non-alimentaires et produits maison/bien-être
     const ingredient = pantry.find(ing => ing.name === ingredientName);
-    if (ingredient) {
-      const categoryLower = ingredient.category.toLowerCase();
-      const isNonFood = NON_FOOD_CATEGORIES.some(cat => categoryLower.includes(cat));
-      if (isNonFood) return; // Ignorer silencieusement
-    }
+    if (isNonFoodItem(ingredientName, ingredient?.category)) return; // Ignorer silencieusement
     setChandyekIngredients(prev => {
       const ingredientsList = prev ? prev.split(', ').filter(Boolean) : [];
       if (ingredientsList.includes(ingredientName)) {
@@ -1463,6 +1463,8 @@ export default function KitchenAssistantPage() {
         sharedRecipeToView={sharedRecipeToView}
         setSharedRecipeToView={setSharedRecipeToView}
         onSaveSharedRecipe={handleSaveUserRecipe}
+        handleSaveRecipe={handleSaveRecipe}
+        savedRecipes={savedRecipes}
       />
 
       <CategoryPriceEvolutionDialog

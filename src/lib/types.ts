@@ -33,6 +33,7 @@ export interface Recipe {
   isEconomical?: boolean;
   searchUrl?: string;
   searchLinks?: { label: string; url: string }[];
+  imageUrl?: string;
 }
 
 export interface UserRecipe {

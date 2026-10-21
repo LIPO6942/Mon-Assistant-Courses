@@ -8,7 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Plus, PlusCircle, Pencil, Trash2, Search, BrainCircuit, History, ChevronUp, ChevronDown, AlarmClock } from 'lucide-react';
 import type { Ingredient, CategoryDef, PurchaseHistory } from '@/lib/types';
 import BudgetManager from './BudgetManager';
-import { cn, getProductStatus } from '@/lib/utils';
+import { cn, getProductStatus, isNonFoodItem } from '@/lib/utils';
 import { Sheet, SheetTrigger } from '@/components/ui/sheet';
 import QuickReorderSheet from './QuickReorderSheet';
 import ReminderSheet from './ReminderSheet';
@@ -181,9 +181,8 @@ export default function PantryView({
                     <ul className="space-y-2 pr-4">
                       {items.map(item => {
                         const isSelectedForChandyek = chandyekIngredientsList.includes(item.name);
-                        // Masquer le bouton Ch3andek pour les articles non-alimentaires
-                        const categoryLower = item.category.toLowerCase();
-                        const isNonFoodItem = ['maison','médicaments','médicament','produits de soin','produit de soin','soin','bien-être','bien être','hygiène','entretien','nettoyage','hygiene','beauté','beaute'].some(kw => categoryLower.includes(kw));
+                        // Masquer le bouton Ch3andek pour les articles non-alimentaires (maison, bien-être, piles, etc.)
+                        const isNonFood = isNonFoodItem(item.name, item.category);
                         return (
                           <li key={item.id} className="flex items-center justify-between p-2 rounded-2xl bg-background/50 border border-border/20 shadow-sm hover:shadow-md hover:bg-background/80 transition-all duration-300 group/item">
                             <div className="flex flex-col gap-0.5 min-w-0 flex-1 mr-1">
@@ -217,7 +216,7 @@ export default function PantryView({
                               >
                                 <Plus className="h-3.5 w-3.5" />
                               </Button>
-                              {!isNonFoodItem && (
+                              {!isNonFood && (
                                 <Button
                                   variant={isSelectedForChandyek ? "secondary" : "ghost"}
                                   size="icon"

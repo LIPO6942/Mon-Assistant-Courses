@@ -21,11 +21,18 @@ export interface GroqChatRequest {
   max_tokens?: number;
   // OpenAI-compatible JSON mode; supported by Groq
   response_format?: { type: 'json_object' };
+  reasoning_format?: 'parsed' | 'raw' | 'hidden';
+  reasoning_effort?: 'none' | 'low' | 'medium' | 'high' | 'default';
 }
 
 interface GroqChatChoice {
   index: number;
-  message: { role: 'assistant'; content: string | GroqMessageContentPart[] };
+  message: {
+    role: 'assistant';
+    content: string | GroqMessageContentPart[];
+    reasoning?: string;
+    reasoning_content?: string;
+  };
   finish_reason: string | null;
 }
 
@@ -35,6 +42,19 @@ interface GroqChatResponse {
   created: number;
   model: string;
   choices: GroqChatChoice[];
+}
+
+export function normalizeModelName(model: string): string {
+  const trimmed = model.trim();
+  if (trimmed === 'qwen3.8-27b') return 'qwen/qwen3.8-27b';
+  if (trimmed === 'qwen3.6-27b') return 'qwen/qwen3.6-27b';
+  if (trimmed === 'qwen3-32b') return 'qwen/qwen3-32b';
+  return trimmed;
+}
+
+export function isReasoningModel(model: string): boolean {
+  const m = model.toLowerCase();
+  return m.includes('qwen') || m.includes('deepseek-r1') || m.includes('qwq');
 }
 
 function getGroqApiKey(): string {
@@ -49,13 +69,26 @@ function getGroqApiKey(): string {
 
 async function groqChat(request: GroqChatRequest): Promise<GroqChatResponse> {
   const apiKey = getGroqApiKey();
+  const finalModel = normalizeModelName(request.model);
+
+  const payload: Record<string, unknown> = {
+    ...request,
+    model: finalModel,
+  };
+
+  // For reasoning models (such as qwen/qwen3.8-27b), Groq rejects raw reasoning combined with JSON mode (400 error).
+  // Automatically configure reasoning_format: 'parsed' if not specified.
+  if (isReasoningModel(finalModel) && !payload.reasoning_format) {
+    payload.reasoning_format = 'parsed';
+  }
+
   const res = await fetch(`${GROQ_BASE_URL}/chat/completions`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(request),
+    body: JSON.stringify(payload),
     // Let Next.js/Node decide; these are server actions
   });
 
@@ -76,12 +109,16 @@ export async function groqChatText(
 ): Promise<string> {
   const response = await groqChat(params);
   const first = response.choices?.[0]?.message?.content;
-  if (typeof first === 'string') return first;
-  if (Array.isArray(first)) {
+  let text = '';
+  if (typeof first === 'string') {
+    text = first;
+  } else if (Array.isArray(first)) {
     // Concatenate text parts if any
-    return first.map((p) => (p.type === 'text' ? p.text : '')).join('\n').trim();
+    text = first.map((p) => (p.type === 'text' ? p.text : '')).join('\n').trim();
+  } else {
+    throw new Error("Réponse Groq invalide : contenu manquant.");
   }
-  throw new Error("Réponse Groq invalide : contenu manquant.");
+  return text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
 }
 
 export async function groqChatJson<T = unknown>(
@@ -93,40 +130,50 @@ export async function groqChatJson<T = unknown>(
     ? content.map((p) => (p.type === 'text' ? p.text : '')).join('\n')
     : (content as string | undefined);
   if (!asText) throw new Error("Réponse Groq vide.");
+
+  // Clean text: strip potential <think> tags or markdown code fences
+  let cleaned = asText.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+  if (cleaned.startsWith('```')) {
+    cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+  }
+
   try {
-    return JSON.parse(asText) as T;
+    return JSON.parse(cleaned) as T;
   } catch (err) {
     // Fallback: try to extract JSON substring
-    const match = asText.match(/\{[\s\S]*\}/);
+    const match = cleaned.match(/\{[\s\S]*\}/);
     if (match) {
-      return JSON.parse(match[0]) as T;
+      try {
+        return JSON.parse(match[0]) as T;
+      } catch {
+        // continue
+      }
     }
-    throw new Error("La réponse Groq n'est pas un JSON valide.");
+    throw new Error(`La réponse Groq n'est pas un JSON valide : ${cleaned.slice(0, 100)}...`);
   }
 }
 
 const DEFAULT_TEXT_MODELS = [
-  // Prefer supported defaults first
+  'qwen/qwen3.8-27b',
+  'qwen-2.5-32b',
+  'llama-3.3-70b-versatile',
   'llama-3.1-8b-instant',
-  'llama-3.2-11b-text-preview',
-  'llama-3.2-90b-text-preview',
-  // Deprecated previously-used model kept as last resort (may 400)
-  'llama-3.1-70b-versatile',
 ];
 
 const DEFAULT_VISION_MODELS = [
+  'qwen/qwen3.8-27b',
   'llama-3.2-11b-vision-preview',
   'llama-3.2-90b-vision-preview',
 ];
 
 export function getPreferredTextModel(): string {
   const override = process.env.GROQ_TEXT_MODEL?.trim();
-  if (override) return override;
+  if (override) return normalizeModelName(override);
   return DEFAULT_TEXT_MODELS[0];
 }
 
 export function getPreferredVisionModel(): string {
   const override = process.env.GROQ_VISION_MODEL?.trim();
-  if (override) return override;
+  if (override) return normalizeModelName(override);
   return DEFAULT_VISION_MODELS[0];
 }

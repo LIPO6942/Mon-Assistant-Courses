@@ -180,6 +180,130 @@ export function isExcludedFromMarketPrices(
   return EXCLUDED_PATTERNS.some(pattern => pattern.test(raw));
 }
 
+// --- PRODUITS NON-ALIMENTAIRES EXCLUS DE CH3ANDEK (BIEN-ÊTRE & MAISON / PILES / ETC.) ---
+export function isNonFoodItem(
+  name: string | undefined | null,
+  category?: string | null
+): boolean {
+  const raw = (name || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+  const cat = (category || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+
+  // 1. Catégories non-alimentaires (Maison, Entretien, Bien-être, etc.)
+  const NON_FOOD_CATEGORIES = [
+    /\bmaison\b/i,
+    /\b(bien[- ]?etre)\b/i,
+    /\b(medicament|medicaments|pharmacie|parapharmacie)\b/i,
+    /\b(soin|soins|produits? de soin)\b/i,
+    /\b(beaute|cosmetique|cosmetiques)\b/i,
+    /\b(hygiene)\b/i,
+    /\b(entretien|nettoyage|menage|droguerie)\b/i,
+    /\b(bricolage|quincaillerie|electronique|electromenager|bazar)\b/i,
+    /\b(animaux|animalerie)\b/i,
+    /\b(fourniture|fournitures|papeterie)\b/i,
+  ];
+
+  if (cat && NON_FOOD_CATEGORIES.some(pattern => pattern.test(cat))) {
+    return true;
+  }
+
+  if (!raw) return false;
+
+  // 2. Mots-clés d'articles non-alimentaires (Produits maison, piles, bien-être, etc.)
+  const NON_FOOD_NAME_PATTERNS = [
+    // Électronique, bricolage & maison
+    /\bpile(s)?\b/i,
+    /\bbatterie(s)?\b/i,
+    /\baccu(s)?\b/i,
+    /\bampoule(s)?\b/i,
+    /\bchargeur(s)?\b/i,
+    /\bcable(s)?\b/i,
+    /\ballumette(s)?\b/i,
+    /\bbriquet(s)?\b/i,
+    /\bbougie(s)?\b/i,
+
+    // Entretien, ménage & produits maison
+    /\blessive(s)?\b/i,
+    /\badoucissant(s)?\b/i,
+    /\bassouplissant(s)?\b/i,
+    /\bjavel\b/i,
+    /\bliquide vaisselle\b/i,
+    /\bpastille(s)? vaisselle\b/i,
+    /\btablette(s)? (lave[- ]?)?vaisselle\b/i,
+    /\bdetergent(s)?\b/i,
+    /\bnettoyant(s)?\b/i,
+    /\bdegraissant(s)?\b/i,
+    /\bdesinfectant(s)?\b/i,
+    /\banticalcaire\b/i,
+    /\bdetartrant\b/i,
+    /\beponge(s)?\b/i,
+    /\bchiffon(s)?\b/i,
+    /\blavette(s)?\b/i,
+    /\bserpilliere(s)?\b/i,
+    /\bserpillere(s)?\b/i,
+    /\bbalai(s)?\b/i,
+    /\bsac(s)? poubelle(s)?\b/i,
+    /\bsac(s)? congelation\b/i,
+    /\bfilm etirable\b/i,
+    /\bpapier alu(minium)?\b/i,
+    /\bpapier cuisson\b/i,
+    /\bdesodorisant(s)?\b/i,
+    /\banti[- ]moustique(s)?\b/i,
+    /\binsecticide(s)?\b/i,
+
+    // Hygiène & Bien-être
+    /\bsavon(s)?\b/i,
+    /\bshampoing(s)?\b/i,
+    /\bshampooing(s)?\b/i,
+    /\bapres[- ]shampoing(s)?\b/i,
+    /\bgel douche\b/i,
+    /\bdentifrice(s)?\b/i,
+    /\bbrosse(s)? a dents?\b/i,
+    /\bbain de bouche\b/i,
+    /\bfil dentaire\b/i,
+    /\bcoton(s)?\b/i,
+    /\bcoton[- ]tige(s)?\b/i,
+    /\bdeodorant(s)?\b/i,
+    /\bparfum(s)?\b/i,
+    /\beau de toilette\b/i,
+    /\bcreme (solaire|visage|corps|mains|hydratante|anti[- ]age|nivea|de beaute)\b/i,
+    /\bbaume a levres\b/i,
+    /\bmouchoir(s)?\b/i,
+    /\bpapier toilette\b/i,
+    /\bpapier hygienique\b/i,
+    /\bsopalin\b/i,
+    /\bessuie[- ]tout\b/i,
+    /\bserviette(s)? hygienique(s)?\b/i,
+    /\btampon(s)?\b/i,
+    /\bprotege[- ]slip(s)?\b/i,
+    /\bcouche(s)?\b/i,
+    /\blingette(s)?\b/i,
+    /\brasoir(s)?\b/i,
+    /\blame(s)? de rasoir\b/i,
+    /\bmousse a raser\b/i,
+    /\bpreservatif(s)?\b/i,
+    /\bcondom(s)?\b/i,
+    /\blubrifiant(s)?\b/i,
+
+    // Santé & Médicaments
+    /\bmedicament(s)?\b/i,
+    /\bdoliprane\b/i,
+    /\bparacetamol\b/i,
+    /\befferalgan\b/i,
+    /\baspirine\b/i,
+    /\bibuprofene\b/i,
+    /\bpansement(s)?\b/i,
+    /\bbandage(s)?\b/i,
+    /\bcompresse(s)?\b/i,
+    /\bsparadrap\b/i,
+    /\balcool a 70\b/i,
+    /\bbetadine\b/i,
+    /\bvitamine(s)?\b/i,
+    /\bcomplement(s)? alimentaire(s)?\b/i,
+  ];
+
+  return NON_FOOD_NAME_PATTERNS.some(pattern => pattern.test(raw));
+}
+
 // --- NORMALISATION PHONÉTIQUE ET DIALECTALE DE LA CUISINE TUNISIENNE ---
 
 export const TUNISIAN_CULINARY_ALIASES: Record<string, string[]> = {

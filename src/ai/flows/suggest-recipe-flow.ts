@@ -29,15 +29,21 @@ export async function suggestRecipes(input: SuggestRecipeInput): Promise<Suggest
     '- Surprends l’utilisateur avec des associations de saveurs audacieuses.',
     '- Sur les 3 plats, au moins UN doit être "non conventionnel" ou mystérieux pour stimuler la curiosité culinaire.',
     '',
-    'Rends uniquement un objet JSON valide respectant ce schéma exact:',
-    '{ "recipes": [',
-    '  {',
-    '    "title": string,',
-    '    "description": string,',
-    '    "country": string,',
-    '    "ingredients": [ { "name": string, "quantity": number, "unit": string } ]',
-    '  }',
-    '] }',
+    'IMPORTANT :',
+    'Tu DOIS répondre UNIQUEMENT avec un objet JSON valide contenant la clé "recipes". Ne mets aucun texte en dehors du JSON.',
+    'Schéma JSON attendu :',
+    '{',
+    '  "recipes": [',
+    '    {',
+    '      "title": "Nom de la recette",',
+    '      "description": "Courte description alléchante d\'une ligne",',
+    '      "country": "Pays d\'origine",',
+    '      "ingredients": [',
+    '        { "name": "nom", "quantity": 100, "unit": "g" }',
+    '      ]',
+    '    }',
+    '  ]',
+    '}',
   ].join('\n');
 
   const userPrompt = [
@@ -48,9 +54,10 @@ export async function suggestRecipes(input: SuggestRecipeInput): Promise<Suggest
       ? ['🎯 INGRÉDIENTS PHARES (À utiliser en priorité) :', ...parsedInput.keyIngredients.map((i: string) => `- ${i}`), '']
       : []),
     'CONSIGNES :',
-    '- Soit EXTRÊMEMENT RAPIDE : ne génère que le titre, une description d’une ligne et la liste des ingrédients utilisés.',
+    '- Ne génère que le titre, une description d’une ligne et la liste des ingrédients utilisés.',
     '- NE GÉNÈRE AUCUNE ÉTAPE DE PRÉPARATION.',
     '- Génère exactement 3 idées de recettes variées.',
+    '- Rends uniquement du JSON valide.',
   ].join('\n');
 
   const output = await groqChatJson<{ recipes: SuggestRecipeOutput[] }>({
@@ -60,11 +67,24 @@ export async function suggestRecipes(input: SuggestRecipeInput): Promise<Suggest
       { role: 'user', content: userPrompt },
     ],
     temperature: 0.7,
-    max_tokens: 1000, // Very low for maximum speed
+    max_tokens: 2500,
     response_format: { type: 'json_object' },
+    reasoning_format: 'parsed',
   });
 
-  const validated = SuggestRecipesOutputSchema.parse(output);
+  let recipesPayload: { recipes: SuggestRecipeOutput[] } = { recipes: [] };
+  if (output && Array.isArray((output as any).recipes)) {
+    recipesPayload = { recipes: (output as any).recipes };
+  } else if (Array.isArray(output)) {
+    recipesPayload = { recipes: output };
+  } else if (output && typeof output === 'object') {
+    const listKey = Object.keys(output).find(k => Array.isArray((output as any)[k]));
+    if (listKey) {
+      recipesPayload = { recipes: (output as any)[listKey] };
+    }
+  }
+
+  const validated = SuggestRecipesOutputSchema.parse(recipesPayload);
   if (!validated.recipes || validated.recipes.length === 0) {
     throw new Error("L'IA n'a pas pu générer d'idées de recettes. Veuillez réessayer.");
   }

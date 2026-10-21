@@ -37,18 +37,22 @@ export const SuggestRecipeInputSchema = z.object({
 export type SuggestRecipeInput = z.infer<typeof SuggestRecipeInputSchema>;
 
 export const SuggestRecipeOutputSchema = z.object({
-  title: z.string().describe("The name of the recipe."),
-  description: z.string().describe("A short, enticing description of the dish."),
-  country: z.string().describe("The country of origin of the recipe."),
-  portions: z.number().int().optional().describe("The number of people the recipe is for."),
+  title: z.string().catch("Recette Maison").describe("The name of the recipe."),
+  description: z.string().catch("").describe("A short, enticing description of the dish."),
+  country: z.string().catch("International").describe("The country of origin of the recipe."),
+  portions: z.coerce.number().int().optional().describe("The number of people the recipe is for."),
   ingredients: z.array(z.object({
     name: z.string().describe("The name of the ingredient."),
-    quantity: z.number().describe("The numeric quantity of the ingredient."),
-    unit: z.string().describe("The unit of measurement (e.g., 'g', 'ml', 'pcs').")
-  })).describe("The list of ingredients for the recipe."),
+    quantity: z.union([z.number(), z.string()]).transform((val) => {
+      if (typeof val === 'number') return val;
+      const parsed = parseFloat(val);
+      return isNaN(parsed) ? 1 : parsed;
+    }).catch(1).describe("The numeric quantity of the ingredient."),
+    unit: z.string().catch('').describe("The unit of measurement (e.g., 'g', 'ml', 'pcs').")
+  })).catch([]).describe("The list of ingredients for the recipe."),
   preparation: z.string().optional().describe("Minimal preparation instructions."),
-  calories: z.number().optional().describe("Total calories for the dish."),
-  preparationTime: z.number().int().optional().describe("The estimated total preparation time in minutes."),
+  calories: z.coerce.number().optional().describe("Total calories for the dish."),
+  preparationTime: z.coerce.number().int().optional().describe("The estimated total preparation time in minutes."),
   isEconomical: z.boolean().optional().describe("A boolean indicating if the recipe is considered cheap to prepare."),
   isMainDish: z.boolean().optional().describe("A boolean indicating if this is the main consistent dish."),
   imageUrl: z.string().optional().describe("An optional URL to an image of the dish."),
