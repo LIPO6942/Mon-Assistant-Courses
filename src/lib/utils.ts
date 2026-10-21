@@ -286,6 +286,10 @@ export function isNonFoodItem(
     /\b(bricolage|quincaillerie|electronique|electromenager|bazar)\b/i,
     /\b(animaux|animalerie)\b/i,
     /\b(fourniture|fournitures|papeterie)\b/i,
+    // Boissons & Eaux prêtes à boire (exclues des ingrédients culinaires Ch3andek)
+    /\b(eau|eaux|boisson|boissons|jus|soda|sodas)\b/i,
+    // Biscuits, Goûters & Pâtisseries industrielles
+    /\b(biscuit|biscuits|snack|snacks|gouter|viennoiserie|confiserie)\b/i,
   ];
 
   if (cat && NON_FOOD_CATEGORIES.some(pattern => pattern.test(cat))) {
@@ -385,6 +389,28 @@ export function isNonFoodItem(
     /\bbetadine\b/i,
     /\bvitamine(s)?\b/i,
     /\bcomplement(s)? alimentaire(s)?\b/i,
+
+    // Boissons & Eaux prêtes à consommer (non cuisinables dans Ch3andek)
+    /\beau(x)?\b/i,
+    /\b(safia|sabrine|marwa|melliti|fourat|jannet|hayat|denia|cristaline)\b/i,
+    /\bjus\b/i,
+    /\b(tropico|viva|boga|coca[- ]?cola|fanta|sprite|pepsi|apla|schweppes|ice[- ]?tea|red[- ]?bull|orangina)\b/i,
+    /\bsoda(s)?\b/i,
+    /\bboisson(s)? (gazeuse|energisante|sucree|rafraichissante)?\b/i,
+    /\bsirop(s)?\b/i,
+
+    // Biscuits, Sablito, Cakes et Pâtisseries industrielles prêtes à consommer
+    /\bbiscuit(s)?\b/i,
+    /\b(sablito|major|prince|oreo|bimo|saida|chocotom|krakou|tuc|lu)\b/i,
+    /\bgaufrette(s)?\b/i,
+    /\bcake(s)?\b/i,
+    /\bmuffin(s)?\b/i,
+    /\bmadeleine(s)?\b/i,
+    /\bcroissant(s)?\b/i,
+    /\bpain au chocolat\b/i,
+    /\bviennoiserie(s)?\b/i,
+    /\bchips\b/i,
+    /\bbonbon(s)?\b/i,
   ];
 
   return NON_FOOD_NAME_PATTERNS.some(pattern => pattern.test(raw));
