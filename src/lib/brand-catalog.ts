@@ -3,7 +3,21 @@ import { PurchaseHistory } from './types';
 export interface BrandDef {
   name: string;
   logoUrl: string;
-  domain: 'WATER' | 'SODA' | 'JUICE' | 'COFFEE' | 'PASTA_GRAINS' | 'DAIRY' | 'CHEESE' | 'OIL' | 'SAUCE' | 'CANNED_FISH' | 'BISCUITS' | 'OTHER';
+  domain:
+    | 'WATER'
+    | 'SODA'
+    | 'JUICE'
+    | 'COFFEE'
+    | 'PASTA_GRAINS'
+    | 'DAIRY'
+    | 'CHEESE'
+    | 'OIL'
+    | 'SAUCE'
+    | 'CANNED_FISH'
+    | 'BISCUITS'
+    | 'BATTERIES'
+    | 'WELLNESS_HYGIENE'
+    | 'OTHER';
   keywords: string[];
 }
 
@@ -11,7 +25,7 @@ export interface BrandDef {
  * Creates a crisp, vector SVG brand logo with official brand colors, typography, and graphic emblem.
  * Loads instantaneously with 0 network latency, 0 broken links, and 100% authentic branding.
  */
-function createBrandSvgLogo(
+export function createBrandSvgLogo(
   bg: string,
   fg: string,
   text: string,
@@ -235,7 +249,7 @@ export const PREDEFINED_BRANDS: BrandDef[] = [
     keywords: ['bondin', 'cafe', 'café', 'moulu', 'grain', 'espresso']
   },
 
-  // --- PÂTES, COUSCOUS, SEMOULE, RIZ & FARINE ---
+  // --- PÂTES, COUSCOUS, SEMOULE, RIZ & FARINE (SANS DE CECCO) ---
   {
     name: 'Randa',
     logoUrl: createBrandSvgLogo(
@@ -291,18 +305,6 @@ export const PREDEFINED_BRANDS: BrandDef[] = [
     ),
     domain: 'PASTA_GRAINS',
     keywords: ['barilla', 'pates', 'pâtes', 'spaghetti', 'penne', 'sauce']
-  },
-  {
-    name: 'De Cecco',
-    logoUrl: createBrandSvgLogo(
-      '#005BAA',
-      '#FED100',
-      'DE CECCO',
-      '<rect x="30" y="26" width="40" height="18" fill="#FED100" rx="3"/><text x="50" y="39" font-family="sans-serif" font-size="9" font-weight="900" fill="#005BAA" text-anchor="middle">1886</text>',
-      '#FED100'
-    ),
-    domain: 'PASTA_GRAINS',
-    keywords: ['de cecco', 'pates', 'pâtes', 'spaghetti']
   },
 
   // --- PRODUITS LAITIERS (LAIT, YAOURT, BEURRE) ---
@@ -506,40 +508,321 @@ export const PREDEFINED_BRANDS: BrandDef[] = [
     ),
     domain: 'BISCUITS',
     keywords: ['moulin d\'or', 'cake', 'pain', 'viennoiserie', 'gâteau']
+  },
+
+  // --- PILES & ACCUS (ÉLECTRONIQUE & MAISON) ---
+  {
+    name: 'Energizer',
+    logoUrl: createBrandSvgLogo(
+      '#1C1C1C',
+      '#FFDD00',
+      'Energizer',
+      '<rect x="36" y="24" width="28" height="46" rx="4" fill="#FFDD00" stroke="#000000" stroke-width="2"/><rect x="43" y="18" width="14" height="6" rx="2" fill="#FFDD00"/><path d="M50 34 L50 46 M44 40 L56 40" stroke="#000000" stroke-width="3" stroke-linecap="round"/>',
+      '#FFDD00'
+    ),
+    domain: 'BATTERIES',
+    keywords: ['energizer', 'pile', 'piles', 'batterie', 'batteries', 'accu', 'accus', 'aa', 'aaa']
+  },
+  {
+    name: 'Eveready',
+    logoUrl: createBrandSvgLogo(
+      '#C8102E',
+      '#FFFFFF',
+      'Eveready',
+      '<circle cx="50" cy="36" r="12" fill="#000000"/><path d="M48 27 L43 37 L49 37 L46 45 L56 34 L50 34 Z" fill="#FFE500"/>',
+      '#FFE500'
+    ),
+    domain: 'BATTERIES',
+    keywords: ['eveready', 'everday', 'eveready cat', 'pile', 'piles', 'batterie']
+  },
+  {
+    name: 'Duracell',
+    logoUrl: createBrandSvgLogo(
+      '#111111',
+      '#C68A4C',
+      'Duracell',
+      '<rect x="34" y="22" width="32" height="14" rx="2" fill="#C68A4C"/><rect x="34" y="36" width="32" height="32" rx="2" fill="#222222"/><rect x="44" y="16" width="12" height="6" rx="2" fill="#C68A4C"/>',
+      '#C68A4C'
+    ),
+    domain: 'BATTERIES',
+    keywords: ['duracell', 'pile', 'piles', 'plus', 'ultra', 'batterie']
+  },
+  {
+    name: 'Varta',
+    logoUrl: createBrandSvgLogo(
+      '#002D72',
+      '#FED100',
+      'VARTA',
+      '<polygon points="50,20 66,44 34,44" fill="#FED100"/>',
+      '#FED100'
+    ),
+    domain: 'BATTERIES',
+    keywords: ['varta', 'pile', 'piles', 'batterie']
+  },
+  {
+    name: 'GP',
+    logoUrl: createBrandSvgLogo(
+      '#00823B',
+      '#FED100',
+      'GP',
+      '<circle cx="50" cy="36" r="11" fill="#FED100"/><text x="50" y="40" font-family="sans-serif" font-weight="900" font-size="11" fill="#00823B" text-anchor="middle">GP</text>',
+      '#FED100'
+    ),
+    domain: 'BATTERIES',
+    keywords: ['gp', 'gp batteries', 'pile', 'piles']
+  },
+  {
+    name: 'Philips',
+    logoUrl: createBrandSvgLogo(
+      '#0B5ED7',
+      '#FFFFFF',
+      'Philips',
+      '<path d="M38 32 C44 26 56 26 62 32 C56 42 44 42 38 32 Z" fill="#FFFFFF"/>'
+    ),
+    domain: 'BATTERIES',
+    keywords: ['philips', 'pile', 'piles']
+  },
+
+  // --- BIEN-ÊTRE, SOINS CORPORELS & HYGIÈNE ---
+  {
+    name: 'Nivea',
+    logoUrl: createBrandSvgLogo(
+      '#0032A0',
+      '#FFFFFF',
+      'NIVEA',
+      '<circle cx="50" cy="36" r="13" fill="#00227A"/><circle cx="50" cy="36" r="10" fill="#0032A0"/>'
+    ),
+    domain: 'WELLNESS_HYGIENE',
+    keywords: ['nivea', 'creme', 'deodorant', 'deo', 'lotion', 'savon', 'soin', 'gel douche', 'baume']
+  },
+  {
+    name: 'Dove',
+    logoUrl: createBrandSvgLogo(
+      '#1A3B8B',
+      '#D4AF37',
+      'Dove',
+      '<path d="M40 32 C45 26 55 28 62 34 C54 36 48 38 42 42 C40 38 38 34 40 32 Z" fill="#D4AF37"/>',
+      '#D4AF37'
+    ),
+    domain: 'WELLNESS_HYGIENE',
+    keywords: ['dove', 'savon', 'gel douche', 'shampoing', 'deodorant', 'soin', 'creme']
+  },
+  {
+    name: 'Le Petit Marseillais',
+    logoUrl: createBrandSvgLogo(
+      '#EAA822',
+      '#1E3A5F',
+      'Marseillais',
+      '<circle cx="50" cy="30" r="6" fill="#1E3A5F"/><path d="M42 44 C42 37 58 37 58 44 Z" fill="#1E3A5F"/>',
+      '#1E3A5F'
+    ),
+    domain: 'WELLNESS_HYGIENE',
+    keywords: ['le petit marseillais', 'marseillais', 'gel douche', 'shampoing', 'savon']
+  },
+  {
+    name: 'Palmolive',
+    logoUrl: createBrandSvgLogo(
+      '#006847',
+      '#FFFFFF',
+      'Palmolive',
+      '<path d="M50 22 C42 32 40 38 40 44 A10 10 0 0 0 60 44 C60 38 58 32 50 22 Z" fill="#88D49E"/>'
+    ),
+    domain: 'WELLNESS_HYGIENE',
+    keywords: ['palmolive', 'savon', 'gel douche', 'liquide vaisselle', 'shampoing']
+  },
+  {
+    name: 'Cadum',
+    logoUrl: createBrandSvgLogo(
+      '#E91E63',
+      '#FFFFFF',
+      'Cadum',
+      '<path d="M50 24 C44 32 38 38 38 44 A12 12 0 0 0 62 44 C62 38 56 32 50 24 Z" fill="#F8BBD0"/>'
+    ),
+    domain: 'WELLNESS_HYGIENE',
+    keywords: ['cadum', 'savon', 'gel douche', 'bebe', 'shampoing']
+  },
+  {
+    name: 'Signal',
+    logoUrl: createBrandSvgLogo(
+      '#D32F2F',
+      '#FFFFFF',
+      'Signal',
+      '<path d="M34 38 Q50 26 66 38 Q50 44 34 38" fill="#FFFFFF"/><circle cx="50" cy="35" r="4" fill="#D32F2F"/>'
+    ),
+    domain: 'WELLNESS_HYGIENE',
+    keywords: ['signal', 'dentifrice', 'brosse a dents']
+  },
+  {
+    name: 'Colgate',
+    logoUrl: createBrandSvgLogo(
+      '#C62828',
+      '#FFFFFF',
+      'Colgate',
+      '<path d="M36 34 Q50 44 64 34 Q50 48 36 34" fill="#FFFFFF"/>'
+    ),
+    domain: 'WELLNESS_HYGIENE',
+    keywords: ['colgate', 'dentifrice', 'brosse a dents', 'bain de bouche']
+  },
+  {
+    name: 'Head & Shoulders',
+    logoUrl: createBrandSvgLogo(
+      '#004B9B',
+      '#FFFFFF',
+      'H&S',
+      '<path d="M34 40 C42 28 58 28 66 40 C58 34 42 34 34 40 Z" fill="#42A5F5"/>'
+    ),
+    domain: 'WELLNESS_HYGIENE',
+    keywords: ['head & shoulders', 'head and shoulders', 'shampoing', 'antipelliculaire']
+  },
+  {
+    name: 'Elseve',
+    logoUrl: createBrandSvgLogo(
+      '#1C1C1C',
+      '#D4AF37',
+      'Elseve',
+      '<ellipse cx="50" cy="34" rx="9" ry="12" fill="#D4AF37"/>',
+      '#D4AF37'
+    ),
+    domain: 'WELLNESS_HYGIENE',
+    keywords: ['elseve', 'l\'oreal', 'loreal', 'shampoing', 'apres-shampoing', 'masque']
+  },
+  {
+    name: 'Gillette',
+    logoUrl: createBrandSvgLogo(
+      '#0D1B2A',
+      '#E0E1DD',
+      'Gillette',
+      '<path d="M36 32 L64 32 L58 42 L30 42 Z" fill="#415A77"/>'
+    ),
+    domain: 'WELLNESS_HYGIENE',
+    keywords: ['gillette', 'rasoir', 'mousse a raser', 'lames']
+  },
+  {
+    name: 'Always',
+    logoUrl: createBrandSvgLogo(
+      '#00509D',
+      '#FFD166',
+      'Always',
+      '<path d="M36 38 C44 28 56 28 64 38 C56 34 44 34 36 38 Z" fill="#FFD166"/>'
+    ),
+    domain: 'WELLNESS_HYGIENE',
+    keywords: ['always', 'serviettes', 'hygienique', 'protege slip']
+  },
+  {
+    name: 'Dettol',
+    logoUrl: createBrandSvgLogo(
+      '#007A3D',
+      '#FFFFFF',
+      'Dettol',
+      '<circle cx="50" cy="35" r="10" fill="#FFFFFF"/><path d="M50 27 L50 43 M42 35 L58 35" stroke="#007A3D" stroke-width="3"/>'
+    ),
+    domain: 'WELLNESS_HYGIENE',
+    keywords: ['dettol', 'savon', 'antiseptique', 'desinfectant']
   }
 ];
 
-const CUSTOM_BRANDS_STORAGE_KEY = 'mon_assistant_custom_brands_v2';
+const CUSTOM_BRANDS_STORAGE_KEY = 'mon_assistant_custom_brands_v3';
 
-export function getCustomBrands(): string[] {
+export interface CustomBrandRecord {
+  name: string;
+  domain?: BrandDef['domain'] | null;
+  category?: string;
+  ingredientId?: string;
+  timestamp: number;
+}
+
+/**
+ * Retrieves all stored custom brands with domain/category metadata.
+ */
+export function getCustomBrandRecords(): CustomBrandRecord[] {
   if (typeof window === 'undefined') return [];
   try {
     const raw = localStorage.getItem(CUSTOM_BRANDS_STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
+    if (!raw) {
+      // Check fallback v2 key for backwards compatibility
+      const fallback = localStorage.getItem('mon_assistant_custom_brands_v2');
+      if (fallback) {
+        const parsed = JSON.parse(fallback);
+        if (Array.isArray(parsed)) {
+          return parsed.map(item => {
+            if (typeof item === 'string') {
+              return { name: item, timestamp: Date.now() };
+            }
+            return item;
+          });
+        }
+      }
+      return [];
+    }
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map(item => {
+      if (typeof item === 'string') {
+        return { name: item, timestamp: Date.now() };
+      }
+      return item;
+    });
   } catch {
     return [];
   }
 }
 
-export function saveCustomBrand(brandName: string): void {
+/**
+ * Returns plain list of custom brand names.
+ */
+export function getCustomBrands(): string[] {
+  return getCustomBrandRecords().map(r => r.name);
+}
+
+/**
+ * Saves a custom brand entered by the user, binding it to its domain/category context
+ * so it immediately becomes available and prioritized for relevant products.
+ */
+export function saveCustomBrand(
+  brandName: string,
+  ingredientName?: string,
+  categoryName?: string,
+  ingredientId?: string
+): void {
   if (typeof window === 'undefined') return;
   const trimmed = brandName.trim();
   if (!trimmed) return;
   try {
-    const existing = getCustomBrands();
-    if (!existing.some(b => b.toLowerCase() === trimmed.toLowerCase())) {
-      const updated = [...existing, trimmed];
-      localStorage.setItem(CUSTOM_BRANDS_STORAGE_KEY, JSON.stringify(updated));
+    const records = getCustomBrandRecords();
+    const existingIndex = records.findIndex(r => r.name.toLowerCase() === trimmed.toLowerCase());
+    const domain = (ingredientName || categoryName) ? detectProductDomain(ingredientName, categoryName) : null;
+
+    const newRecord: CustomBrandRecord = {
+      name: trimmed,
+      domain: domain || undefined,
+      category: categoryName || undefined,
+      ingredientId: ingredientId || undefined,
+      timestamp: Date.now()
+    };
+
+    if (existingIndex >= 0) {
+      records[existingIndex] = {
+        ...records[existingIndex],
+        domain: newRecord.domain || records[existingIndex].domain,
+        category: newRecord.category || records[existingIndex].category,
+        ingredientId: newRecord.ingredientId || records[existingIndex].ingredientId,
+        timestamp: Date.now()
+      };
+    } else {
+      records.unshift(newRecord);
     }
+
+    localStorage.setItem(CUSTOM_BRANDS_STORAGE_KEY, JSON.stringify(records));
   } catch (err) {
     console.error('Error saving custom brand:', err);
   }
 }
 
 /**
- * Detects the culinary/food domain of a given ingredient name and category.
+ * Detects the culinary/food/household domain of a given ingredient name and category.
  * This ensures strict isolation: Coffee brands NEVER show on Couscous,
- * and Sodas/Juice/Coffee NEVER show on plain Water!
+ * Sodas/Juice/Coffee NEVER show on plain Water,
+ * and Batteries/Wellness brands stay in their respective categories.
  */
 export function detectProductDomain(
   ingredientName: string = '',
@@ -571,37 +854,49 @@ export function detectProductDomain(
     return 'COFFEE';
   }
 
-  // 5. Pasta, couscous, semolina, flour, rice
+  // 5. Batteries & power (Piles, accus, batteries)
+  if (/\b(pile|piles|batterie|batteries|accu|accus|energizer|eveready|everday|duracell|varta)\b/.test(norm)) {
+    return 'BATTERIES';
+  }
+
+  // 6. Wellness, personal care, beauty, body hygiene
+  if (
+    /\b(bien[- ]?etre|hygiene|beaute|soin|soins|cosmetique|savon|savons|gel douche|shampoing|champoing|apres[- ]shampoing|dentifrice|brosse a dents|deodorant|deo|creme|lotion|rasoir|mousse a raser|serviette hygienique|protege[- ]slip|lingettes|nivea|dove|cadum|palmolive|signal|colgate|elseve|gillette|always)\b/.test(norm)
+  ) {
+    return 'WELLNESS_HYGIENE';
+  }
+
+  // 7. Pasta, couscous, semolina, flour, rice
   if (/\b(pate|pates|spaghetti|macaroni|couscous|semoule|farine|riz|nwasser|nouasser|chorba|penne|lasagne|randa|warda)\b/.test(norm)) {
     return 'PASTA_GRAINS';
   }
 
-  // 6. Cheese
+  // 8. Cheese
   if (/\b(fromage|fromy|land or|mozzarella|ricotta|gruyere|emmental|edam|sicilien|parmesan)\b/.test(norm)) {
     return 'CHEESE';
   }
 
-  // 7. Dairy (Milk, yogurt, butter, cream)
+  // 9. Dairy (Milk, yogurt, butter, cream)
   if (/\b(lait|yaourt|beurre|creme|laban|raib|laitier|laitiere)\b/.test(norm)) {
     return 'DAIRY';
   }
 
-  // 8. Oils
+  // 10. Oils
   if (/\b(huile|olives?|olive)\b/.test(norm)) {
     return 'OIL';
   }
 
-  // 9. Tomatoes, harissa, tomato paste
+  // 11. Tomatoes, harissa, tomato paste
   if (/\b(tomate|harissa|sauce|concentre)\b/.test(norm)) {
     return 'SAUCE';
   }
 
-  // 10. Canned fish
+  // 12. Canned fish
   if (/\b(thon|sardine|maquereau)\b/.test(norm)) {
     return 'CANNED_FISH';
   }
 
-  // 11. Biscuits & cakes
+  // 13. Biscuits & cakes
   if (/\b(biscuit|biscuits|sablito|major|gaufrette|cake|gateur|cookie)\b/.test(norm)) {
     return 'BISCUITS';
   }
@@ -612,7 +907,8 @@ export function detectProductDomain(
 /**
  * Returns strictly sorted brands for a specific product:
  * 1. Strictly isolated by product domain (NO Ben Yedder on Couscous, NO Boga on Water!).
- * 2. Trié par fréquence d'achat de l'utilisateur pour CE produit : le premier est TOUJOURS le plus utilisé !
+ * 2. Predefined catalog + custom brands saved by user.
+ * 3. Trié par fréquence d'achat de l'utilisateur pour CE produit : le premier est TOUJOURS le plus utilisé !
  */
 export function getSortedBrandsForProduct(
   ingredientId: string,
@@ -623,6 +919,7 @@ export function getSortedBrandsForProduct(
 ): BrandDef[] {
   const domain = detectProductDomain(ingredientName, categoryName);
   const normName = (ingredientName || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+  const normCat = (categoryName || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
 
   // 1. Calculate purchase frequency for each brand EXCLUSIVELY on this ingredient
   const brandFrequency: Record<string, number> = {};
@@ -642,12 +939,10 @@ export function getSortedBrandsForProduct(
     let isMatch = false;
 
     if (domain) {
-      // Strict domain matching
       if (def.domain === domain) {
         isMatch = true;
       }
     } else {
-      // Fallback keyword matching only if domain is not strictly classified
       isMatch = def.keywords.some(k => normName.includes(k) || k.includes(normName));
     }
 
@@ -656,11 +951,59 @@ export function getSortedBrandsForProduct(
     }
   });
 
-  // 3. Include any brand previously recorded in history specifically for this product
+  // 3. Add custom brands saved by user matching this product / domain / category
+  const customRecords = typeof window !== 'undefined' ? getCustomBrandRecords() : [];
+  customRecords.forEach(rec => {
+    const key = rec.name.toLowerCase();
+    let matches = false;
+
+    if (rec.ingredientId && rec.ingredientId === ingredientId) {
+      matches = true;
+    } else if (domain && rec.domain && rec.domain === domain) {
+      matches = true;
+    } else if (rec.category && normCat && (rec.category.toLowerCase().includes(normCat) || normCat.includes(rec.category.toLowerCase()))) {
+      matches = true;
+    } else if (!domain && !rec.domain) {
+      matches = true;
+    }
+
+    if (matches && !candidateMap.has(key)) {
+      const predefined = PREDEFINED_BRANDS.find(b => b.name.toLowerCase() === key);
+      if (predefined) {
+        candidateMap.set(key, predefined);
+      } else {
+        candidateMap.set(key, {
+          name: rec.name,
+          logoUrl: createBrandSvgLogo('#4A5568', '#FFFFFF', rec.name),
+          domain: domain || 'OTHER',
+          keywords: [key]
+        });
+      }
+    }
+  });
+
+  // 4. Also process userCustomBrands (strings passed directly as argument)
+  userCustomBrands.forEach(b => {
+    const key = b.toLowerCase();
+    if (!candidateMap.has(key)) {
+      const predefined = PREDEFINED_BRANDS.find(def => def.name.toLowerCase() === key);
+      if (predefined && (!domain || predefined.domain === domain)) {
+        candidateMap.set(key, predefined);
+      } else if (!domain) {
+        candidateMap.set(key, {
+          name: b,
+          logoUrl: createBrandSvgLogo('#4A5568', '#FFFFFF', b),
+          domain: 'OTHER',
+          keywords: [key]
+        });
+      }
+    }
+  });
+
+  // 5. Include any brand previously recorded in history specifically for this product
   Object.keys(brandFrequency).forEach(brandName => {
     const key = brandName.toLowerCase();
     if (!candidateMap.has(key)) {
-      // Find in predefined or create dynamic SVG badge
       const predefined = PREDEFINED_BRANDS.find(b => b.name.toLowerCase() === key);
       if (predefined) {
         candidateMap.set(key, predefined);
@@ -675,7 +1018,7 @@ export function getSortedBrandsForProduct(
     }
   });
 
-  // 4. Sort descending by frequency:
+  // 6. Sort descending by frequency:
   // "toujours le premier c'est le plus utilisé par l'utilisateur etc.."
   const sorted = Array.from(candidateMap.values()).sort((a, b) => {
     const freqA = brandFrequency[a.name] || 0;
@@ -688,3 +1031,4 @@ export function getSortedBrandsForProduct(
 
   return sorted;
 }
+

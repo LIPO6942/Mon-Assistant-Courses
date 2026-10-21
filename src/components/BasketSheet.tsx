@@ -67,6 +67,7 @@ export default function BasketSheet({
   const [newPriceStr, setNewPriceStr] = useState('');
   const [newRemarkStr, setNewRemarkStr] = useState('');
   const [selectedBrand, setSelectedBrand] = useState('');
+  const [customBrandsRevision, setCustomBrandsRevision] = useState(0);
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { user } = useAuth();
 
@@ -174,7 +175,26 @@ export default function BasketSheet({
       purchaseHistory,
       customBrands
     );
-  }, [editingPriceItem, purchaseHistory]);
+  }, [editingPriceItem, purchaseHistory, customBrandsRevision]);
+
+  const handleSavePriceItem = () => {
+    if (!editingPriceItem) return;
+    const num = parseFloat(newPriceStr);
+    if (!isNaN(num) && num >= 0) {
+      const finalBrand = selectedBrand.trim() || undefined;
+      if (finalBrand) {
+        saveCustomBrand(
+          finalBrand,
+          editingPriceItem.name,
+          editingPriceItem.category,
+          editingPriceItem.id
+        );
+        setCustomBrandsRevision(r => r + 1);
+      }
+      updateBasketItemPrice(editingPriceItem.id, num, newRemarkStr, finalBrand);
+      setEditingPriceItem(null);
+    }
+  };
 
   const openEditItemDialog = (item: BasketItem) => {
     setEditingPriceItem({
@@ -511,13 +531,7 @@ export default function BasketSheet({
                   autoFocus
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
-                      const num = parseFloat(newPriceStr);
-                      if (!isNaN(num) && num >= 0 && editingPriceItem) {
-                        const finalBrand = selectedBrand.trim() || undefined;
-                        if (finalBrand) saveCustomBrand(finalBrand);
-                        updateBasketItemPrice(editingPriceItem.id, num, newRemarkStr, finalBrand);
-                        setEditingPriceItem(null);
-                      }
+                      handleSavePriceItem();
                     }
                   }}
                 />
@@ -591,6 +605,32 @@ export default function BasketSheet({
                 </div>
               )}
 
+              {/* Détection immédiate d'une nouvelle marque personnalisée saisie */}
+              {selectedBrand.trim() && !availableBrands.some(b => b.name.toLowerCase() === selectedBrand.trim().toLowerCase()) && (
+                <div className="flex items-center gap-1.5 mb-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (editingPriceItem) {
+                        saveCustomBrand(
+                          selectedBrand.trim(),
+                          editingPriceItem.name,
+                          editingPriceItem.category,
+                          editingPriceItem.id
+                        );
+                        setCustomBrandsRevision(r => r + 1);
+                      }
+                    }}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 ring-1 ring-primary/20 transition-all cursor-pointer shadow-2xs"
+                  >
+                    <span className="w-4 h-4 rounded-full bg-primary text-white flex items-center justify-center text-[10px] font-bold">
+                      +
+                    </span>
+                    <span>Mémoriser la marque : <strong>{selectedBrand.trim()}</strong></span>
+                  </button>
+                </div>
+              )}
+
               <Input
                 placeholder="Ou saisir une autre marque..."
                 value={selectedBrand}
@@ -598,13 +638,7 @@ export default function BasketSheet({
                 className="rounded-xl text-xs h-9"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
-                    const num = parseFloat(newPriceStr);
-                    if (!isNaN(num) && num >= 0 && editingPriceItem) {
-                      const finalBrand = selectedBrand.trim() || undefined;
-                      if (finalBrand) saveCustomBrand(finalBrand);
-                      updateBasketItemPrice(editingPriceItem.id, num, newRemarkStr, finalBrand);
-                      setEditingPriceItem(null);
-                    }
+                    handleSavePriceItem();
                   }
                 }}
               />
@@ -620,13 +654,7 @@ export default function BasketSheet({
                 className="rounded-xl mt-1 text-xs h-9"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
-                    const num = parseFloat(newPriceStr);
-                    if (!isNaN(num) && num >= 0 && editingPriceItem) {
-                      const finalBrand = selectedBrand.trim() || undefined;
-                      if (finalBrand) saveCustomBrand(finalBrand);
-                      updateBasketItemPrice(editingPriceItem.id, num, newRemarkStr, finalBrand);
-                      setEditingPriceItem(null);
-                    }
+                    handleSavePriceItem();
                   }
                 }}
               />
@@ -647,17 +675,7 @@ export default function BasketSheet({
           <DialogFooter className="flex-col gap-2 sm:flex-col mt-2">
             <Button
               className="w-full rounded-xl"
-              onClick={() => {
-                if (editingPriceItem) {
-                  const num = parseFloat(newPriceStr);
-                  if (!isNaN(num) && num >= 0) {
-                    const finalBrand = selectedBrand.trim() || undefined;
-                    if (finalBrand) saveCustomBrand(finalBrand);
-                    updateBasketItemPrice(editingPriceItem.id, num, newRemarkStr, finalBrand);
-                    setEditingPriceItem(null);
-                  }
-                }
-              }}
+              onClick={handleSavePriceItem}
             >
               Enregistrer
             </Button>
