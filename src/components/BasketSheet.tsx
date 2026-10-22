@@ -14,6 +14,7 @@ import { StoreIcon, StoreOption } from '@/components/StoreIcon';
 import { Checkbox } from './ui/checkbox';
 import { cn, getProductStatus, findMatchingDbaratiItem } from '@/lib/utils';
 import { getSortedBrandsForProduct, getCustomBrands, saveCustomBrand, BrandDef } from '@/lib/brand-catalog';
+import { listenCommunityBrands } from '@/lib/community-brands';
 import {
   Dialog,
   DialogContent,
@@ -106,6 +107,13 @@ export default function BasketSheet({
     loadLastShared();
     window.addEventListener('basketSharedInternally', loadLastShared);
     return () => window.removeEventListener('basketSharedInternally', loadLastShared);
+  }, []);
+
+  useEffect(() => {
+    const unsub = listenCommunityBrands(() => {
+      setCustomBrandsRevision(r => r + 1);
+    });
+    return () => unsub();
   }, []);
 
   const handleQuickShare = async () => {

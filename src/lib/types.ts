@@ -142,6 +142,7 @@ export interface CommunityPurchase {
   date: string;
   category?: string;
   userId?: string;
+  brand?: string;
 }
 
 export interface IngredientReminder {

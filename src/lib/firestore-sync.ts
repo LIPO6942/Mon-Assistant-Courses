@@ -195,6 +195,9 @@ export async function publishCommunityPurchases(uid: string, items: any[]) {
                 if (item.store && typeof item.store === 'string') {
                     docData.store = item.store;
                 }
+                if (item.brand && typeof item.brand === 'string') {
+                    docData.brand = item.brand;
+                }
                 return addDoc(collection(firestoreDb, 'communityPurchases'), docData);
             });
         await Promise.all(batch);

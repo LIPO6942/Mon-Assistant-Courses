@@ -43,6 +43,7 @@ import {
   notifyShareSeen,
   sendThanksForBasket,
 } from '@/lib/firestore-sync';
+import { recordCommunityBrand } from '@/lib/community-brands';
 
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { useBasketAbandonmentReminder } from '@/hooks/useBasketAbandonmentReminder';
@@ -808,6 +809,11 @@ export default function KitchenAssistantPage() {
           ...(item.remark ? { remark: item.remark } : {}),
           ...(item.brand ? { brand: item.brand } : {}),
         });
+
+        // Record community brand usage for confirmed purchases
+        if (item.brand && item.brand.trim()) {
+          recordCommunityBrand(item.brand, item.name, item.category, item.id).catch(() => {});
+        }
 
         // Add to Ch3andek if not present and is a food item (strictly exclude home and wellness products)
         if (
