@@ -203,6 +203,30 @@ export function formatCompactRelativeDate(isoDate?: string | null): string | nul
   }
 }
 
+/**
+ * Formate une date pour Dbarati avec le jour de la semaine abrégé en petit (lun., mar., mer., etc.)
+ * Format compact en français, ex: "mar. 27 oct." ou "mar. 27 oct. 26"
+ */
+export function formatDbaratiDate(
+  isoDate?: string | null,
+  options?: { withYear?: boolean }
+): string {
+  if (!isoDate || typeof isoDate !== 'string') return '';
+  try {
+    const date = new Date(isoDate);
+    if (isNaN(date.getTime())) return '';
+
+    return new Intl.DateTimeFormat('fr-FR', {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+      ...(options?.withYear ? { year: '2-digit' } : {}),
+    }).format(date);
+  } catch (_) {
+    return '';
+  }
+}
+
 // --- PRODUITS EXCLUS DU MARCHÉ PUBLIC (HYGIÈNE INTIME, SOUS-VÊTEMENTS, PRÉSERVATIFS) ---
 // Note : Les articles bébés sont expressément CONSERVÉS.
 export function isExcludedFromMarketPrices(

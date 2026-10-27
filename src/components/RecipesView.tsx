@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { PlusCircle, Shuffle, Dices, Clock, Coins, Utensils, BookUser, Search, Tag, Sparkles, TrendingDown, ClipboardList, Check, Trash2, Plus, Minus, Users, ChevronUp, ChevronDown, Loader2, X, Calendar, AlertCircle, Cake } from 'lucide-react';
 import type { Recipe, UserRecipe, BasketItem, PurchaseHistory, CommunityPurchase, DbaratiItem } from '@/lib/types';
 import { streetFoodOptions } from '@/lib/data';
-import { cn, getProductStatus } from '@/lib/utils';
+import { cn, getProductStatus, formatDbaratiDate } from '@/lib/utils';
 import Image from 'next/image';
 import { listenCommunityPurchases } from '@/lib/firestore-sync';
 import { calculateMarketPrices, calculateRecipeCost, getRecipeAvailabilityPercentage, formatPrice } from '@/lib/price-utils';
@@ -171,6 +171,75 @@ export default function RecipesView({
   };
 
   const todayStr = useMemo(() => getLocalDateString(), []);
+
+  // Stats Dbarati : Baromètre des 7 jours & Rituels
+  const [isStatsExpanded, setIsStatsExpanded] = useState(true);
+  const [selectedStatDay, setSelectedStatDay] = useState<number | null>(null);
+
+  const weekStats = useMemo(() => {
+    const WEEK_DAYS = ['lun', 'mar', 'mer', 'jeu', 'ven', 'sam', 'dim'] as const;
+    const FULL_WEEK_DAYS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'] as const;
+
+    interface DayDetail {
+      dayShort: string;
+      dayFull: string;
+      count: number;
+      dishesMap: Record<string, number>;
+    }
+
+    const days: DayDetail[] = WEEK_DAYS.map((short, i) => ({
+      dayShort: short,
+      dayFull: FULL_WEEK_DAYS[i],
+      count: 0,
+      dishesMap: {},
+    }));
+
+    let totalPreps = 0;
+
+    dbarati.forEach(item => {
+      const dates = item.prepHistory && item.prepHistory.length > 0
+        ? item.prepHistory
+        : (item.lastPreparedAt ? [item.lastPreparedAt] : []);
+
+      dates.forEach(iso => {
+        const d = new Date(iso);
+        if (!isNaN(d.getTime())) {
+          const jsDay = d.getDay(); // 0 = Dimanche, 1 = Lundi, ...
+          const dayIdx = (jsDay + 6) % 7; // 0 = Lun, ..., 6 = Dim
+          days[dayIdx].count += 1;
+          days[dayIdx].dishesMap[item.text] = (days[dayIdx].dishesMap[item.text] || 0) + 1;
+          totalPreps += 1;
+        }
+      });
+    });
+
+    const maxCount = Math.max(...days.map(d => d.count), 1);
+    const todayDayIdx = (new Date().getDay() + 6) % 7;
+
+    const topDay = [...days].sort((a, b) => b.count - a.count)[0];
+
+    const rituals: Array<{ dayShort: string; dayFull: string; dish: string; count: number }> = [];
+    days.forEach(d => {
+      const entries = Object.entries(d.dishesMap).sort((a, b) => b[1] - a[1]);
+      if (entries.length > 0) {
+        rituals.push({
+          dayShort: d.dayShort,
+          dayFull: d.dayFull,
+          dish: entries[0][0],
+          count: entries[0][1],
+        });
+      }
+    });
+
+    return {
+      days,
+      totalPreps,
+      maxCount,
+      todayDayIdx,
+      topDay: topDay && topDay.count > 0 ? topDay : null,
+      rituals,
+    };
+  }, [dbarati]);
 
   const dishPrepDates = useMemo(() => {
     if (!preparingDish) return new Set<string>();
@@ -502,6 +571,167 @@ export default function RecipesView({
                 </div>
               </div>
 
+              {/* --- BAROMÈTRE DES 7 JOURS & RITUELS PAR JOUR --- */}
+              {(() => {
+                if (weekStats.totalPreps === 0) return null;
+
+                return (
+                  <div className="max-w-4xl mx-auto mb-4 bg-indigo-50/50 dark:bg-indigo-950/20 rounded-2xl p-3 border border-indigo-200/40 dark:border-indigo-800/20 shadow-sm transition-all">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs">📊</span>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-900 dark:text-indigo-300">
+                          Baromètre & Rituels de la semaine
+                        </p>
+                        <span className="text-[9px] font-bold bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 px-1.5 py-0.2 rounded-full">
+                          {weekStats.totalPreps} {weekStats.totalPreps > 1 ? 'préparations' : 'préparation'}
+                        </span>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setIsStatsExpanded(!isStatsExpanded)}
+                        className="text-muted-foreground hover:text-indigo-600 dark:hover:text-indigo-400 p-1 rounded-md transition-colors"
+                        title={isStatsExpanded ? "Réduire" : "Développer"}
+                      >
+                        {isStatsExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                      </button>
+                    </div>
+
+                    {isStatsExpanded && (
+                      <div className="space-y-2.5 animate-in fade-in duration-200">
+                        {/* 7 Jours Baromètre */}
+                        <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
+                          {weekStats.days.map((day, idx) => {
+                            const isToday = idx === weekStats.todayDayIdx;
+                            const isSelected = selectedStatDay === idx;
+                            const isTop = weekStats.topDay && weekStats.topDay.dayShort === day.dayShort && day.count > 0;
+                            const heightPct = Math.max(Math.round((day.count / weekStats.maxCount) * 100), day.count > 0 ? 20 : 0);
+
+                            return (
+                              <button
+                                key={day.dayShort}
+                                type="button"
+                                onClick={() => setSelectedStatDay(isSelected ? null : idx)}
+                                className={cn(
+                                  "flex flex-col items-center justify-between py-1.5 px-1 rounded-xl transition-all cursor-pointer border text-center",
+                                  isSelected
+                                    ? "bg-indigo-600 text-white border-indigo-700 shadow-sm scale-102"
+                                    : isToday
+                                    ? "bg-indigo-100/60 dark:bg-indigo-900/40 border-indigo-300/80 dark:border-indigo-700/60 hover:bg-indigo-100"
+                                    : "bg-white/80 dark:bg-zinc-900/40 border-border/40 hover:bg-muted/40 hover:border-indigo-200"
+                                )}
+                              >
+                                <div className="flex items-center justify-center gap-0.5">
+                                  <span className={cn(
+                                    "text-[9px] font-bold uppercase",
+                                    isSelected
+                                      ? "text-white"
+                                      : isToday
+                                      ? "text-indigo-600 dark:text-indigo-400 font-extrabold"
+                                      : "text-muted-foreground"
+                                  )}>
+                                    {day.dayShort}
+                                  </span>
+                                  {isTop && !isSelected && <span className="text-[8px] leading-none">🏆</span>}
+                                </div>
+
+                                {/* Mini Bar */}
+                                <div className="w-full h-7 flex items-end justify-center py-0.5">
+                                  <div
+                                    className={cn(
+                                      "w-2.5 sm:w-3.5 rounded-full transition-all duration-300",
+                                      isSelected
+                                        ? "bg-white/95"
+                                        : day.count > 0
+                                        ? isTop
+                                          ? "bg-gradient-to-t from-amber-500 to-indigo-500"
+                                          : "bg-indigo-500/80 dark:bg-indigo-400/80"
+                                        : "bg-muted/40 h-0.5"
+                                    )}
+                                    style={{ height: day.count > 0 ? `${heightPct}%` : '3px' }}
+                                  />
+                                </div>
+
+                                <span className={cn(
+                                  "text-[9px] font-bold",
+                                  isSelected
+                                    ? "text-white"
+                                    : day.count > 0
+                                    ? "text-foreground"
+                                    : "text-muted-foreground/40"
+                                )}>
+                                  {day.count}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        {/* Rituels & Détails */}
+                        <div className="pt-1.5 border-t border-indigo-100/80 dark:border-indigo-900/40">
+                          {selectedStatDay !== null ? (
+                            (() => {
+                              const day = weekStats.days[selectedStatDay];
+                              const sortedDishes = Object.entries(day.dishesMap).sort((a, b) => b[1] - a[1]);
+                              return (
+                                <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+                                  <span className="font-bold text-indigo-700 dark:text-indigo-300">
+                                    {day.dayFull} ({day.count} {day.count > 1 ? 'repas' : 'repas'}) :
+                                  </span>
+                                  {sortedDishes.length > 0 ? (
+                                    sortedDishes.map(([dish, count]) => (
+                                      <span
+                                        key={dish}
+                                        className="inline-flex items-center gap-1 bg-white/90 dark:bg-zinc-800 px-2 py-0.5 rounded-md border text-[10px] font-medium shadow-2xs"
+                                      >
+                                        <span className="truncate max-w-[150px]">{dish}</span>
+                                        <span className="text-indigo-600 dark:text-indigo-400 font-bold">
+                                          {count}x
+                                        </span>
+                                      </span>
+                                    ))
+                                  ) : (
+                                    <span className="text-muted-foreground italic text-[10px]">
+                                      Aucune préparation enregistrée ce jour-là.
+                                    </span>
+                                  )}
+                                  <button
+                                    type="button"
+                                    onClick={() => setSelectedStatDay(null)}
+                                    className="text-[9px] text-muted-foreground hover:text-foreground underline ml-auto shrink-0"
+                                  >
+                                    Fermer le détail
+                                  </button>
+                                </div>
+                              );
+                            })()
+                          ) : (
+                            <div className="flex flex-wrap items-center justify-between gap-1.5 text-[10px] text-muted-foreground">
+                              <div className="flex flex-wrap items-center gap-2">
+                                {weekStats.topDay && (
+                                  <span>
+                                    🏆 Jour le plus actif : <strong className="text-foreground">{weekStats.topDay.dayFull}</strong> ({weekStats.topDay.count}x)
+                                  </span>
+                                )}
+                                {weekStats.rituals.filter(r => r.count >= 2).length > 0 && (
+                                  <span>
+                                    • ✨ Rituel : <strong className="text-foreground">{weekStats.rituals.filter(r => r.count >= 2)[0].dish}</strong> le {weekStats.rituals.filter(r => r.count >= 2)[0].dayShort}. ({weekStats.rituals.filter(r => r.count >= 2)[0].count}x)
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-[9px] italic opacity-70">
+                                Touchez un jour pour voir ses rituels
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+
               {/* --- MES CLASSIQUES --- */}
               {(() => {
                 const classiques = dbarati
@@ -520,8 +750,8 @@ export default function RecipesView({
                           <span className="font-semibold text-foreground truncate flex-1 mr-2">{c.text}</span>
                           <span className="text-amber-600 dark:text-amber-400 font-bold shrink-0">{c.prepCount}x</span>
                           {c.lastPreparedAt && (
-                            <span className="text-muted-foreground ml-2 shrink-0">
-                              {new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(new Date(c.lastPreparedAt))}
+                            <span className="text-muted-foreground ml-2 shrink-0 italic text-[10px]">
+                              {formatDbaratiDate(c.lastPreparedAt)}
                             </span>
                           )}
                         </div>
@@ -995,7 +1225,7 @@ export default function RecipesView({
                                         )}
                                         {item.lastPreparedAt && (
                                           <span className="text-[10px] text-muted-foreground italic truncate">
-                                            {new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(new Date(item.lastPreparedAt))}
+                                            {formatDbaratiDate(item.lastPreparedAt)}
                                             <span className="opacity-70 ml-1">
                                               (il y a {Math.floor((Date.now() - new Date(item.lastPreparedAt).getTime()) / (1000 * 60 * 60 * 24))} j)
                                             </span>
@@ -1019,7 +1249,7 @@ export default function RecipesView({
                                         {[...item.prepHistory].reverse().map((date, i) => (
                                           <div key={i} className="flex items-center gap-1">
                                             <span className="w-1 h-1 rounded-full bg-primary/40 shrink-0" />
-                                            {new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: '2-digit' }).format(new Date(date))}
+                                            <span className="italic">{formatDbaratiDate(date, { withYear: true })}</span>
                                           </div>
                                         ))}
                                       </div>
@@ -1279,7 +1509,7 @@ export default function RecipesView({
                                       )}
                                       {item.lastPreparedAt && (
                                         <span className="text-[10px] text-muted-foreground italic truncate">
-                                          {new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(new Date(item.lastPreparedAt))}
+                                          {formatDbaratiDate(item.lastPreparedAt)}
                                           <span className="opacity-70 ml-1">
                                             (il y a {Math.floor((Date.now() - new Date(item.lastPreparedAt).getTime()) / (1000 * 60 * 60 * 24))} j)
                                           </span>
@@ -1302,7 +1532,7 @@ export default function RecipesView({
                                         {[...item.prepHistory].reverse().map((date, i) => (
                                           <div key={i} className="flex items-center gap-1">
                                             <span className="w-1 h-1 rounded-full bg-primary/40 shrink-0" />
-                                            {new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: '2-digit' }).format(new Date(date))}
+                                            <span className="italic">{formatDbaratiDate(date, { withYear: true })}</span>
                                           </div>
                                         ))}
                                       </div>
@@ -1620,6 +1850,11 @@ export default function RecipesView({
                 max={todayStr}
                 onChange={(e) => setSelectedPrepDate(e.target.value)}
               />
+              {selectedPrepDate && (
+                <p className="text-[11px] text-muted-foreground italic mt-1">
+                  Jour sélectionné : <span className="font-semibold text-foreground not-italic">{formatDbaratiDate(selectedPrepDate + 'T12:00:00')}</span>
+                </p>
+              )}
             </div>
 
             {/* Alerte date déjà enregistrée */}
@@ -1631,7 +1866,7 @@ export default function RecipesView({
                   <p className="opacity-90">
                     Ce plat a déjà été enregistré comme préparé le{' '}
                     <span className="font-bold underline">
-                      {selectedPrepDate ? new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(selectedPrepDate + 'T12:00:00')) : ''}
+                      {selectedPrepDate ? formatDbaratiDate(selectedPrepDate + 'T12:00:00', { withYear: true }) : ''}
                     </span>.
                     Il n&apos;est pas possible d&apos;enregistrer deux fois le même jour.
                   </p>
@@ -1655,8 +1890,8 @@ export default function RecipesView({
                 </span>
                 <div className="flex flex-wrap gap-1.5 pt-1">
                   {[...preparingDish.prepHistory].reverse().slice(0, 4).map((d, i) => (
-                    <Badge key={i} variant="outline" className="text-[10px] px-1.5 py-0 font-normal bg-background/50">
-                      {new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(d))}
+                    <Badge key={i} variant="outline" className="text-[10px] px-1.5 py-0 font-normal bg-background/50 italic">
+                      {formatDbaratiDate(d, { withYear: true })}
                     </Badge>
                   ))}
                 </div>
