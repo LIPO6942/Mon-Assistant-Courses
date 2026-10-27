@@ -62,6 +62,7 @@ interface RecipesViewProps {
   onMoveDbaratiItem: (id: string, direction: 'up' | 'down') => void;
   onUpdateDbaratiItemPlatTag: (id: string, platTag: 'Pates' | 'Sauces' | 'Sandwich' | 'Autres') => void;
   onUpdateDbaratiItemDessertTag?: (id: string, dessertTag: 'Gâteau' | 'Crème' | 'Fruits' | 'Pâtisserie' | 'Autres') => void;
+  onRemovePrepDate?: (id: string, dateIsoToRemove: string) => void;
 }
 
 export default function RecipesView({
@@ -77,6 +78,7 @@ export default function RecipesView({
   onAddDbaratiItem,
   onToggleDbaratiItem,
   onMarkPrepared,
+  onRemovePrepDate,
   onSetDbaratiItemDone,
   onDeleteDbaratiItem,
   onUpdateDbaratiItem,
@@ -172,11 +174,11 @@ export default function RecipesView({
 
   const todayStr = useMemo(() => getLocalDateString(), []);
 
-  // Stats Dbarati : Baromètre des 7 jours & Rituels
-  const [isStatsExpanded, setIsStatsExpanded] = useState(true);
+  // Stats Dbarati : Rituels de la semaine (pliable par défaut)
+  const [isRitualsExpanded, setIsRitualsExpanded] = useState(false);
   const [selectedStatDay, setSelectedStatDay] = useState<number | null>(null);
 
-  const weekStats = useMemo(() => {
+  const weekRituals = useMemo(() => {
     const WEEK_DAYS = ['lun', 'mar', 'mer', 'jeu', 'ven', 'sam', 'dim'] as const;
     const FULL_WEEK_DAYS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'] as const;
 
@@ -218,15 +220,17 @@ export default function RecipesView({
 
     const topDay = [...days].sort((a, b) => b.count - a.count)[0];
 
-    const rituals: Array<{ dayShort: string; dayFull: string; dish: string; count: number }> = [];
+    const confirmedRituals: Array<{ dayShort: string; dayFull: string; dish: string; count: number }> = [];
     days.forEach(d => {
       const entries = Object.entries(d.dishesMap).sort((a, b) => b[1] - a[1]);
       if (entries.length > 0) {
-        rituals.push({
-          dayShort: d.dayShort,
-          dayFull: d.dayFull,
-          dish: entries[0][0],
-          count: entries[0][1],
+        entries.filter(([, count]) => count >= 2).forEach(([dish, count]) => {
+          confirmedRituals.push({
+            dayShort: d.dayShort,
+            dayFull: d.dayFull,
+            dish,
+            count,
+          });
         });
       }
     });
@@ -237,7 +241,7 @@ export default function RecipesView({
       maxCount,
       todayDayIdx,
       topDay: topDay && topDay.count > 0 ? topDay : null,
-      rituals,
+      confirmedRituals,
     };
   }, [dbarati]);
 
@@ -286,6 +290,30 @@ export default function RecipesView({
       onToggleDbaratiItem(preparingDish.id);
     }
     setPreparingDish(null);
+  };
+
+  const handleRemovePrep = (dateToRemove: string) => {
+    if (!preparingDish) return;
+    if (window.confirm(`Supprimer la préparation du ${formatDbaratiDate(dateToRemove, { withYear: true })} ?`)) {
+      if (onRemovePrepDate) {
+        onRemovePrepDate(preparingDish.id, dateToRemove);
+      }
+      setPreparingDish(prev => {
+        if (!prev) return null;
+        const existing = prev.prepHistory && prev.prepHistory.length > 0
+          ? prev.prepHistory
+          : (prev.lastPreparedAt ? [prev.lastPreparedAt] : []);
+        const newHistory = existing.filter(d => d !== dateToRemove);
+        const newLatest = newHistory.length > 0 ? newHistory[newHistory.length - 1] : undefined;
+        return {
+          ...prev,
+          done: newHistory.length > 0 ? prev.done : false,
+          lastPreparedAt: newLatest,
+          prepCount: newHistory.length,
+          prepHistory: newHistory,
+        };
+      });
+    }
   };
 
   const handleItemCheckClick = (item: DbaratiItem) => {
@@ -571,42 +599,48 @@ export default function RecipesView({
                 </div>
               </div>
 
-              {/* --- BAROMÈTRE DES 7 JOURS & RITUELS PAR JOUR --- */}
+              {/* --- RITUELS DE LA SEMAINE (AVEC GAUGES/BAROMÈTRES, PLIABLE PAR DÉFAUT & ULTRA-MINCE) --- */}
               {(() => {
-                if (weekStats.totalPreps === 0) return null;
+                if (weekRituals.totalPreps === 0) return null;
 
                 return (
-                  <div className="max-w-4xl mx-auto mb-4 bg-indigo-50/50 dark:bg-indigo-950/20 rounded-2xl p-3 border border-indigo-200/40 dark:border-indigo-800/20 shadow-sm transition-all">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs">📊</span>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-900 dark:text-indigo-300">
-                          Baromètre & Rituels de la semaine
-                        </p>
-                        <span className="text-[9px] font-bold bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 px-1.5 py-0.2 rounded-full">
-                          {weekStats.totalPreps} {weekStats.totalPreps > 1 ? 'préparations' : 'préparation'}
+                  <div className="max-w-4xl mx-auto mb-3 bg-indigo-50/40 dark:bg-indigo-950/20 rounded-xl border border-indigo-200/40 dark:border-indigo-800/25 transition-all overflow-hidden shadow-2xs">
+                    <button
+                      type="button"
+                      onClick={() => setIsRitualsExpanded(!isRitualsExpanded)}
+                      className="w-full flex items-center justify-between py-1.5 px-3 hover:bg-indigo-50/70 dark:hover:bg-indigo-950/35 transition-colors text-left group"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-xs shrink-0">✨</span>
+                        <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-indigo-900 dark:text-indigo-300 truncate">
+                          Rituels de la semaine
+                        </span>
+                        <span className="text-[9px] font-bold bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 px-1.5 py-0.2 rounded-full shrink-0">
+                          {weekRituals.totalPreps} prép.
                         </span>
                       </div>
 
-                      <button
-                        type="button"
-                        onClick={() => setIsStatsExpanded(!isStatsExpanded)}
-                        className="text-muted-foreground hover:text-indigo-600 dark:hover:text-indigo-400 p-1 rounded-md transition-colors"
-                        title={isStatsExpanded ? "Réduire" : "Développer"}
-                      >
-                        {isStatsExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-                      </button>
-                    </div>
+                      <div className="flex items-center gap-2 shrink-0 ml-2">
+                        {!isRitualsExpanded && weekRituals.confirmedRituals.length > 0 && (
+                          <span className="text-[10px] text-muted-foreground italic truncate max-w-[150px] sm:max-w-[260px] hidden sm:inline">
+                            ex: {weekRituals.confirmedRituals[0].dish} ({weekRituals.confirmedRituals[0].dayShort}.)
+                          </span>
+                        )}
+                        <span className="text-muted-foreground/70 group-hover:text-foreground">
+                          {isRitualsExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                        </span>
+                      </div>
+                    </button>
 
-                    {isStatsExpanded && (
-                      <div className="space-y-2.5 animate-in fade-in duration-200">
-                        {/* 7 Jours Baromètre */}
-                        <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
-                          {weekStats.days.map((day, idx) => {
-                            const isToday = idx === weekStats.todayDayIdx;
+                    {isRitualsExpanded && (
+                      <div className="px-3 pb-2.5 pt-1 border-t border-indigo-100/70 dark:border-indigo-900/40 space-y-2 animate-in fade-in duration-150">
+                        {/* Les 7 baromètres journaliers (très minces & épurés) */}
+                        <div className="grid grid-cols-7 gap-1 sm:gap-1.5 pt-0.5">
+                          {weekRituals.days.map((day, idx) => {
+                            const isToday = idx === weekRituals.todayDayIdx;
                             const isSelected = selectedStatDay === idx;
-                            const isTop = weekStats.topDay && weekStats.topDay.dayShort === day.dayShort && day.count > 0;
-                            const heightPct = Math.max(Math.round((day.count / weekStats.maxCount) * 100), day.count > 0 ? 20 : 0);
+                            const isTop = weekRituals.topDay && weekRituals.topDay.dayShort === day.dayShort && day.count > 0;
+                            const heightPct = Math.max(Math.round((day.count / weekRituals.maxCount) * 100), day.count > 0 ? 20 : 0);
 
                             return (
                               <button
@@ -614,12 +648,12 @@ export default function RecipesView({
                                 type="button"
                                 onClick={() => setSelectedStatDay(isSelected ? null : idx)}
                                 className={cn(
-                                  "flex flex-col items-center justify-between py-1.5 px-1 rounded-xl transition-all cursor-pointer border text-center",
+                                  "flex flex-col items-center justify-between py-1 px-0.5 rounded-lg transition-all cursor-pointer border text-center",
                                   isSelected
                                     ? "bg-indigo-600 text-white border-indigo-700 shadow-sm scale-102"
                                     : isToday
-                                    ? "bg-indigo-100/60 dark:bg-indigo-900/40 border-indigo-300/80 dark:border-indigo-700/60 hover:bg-indigo-100"
-                                    : "bg-white/80 dark:bg-zinc-900/40 border-border/40 hover:bg-muted/40 hover:border-indigo-200"
+                                    ? "bg-indigo-100/70 dark:bg-indigo-900/40 border-indigo-300/80 dark:border-indigo-700/60 hover:bg-indigo-100"
+                                    : "bg-white/80 dark:bg-zinc-900/40 border-border/30 hover:bg-muted/40 hover:border-indigo-200"
                                 )}
                               >
                                 <div className="flex items-center justify-center gap-0.5">
@@ -633,14 +667,14 @@ export default function RecipesView({
                                   )}>
                                     {day.dayShort}
                                   </span>
-                                  {isTop && !isSelected && <span className="text-[8px] leading-none">🏆</span>}
+                                  {isTop && !isSelected && <span className="text-[7.5px] leading-none">🏆</span>}
                                 </div>
 
-                                {/* Mini Bar */}
-                                <div className="w-full h-7 flex items-end justify-center py-0.5">
+                                {/* Jauge / Barre mince */}
+                                <div className="w-full h-6 flex items-end justify-center py-0.5">
                                   <div
                                     className={cn(
-                                      "w-2.5 sm:w-3.5 rounded-full transition-all duration-300",
+                                      "w-2 sm:w-3 rounded-full transition-all duration-300",
                                       isSelected
                                         ? "bg-white/95"
                                         : day.count > 0
@@ -649,12 +683,12 @@ export default function RecipesView({
                                           : "bg-indigo-500/80 dark:bg-indigo-400/80"
                                         : "bg-muted/40 h-0.5"
                                     )}
-                                    style={{ height: day.count > 0 ? `${heightPct}%` : '3px' }}
+                                    style={{ height: day.count > 0 ? `${heightPct}%` : '2px' }}
                                   />
                                 </div>
 
                                 <span className={cn(
-                                  "text-[9px] font-bold",
+                                  "text-[8.5px] font-bold leading-none",
                                   isSelected
                                     ? "text-white"
                                     : day.count > 0
@@ -668,11 +702,11 @@ export default function RecipesView({
                           })}
                         </div>
 
-                        {/* Rituels & Détails */}
-                        <div className="pt-1.5 border-t border-indigo-100/80 dark:border-indigo-900/40">
+                        {/* Rituels & Détails interactifs */}
+                        <div className="pt-1 border-t border-indigo-100/60 dark:border-indigo-900/30">
                           {selectedStatDay !== null ? (
                             (() => {
-                              const day = weekStats.days[selectedStatDay];
+                              const day = weekRituals.days[selectedStatDay];
                               const sortedDishes = Object.entries(day.dishesMap).sort((a, b) => b[1] - a[1]);
                               return (
                                 <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
@@ -709,14 +743,14 @@ export default function RecipesView({
                           ) : (
                             <div className="flex flex-wrap items-center justify-between gap-1.5 text-[10px] text-muted-foreground">
                               <div className="flex flex-wrap items-center gap-2">
-                                {weekStats.topDay && (
+                                {weekRituals.topDay && (
                                   <span>
-                                    🏆 Jour le plus actif : <strong className="text-foreground">{weekStats.topDay.dayFull}</strong> ({weekStats.topDay.count}x)
+                                    🏆 Jour le plus actif : <strong className="text-foreground">{weekRituals.topDay.dayFull}</strong> ({weekRituals.topDay.count}x)
                                   </span>
                                 )}
-                                {weekStats.rituals.filter(r => r.count >= 2).length > 0 && (
+                                {weekRituals.confirmedRituals.length > 0 && (
                                   <span>
-                                    • ✨ Rituel : <strong className="text-foreground">{weekStats.rituals.filter(r => r.count >= 2)[0].dish}</strong> le {weekStats.rituals.filter(r => r.count >= 2)[0].dayShort}. ({weekStats.rituals.filter(r => r.count >= 2)[0].count}x)
+                                    • ✨ Rituel : <strong className="text-foreground">{weekRituals.confirmedRituals[0].dish}</strong> le {weekRituals.confirmedRituals[0].dayShort}. ({weekRituals.confirmedRituals[0].count}x)
                                   </span>
                                 )}
                               </div>
@@ -1247,9 +1281,26 @@ export default function RecipesView({
                                     {openHistoryId === item.id && item.prepHistory && item.prepHistory.length > 0 && (
                                       <div className="mt-1.5 text-[9px] text-muted-foreground bg-muted/30 rounded-lg px-2 py-1.5 space-y-0.5 animate-in fade-in slide-in-from-top-1 duration-200">
                                         {[...item.prepHistory].reverse().map((date, i) => (
-                                          <div key={i} className="flex items-center gap-1">
-                                            <span className="w-1 h-1 rounded-full bg-primary/40 shrink-0" />
-                                            <span className="italic">{formatDbaratiDate(date, { withYear: true })}</span>
+                                          <div key={i} className="flex items-center justify-between gap-1 group/hist py-0.5">
+                                            <div className="flex items-center gap-1 min-w-0">
+                                              <span className="w-1 h-1 rounded-full bg-primary/40 shrink-0" />
+                                              <span className="italic truncate">{formatDbaratiDate(date, { withYear: true })}</span>
+                                            </div>
+                                            {onRemovePrepDate && (
+                                              <button
+                                                type="button"
+                                                title="Supprimer cette préparation"
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  if (window.confirm(`Supprimer la préparation du ${formatDbaratiDate(date, { withYear: true })} ?`)) {
+                                                    onRemovePrepDate(item.id, date);
+                                                  }
+                                                }}
+                                                className="opacity-0 group-hover/hist:opacity-100 text-muted-foreground/60 hover:text-destructive hover:bg-destructive/10 p-0.5 rounded transition-all shrink-0"
+                                              >
+                                                <X className="h-2.5 w-2.5" />
+                                              </button>
+                                            )}
                                           </div>
                                         ))}
                                       </div>
@@ -1530,9 +1581,26 @@ export default function RecipesView({
                                     {openHistoryId === item.id && item.prepHistory && item.prepHistory.length > 0 && (
                                       <div className="mt-1.5 text-[9px] text-muted-foreground bg-muted/30 rounded-lg px-2 py-1.5 space-y-0.5 animate-in fade-in slide-in-from-top-1 duration-200">
                                         {[...item.prepHistory].reverse().map((date, i) => (
-                                          <div key={i} className="flex items-center gap-1">
-                                            <span className="w-1 h-1 rounded-full bg-primary/40 shrink-0" />
-                                            <span className="italic">{formatDbaratiDate(date, { withYear: true })}</span>
+                                          <div key={i} className="flex items-center justify-between gap-1 group/hist py-0.5">
+                                            <div className="flex items-center gap-1 min-w-0">
+                                              <span className="w-1 h-1 rounded-full bg-primary/40 shrink-0" />
+                                              <span className="italic truncate">{formatDbaratiDate(date, { withYear: true })}</span>
+                                            </div>
+                                            {onRemovePrepDate && (
+                                              <button
+                                                type="button"
+                                                title="Supprimer cette préparation"
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  if (window.confirm(`Supprimer la préparation du ${formatDbaratiDate(date, { withYear: true })} ?`)) {
+                                                    onRemovePrepDate(item.id, date);
+                                                  }
+                                                }}
+                                                className="opacity-0 group-hover/hist:opacity-100 text-muted-foreground/60 hover:text-destructive hover:bg-destructive/10 p-0.5 rounded transition-all shrink-0"
+                                              >
+                                                <X className="h-2.5 w-2.5" />
+                                              </button>
+                                            )}
                                           </div>
                                         ))}
                                       </div>
@@ -1882,21 +1950,48 @@ export default function RecipesView({
               </div>
             )}
 
-            {/* Aperçu des dernières préparations existantes */}
-            {preparingDish && preparingDish.prepHistory && preparingDish.prepHistory.length > 0 && (
-              <div className="text-[11px] text-muted-foreground bg-muted/40 p-2.5 rounded-xl space-y-1">
-                <span className="font-semibold block text-[10px] uppercase tracking-wider text-muted-foreground/80">
-                  Dernières préparations enregistrées ({preparingDish.prepHistory.length}) :
-                </span>
-                <div className="flex flex-wrap gap-1.5 pt-1">
-                  {[...preparingDish.prepHistory].reverse().slice(0, 4).map((d, i) => (
-                    <Badge key={i} variant="outline" className="text-[10px] px-1.5 py-0 font-normal bg-background/50 italic">
-                      {formatDbaratiDate(d, { withYear: true })}
-                    </Badge>
-                  ))}
+            {/* Aperçu des préparations existantes avec possibilité de retrait */}
+            {(() => {
+              const prepList = preparingDish?.prepHistory && preparingDish.prepHistory.length > 0
+                ? preparingDish.prepHistory
+                : (preparingDish?.lastPreparedAt ? [preparingDish.lastPreparedAt] : []);
+
+              if (!preparingDish || prepList.length === 0) return null;
+
+              return (
+                <div className="text-[11px] text-muted-foreground bg-muted/40 p-2.5 rounded-xl space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold block text-[10px] uppercase tracking-wider text-muted-foreground/80">
+                      Historique des préparations ({prepList.length}) :
+                    </span>
+                    <span className="text-[9px] text-muted-foreground/70 italic">
+                      (cliquez sur ✕ pour retirer)
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 pt-0.5 max-h-28 overflow-y-auto pr-1">
+                    {[...prepList].reverse().map((d, i) => (
+                      <span
+                        key={i}
+                        className="inline-flex items-center gap-1.5 text-[10px] pl-2 pr-1 py-0.5 rounded-lg border bg-background/80 font-normal hover:border-destructive/50 transition-colors"
+                      >
+                        <span className="italic">{formatDbaratiDate(d, { withYear: true })}</span>
+                        <button
+                          type="button"
+                          title="Retirer cette préparation (erreur)"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemovePrep(d);
+                          }}
+                          className="h-3.5 w-3.5 rounded-full inline-flex items-center justify-center text-muted-foreground/60 hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0"
+                        >
+                          <X className="h-2.5 w-2.5" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
           </div>
 
           <DialogFooter className="flex flex-col sm:flex-row gap-2 pt-2">

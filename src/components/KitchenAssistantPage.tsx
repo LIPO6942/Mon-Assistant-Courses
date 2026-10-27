@@ -1301,6 +1301,23 @@ export default function KitchenAssistantPage() {
                   };
                 }));
               }}
+              onRemovePrepDate={(id: string, dateIsoToRemove: string) => {
+                setDbarati(prev => prev.map(item => {
+                  if (item.id !== id) return item;
+                  const existingHistory = item.prepHistory ?? (
+                    item.lastPreparedAt ? [item.lastPreparedAt] : []
+                  );
+                  const newHistory = existingHistory.filter(d => d !== dateIsoToRemove);
+                  const latestDate = newHistory.length > 0 ? newHistory[newHistory.length - 1] : undefined;
+                  return {
+                    ...item,
+                    done: newHistory.length > 0 ? item.done : false,
+                    lastPreparedAt: latestDate,
+                    prepCount: newHistory.length,
+                    prepHistory: newHistory,
+                  };
+                }));
+              }}
               onDeleteDbaratiItem={(id: string) => {
                 setDbarati(prev => prev.filter(item => item.id !== id));
               }}
