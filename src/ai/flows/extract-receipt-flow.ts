@@ -5,7 +5,7 @@ import { groqChatJson, getPreferredVisionModel, type GroqMessageContentPart } fr
 import { ReceiptLine, Receipt } from '@/lib/types';
 
 const ExtractReceiptInputSchema = z.object({
-  receiptDataUri: z.string().describe('Data URI base64 du ticket de caisse.'),
+  receiptDataUri: z.string().describe('Data URI base64 du ticket.'),
 });
 export type ExtractReceiptInput = z.infer<typeof ExtractReceiptInputSchema>;
 
@@ -34,7 +34,7 @@ const ExtractReceiptOutputSchema = z.object({
 });
 export type ExtractReceiptOutput = z.infer<typeof ExtractReceiptOutputSchema>;
 
-const RECEIPT_PROMPT = `Tu es un expert en extraction de données OCR pour tous types de reçus et tickets de caisse (Carrefour Tunisie, Monoprix, MG Magasin Général, Géant, Aziza, épicerie, etc.).
+const RECEIPT_PROMPT = `Tu es un expert en extraction de données OCR pour tous types de reçus et tickets (Carrefour Tunisie, Monoprix, MG Magasin Général, Géant, Aziza, épicerie, etc.).
 Analyse cette image et extrais TOUS les produits et détails listés.
 
 STRUCTURE TYPIQUE D'UN PRODUIT (EX: CARREFOUR) :
@@ -86,7 +86,7 @@ export async function extractReceiptFromImage(
   const parsed = ExtractReceiptInputSchema.parse(input);
 
   const systemPrompt =
-    'Vous êtes un expert en extraction JSON de reçus et tickets de caisse. Répondez UNIQUEMENT avec un objet JSON valide, sans texte d accompagnement ni balises markdown.';
+    'Vous êtes un expert en extraction JSON de reçus et tickets. Répondez UNIQUEMENT avec un objet JSON valide, sans texte d accompagnement ni balises markdown.';
 
   const userContent: GroqMessageContentPart[] = [
     { type: 'text', text: RECEIPT_PROMPT },

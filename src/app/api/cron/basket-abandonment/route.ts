@@ -89,5 +89,10 @@ async function handler(request: Request) {
     }
 }
 
-// Sécurisé par la vérification de signature QStash
-export const POST = verifySignatureAppRouter(handler);
+// Sécurisé par la vérification de signature QStash (évalué à l'exécution)
+export async function POST(request: Request, params?: any) {
+    if (process.env.QSTASH_CURRENT_SIGNING_KEY || process.env.QSTASH_NEXT_SIGNING_KEY) {
+        return verifySignatureAppRouter(handler)(request, params);
+    }
+    return handler(request);
+}

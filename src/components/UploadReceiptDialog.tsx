@@ -168,10 +168,10 @@ export function UploadReceiptDialog({
             <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
               <ReceiptText className="h-5 w-5" />
             </div>
-            <DialogTitle className="text-xl font-bold">Scanner un ticket de caisse</DialogTitle>
+            <DialogTitle className="text-xl font-bold">Scanner un ticket</DialogTitle>
           </div>
           <DialogDescription className="text-xs text-muted-foreground">
-            Photographiez ou importez votre ticket (Carrefour, Monoprix, MG, etc.). L'IA extraira les articles, prix et totaux.
+            Photographiez ou importez votre ticket (Carrefour, Monoprix, MG, etc.). L&apos;IA extraira les articles, prix et totaux.
           </DialogDescription>
         </DialogHeader>
 

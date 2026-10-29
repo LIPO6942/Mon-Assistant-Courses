@@ -2,8 +2,6 @@ import { NextResponse } from 'next/server';
 import { Client } from '@upstash/qstash';
 import { adminDb } from '@/lib/firebase-admin';
 
-const qstash = new Client({ token: process.env.QSTASH_TOKEN! });
-
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
@@ -48,6 +46,7 @@ export async function POST(request: Request) {
         console.log(` - Current Server Time: ${new Date().toISOString()}`);
         console.log(` - Scheduled Notify Time: ${notifyDate.toISOString()}`);
 
+        const qstash = new Client({ token: process.env.QSTASH_TOKEN || '' });
         const qstashResponse = await qstash.publishJSON({
             url: targetUrl,
             body: { reminderId, userId },

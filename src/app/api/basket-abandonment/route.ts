@@ -2,8 +2,6 @@ import { NextResponse } from 'next/server';
 import { Client } from '@upstash/qstash';
 import { adminDb } from '@/lib/firebase-admin';
 
-const qstash = new Client({ token: process.env.QSTASH_TOKEN! });
-
 const BASKET_ABANDONMENT_THRESHOLD = 6; // nombre de produits distincts
 const DELAY_DAYS = 7;                   // délai avant notification
 
@@ -55,6 +53,7 @@ export async function POST(request: Request) {
         });
 
         // Scheduler dans QStash
+        const qstash = new Client({ token: process.env.QSTASH_TOKEN || '' });
         const qstashResponse = await qstash.publishJSON({
             url: targetUrl,
             body: { userId },

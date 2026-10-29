@@ -159,7 +159,7 @@ export default function ReceiptsView({
         <div>
           <div className="flex items-center gap-2.5">
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
-              Tickets de caisse
+              Tickets
             </h1>
             <Badge variant="secondary" className="font-bold">
               {receipts.length}
@@ -246,7 +246,7 @@ export default function ReceiptsView({
           </div>
           <h3 className="font-bold text-lg mb-1">Aucun ticket pour le moment</h3>
           <p className="text-xs text-muted-foreground max-w-sm mx-auto mb-6">
-            Prenez en photo votre ticket de caisse (Carrefour, Monoprix, MG, etc.) pour commencer à suivre vos dépenses.
+            Prenez en photo votre ticket (Carrefour, Monoprix, MG, etc.) pour commencer à suivre vos dépenses.
           </p>
           <UploadReceiptDialog onReceiptProcessed={onAddReceipt}>
             <Button className="rounded-full gap-2 px-6">
@@ -399,7 +399,7 @@ export default function ReceiptsView({
         <DialogContent className="sm:max-w-md rounded-2xl">
           <DialogHeader>
             <DialogTitle>Modifier le ticket</DialogTitle>
-            <DialogDescription>Ajustez l'enseigne et la date d'achat du ticket.</DialogDescription>
+            <DialogDescription>Ajustez l&apos;enseigne et la date d&apos;achat du ticket.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div>
@@ -415,7 +415,7 @@ export default function ReceiptsView({
             </div>
             <div>
               <label className="text-xs font-bold text-muted-foreground block mb-1.5">
-                Date d'achat
+                Date d&apos;achat
               </label>
               <Input
                 type="date"

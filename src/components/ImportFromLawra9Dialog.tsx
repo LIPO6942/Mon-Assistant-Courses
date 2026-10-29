@@ -152,7 +152,7 @@ export function ImportFromLawra9Dialog({ allIngredients, categories, onUpdatePri
                     </DialogTitle>
                     <DialogDescription>
                         {step === 'input'
-                            ? "Prenez en photo votre ticket de caisse pour extraire les prix et mettre à jour votre garde-manger."
+                            ? "Prenez en photo votre ticket pour extraire les prix et mettre à jour votre garde-manger."
                             : "Vérifiez les correspondances trouvées par l'IA avec vos ingrédients."}
                     </DialogDescription>
                 </DialogHeader>
@@ -164,7 +164,7 @@ export function ImportFromLawra9Dialog({ allIngredients, categories, onUpdatePri
                             <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20 space-y-3 text-center">
                                 <h4 className="font-bold text-sm text-foreground">Scan automatique par IA</h4>
                                 <p className="text-xs text-muted-foreground">
-                                    Prenez une photo de votre ticket de caisse (Carrefour, Monoprix, MG, etc.). L'IA Groq extrait tous les produits.
+                                    Prenez une photo de votre ticket (Carrefour, Monoprix, MG, etc.). L&apos;IA Groq extrait tous les produits.
                                 </p>
                                 <UploadReceiptDialog onReceiptProcessed={handleReceiptScanned}>
                                     <Button className="w-full sm:w-auto rounded-full gap-2 px-6 shadow-md">
