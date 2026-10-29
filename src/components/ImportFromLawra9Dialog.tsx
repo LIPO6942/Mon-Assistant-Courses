@@ -161,17 +161,19 @@ export function ImportFromLawra9Dialog({ allIngredients, categories, onUpdatePri
                     {step === 'input' ? (
                         <div className="space-y-4">
                             {/* Option 1: Scan direct par caméra ou upload */}
-                            <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20 space-y-3 text-center">
+                            <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20 space-y-3 text-center flex flex-col items-center justify-center">
                                 <h4 className="font-bold text-sm text-foreground">Scan automatique par IA</h4>
-                                <p className="text-xs text-muted-foreground">
+                                <p className="text-xs text-muted-foreground max-w-sm mx-auto">
                                     Prenez une photo de votre ticket (Carrefour, Monoprix, MG, etc.). L&apos;IA Groq extrait tous les produits.
                                 </p>
-                                <UploadReceiptDialog onReceiptProcessed={handleReceiptScanned}>
-                                    <Button className="w-full sm:w-auto rounded-full gap-2 px-6 shadow-md">
-                                        <Camera className="h-4 w-4" />
-                                        Prendre une photo / Choisir un fichier
-                                    </Button>
-                                </UploadReceiptDialog>
+                                <div className="w-full flex justify-center">
+                                    <UploadReceiptDialog onReceiptProcessed={handleReceiptScanned}>
+                                        <Button className="w-full sm:w-auto rounded-full gap-2 px-6 shadow-md mx-auto">
+                                            <Camera className="h-4 w-4" />
+                                            Prendre une photo / Choisir un fichier
+                                        </Button>
+                                    </UploadReceiptDialog>
+                                </div>
                             </div>
 
                             <div className="flex items-center gap-3">

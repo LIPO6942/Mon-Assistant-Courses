@@ -26,18 +26,6 @@ export default function AppNav({ activeTab, setActiveTab, chandyekIngredientCoun
             <UtensilsCrossed className="mr-2 h-4 w-4" />Garde-Manger
           </Button>
 
-          <Button variant="ghost" onClick={() => setActiveTab('receipts')} className={cn(
-            "relative shrink-0 rounded-none h-12 border-b-2 font-semibold px-4",
-            activeTab === 'receipts' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-primary/80'
-          )}>
-            <ReceiptText className="mr-2 h-4 w-4" />Tickets
-            {receiptCount > 0 && (
-              <Badge variant="secondary" className="ml-1.5 px-1.5 py-0 h-4 text-[10px] font-bold rounded-full">
-                {receiptCount}
-              </Badge>
-            )}
-          </Button>
-
           <Button variant="ghost" onClick={() => setActiveTab('recipes')} className={cn(
             "shrink-0 rounded-none h-12 border-b-2 font-semibold px-4",
             activeTab === 'recipes' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-primary/80'
@@ -52,6 +40,18 @@ export default function AppNav({ activeTab, setActiveTab, chandyekIngredientCoun
             <BrainCircuit className="mr-2 h-4 w-4" />Ch3andek?
             {chandyekIngredientCount > 0 && (
               <Badge variant="destructive" className="absolute top-2 right-2 h-5 w-5 justify-center p-0">{chandyekIngredientCount}</Badge>
+            )}
+          </Button>
+
+          <Button variant="ghost" onClick={() => setActiveTab('receipts')} className={cn(
+            "relative shrink-0 rounded-none h-12 border-b-2 font-semibold px-4",
+            activeTab === 'receipts' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-primary/80'
+          )}>
+            <ReceiptText className="mr-2 h-4 w-4" />Tickets
+            {receiptCount > 0 && (
+              <Badge variant="secondary" className="ml-1.5 px-1.5 py-0 h-4 text-[10px] font-bold rounded-full">
+                {receiptCount}
+              </Badge>
             )}
           </Button>
 

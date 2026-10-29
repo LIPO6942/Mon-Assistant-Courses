@@ -167,7 +167,8 @@ export default function MarketPricesView() {
             }
 
             const storeIngredients = ingredientsByStore.get(store)!;
-            const key = p.normalizedName || p.ingredientName;
+            const brandSuffix = p.brand ? ` (${p.brand})` : '';
+            const key = (p.normalizedName || p.ingredientName) + brandSuffix;
 
             if (!storeIngredients.has(key)) {
                 storeIngredients.set(key, { prices: [], count: 0, unit: p.unit });
@@ -216,7 +217,11 @@ export default function MarketPricesView() {
                 if (isExcludedFromMarketPrices(p.ingredientName, p.category)) return false;
                 const searchLower = searchQuery.toLowerCase();
                 const nameToSearch = (p.normalizedName || p.ingredientName || '').toLowerCase();
-                const matchesSearch = nameToSearch.includes(searchLower) || (p.store || '').toLowerCase().includes(searchLower);
+                const storeToSearch = (p.store || '').toLowerCase();
+                const brandToSearch = (p.brand || '').toLowerCase();
+                const matchesSearch = nameToSearch.includes(searchLower) ||
+                                      storeToSearch.includes(searchLower) ||
+                                      brandToSearch.includes(searchLower);
                 const matchesStore = selectedStore === 'all' || p.store === selectedStore;
                 return matchesSearch && matchesStore;
             })
@@ -225,10 +230,11 @@ export default function MarketPricesView() {
                 return new Date(b.date).getTime() - new Date(a.date).getTime();
             });
 
-        // Group by normalized name (avoid duplicates)
+        // Group by normalized name AND brand (preserve distinct brand prices)
         const map = new Map<string, typeof filtered[0]>();
         filtered.forEach(p => {
-            const key = p.normalizedName || p.ingredientName;
+            const brandKey = p.brand ? `_${p.brand.toLowerCase().trim()}` : '';
+            const key = (p.normalizedName || p.ingredientName) + brandKey;
             const existing = map.get(key);
             if (!existing || new Date(p.date) > new Date(existing.date)) {
                 map.set(key, p);
@@ -451,9 +457,16 @@ export default function MarketPricesView() {
                                                             <TrendingDown className="h-4 w-4" />
                                                         </div>
                                                         <div className="flex flex-col min-w-0">
-                                                            <CardTitle className="text-base sm:text-lg font-bold tracking-tight whitespace-normal break-words group-hover:text-primary transition-colors">
-                                                                {purchase.ingredientName}
-                                                            </CardTitle>
+                                                            <div className="flex items-center gap-1.5 flex-wrap">
+                                                                <CardTitle className="text-base sm:text-lg font-bold tracking-tight whitespace-normal break-words group-hover:text-primary transition-colors">
+                                                                    {purchase.ingredientName}
+                                                                </CardTitle>
+                                                                {purchase.brand && (
+                                                                    <Badge variant="outline" className="px-2 py-0 text-[10px] font-bold rounded-lg bg-primary/10 text-primary border-primary/25 shadow-2xs">
+                                                                        🏷️ {purchase.brand}
+                                                                    </Badge>
+                                                                )}
+                                                            </div>
                                                             <CardDescription className="flex items-center gap-1 font-semibold text-[10px] sm:text-xs text-primary/80">
                                                                 <Calendar className="h-3 w-3" />
                                                                 {formatRelativeDate(purchase.date)}
@@ -473,7 +486,7 @@ export default function MarketPricesView() {
                                             </CardHeader>
                                             <CardContent className="p-4 sm:p-5 pt-0">
                                                 <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/10">
-                                                    <div className="flex items-center gap-2 min-w-0">
+                                                    <div className="flex items-center gap-2 min-w-0 flex-wrap">
                                                         {purchase.store ? (
                                                             <div className="flex items-center gap-1.5 px-2.5 py-1 bg-background/50 backdrop-blur-sm rounded-xl border border-border/20 shadow-sm min-w-0">
                                                                 <StoreIcon storeName={purchase.store} size="xs" />
@@ -481,6 +494,12 @@ export default function MarketPricesView() {
                                                             </div>
                                                         ) : (
                                                             <div className="text-[10px] text-muted-foreground/60 italic font-medium">Magasin non précisé</div>
+                                                        )}
+                                                        {purchase.brand && (
+                                                            <div className="flex items-center gap-1 px-2.5 py-1 bg-primary/5 rounded-xl border border-primary/15 text-[10px] sm:text-xs font-semibold text-foreground/80">
+                                                                <span className="text-muted-foreground text-[9px] uppercase font-bold">Marque :</span>
+                                                                <span className="font-bold text-primary">{purchase.brand}</span>
+                                                            </div>
                                                         )}
                                                     </div>
                                                     <div className="flex flex-col items-end shrink-0">

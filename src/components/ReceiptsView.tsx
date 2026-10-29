@@ -240,20 +240,22 @@ export default function ReceiptsView({
 
       {/* Liste des tickets */}
       {filteredReceipts.length === 0 ? (
-        <Card className="rounded-3xl border border-dashed p-10 text-center bg-card/40">
-          <div className="mx-auto h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-4">
+        <Card className="rounded-3xl border border-dashed p-10 text-center bg-card/40 flex flex-col items-center justify-center">
+          <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-4">
             <ReceiptText className="h-8 w-8" />
           </div>
           <h3 className="font-bold text-lg mb-1">Aucun ticket pour le moment</h3>
           <p className="text-xs text-muted-foreground max-w-sm mx-auto mb-6">
             Prenez en photo votre ticket (Carrefour, Monoprix, MG, etc.) pour commencer à suivre vos dépenses.
           </p>
-          <UploadReceiptDialog onReceiptProcessed={onAddReceipt}>
-            <Button className="rounded-full gap-2 px-6">
-              <Camera className="h-4 w-4" />
-              Scanner mon premier ticket
-            </Button>
-          </UploadReceiptDialog>
+          <div className="w-full flex items-center justify-center">
+            <UploadReceiptDialog onReceiptProcessed={onAddReceipt}>
+              <Button className="rounded-full gap-2 px-6 shadow-md hover:shadow-lg transition-all mx-auto">
+                <Camera className="h-4 w-4" />
+                Scanner mon premier ticket
+              </Button>
+            </UploadReceiptDialog>
+          </div>
         </Card>
       ) : (
         <div className="space-y-4">
