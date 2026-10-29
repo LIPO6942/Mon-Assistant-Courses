@@ -1,18 +1,20 @@
-
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { UtensilsCrossed, BookOpen, BrainCircuit, HeartPulse, Settings, TrendingDown } from 'lucide-react';
+import { UtensilsCrossed, BookOpen, BrainCircuit, HeartPulse, Settings, TrendingDown, ReceiptText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from './ui/badge';
 
+export type MainNavTab = 'pantry' | 'receipts' | 'recipes' | 'chandyek' | 'guide' | 'settings' | 'market';
+
 interface AppNavProps {
-  activeTab: 'pantry' | 'recipes' | 'chandyek' | 'guide' | 'settings' | 'market';
-  setActiveTab: (tab: 'pantry' | 'recipes' | 'chandyek' | 'guide' | 'settings' | 'market') => void;
+  activeTab: MainNavTab;
+  setActiveTab: (tab: MainNavTab) => void;
   chandyekIngredientCount: number;
+  receiptCount?: number;
 }
 
-export default function AppNav({ activeTab, setActiveTab, chandyekIngredientCount }: AppNavProps) {
+export default function AppNav({ activeTab, setActiveTab, chandyekIngredientCount, receiptCount = 0 }: AppNavProps) {
   return (
     <nav className="bg-card/95 backdrop-blur-sm border-b sticky top-[69px] z-10">
       <div className="overflow-x-auto whitespace-nowrap">
@@ -23,12 +25,26 @@ export default function AppNav({ activeTab, setActiveTab, chandyekIngredientCoun
           )}>
             <UtensilsCrossed className="mr-2 h-4 w-4" />Garde-Manger
           </Button>
+
+          <Button variant="ghost" onClick={() => setActiveTab('receipts')} className={cn(
+            "relative shrink-0 rounded-none h-12 border-b-2 font-semibold px-4",
+            activeTab === 'receipts' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-primary/80'
+          )}>
+            <ReceiptText className="mr-2 h-4 w-4" />Tickets
+            {receiptCount > 0 && (
+              <Badge variant="secondary" className="ml-1.5 px-1.5 py-0 h-4 text-[10px] font-bold rounded-full">
+                {receiptCount}
+              </Badge>
+            )}
+          </Button>
+
           <Button variant="ghost" onClick={() => setActiveTab('recipes')} className={cn(
             "shrink-0 rounded-none h-12 border-b-2 font-semibold px-4",
             activeTab === 'recipes' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-primary/80'
           )}>
             <BookOpen className="mr-2 h-4 w-4" />Recettes & Idées
           </Button>
+
           <Button variant="ghost" onClick={() => setActiveTab('chandyek')} className={cn(
             "relative shrink-0 rounded-none h-12 border-b-2 font-semibold px-4",
             activeTab === 'chandyek' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-primary/80'
@@ -38,18 +54,21 @@ export default function AppNav({ activeTab, setActiveTab, chandyekIngredientCoun
               <Badge variant="destructive" className="absolute top-2 right-2 h-5 w-5 justify-center p-0">{chandyekIngredientCount}</Badge>
             )}
           </Button>
+
           <Button variant="ghost" onClick={() => setActiveTab('guide')} className={cn(
             "shrink-0 rounded-none h-12 border-b-2 font-semibold px-4",
             activeTab === 'guide' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-primary/80'
           )}>
             <HeartPulse className="mr-2 h-4 w-4" />Guide Santé
           </Button>
+
           <Button variant="ghost" onClick={() => setActiveTab('market')} className={cn(
             "shrink-0 rounded-none h-12 border-b-2 font-semibold px-4",
             activeTab === 'market' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-primary/80'
           )}>
             <TrendingDown className="mr-2 h-4 w-4" />Prix du marché
           </Button>
+
           <Button variant="ghost" onClick={() => setActiveTab('settings')} className={cn(
             "shrink-0 rounded-none h-12 border-b-2 font-semibold px-4",
             activeTab === 'settings' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-primary/80'

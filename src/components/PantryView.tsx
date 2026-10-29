@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Plus, PlusCircle, Pencil, Trash2, Search, BrainCircuit, History, ChevronUp, ChevronDown, AlarmClock } from 'lucide-react';
-import type { Ingredient, CategoryDef, PurchaseHistory, DbaratiItem } from '@/lib/types';
+import type { Receipt, Ingredient, CategoryDef, PurchaseHistory, DbaratiItem } from '@/lib/types';
 import BudgetManager from './BudgetManager';
 import { cn, getProductStatus, isNonFoodItem } from '@/lib/utils';
 import { Sheet, SheetTrigger } from '@/components/ui/sheet';
@@ -42,6 +42,7 @@ interface PantryViewProps {
   onDeleteFromHistory: (id: string) => void;
   onUpdatePrices: (updates: { id: string; price: number }[]) => void;
   onAddIngredients: (newIngredients: Omit<Ingredient, 'id'>[]) => void;
+  onSaveReceipt?: (receipt: Receipt) => void;
   onViewCategoryTrends: (category: CategoryDef) => void;
   onMoveCategory: (id: string, direction: 'up' | 'down') => void;
   userId?: string;
@@ -74,6 +75,7 @@ export default function PantryView({
   onDeleteFromHistory,
   onUpdatePrices,
   onAddIngredients,
+  onSaveReceipt,
   onViewCategoryTrends,
   onMoveCategory,
   userId,
@@ -112,6 +114,7 @@ export default function PantryView({
           categories={categories}
           onUpdatePrices={onUpdatePrices}
           onAddIngredients={onAddIngredients}
+          onSaveReceipt={onSaveReceipt}
         />
         <Sheet>
           <SheetTrigger asChild>

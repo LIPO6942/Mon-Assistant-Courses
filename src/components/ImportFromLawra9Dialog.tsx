@@ -1,16 +1,16 @@
-
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { ShoppingBag, Check, AlertCircle, RefreshCw, ArrowRight } from 'lucide-react';
+import { ShoppingBag, Check, AlertCircle, RefreshCw, ArrowRight, Camera, UploadCloud, Loader2, Sparkles } from 'lucide-react';
 import { SmartMatchingService, cleanProductName, mapLawra9Category } from '@/lib/smart-matching';
-import { Ingredient, Lawra9ImportData, Lawra9Product, CategoryDef } from '@/lib/types';
+import { Ingredient, Lawra9ImportData, Lawra9Product, CategoryDef, Receipt } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { UploadReceiptDialog } from './UploadReceiptDialog';
 
 interface MatchedProduct {
     raw: Lawra9Product;
@@ -26,9 +26,10 @@ interface ImportFromLawra9DialogProps {
     categories: CategoryDef[];
     onUpdatePrices: (updates: { id: string; price: number }[]) => void;
     onAddIngredients: (newIngredients: Omit<Ingredient, 'id'>[]) => void;
+    onSaveReceipt?: (receipt: Receipt) => void;
 }
 
-export function ImportFromLawra9Dialog({ allIngredients, categories, onUpdatePrices, onAddIngredients }: ImportFromLawra9DialogProps) {
+export function ImportFromLawra9Dialog({ allIngredients, categories, onUpdatePrices, onAddIngredients, onSaveReceipt }: ImportFromLawra9DialogProps) {
     const [open, setOpen] = useState(false);
     const [step, setStep] = useState<'input' | 'review'>('input');
     const [jsonInput, setJsonInput] = useState('');
@@ -47,16 +48,14 @@ export function ImportFromLawra9Dialog({ allIngredients, categories, onUpdatePri
         setMatchedProducts(prev => prev.map(p => ({ ...p, isSelected: select })));
     };
 
-    const handleProcessJSON = async () => {
+    const processProductList = async (products: Lawra9Product[], receipt?: Receipt) => {
         try {
             setIsProcessing(true);
-            const data: Lawra9ImportData = JSON.parse(jsonInput);
-
-            if (!data.products || !Array.isArray(data.products)) {
-                throw new Error("Format invalide");
+            if (receipt && onSaveReceipt) {
+                onSaveReceipt(receipt);
             }
 
-            const results = await Promise.all(data.products.map(async (p) => {
+            const results = await Promise.all(products.map(async (p) => {
                 const { ingredient, confidence } = await SmartMatchingService.findMatch(p.name, allIngredients);
 
                 let status: 'exact' | 'fuzzy' | 'new' = 'new';
@@ -76,9 +75,32 @@ export function ImportFromLawra9Dialog({ allIngredients, categories, onUpdatePri
             setMatchedProducts(results);
             setStep('review');
         } catch (e) {
-            alert("Erreur : Le format du texte collé n'est pas reconnu.");
+            alert("Erreur lors de l'analyse des produits.");
         } finally {
             setIsProcessing(false);
+        }
+    };
+
+    const handleReceiptScanned = (receipt: Receipt) => {
+        const products: Lawra9Product[] = (receipt.lines || []).map(ln => ({
+            name: ln.normalizedLabel || ln.rawLabel,
+            price: ln.unitPrice ?? (ln.lineTotal && ln.quantity ? ln.lineTotal / ln.quantity : 0),
+            unit: ln.unit || 'pcs',
+            category: ln.category || 'Alimentation / Divers'
+        }));
+
+        processProductList(products, receipt);
+    };
+
+    const handleProcessJSON = async () => {
+        try {
+            const data: Lawra9ImportData = JSON.parse(jsonInput);
+            if (!data.products || !Array.isArray(data.products)) {
+                throw new Error("Format invalide");
+            }
+            await processProductList(data.products);
+        } catch (e) {
+            alert("Erreur : Le format du texte collé n'est pas reconnu.");
         }
     };
 
@@ -91,7 +113,6 @@ export function ImportFromLawra9Dialog({ allIngredients, categories, onUpdatePri
 
             if (m.match) {
                 toUpdate.push({ id: m.match.id, price: m.raw.price });
-                // Enregistrer l'alias si c'était une recherche floue
                 if (m.status === 'fuzzy') {
                     await SmartMatchingService.saveAlias(m.raw.name, m.match.id);
                 }
@@ -117,43 +138,71 @@ export function ImportFromLawra9Dialog({ allIngredients, categories, onUpdatePri
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 <Button variant="outline" className="h-11 rounded-full px-5 border-dashed gap-2 hover:bg-accent hover:text-accent-foreground transition-all">
-                    <ShoppingBag className="h-4 w-4" />
-                    <span className="hidden sm:inline">Importer de Lawra9</span>
+                    <Camera className="h-4 w-4" />
+                    <span className="hidden sm:inline">Scanner un ticket</span>
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
+            <DialogContent className="sm:max-w-xl max-h-[90vh] flex flex-col p-0 overflow-hidden rounded-2xl">
                 <DialogHeader className="p-6 pb-2">
                     <DialogTitle className="flex items-center gap-2 text-2xl font-bold">
                         <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                            <ShoppingBag className="h-5 w-5 text-primary" />
+                            <Sparkles className="h-5 w-5 text-primary" />
                         </div>
-                        Importation intelligente
+                        Scanner & Importer un ticket
                     </DialogTitle>
                     <DialogDescription>
                         {step === 'input'
-                            ? "Collez ici les données exportées depuis Lawra9 pour mettre à jour vos prix."
-                            : "Vérifiez les correspondances trouvées par l'IA."}
+                            ? "Prenez en photo votre ticket de caisse pour extraire les prix et mettre à jour votre garde-manger."
+                            : "Vérifiez les correspondances trouvées par l'IA avec vos ingrédients."}
                     </DialogDescription>
                 </DialogHeader>
 
                 <div className="flex-1 overflow-hidden px-6 py-2">
                     {step === 'input' ? (
                         <div className="space-y-4">
+                            {/* Option 1: Scan direct par caméra ou upload */}
+                            <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20 space-y-3 text-center">
+                                <h4 className="font-bold text-sm text-foreground">Scan automatique par IA</h4>
+                                <p className="text-xs text-muted-foreground">
+                                    Prenez une photo de votre ticket de caisse (Carrefour, Monoprix, MG, etc.). L'IA Groq extrait tous les produits.
+                                </p>
+                                <UploadReceiptDialog onReceiptProcessed={handleReceiptScanned}>
+                                    <Button className="w-full sm:w-auto rounded-full gap-2 px-6 shadow-md">
+                                        <Camera className="h-4 w-4" />
+                                        Prendre une photo / Choisir un fichier
+                                    </Button>
+                                </UploadReceiptDialog>
+                            </div>
+
+                            <div className="flex items-center gap-3">
+                                <div className="h-px bg-border flex-1" />
+                                <span className="text-[11px] font-semibold text-muted-foreground uppercase">Ou coller du JSON</span>
+                                <div className="h-px bg-border flex-1" />
+                            </div>
+
+                            {/* Option 2: Ancien copier/coller JSON */}
                             <Textarea
-                                placeholder="Collez le JSON ici..."
-                                className="min-h-[300px] font-mono text-xs bg-muted/30 focus:ring-1"
+                                placeholder="Collez le JSON ici si vous préférez la méthode manuelle..."
+                                className="min-h-[120px] font-mono text-xs bg-muted/30 focus:ring-1 rounded-xl"
                                 value={jsonInput}
                                 onChange={(e) => setJsonInput(e.target.value)}
                             />
-                            <div className="flex items-start gap-2 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-xs">
-                                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                                <p>Dans Lawra9, cliquez sur le bouton 🛒 d&apos;un ticket pour copier les données, puis collez-les ici.</p>
-                            </div>
+
+                            {jsonInput.trim().length > 0 && (
+                                <Button
+                                    onClick={handleProcessJSON}
+                                    disabled={isProcessing}
+                                    className="w-full rounded-xl gap-2"
+                                >
+                                    {isProcessing && <Loader2 className="h-4 w-4 animate-spin" />}
+                                    Analyser le JSON collé
+                                </Button>
+                            )}
                         </div>
                     ) : (
                         <div className="flex flex-col h-[500px] overflow-hidden">
                             <div className="flex justify-between items-center mb-4 px-1 flex-shrink-0 gap-2">
-                                <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest truncate">{matchedProducts.length} produits</span>
+                                <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest truncate">{matchedProducts.length} produits détectés</span>
                                 <div className="flex gap-2 shrink-0">
                                     <Button variant="ghost" size="sm" className="h-8 w-8 px-0 sm:w-auto sm:px-3" onClick={() => toggleAll(true)} title="Tout sélectionner">
                                         <div className="flex items-center gap-2">
@@ -198,57 +247,45 @@ export function ImportFromLawra9Dialog({ allIngredients, categories, onUpdatePri
                                                     </span>
                                                     <div className="flex flex-col sm:flex-row sm:items-center items-end gap-0.5 sm:gap-1.5 ml-auto shrink-0 text-[10px]">
                                                         {p.match && (
-                                                            <span className="text-muted-foreground whitespace-nowrap">
-                                                                <span className="hidden sm:inline">MAC: </span><span className="line-through">{p.match.price.toFixed(3)}</span>
+                                                            <span className="line-through text-muted-foreground">
+                                                                {p.match.price.toFixed(3)} DT
                                                             </span>
                                                         )}
-                                                        {p.match && <ArrowRight className="h-3 w-3 text-muted-foreground/50 hidden sm:block" />}
-                                                        <span className={cn(
-                                                            "font-mono px-1.5 py-0.5 rounded font-bold whitespace-nowrap",
-                                                            p.match && p.raw.price > p.match.price ? "bg-red-100 text-red-700 dark:bg-red-900/30" :
-                                                                p.match && p.raw.price < p.match.price ? "bg-green-100 text-green-700 dark:bg-green-900/30" :
-                                                                    "bg-secondary text-secondary-foreground"
-                                                        )}>
-                                                            <span className="hidden sm:inline">{p.match ? 'Lawra9: ' : ''}</span>{p.raw.price.toFixed(3)} DT
+                                                        <span className="font-black text-primary">
+                                                            {p.raw.price.toFixed(3)} DT
                                                         </span>
                                                     </div>
                                                 </div>
 
-                                                <div className="flex items-center gap-2 text-[10px] text-muted-foreground w-full">
-                                                    <div className="flex items-center gap-1.5 flex-1 min-w-0 overflow-hidden">
-                                                        {p.match ? (
-                                                            <>
-                                                                {Math.abs(p.match.price - p.raw.price) > 0.001 ? (
-                                                                    <span className="shrink-0 font-medium text-emerald-600 dark:text-emerald-400">Mise à jour</span>
-                                                                ) : (
-                                                                    <span className="shrink-0 font-medium text-muted-foreground">Prix identique</span>
-                                                                )}
-                                                                {p.raw.name !== p.match.name && (
-                                                                    <span className="truncate italic text-muted-foreground/70 hidden sm:inline">(Source: &quot;{p.raw.name}&quot;)</span>
-                                                                )}
-                                                            </>
-                                                        ) : (
-                                                            <span className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 px-2 py-0.5 rounded-full font-medium truncate shrink-0">✨ Nouveau</span>
-                                                        )}
-                                                    </div>
-                                                    <Select
-                                                        value={p.targetCategory}
-                                                        onValueChange={(val) => onCategoryChange(i, val)}
-                                                    >
-                                                        <SelectTrigger
-                                                            className="shrink-0 h-6 w-[80px] sm:w-auto px-2 py-0 text-[8px] sm:text-[9px] font-semibold uppercase tracking-wider border-border/50 bg-muted truncate"
-                                                            onClick={(e) => e.stopPropagation()}
-                                                        >
-                                                            <SelectValue />
-                                                        </SelectTrigger>
-                                                        <SelectContent onClick={(e) => e.stopPropagation()}>
-                                                            {categories.map(cat => (
-                                                                <SelectItem key={cat.id} value={cat.name} className="text-xs">
-                                                                    {cat.name}
-                                                                </SelectItem>
-                                                            ))}
-                                                        </SelectContent>
-                                                    </Select>
+                                                <div className="flex items-center gap-2 text-xs">
+                                                    <span className={cn(
+                                                        "text-[9px] px-1.5 py-0.5 rounded font-black tracking-wider uppercase",
+                                                        p.status === 'exact' && "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",
+                                                        p.status === 'fuzzy' && "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300",
+                                                        p.status === 'new' && "bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300"
+                                                    )}>
+                                                        {p.status === 'exact' ? 'Exact' : p.status === 'fuzzy' ? 'Ressemblant' : 'Nouveau'}
+                                                    </span>
+
+                                                    {p.status === 'new' && (
+                                                        <div className="ml-auto" onClick={(e) => e.stopPropagation()}>
+                                                            <Select
+                                                                value={p.targetCategory}
+                                                                onValueChange={(val) => onCategoryChange(i, val)}
+                                                            >
+                                                                <SelectTrigger className="h-6 text-[10px] px-2 py-0 min-w-[110px] rounded-lg">
+                                                                    <SelectValue />
+                                                                </SelectTrigger>
+                                                                <SelectContent className="max-h-[200px]">
+                                                                    {categories.map(c => (
+                                                                        <SelectItem key={c.id} value={c.name} className="text-xs">
+                                                                            {c.name}
+                                                                        </SelectItem>
+                                                                    ))}
+                                                                </SelectContent>
+                                                            </Select>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
@@ -259,26 +296,21 @@ export function ImportFromLawra9Dialog({ allIngredients, categories, onUpdatePri
                     )}
                 </div>
 
-                <DialogFooter className="p-6 bg-muted/20 border-t">
-                    {step === 'input' ? (
+                <DialogFooter className="p-4 bg-muted/20 border-t flex items-center justify-between">
+                    {step === 'review' ? (
                         <>
-                            <Button variant="ghost" onClick={() => setOpen(false)}>Annuler</Button>
-                            <Button
-                                disabled={!jsonInput || isProcessing}
-                                onClick={handleProcessJSON}
-                                className="px-8 shadow-lg shadow-primary/20"
-                            >
-                                {isProcessing ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : null}
-                                Analyser les données
+                            <Button variant="ghost" onClick={() => setStep('input')} className="rounded-xl text-xs">
+                                Retour
+                            </Button>
+                            <Button onClick={handleImport} className="rounded-xl gap-2 text-xs">
+                                Importer la sélection ({matchedProducts.filter(p => p.isSelected).length})
+                                <ArrowRight className="h-3.5 w-3.5" />
                             </Button>
                         </>
                     ) : (
-                        <>
-                            <Button variant="ghost" onClick={() => setStep('input')}>Retour</Button>
-                            <Button onClick={handleImport} className="px-8 shadow-lg shadow-primary/20 font-bold">
-                                Mettre à jour {matchedProducts.filter(m => m.isSelected).length} produits
-                            </Button>
-                        </>
+                        <Button variant="ghost" onClick={() => setOpen(false)} className="rounded-xl text-xs ml-auto">
+                            Fermer
+                        </Button>
                     )}
                 </DialogFooter>
             </DialogContent>

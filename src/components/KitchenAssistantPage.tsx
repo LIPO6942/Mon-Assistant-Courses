@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { initialCategories, predefinedIngredients, discoverableRecipes, initialHealthConditions } from '@/lib/data';
-import type { Ingredient, Recipe, BasketItem, CategoryDef, RecipeIngredient, HealthConditionCategory, HealthCondition, UserRecipe, PurchaseHistory, DbaratiItem } from '@/lib/types';
+import type { Receipt, Ingredient, Recipe, BasketItem, CategoryDef, RecipeIngredient, HealthConditionCategory, HealthCondition, UserRecipe, PurchaseHistory, DbaratiItem } from '@/lib/types';
 import { suggestRecipes } from '@/ai/flows/suggest-recipe-flow';
 import type { SuggestRecipeOutput } from '@/ai/types';
 
@@ -15,6 +15,7 @@ import RecipesView from './RecipesView';
 import ChandyekView from './ChandyekView';
 import NutritionalGuideView from './NutritionalGuideView';
 import MarketPricesView from './MarketPricesView';
+import ReceiptsView from './ReceiptsView';
 import CategoryPriceEvolutionDialog from './CategoryPriceEvolutionDialog';
 import SettingsPage from './SettingsPage';
 import { db } from '@/lib/idb';
@@ -37,6 +38,7 @@ import {
   saveHealthConditions,
   savePurchaseHistory,
   saveDbarati,
+  saveReceipts,
   listenForIncomingShares,
   updateShareStatus,
   publishCommunityPurchases,
@@ -61,10 +63,11 @@ export default function KitchenAssistantPage() {
   const [healthConditions, setHealthConditions] = useState<HealthConditionCategory[]>([]);
   const [purchaseHistory, setPurchaseHistory] = useState<PurchaseHistory>({});
   const [dbarati, setDbarati] = useState<DbaratiItem[]>([]);
+  const [receipts, setReceipts] = useState<Receipt[]>([]);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
 
   // Ephemeral state
-  const [activeTab, setActiveTab] = useState<'pantry' | 'recipes' | 'chandyek' | 'guide' | 'settings' | 'market'>('pantry');
+  const [activeTab, setActiveTab] = useState<'pantry' | 'recipes' | 'chandyek' | 'guide' | 'settings' | 'market' | 'receipts'>('pantry');
   const [searchQuery, setSearchQuery] = useState('');
 
   // Chandyek (AI) State
@@ -263,8 +266,9 @@ export default function KitchenAssistantPage() {
           budgetData,
           totalSpentData,
           healthConditionsData,
-          purchaseHistoryData,
+                    purchaseHistoryData,
           dbaratiData,
+          receiptsData,
         ] = await Promise.all([
           db.get<Ingredient[]>('pantry'),
           db.get<BasketItem[]>('basket'),
@@ -276,6 +280,7 @@ export default function KitchenAssistantPage() {
           db.get<HealthConditionCategory[]>('healthConditions'),
           db.get<PurchaseHistory>('purchaseHistory'),
           db.get<DbaratiItem[]>('dbarati'),
+          db.get<Receipt[]>('receipts'),
         ]);
 
         // 4. Choisir la source du panier la plus récente :
@@ -313,6 +318,7 @@ export default function KitchenAssistantPage() {
         }
         setPurchaseHistory(migratedHistory);
         setDbarati(cloudData?.dbarati ?? dbaratiData ?? []);
+        setReceipts(cloudData?.receipts ?? receiptsData ?? []);
 
       } catch (error) {
         console.error("Error loading data from Firestore:", error);
@@ -720,6 +726,52 @@ export default function KitchenAssistantPage() {
       return newArr;
     });
   };
+  
+  const handleAddReceipt = (receipt: Receipt) => {
+    setReceipts(prev => {
+      const next = [receipt, ...prev.filter(r => r.id !== receipt.id)];
+      db.set('receipts', next);
+      if (userUid) saveReceipts(userUid, next);
+      return next;
+    });
+  };
+
+  const handleUpdateReceipt = (id: string, updated: Partial<Receipt>) => {
+    setReceipts(prev => {
+      const next = prev.map(r => (r.id === id ? { ...r, ...updated } : r));
+      db.set('receipts', next);
+      if (userUid) saveReceipts(userUid, next);
+      return next;
+    });
+  };
+
+  const handleDeleteReceipt = (id: string) => {
+    setReceipts(prev => {
+      const next = prev.filter(r => r.id !== id);
+      db.set('receipts', next);
+      if (userUid) saveReceipts(userUid, next);
+      return next;
+    });
+  };
+
+  const handleSyncReceiptWithPantry = (receipt: Receipt) => {
+    const updates: { id: string; price: number }[] = [];
+    (receipt.lines || []).forEach(line => {
+      const price = line.unitPrice ?? (line.lineTotal && line.quantity ? line.lineTotal / line.quantity : 0);
+      const name = (line.normalizedLabel || line.rawLabel).toLowerCase();
+      const existing = pantry.find(p => p.name.toLowerCase() === name);
+      if (existing && price > 0) {
+        updates.push({ id: existing.id, price });
+      }
+    });
+
+    if (updates.length > 0) {
+      handleUpdatePrices(updates);
+    } else {
+      alert(`Reçu vérifié. Aucun produit existant n'a un nom identique dans le garde-manger. Utilisez le bouton 'Scanner un ticket' dans le Garde-Manger pour faire une correspondance avancée (IA/Fuzzy).`);
+    }
+  };
+
   const handleUpdatePrices = (updates: { id: string; price: number }[]) => {
     setPantry(prev => prev.map(ing => {
       const update = updates.find(u => u.id === ing.id);
@@ -1220,13 +1272,23 @@ export default function KitchenAssistantPage() {
               onDeleteFromHistory={handleDeleteFromHistory}
               onUpdatePrices={handleUpdatePrices}
               onAddIngredients={handleAddIngredients}
+                onSaveReceipt={handleAddReceipt}
               onViewCategoryTrends={setViewingCategoryTrends}
               onMoveCategory={handleMoveCategory}
               userId={userUid}
               dbarati={dbarati}
             />
           )}
-          {activeTab === 'recipes' && (
+          {activeTab === 'receipts' && (
+              <ReceiptsView
+                receipts={receipts}
+                onAddReceipt={handleAddReceipt}
+                onUpdateReceipt={handleUpdateReceipt}
+                onDeleteReceipt={handleDeleteReceipt}
+                onSyncWithPantry={handleSyncReceiptWithPantry}
+              />
+            )}
+            {activeTab === 'recipes' && (
             <RecipesView
               setViewingRecipe={setViewingRecipe}
               discoverableRecipes={discoverableRecipes}

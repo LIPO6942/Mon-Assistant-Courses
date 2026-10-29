@@ -166,3 +166,34 @@ export interface BasketAbandonmentReminder {
   status: 'pending' | 'sent' | 'cancelled';
   qstashMessageId?: string;
 }
+
+export interface ReceiptLine {
+  id: string;
+  rawLabel: string;
+  normalizedLabel?: string;
+  category?: string;
+  quantity?: number;
+  unit?: string;
+  unitPrice?: number;
+  lineTotal?: number;
+  vatRate?: number;
+  barcode?: string;
+  stdUnit?: 'kg' | 'L' | 'pcs';
+  stdQty?: number;
+  standardUnitPrice?: number;
+}
+
+export interface Receipt {
+  id: string;
+  storeName?: string;
+  storeId?: string;
+  purchaseAt?: string; // ISO datetime
+  currency?: string; // e.g., TND
+  total?: number;
+  subtotal?: number;
+  taxTotal?: number;
+  ocrText?: string;
+  status?: 'parsed' | 'needs_review' | 'confirmed';
+  confidence?: number;
+  lines: ReceiptLine[];
+}

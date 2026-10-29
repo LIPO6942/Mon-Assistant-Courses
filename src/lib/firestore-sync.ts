@@ -48,6 +48,7 @@ export async function loadUserData(uid: string) {
                 healthConditionsSnap,
                 purchaseHistorySnap,
                 frequentContactsSnap,
+                receiptsSnap,
             ] = await Promise.all([
                 getDoc(userDocRef(uid, 'pantry')),
                 getDoc(userDocRef(uid, 'basket')),
@@ -58,6 +59,7 @@ export async function loadUserData(uid: string) {
                 getDoc(userDocRef(uid, 'healthConditions')),
                 getDoc(userDocRef(uid, 'purchaseHistory')),
                 getDoc(userDocRef(uid, 'frequentContacts')),
+                getDoc(userDocRef(uid, 'receipts')),
             ]);
 
             return {
@@ -73,6 +75,7 @@ export async function loadUserData(uid: string) {
                 healthConditions: healthConditionsSnap.exists() ? healthConditionsSnap.data().items : null,
                 purchaseHistory: purchaseHistorySnap.exists() ? purchaseHistorySnap.data().data : null,
                 frequentContacts: frequentContactsSnap.exists() ? (frequentContactsSnap.data().contacts || []) : [],
+                receipts: receiptsSnap.exists() ? receiptsSnap.data().items : null,
                 dbarati: (await getDoc(userDocRef(uid, 'dbarati'))).exists() ? (await getDoc(userDocRef(uid, 'dbarati'))).data()?.items : null,
             };
         })();
@@ -91,6 +94,15 @@ export async function loadUserData(uid: string) {
 }
 
 // ---------- save individual collections ----------
+
+
+export async function saveReceipts(uid: string, items: any[]) {
+    try {
+        await setDoc(userDocRef(uid, 'receipts'), { items, updatedAt: new Date().toISOString() });
+    } catch (e) {
+        console.error('Error saving receipts:', e);
+    }
+}
 
 export async function savePantry(uid: string, items: any[]) {
     try {
