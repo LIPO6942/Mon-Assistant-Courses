@@ -80,58 +80,77 @@ Format de sortie JSON Strict :
   ]
 }`;
 
+export type ExtractReceiptResult =
+  | { success: true; data: ExtractReceiptOutput }
+  | { success: false; error: string };
+
 export async function extractReceiptFromImage(
   input: ExtractReceiptInput
-): Promise<ExtractReceiptOutput> {
-  const parsed = ExtractReceiptInputSchema.parse(input);
+): Promise<ExtractReceiptResult> {
+  try {
+    const parsed = ExtractReceiptInputSchema.parse(input);
 
-  const systemPrompt =
-    'Vous êtes un expert en extraction JSON de reçus et tickets. Répondez UNIQUEMENT avec un objet JSON valide, sans texte d accompagnement ni balises markdown.';
+    const systemPrompt =
+      'Vous êtes un expert en extraction JSON de reçus et tickets. Répondez UNIQUEMENT avec un objet JSON valide, sans texte d accompagnement ni balises markdown.';
 
-  const userContent: GroqMessageContentPart[] = [
-    { type: 'text', text: RECEIPT_PROMPT },
-    { type: 'image_url', image_url: { url: parsed.receiptDataUri } },
-  ];
+    const userContent: GroqMessageContentPart[] = [
+      { type: 'text', text: RECEIPT_PROMPT },
+      { type: 'image_url', image_url: { url: parsed.receiptDataUri } },
+    ];
 
-  const candidateModels = [
-    getPreferredVisionModel(),
-    'qwen/qwen3.8-27b',
-    'llama-3.2-11b-vision-preview',
-    'llama-3.2-90b-vision-preview',
-  ].filter(Boolean);
+    const candidateModels = Array.from(new Set([
+      getPreferredVisionModel(),
+      'meta-llama/llama-4-scout-17b-16e-instruct',
+      'meta-llama/llama-4-maverick-17b-128e-instruct',
+      'qwen/qwen3.8-27b',
+    ].filter(Boolean)));
 
-  let lastError: any = null;
+    let lastError: any = null;
 
-  for (const model of candidateModels) {
-    try {
-      console.log(`[MAC Receipt AI] Appel Groq Vision avec modèle : ${model}...`);
-      const res = await groqChatJson<ExtractReceiptOutput>({
-        model,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userContent },
-        ],
-        temperature: 0.1,
-        max_tokens: 4096,
-        response_format: { type: 'json_object' },
-      });
+    for (const model of candidateModels) {
+      try {
+        console.log(`[MAC Receipt AI] Appel Groq Vision avec modèle : ${model}...`);
+        const res = await groqChatJson<ExtractReceiptOutput>({
+          model,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userContent },
+          ],
+          temperature: 0.1,
+          max_tokens: 4096,
+          response_format: { type: 'json_object' },
+        });
 
-      if (res && Array.isArray(res.lines) && res.lines.length > 0) {
-        console.log(`[MAC Receipt AI] Succès : ${res.lines.length} articles extraits via ${model}`);
-        return {
-          ...res,
-          currency: res.currency || 'TND',
-          confidence: res.confidence || 0.85,
-        };
+        if (res && Array.isArray(res.lines) && res.lines.length > 0) {
+          console.log(`[MAC Receipt AI] Succès : ${res.lines.length} articles extraits via ${model}`);
+          return {
+            success: true,
+            data: {
+              ...res,
+              currency: res.currency || 'TND',
+              confidence: res.confidence || 0.85,
+            },
+          };
+        }
+      } catch (err: any) {
+        console.warn(`[MAC Receipt AI] Erreur modèle ${model}:`, err.message);
+        lastError = err;
       }
-    } catch (err: any) {
-      console.warn(`[MAC Receipt AI] Erreur modèle ${model}:`, err.message);
-      lastError = err;
     }
-  }
 
-  throw new Error(
-    lastError?.message ||
-      "L'IA n'a pas pu analyser le ticket. Vérifiez que l'image est nette et bien éclairée."
-  );
+    return {
+      success: false,
+      error:
+        lastError?.message ||
+        "L'IA n'a pas pu analyser le ticket. Vérifiez que l'image est nette, lisible et bien éclairée.",
+    };
+  } catch (err: any) {
+    console.error('[MAC Receipt AI] Erreur globale extraction:', err);
+    return {
+      success: false,
+      error:
+        err?.message ||
+        "Une erreur inattendue est survenue lors de l'analyse du ticket.",
+    };
+  }
 }

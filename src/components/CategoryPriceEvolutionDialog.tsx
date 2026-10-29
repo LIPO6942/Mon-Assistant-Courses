@@ -4,6 +4,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { CategoryDef, Ingredient, PurchaseHistory } from "@/lib/types";
 import { TrendingDown, TrendingUp, Minus, Calendar, Tag, Award, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getBrandLogoUrl } from "@/lib/brand-catalog";
 
 interface CategoryPriceEvolutionDialogProps {
   category: CategoryDef | null;
@@ -119,12 +120,24 @@ export default function CategoryPriceEvolutionDialog({
                         <div className="flex justify-between items-start">
                           <div>
                             <h4 className="font-bold text-base leading-tight">{item.name}</h4>
-                            {item.preferredBrand && (
-                              <span className="text-[10px] text-muted-foreground flex items-center gap-1 mt-0.5">
-                                <Tag className="h-2.5 w-2.5 text-primary" />
-                                Marque habituelle : <strong className="text-foreground">{item.preferredBrand}</strong>
-                              </span>
-                            )}
+                            {item.preferredBrand && (() => {
+                              const logo = getBrandLogoUrl(item.preferredBrand, item.name, item.category);
+                              return (
+                                <span className="text-[10px] text-muted-foreground flex items-center gap-1.5 mt-0.5">
+                                  {logo ? (
+                                    <img
+                                      src={logo}
+                                      alt={item.preferredBrand}
+                                      className="w-3.5 h-3.5 rounded-full object-cover shrink-0 border border-black/10"
+                                      loading="lazy"
+                                    />
+                                  ) : (
+                                    <Tag className="h-2.5 w-2.5 text-primary" />
+                                  )}
+                                  Marque habituelle : <strong className="text-foreground">{item.preferredBrand}</strong>
+                                </span>
+                              );
+                            })()}
                           </div>
                           <div className="text-right">
                             <span className="block font-mono font-bold text-primary">

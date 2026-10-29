@@ -20,6 +20,7 @@ import { firestoreDb } from '@/lib/firebase';
 import { normalizeIngredientName } from '@/lib/normalization';
 import { CommunityPurchase, DbaratiItem } from './types';
 import { isExcludedFromMarketPrices } from './utils';
+import { getBrandLogoUrl } from './brand-catalog';
 export { firestoreDb };
 
 // ---------- helpers ----------
@@ -209,6 +210,10 @@ export async function publishCommunityPurchases(uid: string, items: any[]) {
                 }
                 if (item.brand && typeof item.brand === 'string') {
                     docData.brand = item.brand;
+                    const logoUrl = item.brandLogoUrl || getBrandLogoUrl(item.brand, item.name || item.ingredientName, item.category);
+                    if (logoUrl) {
+                        docData.brandLogoUrl = logoUrl;
+                    }
                 }
                 return addDoc(collection(firestoreDb, 'communityPurchases'), docData);
             });

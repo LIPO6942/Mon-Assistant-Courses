@@ -161,9 +161,9 @@ const DEFAULT_TEXT_MODELS = [
 ];
 
 const DEFAULT_VISION_MODELS = [
+  'meta-llama/llama-4-scout-17b-16e-instruct',
+  'meta-llama/llama-4-maverick-17b-128e-instruct',
   'qwen/qwen3.8-27b',
-  'llama-3.2-11b-vision-preview',
-  'llama-3.2-90b-vision-preview',
 ];
 
 export function getPreferredTextModel(): string {

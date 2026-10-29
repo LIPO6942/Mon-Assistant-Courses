@@ -56,25 +56,24 @@ export function UploadReceiptDialog({
       setError(null);
 
       let finalDataUri: string;
-      const isHeic = file.name.toLowerCase().endsWith('.heic');
-
-      if (isHeic || file.size > 2 * 1024 * 1024) {
-        setProcessingMessage('Optimisation de l\'image...');
-        try {
-          const compressed = await compressImage(file, 0.75, 1600, 1600);
-          finalDataUri = compressed.dataUrl;
-        } catch (e) {
-          console.warn('Compression échouée, utilisation originale', e);
-          finalDataUri = await fileToDataUrl(file);
-        }
-      } else {
-        setProcessingMessage('Préparation du fichier...');
+      setProcessingMessage('Optimisation et préparation de l\'image...');
+      try {
+        const compressed = await compressImage(file, 0.7, 1280, 1280);
+        finalDataUri = compressed.dataUrl;
+      } catch (e) {
+        console.warn('Compression échouée, utilisation originale', e);
         finalDataUri = await fileToDataUrl(file);
       }
 
       setProcessingMessage('Analyse IA du ticket en cours (Groq Vision)...');
 
-      const res = await extractReceiptFromImage({ receiptDataUri: finalDataUri });
+      const result = await extractReceiptFromImage({ receiptDataUri: finalDataUri });
+
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      const res = result.data;
 
       if (!res || !res.lines || res.lines.length === 0) {
         throw new Error("L'IA n'a détecté aucun article sur ce ticket. Veuillez réessayer avec une photo plus nette.");

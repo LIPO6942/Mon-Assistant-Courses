@@ -1,5 +1,5 @@
 import { PurchaseHistory } from './types';
-import { getCommunityBrandsForProduct, recordCommunityBrand } from './community-brands';
+import { getCommunityBrandsForProduct, recordCommunityBrand, getCachedCommunityBrands } from './community-brands';
 
 export type ProductDomain =
   | 'WATER'
@@ -1298,3 +1298,38 @@ export function getSortedBrandsForProduct(
   return sorted;
 }
 
+/**
+ * Resolves the vector SVG logo URL (data:image/svg+xml;...) for any given brand name.
+ * Searches predefined catalog, custom user brands, and falls back to dynamic domain-harmonious SVG.
+ */
+export function getBrandLogoUrl(
+  brandName?: string | null,
+  ingredientName?: string,
+  categoryName?: string
+): string {
+  if (!brandName || !brandName.trim()) return '';
+  const trimmed = brandName.trim();
+  const lower = trimmed.toLowerCase();
+
+  // 1. Check predefined brand catalog
+  const predefined = PREDEFINED_BRANDS.find(b => b.name.toLowerCase() === lower);
+  if (predefined && predefined.logoUrl) {
+    return predefined.logoUrl;
+  }
+
+  // 2. Check community brands cache (if in browser)
+  if (typeof window !== 'undefined') {
+    try {
+      const community = getCachedCommunityBrands().find(b => b.brandName.toLowerCase() === lower);
+      if (community && community.logoUrl) {
+        return community.logoUrl;
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  // 3. Fallback: generate dynamic vector SVG logo tailored to product domain
+  const domain = detectProductDomain(ingredientName || '', categoryName || '');
+  return createDynamicBrandSvgLogo(trimmed, domain);
+}

@@ -56,6 +56,7 @@ export interface BasketItem extends Ingredient {
   purchased?: boolean;
   remark?: string;
   brand?: string;
+  brandLogoUrl?: string;
 }
 
 export interface CategoryDef {
@@ -82,6 +83,7 @@ export interface PurchaseRecord {
   store?: string; // magasin où l'achat a été effectué (optionnel)
   remark?: string; // remarque liée à cet achat
   brand?: string; // marque du produit acheté (optionnel)
+  brandLogoUrl?: string; // logo SVG de la marque (optionnel)
 }
 
 export type PurchaseHistory = Record<string, PurchaseRecord[]>;
@@ -143,6 +145,7 @@ export interface CommunityPurchase {
   category?: string;
   userId?: string;
   brand?: string;
+  brandLogoUrl?: string; // logo SVG de la marque (optionnel)
 }
 
 export interface IngredientReminder {

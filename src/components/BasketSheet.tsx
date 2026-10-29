@@ -13,7 +13,7 @@ import { STORES } from '@/lib/stores';
 import { StoreIcon, StoreOption } from '@/components/StoreIcon';
 import { Checkbox } from './ui/checkbox';
 import { cn, getProductStatus, findMatchingDbaratiItem } from '@/lib/utils';
-import { getSortedBrandsForProduct, getCustomBrands, saveCustomBrand, BrandDef } from '@/lib/brand-catalog';
+import { getSortedBrandsForProduct, getCustomBrands, saveCustomBrand, getBrandLogoUrl, BrandDef } from '@/lib/brand-catalog';
 import { listenCommunityBrands } from '@/lib/community-brands';
 import {
   Dialog,
@@ -312,14 +312,25 @@ export default function BasketSheet({
                       <span className={cn('text-xs text-muted-foreground whitespace-nowrap', item.purchased && 'line-through')}>
                         {item.price.toFixed(3)} DT / {item.unit}
                       </span>
-                      {item.brand && (
-                        <span className={cn(
-                          "text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-primary/10 text-primary border border-primary/20 shrink-0",
-                          item.purchased && 'line-through opacity-70'
-                        )}>
-                          {item.brand}
-                        </span>
-                      )}
+                      {item.brand && (() => {
+                        const brandLogo = item.brandLogoUrl || getBrandLogoUrl(item.brand, item.name, item.category);
+                        return (
+                          <span className={cn(
+                            "inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20 shrink-0",
+                            item.purchased && 'line-through opacity-70'
+                          )}>
+                            {brandLogo && (
+                              <img
+                                src={brandLogo}
+                                alt={item.brand}
+                                className="w-3 h-3 rounded-full object-cover shrink-0 border border-black/10"
+                                loading="lazy"
+                              />
+                            )}
+                            <span>{item.brand}</span>
+                          </span>
+                        );
+                      })()}
                       {item.remark && (
                         <span className={cn("text-[9px] text-muted-foreground/80 italic truncate max-w-[80px]", item.purchased && 'line-through')}>
                           ({item.remark})

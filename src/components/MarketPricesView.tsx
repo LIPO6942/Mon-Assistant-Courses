@@ -13,6 +13,7 @@ import { StoreIcon, StoreOption } from './StoreIcon';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { getBrandLogoUrl } from '@/lib/brand-catalog';
 
 interface IngredientPriceStats {
     ingredientName: string;
@@ -29,7 +30,7 @@ interface StoreStat {
     store: string;
     uniqueItems: number;
     avgPricePerItem: number;
-    topItems: Array<{ name: string; avgPrice: number; count: number; unit: string }>;
+    topItems: Array<{ name: string; avgPrice: number; count: number; unit: string; brand?: string; brandLogo?: string }>;
 }
 
 export default function MarketPricesView() {
@@ -151,7 +152,7 @@ export default function MarketPricesView() {
     // Compute store statistics for "by store" view
     const storeStats = useMemo(() => {
         const stats = new Map<string, StoreStat>();
-        const ingredientsByStore = new Map<string, Map<string, { prices: number[]; count: number; unit: string }>>();
+        const ingredientsByStore = new Map<string, Map<string, { prices: number[]; count: number; unit: string; brand?: string; brandLogo?: string }>>();
 
         purchases.forEach(p => {
             const store = p.store || 'Sans magasin';
@@ -169,9 +170,10 @@ export default function MarketPricesView() {
             const storeIngredients = ingredientsByStore.get(store)!;
             const brandSuffix = p.brand ? ` (${p.brand})` : '';
             const key = (p.normalizedName || p.ingredientName) + brandSuffix;
+            const brandLogo = p.brandLogoUrl || (p.brand ? getBrandLogoUrl(p.brand, p.ingredientName, p.category) : undefined);
 
             if (!storeIngredients.has(key)) {
-                storeIngredients.set(key, { prices: [], count: 0, unit: p.unit });
+                storeIngredients.set(key, { prices: [], count: 0, unit: p.unit, brand: p.brand, brandLogo });
             }
 
             const ing = storeIngredients.get(key)!;
@@ -182,7 +184,7 @@ export default function MarketPricesView() {
         // Calculate stats for each store
         ingredientsByStore.forEach((ingredients, store) => {
             let totalPrice = 0;
-            const topItems: Array<{ name: string; avgPrice: number; count: number; unit: string }> = [];
+            const topItems: Array<{ name: string; avgPrice: number; count: number; unit: string; brand?: string; brandLogo?: string }> = [];
 
             ingredients.forEach((data, name) => {
                 const avgPrice = data.prices.reduce((a, b) => a + b, 0) / data.prices.length;
@@ -192,6 +194,8 @@ export default function MarketPricesView() {
                     avgPrice,
                     count: data.count,
                     unit: data.unit,
+                    brand: data.brand,
+                    brandLogo: data.brandLogo,
                 });
             });
 
@@ -423,6 +427,7 @@ export default function MarketPricesView() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in duration-500">
                                 {filteredPurchases.map((purchase) => {
                                     const isOwner = user && purchase.userId === user.uid;
+                                    const brandLogo = purchase.brandLogoUrl || (purchase.brand ? getBrandLogoUrl(purchase.brand, purchase.ingredientName, purchase.category) : undefined);
 
                                     return (
                                         <Card
@@ -462,8 +467,18 @@ export default function MarketPricesView() {
                                                                     {purchase.ingredientName}
                                                                 </CardTitle>
                                                                 {purchase.brand && (
-                                                                    <Badge variant="outline" className="px-2 py-0 text-[10px] font-bold rounded-lg bg-primary/10 text-primary border-primary/25 shadow-2xs">
-                                                                        🏷️ {purchase.brand}
+                                                                    <Badge variant="outline" className="inline-flex items-center gap-1.5 pl-1.5 pr-2 py-0.5 text-[10px] font-bold rounded-full bg-primary/10 text-primary border-primary/25 shadow-2xs">
+                                                                        {brandLogo ? (
+                                                                            <img
+                                                                                src={brandLogo}
+                                                                                alt={purchase.brand}
+                                                                                className="w-3.5 h-3.5 rounded-full object-cover shrink-0 border border-black/10"
+                                                                                loading="lazy"
+                                                                            />
+                                                                        ) : (
+                                                                            <span className="text-[10px]">🏷️</span>
+                                                                        )}
+                                                                        <span>{purchase.brand}</span>
                                                                     </Badge>
                                                                 )}
                                                             </div>
@@ -496,7 +511,15 @@ export default function MarketPricesView() {
                                                             <div className="text-[10px] text-muted-foreground/60 italic font-medium">Magasin non précisé</div>
                                                         )}
                                                         {purchase.brand && (
-                                                            <div className="flex items-center gap-1 px-2.5 py-1 bg-primary/5 rounded-xl border border-primary/15 text-[10px] sm:text-xs font-semibold text-foreground/80">
+                                                            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-primary/5 rounded-xl border border-primary/15 text-[10px] sm:text-xs font-semibold text-foreground/80">
+                                                                {brandLogo && (
+                                                                    <img
+                                                                        src={brandLogo}
+                                                                        alt={purchase.brand}
+                                                                        className="w-3.5 h-3.5 rounded-full object-cover shrink-0 border border-black/10"
+                                                                        loading="lazy"
+                                                                    />
+                                                                )}
                                                                 <span className="text-muted-foreground text-[9px] uppercase font-bold">Marque :</span>
                                                                 <span className="font-bold text-primary">{purchase.brand}</span>
                                                             </div>
@@ -566,9 +589,19 @@ export default function MarketPricesView() {
                                                     {store.topItems.map((item) => (
                                                         <div key={item.name} className="flex items-center justify-between p-2 rounded-lg bg-background/50 border border-border/10 group/item hover:border-primary/30 transition-all">
                                                             <div className="min-w-0 flex-1">
-                                                                <p className="text-xs font-bold truncate text-foreground group-hover/item:text-primary transition-colors">
-                                                                    {item.name}
-                                                                </p>
+                                                                <div className="flex items-center gap-1.5 min-w-0">
+                                                                    {item.brandLogo && (
+                                                                        <img
+                                                                            src={item.brandLogo}
+                                                                            alt={item.brand || ''}
+                                                                            className="w-3.5 h-3.5 rounded-full object-cover shrink-0 border border-black/10"
+                                                                            loading="lazy"
+                                                                        />
+                                                                    )}
+                                                                    <p className="text-xs font-bold truncate text-foreground group-hover/item:text-primary transition-colors">
+                                                                        {item.name}
+                                                                    </p>
+                                                                </div>
                                                                 <p className="text-[9px] text-muted-foreground/60">
                                                                     {item.count} contribution{item.count > 1 ? 's' : ''}
                                                                 </p>

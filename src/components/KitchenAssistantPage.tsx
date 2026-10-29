@@ -46,6 +46,7 @@ import {
   sendThanksForBasket,
 } from '@/lib/firestore-sync';
 import { recordCommunityBrand } from '@/lib/community-brands';
+import { getBrandLogoUrl } from '@/lib/brand-catalog';
 
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { useBasketAbandonmentReminder } from '@/hooks/useBasketAbandonmentReminder';
@@ -799,7 +800,8 @@ export default function KitchenAssistantPage() {
       const lastRecord = history && history.length > 0 ? history[history.length - 1] : undefined;
       const lastRemark = lastRecord?.remark;
       const lastBrand = lastRecord?.brand || ingredient.preferredBrand;
-      return [...prev, { ...ingredient, quantity, purchased: false, remark: lastRemark, brand: lastBrand }];
+      const lastBrandLogo = lastRecord?.brandLogoUrl || (lastBrand ? getBrandLogoUrl(lastBrand, ingredient.name, ingredient.category) : undefined);
+      return [...prev, { ...ingredient, quantity, purchased: false, remark: lastRemark, brand: lastBrand, brandLogoUrl: lastBrandLogo }];
     });
     setQuantityDialogOpen(false);
   };
@@ -815,7 +817,13 @@ export default function KitchenAssistantPage() {
   };
 
   const updateBasketItemPrice = (id: string, newPrice: number, remark?: string, brand?: string) => {
-    setBasket(prev => prev.map(item => item.id === id ? { ...item, price: newPrice, remark, ...(brand !== undefined ? { brand } : {}) } : item));
+    setBasket(prev => prev.map(item => {
+      if (item.id === id) {
+        const brandLogoUrl = brand ? (item.brandLogoUrl || getBrandLogoUrl(brand, item.name, item.category)) : undefined;
+        return { ...item, price: newPrice, remark, ...(brand !== undefined ? { brand, brandLogoUrl } : {}) };
+      }
+      return item;
+    }));
     setPantry(prev => prev.map(item => item.id === id ? { ...item, price: newPrice, ...(brand ? { preferredBrand: brand } : {}) } : item));
   };
 
@@ -859,7 +867,10 @@ export default function KitchenAssistantPage() {
           price: item.price,
           ...(store ? { store } : {}),  // enregistre le magasin si fourni
           ...(item.remark ? { remark: item.remark } : {}),
-          ...(item.brand ? { brand: item.brand } : {}),
+          ...(item.brand ? {
+            brand: item.brand,
+            brandLogoUrl: item.brandLogoUrl || getBrandLogoUrl(item.brand, item.name, item.category),
+          } : {}),
         });
 
         // Record community brand usage for confirmed purchases
@@ -892,7 +903,8 @@ export default function KitchenAssistantPage() {
         .filter(item => item.purchased && !isExcludedFromMarketPrices(item.name, item.category))
         .map(item => ({
           ...item,
-          store // associer le magasin choisi pour la publication communautaire
+          store, // associer le magasin choisi pour la publication communautaire
+          brandLogoUrl: item.brand ? (item.brandLogoUrl || getBrandLogoUrl(item.brand, item.name, item.category)) : undefined,
         }));
       if (purchasedItems.length > 0) {
         publishCommunityPurchases(user.uid, purchasedItems)
