@@ -31,19 +31,27 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { UploadReceiptDialog } from './UploadReceiptDialog';
+import { ReceiptSyncDialog } from './ReceiptSyncDialog';
 import { computeReceiptKpis } from '@/lib/receipt-utils';
 import { cn } from '@/lib/utils';
 
 interface ReceiptsViewProps {
   receipts: Receipt[];
+  pantry: Ingredient[];
+  categories: CategoryDef[];
   onAddReceipt: (receipt: Receipt) => void;
   onUpdateReceipt: (id: string, updated: Partial<Receipt>) => void;
   onDeleteReceipt: (id: string) => void;
-  onSyncWithPantry: (receipt: Receipt) => void;
+  onSyncWithPantry: (
+    priceUpdates: { id: string; price: number }[],
+    newIngredients: Omit<Ingredient, 'id'>[]
+  ) => void;
 }
 
 export default function ReceiptsView({
   receipts,
+  pantry,
+  categories,
   onAddReceipt,
   onUpdateReceipt,
   onDeleteReceipt,
@@ -62,10 +70,19 @@ export default function ReceiptsView({
   const [lineDrafts, setLineDrafts] = useState<ReceiptLine[]>([]);
   const [lineReceiptId, setLineReceiptId] = useState<string | null>(null);
 
+  // Synchronisation garde-manger
+  const [syncDialogOpen, setSyncDialogOpen] = useState(false);
+  const [syncReceipt, setSyncReceipt] = useState<Receipt | null>(null);
+
   // Recherche
   const [searchQuery, setSearchQuery] = useState('');
 
   const kpis = useMemo(() => computeReceiptKpis(receipts), [receipts]);
+
+  function openSyncDialog(rcpt: Receipt) {
+    setSyncReceipt(rcpt);
+    setSyncDialogOpen(true);
+  }
 
   const filteredReceipts = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -301,7 +318,7 @@ export default function ReceiptsView({
                       variant="outline"
                       className="rounded-xl h-9 text-xs gap-1.5 hover:bg-primary/10 hover:text-primary transition-all"
                       title="Mettre à jour les prix du garde-manger"
-                      onClick={() => onSyncWithPantry(rcpt)}
+                      onClick={() => openSyncDialog(rcpt)}
                     >
                       <Sparkles className="h-3.5 w-3.5 text-primary" />
                       <span className="hidden sm:inline">Garde-manger</span>
@@ -528,6 +545,16 @@ export default function ReceiptsView({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Dialog Synchronisation Garde-Manger */}
+      <ReceiptSyncDialog
+        open={syncDialogOpen}
+        onOpenChange={setSyncDialogOpen}
+        receipt={syncReceipt}
+        pantry={pantry}
+        categories={categories}
+        onConfirm={onSyncWithPantry}
+      />
     </div>
   );
 }

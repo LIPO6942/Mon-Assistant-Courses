@@ -755,21 +755,25 @@ export default function KitchenAssistantPage() {
     });
   };
 
-  const handleSyncReceiptWithPantry = (receipt: Receipt) => {
-    const updates: { id: string; price: number }[] = [];
-    (receipt.lines || []).forEach(line => {
-      const price = line.unitPrice ?? (line.lineTotal && line.quantity ? line.lineTotal / line.quantity : 0);
-      const name = (line.normalizedLabel || line.rawLabel).toLowerCase();
-      const existing = pantry.find(p => p.name.toLowerCase() === name);
-      if (existing && price > 0) {
-        updates.push({ id: existing.id, price });
-      }
-    });
+  const handleSyncReceiptWithPantry = (
+    priceUpdates: { id: string; price: number }[],
+    newIngredients: Omit<Ingredient, 'id'>[]
+  ) => {
+    // 1. Mettre à jour les prix des produits existants
+    if (priceUpdates.length > 0) {
+      setPantry(prev => prev.map(ing => {
+        const update = priceUpdates.find(u => u.id === ing.id);
+        return update ? { ...ing, price: update.price } : ing;
+      }));
+    }
 
-    if (updates.length > 0) {
-      handleUpdatePrices(updates);
-    } else {
-      alert(`Reçu vérifié. Aucun produit existant n'a un nom identique dans le garde-manger. Utilisez le bouton 'Scanner un ticket' dans le Garde-Manger pour faire une correspondance avancée (IA/Fuzzy).`);
+    // 2. Ajouter les nouveaux ingrédients au garde-manger (sans alert parasite)
+    if (newIngredients.length > 0) {
+      const prepared = newIngredients.map(item => ({
+        ...item,
+        id: self.crypto.randomUUID(),
+      } as Ingredient));
+      setPantry(prev => [...prev, ...prepared].sort((a, b) => a.name.localeCompare(b.name)));
     }
   };
 
@@ -1294,6 +1298,8 @@ export default function KitchenAssistantPage() {
           {activeTab === 'receipts' && (
               <ReceiptsView
                 receipts={receipts}
+                pantry={pantry}
+                categories={categories}
                 onAddReceipt={handleAddReceipt}
                 onUpdateReceipt={handleUpdateReceipt}
                 onDeleteReceipt={handleDeleteReceipt}

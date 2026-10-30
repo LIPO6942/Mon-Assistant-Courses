@@ -23,6 +23,7 @@ function getLevenshteinDistance(a: string, b: string): number {
 
 /**
  * Nettoie le nom du produit pour l'affichage et la création (ex: "Spaghetti 500g" -> "Spaghetti")
+ * Supprime grammages, unités et nombres isolés.
  */
 export function cleanProductName(name: string): string {
     return (name || '')
@@ -30,6 +31,57 @@ export function cleanProductName(name: string): string {
         .replace(/\b\d+\b/g, '')
         .replace(/\s+/g, ' ')
         .trim();
+}
+
+/**
+ * Mots-clés de "bruit de ticket" qui ne sont pas des produits alimentaires.
+ * Retourne true si la ligne doit être ignorée lors de la synchronisation garde-manger.
+ */
+const RECEIPT_NOISE_KEYWORDS = [
+    'timbre', 'droit timbre', 'droit de timbre', 'tva', 'taxe', 'remise',
+    'reduction', 'reduction', 'avoir', 'total', 'sous-total', 'sous total',
+    'escompte', 'fidelite', 'fidelite', 'point fidel', 'points fid',
+    'frais livraison', 'frais de port', 'sac', 'emballage',
+    'ticket', 'recu', 'recu', 'caisse',
+];
+
+export function isReceiptNoise(label: string): boolean {
+    const normalized = (label || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim();
+    return RECEIPT_NOISE_KEYWORDS.some(kw => {
+        const normKw = kw.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        return normalized === normKw || normalized.startsWith(normKw + ' ');
+    });
+}
+
+/**
+ * Nettoie un libellé de ticket brut pour proposer un nom produit lisible :
+ * - Supprime le grammage en début (ex: "330G PATE A TARTIN" -> "Pate A Tartin")
+ * - Supprime les unités en fin de chaîne
+ * - Met en forme Title Case si tout est en majuscules
+ */
+export function cleanReceiptLabel(rawLabel: string): string {
+    let name = (rawLabel || '').trim();
+
+    // Supprimer les patterns de grammage en début : ex "330G", "2L", "25CL"
+    name = name.replace(/^\d+[\.,]?\d*\s*(kg|gr|g|ml|lt|l|cl|pcs|u|un|x)\s*/gi, '');
+    // Supprimer les grammages en fin
+    name = name.replace(/\s+\d+[\.,]?\d*\s*(kg|gr|g|ml|lt|l|cl|pcs|u|un|x)\s*$/gi, '');
+    // Supprimer les codes numériques longs (ex: codes PLU "12345")
+    name = name.replace(/\b\d{3,}\b/g, '');
+    name = name.replace(/\s+/g, ' ').trim();
+
+    // Mettre en Title Case si tout est en majuscules
+    if (name === name.toUpperCase() && name.length > 2) {
+        name = name
+            .toLowerCase()
+            .replace(/(^|\s)\S/g, (c) => c.toUpperCase());
+    }
+
+    return name.trim();
 }
 
 function normalize(text: string): string {
@@ -93,14 +145,11 @@ export class SmartMatchingService {
 
         // 3. Recherche par containment et similarité de mots
         // Ceci permet de matcher "Lait" avec "Lait demi écrémé" ou "Delio" avec "Delio aroma g"
-        // 3. Recherche par containment et similarité de mots
-        // Ceci permet de matcher "Lait" avec "Lait demi écrémé" ou "Delio" avec "Delio aroma g"
         let bestContainmentMatch: Ingredient | undefined;
         let bestContainmentScore = 0;
 
         for (const ing of allIngredients) {
             const normIng = normalize(ing.name);
-            const ingWords = normIng.split(' ').filter(w => w.length > 2);
 
             // Priorité absolue : Le nom MAC est un préfixe exact ou contenu exact du nom importé
             // Ex: MAC "Eau" -> Import "Eau Pristine"
