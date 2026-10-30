@@ -319,10 +319,17 @@ export default function KitchenAssistantPage() {
         }
         setPurchaseHistory(migratedHistory);
         setDbarati(cloudData?.dbarati ?? dbaratiData ?? []);
-        const resolvedReceipts = cloudData?.receipts ?? receiptsData ?? [];
+        // Receipts: localStorage (synchrone) > Firestore > IndexedDB
+        let lsReceipts: Receipt[] | null = null;
+        try {
+          const lsRaw = localStorage.getItem('mac_receipts');
+          if (lsRaw) { lsReceipts = JSON.parse(lsRaw).items ?? null; }
+        } catch (_) {}
+        const resolvedReceipts = lsReceipts ?? cloudData?.receipts ?? receiptsData ?? [];
         console.log('[MAC-DEBUG] loadData receipts:', {
-          cloudReceipts: cloudData?.receipts?.length ?? 'null',
-          idbReceipts: receiptsData?.length ?? 'null',
+          localStorage: lsReceipts?.length ?? 'null',
+          cloud: cloudData?.receipts?.length ?? 'null',
+          idb: receiptsData?.length ?? 'null',
           resolved: resolvedReceipts.length,
         });
         setReceipts(resolvedReceipts);
@@ -362,8 +369,12 @@ export default function KitchenAssistantPage() {
           }
           setPurchaseHistory(migratedHistory);
           setDbarati(idbDbarati ?? []);
-          console.log('[MAC-DEBUG] fallback idbReceipts:', idbReceipts?.length ?? 'null');
-          setReceipts(idbReceipts ?? []);
+          let fallbackLsReceipts: Receipt[] | null = null;
+          try {
+            const lsRaw = localStorage.getItem('mac_receipts');
+            if (lsRaw) { fallbackLsReceipts = JSON.parse(lsRaw).items ?? null; }
+          } catch (_) {}
+          setReceipts(fallbackLsReceipts ?? idbReceipts ?? []);
         } catch (_) {
           // Dernier recours : données par défaut (ne devrait jamais arriver)
           setPantry(predefinedIngredients);
@@ -389,6 +400,18 @@ export default function KitchenAssistantPage() {
   const [confirmPantryAddOpen, setConfirmPantryAddOpen] = useState(false);
   const [missingIngredients, setMissingIngredients] = useState<Omit<Ingredient, 'id'>[]>([]);
   const [pendingRecipeSave, setPendingRecipeSave] = useState<{ recipe: UserRecipe, isNew: boolean } | null>(null);
+
+  const persistReceipts = useCallback((list: Receipt[]) => {
+    // 1. localStorage (synchrone, toujours fiable)
+    try {
+      const slim = list.map(({ ocrText, ...rest }) => rest);
+      localStorage.setItem('mac_receipts', JSON.stringify({ items: slim, savedAt: Date.now() }));
+    } catch (_) {}
+    // 2. IndexedDB (async)
+    db.set('receipts', list).catch(e => console.error('IDB receipts save error:', e));
+    // 3. Firestore (async)
+    if (userUid) saveReceipts(userUid, list).catch(e => console.error('Firestore receipts save error:', e));
+  }, [userUid]);
 
   // --- SAVE TO INDEXEDDB + FIRESTORE ---
   // Use a ref to prevent saving on initial mount/auth transition
@@ -428,15 +451,13 @@ export default function KitchenAssistantPage() {
   }, [initialBudget, totalSpent]);
   useEffect(() => { if (!isInitialMount.current && isDataLoaded) { try { db.set('healthConditions', healthConditions); } catch (e) { console.error(e); } if (userUid) saveHealthConditions(userUid, healthConditions); } }, [healthConditions]);
   useEffect(() => { if (!isInitialMount.current && isDataLoaded) { try { db.set('dbarati', dbarati); } catch (e) { console.error(e); } if (userUid) saveDbarati(userUid, dbarati); } }, [dbarati]);
+  // Receipts are saved directly in handleAddReceipt/Update/Delete via persistReceipts.
+  // This useEffect only handles edge cases (e.g. sync from another component).
   useEffect(() => {
-    if (!isInitialMount.current && isDataLoaded) {
-      console.log('[MAC-DEBUG] useEffect receipts triggered, saving', receipts.length, 'receipts');
-      try { db.set('receipts', receipts); } catch (e) { console.error('[MAC-DEBUG] useEffect IDB error:', e); }
-      if (userUid) saveReceipts(userUid, receipts);
-    } else {
-      console.log('[MAC-DEBUG] useEffect receipts SKIPPED:', { isInitialMount: isInitialMount.current, isDataLoaded, count: receipts.length });
+    if (!isInitialMount.current && isDataLoaded && receipts.length > 0) {
+      persistReceipts(receipts);
     }
-  }, [receipts]);
+  }, [receipts, isDataLoaded, persistReceipts]);
 
   // --- AUTO-UNCHECK DBARATI ITEMS AFTER 30 DAYS ---
   useEffect(() => {
@@ -750,19 +771,7 @@ export default function KitchenAssistantPage() {
   const handleAddReceipt = (receipt: Receipt) => {
     setReceipts(prev => {
       const next = [receipt, ...prev.filter(r => r.id !== receipt.id)];
-      console.log('[MAC-DEBUG] handleAddReceipt saving', next.length, 'receipts to IDB');
-      db.set('receipts', next).then(() => {
-        console.log('[MAC-DEBUG] IDB save SUCCESS for receipts');
-      }).catch((e: any) => {
-        console.error('[MAC-DEBUG] IDB save FAILED for receipts:', e);
-      });
-      if (userUid) {
-        saveReceipts(userUid, next).then(() => {
-          console.log('[MAC-DEBUG] Firestore save SUCCESS for receipts');
-        }).catch((e: any) => {
-          console.error('[MAC-DEBUG] Firestore save FAILED for receipts:', e);
-        });
-      }
+      persistReceipts(next);
       return next;
     });
   };
@@ -770,8 +779,7 @@ export default function KitchenAssistantPage() {
   const handleUpdateReceipt = (id: string, updated: Partial<Receipt>) => {
     setReceipts(prev => {
       const next = prev.map(r => (r.id === id ? { ...r, ...updated } : r));
-      db.set('receipts', next);
-      if (userUid) saveReceipts(userUid, next);
+      persistReceipts(next);
       return next;
     });
   };
@@ -779,8 +787,7 @@ export default function KitchenAssistantPage() {
   const handleDeleteReceipt = (id: string) => {
     setReceipts(prev => {
       const next = prev.filter(r => r.id !== id);
-      db.set('receipts', next);
-      if (userUid) saveReceipts(userUid, next);
+      persistReceipts(next);
       return next;
     });
   };
