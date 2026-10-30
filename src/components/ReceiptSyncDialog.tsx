@@ -11,7 +11,6 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Select,
   SelectContent,
@@ -199,7 +198,7 @@ export function ReceiptSyncDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col p-0 overflow-hidden rounded-2xl">
+      <DialogContent className="sm:max-w-2xl h-[90vh] flex flex-col p-0 overflow-hidden rounded-2xl">
         {/* Header */}
         <DialogHeader className="px-6 pt-6 pb-3 border-b">
           <div className="flex items-center gap-3">
@@ -218,7 +217,7 @@ export function ReceiptSyncDialog({
         </DialogHeader>
 
         {/* Corps scrollable */}
-        <ScrollArea className="flex-1 min-h-0">
+        <div className="flex-1 overflow-y-auto overscroll-contain">
           <div className="px-6 py-4 space-y-6">
 
             {/* État : analyse en cours */}
@@ -426,7 +425,7 @@ export function ReceiptSyncDialog({
             )}
 
           </div>
-        </ScrollArea>
+        </div>
 
         {/* Footer */}
         <DialogFooter className="px-6 py-4 border-t bg-muted/20 flex flex-col sm:flex-row items-center justify-between gap-3">
