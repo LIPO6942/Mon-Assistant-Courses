@@ -756,24 +756,62 @@ export default function KitchenAssistantPage() {
   };
 
   const handleSyncReceiptWithPantry = (
-    priceUpdates: { id: string; price: number }[],
-    newIngredients: Omit<Ingredient, 'id'>[]
+    priceUpdates: { id: string; price: number; ingredientId: string; newPrice: number; line: any }[],
+    newIngredients: Omit<Ingredient, 'id'>[],
+    receipt: Receipt
   ) => {
-    // 1. Mettre à jour les prix des produits existants
+    const now = receipt.purchaseAt || new Date().toISOString();
+    const store = receipt.storeName;
+
+    // 1. Mettre à jour les prix + enregistrer dans l'historique d'achats
     if (priceUpdates.length > 0) {
       setPantry(prev => prev.map(ing => {
         const update = priceUpdates.find(u => u.id === ing.id);
         return update ? { ...ing, price: update.price } : ing;
       }));
+
+      // Enregistrer dans l'historique d'achats
+      setPurchaseHistory(prev => {
+        const newHistory = { ...prev };
+        priceUpdates.forEach(u => {
+          if (!newHistory[u.id]) newHistory[u.id] = [];
+          newHistory[u.id] = [
+            ...newHistory[u.id],
+            {
+              date: now,
+              quantity: u.line?.quantity ?? 1,
+              unit: u.line?.unit || 'pièce',
+              price: u.newPrice,
+              ...(store ? { store } : {}),
+            },
+          ];
+        });
+        return newHistory;
+      });
     }
 
-    // 2. Ajouter les nouveaux ingrédients au garde-manger (sans alert parasite)
+    // 2. Ajouter les nouveaux ingrédients au garde-manger
     if (newIngredients.length > 0) {
       const prepared = newIngredients.map(item => ({
         ...item,
         id: self.crypto.randomUUID(),
       } as Ingredient));
       setPantry(prev => [...prev, ...prepared].sort((a, b) => a.name.localeCompare(b.name)));
+
+      // Enregistrer aussi les nouveaux dans l'historique
+      setPurchaseHistory(prev => {
+        const newHistory = { ...prev };
+        prepared.forEach(ing => {
+          newHistory[ing.id] = [{
+            date: now,
+            quantity: 1,
+            unit: ing.unit || 'pièce',
+            price: ing.price,
+            ...(store ? { store } : {}),
+          }];
+        });
+        return newHistory;
+      });
     }
   };
 

@@ -43,8 +43,9 @@ interface ReceiptsViewProps {
   onUpdateReceipt: (id: string, updated: Partial<Receipt>) => void;
   onDeleteReceipt: (id: string) => void;
   onSyncWithPantry: (
-    priceUpdates: { id: string; price: number }[],
-    newIngredients: Omit<Ingredient, 'id'>[]
+    priceUpdates: { id: string; price: number; ingredientId: string; newPrice: number; line: any }[],
+    newIngredients: Omit<Ingredient, 'id'>[],
+    receipt: Receipt
   ) => void;
 }
 

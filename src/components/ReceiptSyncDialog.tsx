@@ -56,8 +56,9 @@ interface ReceiptSyncDialogProps {
   pantry: Ingredient[];
   categories: CategoryDef[];
   onConfirm: (
-    priceUpdates: { id: string; price: number }[],
-    newIngredients: Omit<Ingredient, 'id'>[]
+    priceUpdates: { id: string; price: number; ingredientId: string; newPrice: number; line: ReceiptLine }[],
+    newIngredients: Omit<Ingredient, 'id'>[],
+    receipt: Receipt
   ) => void;
 }
 
@@ -152,10 +153,20 @@ export function ReceiptSyncDialog({
     );
   }
 
+  function toggleAllMatched() {
+    const allConfirmed = matched.every(m => m.confirmed);
+    setMatched(prev => prev.map(m => ({ ...m, confirmed: !allConfirmed })));
+  }
+
   function toggleUnmatchedInclude(index: number) {
     setUnmatched(prev =>
       prev.map((u, i) => (i === index ? { ...u, include: !u.include } : u))
     );
+  }
+
+  function toggleAllUnmatched() {
+    const allIncluded = unmatched.every(u => u.include);
+    setUnmatched(prev => prev.map(u => ({ ...u, include: !allIncluded })));
   }
 
   function setUnmatchedCategory(index: number, category: string) {
@@ -171,9 +182,17 @@ export function ReceiptSyncDialog({
   }
 
   function handleConfirm() {
+    if (!receipt) return;
+
     const priceUpdates = matched
       .filter(m => m.confirmed)
-      .map(m => ({ id: m.ingredient.id, price: m.newPrice }));
+      .map(m => ({
+        id: m.ingredient.id,
+        price: m.newPrice,
+        ingredientId: m.ingredient.id,
+        newPrice: m.newPrice,
+        line: m.line,
+      }));
 
     const newIngredients: Omit<Ingredient, 'id'>[] = unmatched
       .filter(u => u.include && u.suggestedName.trim().length > 0)
@@ -184,7 +203,7 @@ export function ReceiptSyncDialog({
         unit: u.line.unit || 'pièce',
       }));
 
-    onConfirm(priceUpdates, newIngredients);
+    onConfirm(priceUpdates, newIngredients, receipt);
     onOpenChange(false);
   }
 
@@ -231,14 +250,24 @@ export function ReceiptSyncDialog({
             {/* Section A — Produits trouvés dans le garde-manger */}
             {!isAnalyzing && matched.length > 0 && (
               <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <RefreshCw className="h-4 w-4 text-primary" />
-                  <h3 className="text-sm font-bold text-foreground">
-                    Mise à jour des prix
-                  </h3>
-                  <Badge variant="secondary" className="text-[10px] font-bold">
-                    {matched.length} produit{matched.length > 1 ? 's' : ''} trouvé{matched.length > 1 ? 's' : ''}
-                  </Badge>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <RefreshCw className="h-4 w-4 text-primary" />
+                    <h3 className="text-sm font-bold text-foreground">
+                      Mise à jour des prix
+                    </h3>
+                    <Badge variant="secondary" className="text-[10px] font-bold">
+                      {matched.length} produit{matched.length > 1 ? 's' : ''} trouvé{matched.length > 1 ? 's' : ''}
+                    </Badge>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 text-[11px] rounded-lg px-2.5 text-primary hover:text-primary hover:bg-primary/10"
+                    onClick={toggleAllMatched}
+                  >
+                    {matched.every(m => m.confirmed) ? 'Tout désélectionner' : 'Tout sélectionner'}
+                  </Button>
                 </div>
                 <p className="text-[11px] text-muted-foreground">
                   Cochez les produits dont vous souhaitez mettre à jour le prix dans votre garde-manger.
@@ -314,14 +343,24 @@ export function ReceiptSyncDialog({
             {/* Section B — Produits non trouvés : proposition d'ajout */}
             {!isAnalyzing && unmatched.length > 0 && (
               <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <PackageSearch className="h-4 w-4 text-amber-500" />
-                  <h3 className="text-sm font-bold text-foreground">
-                    Nouveaux produits
-                  </h3>
-                  <Badge variant="outline" className="text-[10px] font-bold border-amber-400 text-amber-600">
-                    {unmatched.length} non trouvé{unmatched.length > 1 ? 's' : ''}
-                  </Badge>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <PackageSearch className="h-4 w-4 text-amber-500" />
+                    <h3 className="text-sm font-bold text-foreground">
+                      Nouveaux produits
+                    </h3>
+                    <Badge variant="outline" className="text-[10px] font-bold border-amber-400 text-amber-600">
+                      {unmatched.length} non trouvé{unmatched.length > 1 ? 's' : ''}
+                    </Badge>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 text-[11px] rounded-lg px-2.5 text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/20"
+                    onClick={toggleAllUnmatched}
+                  >
+                    {unmatched.every(u => u.include) ? 'Tout désélectionner' : 'Tout sélectionner'}
+                  </Button>
                 </div>
                 <p className="text-[11px] text-muted-foreground">
                   Ces produits ne sont pas encore dans votre garde-manger. Cochez ceux que vous souhaitez ajouter et choisissez leur catégorie.

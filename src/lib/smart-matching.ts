@@ -173,13 +173,26 @@ export class SmartMatchingService {
             return { ingredient: bestContainmentMatch, confidence: bestContainmentScore, isAlias: false };
         }
 
-        // 4. Fuzzy Matching (Levenshtein) - pour les fautes de frappe
+        // 4. Fuzzy Matching (Levenshtein) - pour les fautes de frappe uniquement
+        // On n'applique le fuzzy QUE si les chaînes ont une longueur similaire
+        // (évite "Yab To Mix" → "Pain de mie" qui ont des longueurs proches mais rien en commun)
 
         let bestMatch: Ingredient | undefined;
         let bestScore = 0;
 
         for (const ing of allIngredients) {
             const normIng = normalize(ing.name);
+
+            // Ignorer si la différence de longueur est trop grande (> 50%)
+            const lenRatio = Math.min(normRaw.length, normIng.length) / Math.max(normRaw.length, normIng.length);
+            if (lenRatio < 0.5) continue;
+
+            // Exiger au moins un mot en commun (≥ 3 lettres) avant le calcul Levenshtein
+            const rawWords = normRaw.split(' ').filter(w => w.length >= 3);
+            const ingWords = normIng.split(' ').filter(w => w.length >= 3);
+            const hasCommonWord = rawWords.some(w => ingWords.some(iw => iw === w || iw.startsWith(w) || w.startsWith(iw)));
+            if (!hasCommonWord) continue;
+
             const distance = getLevenshteinDistance(normRaw, normIng);
             const maxLength = Math.max(normRaw.length, normIng.length);
             const score = maxLength === 0 ? 0 : 1 - (distance / maxLength);
@@ -190,8 +203,8 @@ export class SmartMatchingService {
             }
         }
 
-        // Seuil minimal pour accepter un fuzzy match
-        if (bestScore < 0.4) {
+        // Seuil relevé à 0.65 pour éviter les faux positifs
+        if (bestScore < 0.65) {
             return { ingredient: undefined, confidence: 0, isAlias: false };
         }
 
