@@ -326,7 +326,7 @@ export default function KitchenAssistantPage() {
         // Ne PAS réinitialiser à vide — essayer IndexedDB d'abord pour éviter de perdre les données
         try {
           const [idbPantry, idbBasket, idbCats, idbSavedRecipes, idbUserRecipes,
-                 idbBudget, idbSpent, idbHealth, idbHistory, idbDbarati] = await Promise.all([
+                 idbBudget, idbSpent, idbHealth, idbHistory, idbDbarati, idbReceipts] = await Promise.all([
             db.get<Ingredient[]>('pantry'),
             db.get<BasketItem[]>('basket'),
             db.get<CategoryDef[]>('categories'),
@@ -337,6 +337,7 @@ export default function KitchenAssistantPage() {
             db.get<HealthConditionCategory[]>('healthConditions'),
             db.get<PurchaseHistory>('purchaseHistory'),
             db.get<DbaratiItem[]>('dbarati'),
+            db.get<Receipt[]>('receipts'),
           ]);
           setPantry(idbPantry ?? predefinedIngredients);
           setBasket(idbBasket ?? []);
@@ -355,6 +356,7 @@ export default function KitchenAssistantPage() {
           }
           setPurchaseHistory(migratedHistory);
           setDbarati(idbDbarati ?? []);
+          setReceipts(idbReceipts ?? []);
         } catch (_) {
           // Dernier recours : données par défaut (ne devrait jamais arriver)
           setPantry(predefinedIngredients);
@@ -367,6 +369,7 @@ export default function KitchenAssistantPage() {
           setHealthConditions(initialHealthConditions);
           setPurchaseHistory({});
           setDbarati([]);
+          setReceipts([]);
         }
       } finally {
         setIsDataLoaded(true);
