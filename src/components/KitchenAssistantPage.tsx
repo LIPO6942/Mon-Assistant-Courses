@@ -319,7 +319,13 @@ export default function KitchenAssistantPage() {
         }
         setPurchaseHistory(migratedHistory);
         setDbarati(cloudData?.dbarati ?? dbaratiData ?? []);
-        setReceipts(cloudData?.receipts ?? receiptsData ?? []);
+        const resolvedReceipts = cloudData?.receipts ?? receiptsData ?? [];
+        console.log('[MAC-DEBUG] loadData receipts:', {
+          cloudReceipts: cloudData?.receipts?.length ?? 'null',
+          idbReceipts: receiptsData?.length ?? 'null',
+          resolved: resolvedReceipts.length,
+        });
+        setReceipts(resolvedReceipts);
 
       } catch (error) {
         console.error("Error loading data from Firestore:", error);
@@ -356,6 +362,7 @@ export default function KitchenAssistantPage() {
           }
           setPurchaseHistory(migratedHistory);
           setDbarati(idbDbarati ?? []);
+          console.log('[MAC-DEBUG] fallback idbReceipts:', idbReceipts?.length ?? 'null');
           setReceipts(idbReceipts ?? []);
         } catch (_) {
           // Dernier recours : données par défaut (ne devrait jamais arriver)
@@ -421,7 +428,15 @@ export default function KitchenAssistantPage() {
   }, [initialBudget, totalSpent]);
   useEffect(() => { if (!isInitialMount.current && isDataLoaded) { try { db.set('healthConditions', healthConditions); } catch (e) { console.error(e); } if (userUid) saveHealthConditions(userUid, healthConditions); } }, [healthConditions]);
   useEffect(() => { if (!isInitialMount.current && isDataLoaded) { try { db.set('dbarati', dbarati); } catch (e) { console.error(e); } if (userUid) saveDbarati(userUid, dbarati); } }, [dbarati]);
-  useEffect(() => { if (!isInitialMount.current && isDataLoaded) { try { db.set('receipts', receipts); } catch (e) { console.error(e); } if (userUid) saveReceipts(userUid, receipts); } }, [receipts]);
+  useEffect(() => {
+    if (!isInitialMount.current && isDataLoaded) {
+      console.log('[MAC-DEBUG] useEffect receipts triggered, saving', receipts.length, 'receipts');
+      try { db.set('receipts', receipts); } catch (e) { console.error('[MAC-DEBUG] useEffect IDB error:', e); }
+      if (userUid) saveReceipts(userUid, receipts);
+    } else {
+      console.log('[MAC-DEBUG] useEffect receipts SKIPPED:', { isInitialMount: isInitialMount.current, isDataLoaded, count: receipts.length });
+    }
+  }, [receipts]);
 
   // --- AUTO-UNCHECK DBARATI ITEMS AFTER 30 DAYS ---
   useEffect(() => {
@@ -735,8 +750,19 @@ export default function KitchenAssistantPage() {
   const handleAddReceipt = (receipt: Receipt) => {
     setReceipts(prev => {
       const next = [receipt, ...prev.filter(r => r.id !== receipt.id)];
-      db.set('receipts', next);
-      if (userUid) saveReceipts(userUid, next);
+      console.log('[MAC-DEBUG] handleAddReceipt saving', next.length, 'receipts to IDB');
+      db.set('receipts', next).then(() => {
+        console.log('[MAC-DEBUG] IDB save SUCCESS for receipts');
+      }).catch((e: any) => {
+        console.error('[MAC-DEBUG] IDB save FAILED for receipts:', e);
+      });
+      if (userUid) {
+        saveReceipts(userUid, next).then(() => {
+          console.log('[MAC-DEBUG] Firestore save SUCCESS for receipts');
+        }).catch((e: any) => {
+          console.error('[MAC-DEBUG] Firestore save FAILED for receipts:', e);
+        });
+      }
       return next;
     });
   };
