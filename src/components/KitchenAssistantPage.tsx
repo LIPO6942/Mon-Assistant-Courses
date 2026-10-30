@@ -418,6 +418,7 @@ export default function KitchenAssistantPage() {
   }, [initialBudget, totalSpent]);
   useEffect(() => { if (!isInitialMount.current && isDataLoaded) { try { db.set('healthConditions', healthConditions); } catch (e) { console.error(e); } if (userUid) saveHealthConditions(userUid, healthConditions); } }, [healthConditions]);
   useEffect(() => { if (!isInitialMount.current && isDataLoaded) { try { db.set('dbarati', dbarati); } catch (e) { console.error(e); } if (userUid) saveDbarati(userUid, dbarati); } }, [dbarati]);
+  useEffect(() => { if (!isInitialMount.current && isDataLoaded) { try { db.set('receipts', receipts); } catch (e) { console.error(e); } if (userUid) saveReceipts(userUid, receipts); } }, [receipts]);
 
   // --- AUTO-UNCHECK DBARATI ITEMS AFTER 30 DAYS ---
   useEffect(() => {
