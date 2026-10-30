@@ -128,7 +128,21 @@ export function UploadReceiptDialog({
       const receipt: Receipt = {
         id: `rcpt-${Date.now()}`,
         storeName: res.storeName || 'Magasin Inconnu',
-        purchaseAt: res.purchaseAt || new Date().toISOString(),
+        purchaseAt: (() => {
+          // Valider la date renvoyée par l'IA : si absente, invalide,
+          // trop ancienne (> 90 jours) ou dans le futur → date d'aujourd'hui
+          if (!res.purchaseAt) return new Date().toISOString();
+          const parsed = new Date(res.purchaseAt);
+          if (isNaN(parsed.getTime())) return new Date().toISOString();
+          const now = Date.now();
+          const diffMs = now - parsed.getTime();
+          const NINETY_DAYS = 90 * 24 * 60 * 60 * 1000;
+          if (diffMs > NINETY_DAYS || diffMs < -24 * 60 * 60 * 1000) {
+            // Date trop ancienne ou dans le futur → probablement hallucinée
+            return new Date().toISOString();
+          }
+          return parsed.toISOString();
+        })(),
         currency: res.currency || 'TND',
         total: res.total || mergedLines.reduce((acc, l) => acc + (l.lineTotal || 0), 0),
         subtotal: res.subtotal,

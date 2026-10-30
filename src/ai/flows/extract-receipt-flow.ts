@@ -46,7 +46,7 @@ STRUCTURE TYPIQUE D'UN PRODUIT (EX: CARREFOUR) :
 RÈGLES CRITIQUES :
 1. NE JAMAIS RÉUTILISER la quantité d'un produit précédent pour le suivant.
 2. Si une ligne contient "X x Y", X est TOUJOURS la quantité et Y est le prix unitaire.
-3. DATE (purchaseAt) : format ISO YYYY-MM-DD. N'invente jamais.
+3. DATE (purchaseAt) : format ISO YYYY-MM-DD. Si aucune date n'est CLAIREMENT VISIBLE et LISIBLE sur le ticket, OMETS le champ purchaseAt (ne le mets pas du tout). N'INVENTE JAMAIS une date.
 4. PRODUITS EN DOUBLE : Fusionne-les si le libellé est identique (additionne quantités et totaux).
 5. CATÉGORIES :
    - Eau (Pristine, Safia, Sabrine, Melliti, Aqualine, Marwa...)
