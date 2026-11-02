@@ -439,16 +439,7 @@ export default function BasketSheet({
               </span>
               <span className="text-2xl font-bold text-primary">{basketTotal.toFixed(3)} DT</span>
             </div>
-            {onScanReceipt && (
-              <Button
-                variant="outline"
-                onClick={onScanReceipt}
-                className="w-full rounded-xl h-10 border-primary/30 text-primary hover:bg-primary/10 gap-2 font-medium"
-              >
-                <Camera className="h-4 w-4" />
-                Scanner le ticket de ces courses
-              </Button>
-            )}
+
             <Button onClick={handleClickValidate} className="w-full" disabled={purchasedItemCount === 0}>
               Valider les {purchasedItemCount} articles achetés
             </Button>
