@@ -9,7 +9,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { QrCode, Copy, Check, Download, Share2, Sparkles, Smartphone, Lightbulb, Camera, Utensils } from 'lucide-react';
+import { QrCode, Copy, Check, Download, Share2, Sparkles } from 'lucide-react';
 
 interface AppQRCodeDialogProps {
   open: boolean;
@@ -57,7 +57,7 @@ export function AppQRCodeDialog({ open, onOpenChange }: AppQRCodeDialogProps) {
             Mon Assistant Courses
           </DialogTitle>
           <DialogDescription className="text-xs text-muted-foreground max-w-xs mx-auto">
-            Scannez ce QR Code avec votre appareil photo pour ouvrir l'application et l'installer sur votre écran d'accueil.
+            Scannez ce QR Code avec votre appareil photo pour ouvrir l&apos;application et l&apos;installer sur votre écran d&apos;accueil.
           </DialogDescription>
         </DialogHeader>
 
@@ -104,7 +104,7 @@ export function AppQRCodeDialog({ open, onOpenChange }: AppQRCodeDialogProps) {
             </li>
             <li className="flex items-start gap-1.5">
               <span className="text-primary font-bold shrink-0">📲</span>
-              <span><strong>App PWA instantanée :</strong> Un bouton visible vous propose d'ajouter l'icône sur votre smartphone, utilisable hors-ligne sans passer par les stores.</span>
+              <span><strong>App PWA instantanée :</strong> Un bouton visible vous propose d&apos;ajouter l&apos;icône sur votre smartphone, utilisable hors-ligne sans passer par les stores.</span>
             </li>
           </ul>
         </div>

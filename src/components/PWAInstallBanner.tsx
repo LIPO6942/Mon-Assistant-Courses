@@ -145,14 +145,14 @@ export function PWAInstallBanner() {
           <div className="flex-1 min-w-0 pr-1">
             <div className="flex items-center gap-1.5">
               <h4 className="text-sm font-bold text-foreground">
-                Installer l'application
+                Installer l&apos;application
               </h4>
               <span className="inline-flex items-center text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-primary/10 text-primary border border-primary/20">
                 PWA
               </span>
             </div>
             <p className="text-xs text-muted-foreground mt-0.5 leading-snug">
-              Profitez d'un accès en 1 clic sur votre écran d'accueil, en plein écran et sans connexion requise.
+              Profitez d&apos;un accès en 1 clic sur votre écran d&apos;accueil, en plein écran et sans connexion requise.
             </p>
 
             <div className="flex items-center gap-2 mt-3">
@@ -162,7 +162,7 @@ export function PWAInstallBanner() {
                 className="h-8 rounded-xl px-3.5 text-xs font-bold shadow-sm gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90"
               >
                 <Download className="h-3.5 w-3.5" />
-                Télécharger l'app
+                Télécharger l&apos;app
               </Button>
 
               <Button
@@ -194,7 +194,7 @@ export function PWAInstallBanner() {
               <Smartphone className="h-6 w-6" />
             </div>
             <DialogTitle className="text-lg font-bold">
-              Ajouter à l'écran d'accueil
+              Ajouter à l&apos;écran d&apos;accueil
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
               Sur votre iPhone ou iPad, 3 étapes simples suffisent :
@@ -207,7 +207,7 @@ export function PWAInstallBanner() {
                 1
               </div>
               <div className="text-xs leading-relaxed">
-                Touchez le bouton de <strong>Partage</strong> en bas de Safari (l'icône carrée avec une flèche <Share className="inline h-3.5 w-3.5 mx-0.5" />).
+                Touchez le bouton de <strong>Partage</strong> en bas de Safari (l&apos;icône carrée avec une flèche <Share className="inline h-3.5 w-3.5 mx-0.5" />).
               </div>
             </div>
 
@@ -216,7 +216,7 @@ export function PWAInstallBanner() {
                 2
               </div>
               <div className="text-xs leading-relaxed">
-                Faites défiler le menu et touchez <strong>« Sur l'écran d'accueil »</strong>.
+                Faites défiler le menu et touchez <strong>« Sur l&apos;écran d&apos;accueil »</strong>.
               </div>
             </div>
 
@@ -235,7 +235,7 @@ export function PWAInstallBanner() {
             className="w-full rounded-xl h-10 text-xs font-bold mt-2 gap-1.5"
           >
             <CheckCircle2 className="h-4 w-4" />
-            C'est fait, j'ai installé l'app
+            C&apos;est fait, j&apos;ai installé l&apos;app
           </Button>
         </DialogContent>
       </Dialog>

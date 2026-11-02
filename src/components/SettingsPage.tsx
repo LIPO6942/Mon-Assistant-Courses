@@ -312,8 +312,8 @@ export default function SettingsPage() {
                         <QrCode className="h-5 w-5" />
                     </div>
                     <div>
-                        <h3 className="font-semibold text-base">Partager l'application</h3>
-                        <p className="text-xs text-muted-foreground">QR Code & lien d'installation PWA</p>
+                        <h3 className="font-semibold text-base">Partager l&apos;application</h3>
+                        <p className="text-xs text-muted-foreground">QR Code & lien d&apos;installation PWA</p>
                     </div>
                 </div>
 
@@ -328,7 +328,7 @@ export default function SettingsPage() {
                             mon-assistant-courses.vercel.app
                         </p>
                         <p className="text-[11px] text-muted-foreground mt-0.5">
-                            Scannez pour ouvrir ou installer l'application PWA.
+                            Scannez pour ouvrir ou installer l&apos;application PWA.
                         </p>
                     </div>
                 </div>

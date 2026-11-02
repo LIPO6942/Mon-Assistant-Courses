@@ -91,7 +91,7 @@ export function ReconciliationSummaryDialog({
           {/* Summary Banner */}
           <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-2xl p-3.5 mb-4">
             <p className="text-xs font-medium text-emerald-800 dark:text-emerald-300 leading-relaxed">
-              ✨ <strong>{totalActioned} article{totalActioned > 1 ? 's' : ''}</strong> du panier {totalActioned > 1 ? 'ont été validés' : 'a été validé'} automatiquement et {totalActioned > 1 ? 'ajoutés' : 'ajouté'} à votre historique d'achat.
+              ✨ <strong>{totalActioned} article{totalActioned > 1 ? 's' : ''}</strong> du panier {totalActioned > 1 ? 'ont été validés' : 'a été validé'} automatiquement et {totalActioned > 1 ? 'ajoutés' : 'ajouté'} à votre historique d&apos;achat.
             </p>
           </div>
 
@@ -199,14 +199,14 @@ export function ReconciliationSummaryDialog({
             className="w-full sm:w-auto rounded-xl text-xs text-destructive hover:bg-destructive/10 hover:text-destructive border-destructive/30 gap-1.5 font-medium"
           >
             <RotateCcw className="h-3.5 w-3.5" />
-            Annuler l'action
+            Annuler l&apos;action
           </Button>
 
           <Button
             onClick={() => onOpenChange(false)}
             className="w-full sm:flex-1 rounded-xl text-xs font-bold"
           >
-            C'est parfait !
+            C&apos;est parfait !
           </Button>
         </DialogFooter>
       </DialogContent>
