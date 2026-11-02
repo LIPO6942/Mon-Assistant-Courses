@@ -134,6 +134,169 @@ export function mapLawra9Category(lawra9Cat: string): string {
     return mapping[lawra9Cat] || 'Autre';
 }
 
+/**
+ * Détermine intelligemment la catégorie la plus appropriée pour un produit
+ * en fonction de son nom, libellé ticket, et des catégories configurées par l'utilisateur.
+ */
+export function guessCategoryForProduct(
+    productName: string,
+    rawLabel: string = '',
+    categories: { id?: string; name: string }[] = [],
+    lineCategory?: string
+): string {
+    if (!categories || categories.length === 0) return 'Autre';
+
+    const normalizedCats = categories.map(c => ({
+        original: c.name,
+        clean: (c.name || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim()
+    }));
+
+    // Cherche si une des catégories de l'utilisateur correspond aux mots-clés cibles
+    const findUserCat = (keywords: string[]): string | null => {
+        // 1. Recherche par correspondance exacte ou mot entier
+        for (const kw of keywords) {
+            const cleanKw = kw.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+            const exact = normalizedCats.find(c => c.clean === cleanKw || new RegExp(`(^|\\s)${cleanKw}(\\s|$)`, 'i').test(c.clean));
+            if (exact) return exact.original;
+        }
+        // 2. Recherche par inclusion
+        for (const kw of keywords) {
+            const cleanKw = kw.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+            const partial = normalizedCats.find(c => c.clean.includes(cleanKw) || cleanKw.includes(c.clean));
+            if (partial) return partial.original;
+        }
+        return null;
+    };
+
+    // 1. Si une catégorie issue du ticket est fournie, tenter de la faire correspondre directement
+    if (lineCategory && lineCategory.trim().length > 0) {
+        const direct = findUserCat([lineCategory]);
+        if (direct) return direct;
+    }
+
+    // 2. Préparation du texte produit (nom nettoyé + libellé brut)
+    const text = `${productName} ${rawLabel}`
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, ' ')
+        .replace(/[^a-z0-9 ]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+    // 3. Détection par domaine sémantique
+
+    // A. BISCUITS, GÂTEAUX, CHOCOLAT, CONFISERIE & ÉPICERIE SUCRÉE
+    if (/\b(biscuit|biscuits|smile|major|sablito|sable|sables|gaufrette|gaufrettes|cookie|cookies|chocolat|chocolats|cacao|nutella|tartiner|confiture|miel|bonbon|bonbons|sucette|sucettes|chamallow|cake|cakes|muffin|muffins|madeleine|madeleines|croissant|croissants|pain au chocolat|cereale|cereales|corn flakes|halwa|chamia|loukoum|dragee|brioche|sucre|vanille|choc|oreo|lu|milka|saida|bimo|tom|kif|choco)\b/i.test(text)) {
+        const found = findUserCat([
+            'biscuit', 'biscuits', 'gateau', 'gateaux', 'chocolat', 'confiserie',
+            'epicerie sucree', 'sucree', 'sucre', 'snack', 'snacks', 'petit dejeuner', 'gouter', 'boulangerie', 'epicerie'
+        ]);
+        if (found) return found;
+    }
+
+    // B. BOISSONS, EAUX, SODAS, JUS, CAFÉ & THÉ
+    if (/\b(eau|eaux|minerale|source|safia|marwa|sabrine|fourat|melliti|cristaline|soda|sodas|coca|cola|pepsi|fanta|sprite|boga|apla|viva|schweppes|jus|nectar|sirop|tropico|diva|cafe|espresso|the|tisane|infusion|boisson|boissons|delice fruit|oh!|canette)\b/i.test(text)) {
+        const found = findUserCat([
+            'boisson', 'boissons', 'eau', 'eaux', 'soda', 'sodas', 'jus', 'cafe', 'the', 'epicerie'
+        ]);
+        if (found) return found;
+    }
+
+    // C. PRODUITS LAITIERS, FROMAGES, CRÈMERIE & ŒUFS
+    if (/\b(lait|laitier|laitiers|yaourt|yaourts|yogourt|fromage|fromages|fromy|mozzarella|ricotta|gruyere|emmental|gouda|edam|parmesan|cheddar|feta|sicilien|beurre|creme fraiche|creme liquide|cremerie|laban|raib|oeuf|oeufs|vitalait|delice lait|caciotta|kiri|president|danone|mamie nova)\b/i.test(text)) {
+        const found = findUserCat([
+            'produits laitiers', 'laitier', 'laitiers', 'cremerie', 'fromage', 'fromages', 'oeuf', 'oeufs', 'frais'
+        ]);
+        if (found) return found;
+    }
+
+    // D. VIANDES, VOLAILLES, CHARCUTERIE & POISSONS
+    if (/\b(poulet|escalope|dinde|boeuf|viande|viandes|hache|veau|agneau|mouton|merguez|saucisse|saucisses|jambon|salami|poisson|poissons|saumon|daurade|loup|crevette|crevettes|calmar|seiche|chich taouk|boucherie|volaille|chahia|el mazraa|mazraa|koutoubia|roule dinde)\b/i.test(text)) {
+        const found = findUserCat([
+            'viandes et poissons', 'viande', 'viandes', 'poisson', 'poissons', 'boucherie', 'volaille', 'charcuterie', 'frais'
+        ]);
+        if (found) return found;
+    }
+
+    // E. FRUITS ET LÉGUMES
+    if (/\b(pomme|pommes|poire|poires|banane|bananes|orange|oranges|mandarine|citron|citrons|fraise|fraises|peche|abricot|raisin|raisins|pasteque|melon|kiwi|ananas|avocat|avocats|tomate|tomates|oignon|oignons|ail|pomme de terre|pommes de terre|patate|patates|carotte|carottes|courgette|courgettes|poivron|poivrons|piment|piments|aubergine|aubergines|salade|salades|laitue|concombre|concombres|persil|menthe|celeri|fenouil|chou|epinard|epinards|navet|navets|betterave|champignon|champignons|legume|legumes|fruit|fruits)\b/i.test(text)) {
+        const found = findUserCat([
+            'fruits et legumes', 'fruits', 'legumes', 'fruit', 'legume', 'primeur', 'maraicher', 'frais'
+        ]);
+        if (found) return found;
+    }
+
+    // F. BOULANGERIE & PAINS
+    if (/\b(pain|baguette|baguettes|pain de mie|tabouna|mlewi|chapati|toast|toasts|biscotte|biscottes|farine|levure boulangere)\b/i.test(text)) {
+        const found = findUserCat([
+            'boulangerie & patisserie', 'boulangerie', 'patisserie', 'pain', 'pains', 'epicerie'
+        ]);
+        if (found) return found;
+    }
+
+    // G. SURGELÉS & GLACES
+    if (/\b(surgele|surgeles|congele|congeles|glace|glaces|creme glacee|sorbet)\b/i.test(text)) {
+        const found = findUserCat([
+            'surgeles', 'surgele', 'glace', 'glaces', 'frais'
+        ]);
+        if (found) return found;
+    }
+
+    // H. ÉPICERIE SALÉE, FÉCULENTS, CONSERVES, CONDIMENTS & ÉPICES
+    if (/\b(pate|pates|spaghetti|macaroni|penne|couscous|semoule|riz|basmati|farine|sel|poivre|epice|epices|curcuma|cumin|paprika|coriandre|harissa|tomate concentre|sauce tomate|sauce|sauces|mayonnaise|ketchup|moutarde|vinaigre|huile|olives|tournesol|mais|lentille|lentilles|pois chiche|pois chiches|haricot|haricots|chorba|nwasser|thon|sardine|sardines|chips|cacahuete|cacahuetes|amande|amandes|noix|pistache|bouillon|barilla|randa|warda|diari|sicam|cap d or)\b/i.test(text)) {
+        const found = findUserCat([
+            'epicerie salee', 'salee', 'sale', 'conserve', 'conserves', 'pate', 'pates', 'riz', 'epice', 'epices', 'condiments', 'sauces', 'apero', 'epicerie'
+        ]);
+        if (found) return found;
+    }
+
+    // I. HYGIÈNE & BEAUTÉ
+    if (/\b(shampoing|champoing|apres-shampoing|savon|savons|gel douche|dentifrice|brosse a dents|deodorant|deo|coton|creme visage|creme corps|rasoir|mousse a raser|serviette hygienique|lingettes|nivea|dove|cadum|signal|colgate|palmolive|elseve|gillette|always)\b/i.test(text)) {
+        const found = findUserCat([
+            'hygiene & beaute', 'hygiene', 'beaute', 'soin', 'soins', 'corps', 'sante', 'maison'
+        ]);
+        if (found) return found;
+    }
+
+    // J. ENTRETIEN & MAISON
+    if (/\b(lessive|assouplissant|liquide vaisselle|vaisselle|javel|detergent|nettoyant|eponge|eponges|sac poubelle|papier toilette|papier wc|essuie-tout|sopalin|papier cuisson|aluminium|pile|piles|ampoule|allumette|ariel|skip|omo|dixan|pril)\b/i.test(text)) {
+        const found = findUserCat([
+            'entretien & maison', 'entretien', 'nettoyage', 'maison', 'droguerie', 'menage', 'bricolage'
+        ]);
+        if (found) return found;
+    }
+
+    // K. BÉBÉ
+    if (/\b(couche|couches|lait bebe|petits pots|biberon|pampers)\b/i.test(text)) {
+        const found = findUserCat([
+            'bebe', 'enfants', 'maternite', 'soin'
+        ]);
+        if (found) return found;
+    }
+
+    // L. ANIMAUX
+    if (/\b(croquette|croquettes|litiere|chat|chien|whiskas|friskies)\b/i.test(text)) {
+        const found = findUserCat([
+            'animaux', 'animal', 'chat', 'chien'
+        ]);
+        if (found) return found;
+    }
+
+    // 4. Si aucun mot-clé spécifique, chercher si le nom d'une catégorie utilisateur apparaît dans le texte
+    for (const cat of normalizedCats) {
+        if (cat.clean.length >= 4 && text.includes(cat.clean)) {
+            return cat.original;
+        }
+    }
+
+    // 5. Recherche d'une catégorie "Autre" ou "Divers"
+    const autreCat = normalizedCats.find(c => c.clean === 'autre' || c.clean === 'divers' || c.clean.includes('autre'));
+    if (autreCat) return autreCat.original;
+
+    // 6. Défaut
+    return categories[0]?.name || 'Autre';
+}
+
 export class SmartMatchingService {
     private static ALIASES_KEY = 'product_aliases';
     private static CUSTOM_INGREDIENTS_KEY = 'custom_ingredients';

@@ -29,7 +29,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { Receipt, ReceiptLine, Ingredient, CategoryDef } from '@/lib/types';
-import { SmartMatchingService, isReceiptNoise, cleanReceiptLabel } from '@/lib/smart-matching';
+import { SmartMatchingService, isReceiptNoise, cleanReceiptLabel, guessCategoryForProduct } from '@/lib/smart-matching';
 import { cn } from '@/lib/utils';
 
 // ─── Types internes ─────────────────────────────────────────────────────────
@@ -101,8 +101,8 @@ export function ReceiptSyncDialog({
           line.unitPrice != null
             ? line.unitPrice
             : line.lineTotal != null && line.quantity != null && line.quantity > 0
-            ? parseFloat((line.lineTotal / line.quantity).toFixed(3))
-            : 0;
+              ? parseFloat((line.lineTotal / line.quantity).toFixed(3))
+              : 0;
 
         if (newPrice <= 0) continue;
 
@@ -122,11 +122,11 @@ export function ReceiptSyncDialog({
           const suggestedName = cleanReceiptLabel(line.normalizedLabel || line.rawLabel || label);
           if (!suggestedName || suggestedName.length < 2) continue;
 
-          // Deviner la catégorie à partir de celle du ticket si possible
-          const guessedCategory =
-            line.category && categories.some(c => c.name === line.category)
-              ? line.category
-              : categories[0]?.name || 'Autre';
+          // Deviner intelligemment la catégorie selon le produit et les catégories utilisateur
+          const guessedCategory = guessCategoryForProduct(suggestedName, line.rawLabel || label, categories, line.category);
+
+
+
 
           newUnmatched.push({
             line,
@@ -390,9 +390,14 @@ export function ReceiptSyncDialog({
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-sm text-foreground truncate">
-                            {u.suggestedName}
-                          </p>
+                          <div className="flex items-center gap-2">
+                            <p className="font-semibold text-sm text-foreground truncate">
+                              {u.suggestedName}
+                            </p>
+                            <span className="inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded-md bg-secondary text-secondary-foreground border shrink-0">
+                              {u.selectedCategory}
+                            </span>
+                          </div>
                           <p className="text-[10px] text-muted-foreground italic truncate">
                             Brut : {u.line.rawLabel}
                           </p>
