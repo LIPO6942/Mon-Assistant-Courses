@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Wifi, WifiOff } from 'lucide-react';
+import { WifiOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useKeepAlive } from '@/hooks/useKeepAlive';
+import { PWAInstallBanner } from './PWAInstallBanner';
 
 export function PWAHandler() {
   const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
@@ -29,7 +30,7 @@ export function PWAHandler() {
         navigator.serviceWorker.register(swUrl, { scope: '/' }).then(
           (registration) => {
             console.log('[PWAHandler] Master SW registered:', registration.scope);
-            
+
             // Listen for SW updates to keep it fresh
             registration.addEventListener('updatefound', () => {
               const newWorker = registration.installing;
@@ -75,18 +76,21 @@ export function PWAHandler() {
     };
   }, []);
 
-  // Show a small banner if offline
-  if (!isOnline) {
-    return (
-      <div className={cn(
-        "fixed bottom-20 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-2",
-        "bg-red-600 text-white px-4 py-2 rounded-full shadow-lg animate-bounce text-sm font-medium"
-      )}>
-        <WifiOff size={16} />
-        <span>Mode Hors-ligne</span>
-      </div>
-    );
-  }
+  return (
+    <>
+      {/* PWA Installation banner for new users / visitors */}
+      <PWAInstallBanner />
 
-  return null;
+      {/* Show a small banner if offline */}
+      {!isOnline && (
+        <div className={cn(
+          "fixed bottom-20 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-2",
+          "bg-red-600 text-white px-4 py-2 rounded-full shadow-lg animate-bounce text-sm font-medium"
+        )}>
+          <WifiOff size={16} />
+          <span>Mode Hors-ligne</span>
+        </div>
+      )}
+    </>
+  );
 }

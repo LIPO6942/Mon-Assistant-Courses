@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
 import type { BasketItem, PurchaseHistory, DbaratiItem } from '@/lib/types';
-import { Minus, Plus, Trash2, Share2, History, Store, CheckCircle2, ListChecks, Pencil } from 'lucide-react';
+import { Minus, Plus, Trash2, Share2, History, Store, CheckCircle2, ListChecks, Pencil, Camera } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { STORES } from '@/lib/stores';
 import { StoreIcon, StoreOption } from '@/components/StoreIcon';
@@ -44,6 +44,7 @@ interface BasketSheetProps {
   onTogglePurchaseStatus: (id: string, itemPrice: number, itemQuantity: number) => void;
   purchaseHistory: PurchaseHistory;
   dbarati?: DbaratiItem[];
+  onScanReceipt?: () => void;
 }
 
 export default function BasketSheet({
@@ -57,6 +58,7 @@ export default function BasketSheet({
   onTogglePurchaseStatus,
   purchaseHistory,
   dbarati = [],
+  onScanReceipt,
 }: BasketSheetProps) {
   const [isStoreDialogOpen, setIsStoreDialogOpen] = useState(false);
   const [selectedStore, setSelectedStore] = useState<string>('');
@@ -242,6 +244,11 @@ export default function BasketSheet({
               <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleToggleAll} disabled={basket.length === 0} aria-label="Tout sélectionner">
                 <ListChecks className="h-4 w-4 text-primary" />
               </Button>
+              {onScanReceipt && (
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onScanReceipt} disabled={basket.length === 0} title="Scanner le ticket de ces courses">
+                  <Camera className="h-4 w-4 text-primary" />
+                </Button>
+              )}
               <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onShareBasket} disabled={basket.length === 0} aria-label="Partager le panier">
                 <Share2 className="h-4 w-4 text-primary" />
               </Button>
@@ -432,6 +439,16 @@ export default function BasketSheet({
               </span>
               <span className="text-2xl font-bold text-primary">{basketTotal.toFixed(3)} DT</span>
             </div>
+            {onScanReceipt && (
+              <Button
+                variant="outline"
+                onClick={onScanReceipt}
+                className="w-full rounded-xl h-10 border-primary/30 text-primary hover:bg-primary/10 gap-2 font-medium"
+              >
+                <Camera className="h-4 w-4" />
+                Scanner le ticket de ces courses
+              </Button>
+            )}
             <Button onClick={handleClickValidate} className="w-full" disabled={purchasedItemCount === 0}>
               Valider les {purchasedItemCount} articles achetés
             </Button>

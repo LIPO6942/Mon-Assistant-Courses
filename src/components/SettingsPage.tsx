@@ -2,13 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { Mail, User, Shield, LogOut, Smartphone, Cloud, ChefHat, RefreshCw } from 'lucide-react';
+import { Mail, User, Shield, LogOut, Smartphone, Cloud, ChefHat, RefreshCw, QrCode } from 'lucide-react';
+import { AppQRCodeDialog } from './AppQRCodeDialog';
 import { Button } from '@/components/ui/button';
 
 export default function SettingsPage() {
     const { user, signOut, pushPermission, requestPushPermission, resetPushNotifications, disablePushNotifications } = useAuth();
     const [lastSharedUser, setLastSharedUser] = useState<{ uid: string, name: string } | null>(null);
     const [frequentContacts, setFrequentContacts] = useState<any[]>([]);
+    const [qrDialogOpen, setQrDialogOpen] = useState(false);
 
     useEffect(() => {
         const stored = localStorage.getItem('lastSharedUser');
@@ -279,7 +281,7 @@ export default function SettingsPage() {
                         className="w-full h-10 rounded-xl text-xs flex items-center justify-center gap-2"
                         onClick={() => {
                             if ('serviceWorker' in navigator) {
-                                navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                                navigator.serviceWorker.getRegistrations().then(function (registrations) {
                                     for (let registration of registrations) {
                                         registration.unregister();
                                     }
@@ -301,6 +303,44 @@ export default function SettingsPage() {
                         Forcer la mise à jour
                     </Button>
                 </div>
+            </div>
+
+            {/* Partage & QR Code */}
+            <div className="bg-card rounded-2xl border shadow-sm p-6 space-y-4">
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                        <QrCode className="h-5 w-5" />
+                    </div>
+                    <div>
+                        <h3 className="font-semibold text-base">Partager l'application</h3>
+                        <p className="text-xs text-muted-foreground">QR Code & lien d'installation PWA</p>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-4 bg-muted/40 p-3 rounded-2xl border">
+                    <img
+                        src="/app-qr-code.svg"
+                        alt="QR Code"
+                        className="w-16 h-16 rounded-lg bg-white p-1 border shadow-xs shrink-0"
+                    />
+                    <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-foreground truncate">
+                            mon-assistant-courses.vercel.app
+                        </p>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                            Scannez pour ouvrir ou installer l'application PWA.
+                        </p>
+                    </div>
+                </div>
+
+                <Button
+                    onClick={() => setQrDialogOpen(true)}
+                    variant="outline"
+                    className="w-full h-11 rounded-xl text-xs font-semibold gap-2"
+                >
+                    <QrCode className="h-4 w-4" />
+                    Afficher le QR Code en grand
+                </Button>
             </div>
 
             {/* Sign Out */}
@@ -328,6 +368,11 @@ export default function SettingsPage() {
             <p className="text-center text-xs text-muted-foreground pb-4">
                 UID: <span className="font-mono text-[10px] select-all">{user.uid}</span>
             </p>
+            <AppQRCodeDialog
+                open={qrDialogOpen}
+                onOpenChange={setQrDialogOpen}
+            />
+
         </div>
     );
 }

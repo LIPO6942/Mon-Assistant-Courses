@@ -1,4 +1,3 @@
-
 import { db } from './idb';
 import { Ingredient, ProductAlias } from './types';
 
@@ -84,18 +83,32 @@ export function cleanReceiptLabel(rawLabel: string): string {
     return name.trim();
 }
 
-function normalize(text: string): string {
-    return (text || '')
+/**
+ * Normalisation avancée avec lemmatisation du pluriel français ('s' ou 'x' terminaux)
+ */
+function stemWord(w: string): string {
+    if (w.length > 3) {
+        if (w.endsWith('s') || w.endsWith('x')) {
+            return w.slice(0, -1);
+        }
+    }
+    return w;
+}
+
+export function normalize(text: string): string {
+    const raw = (text || '')
         .toLowerCase()
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '')
         // Retirer les grammages et unités courantes (ex: 500g, 1L, 2.5kg, x6)
-        .replace(/\b(\d+[\.,]?\d*)\s*(kg|gr|g|ml|lt|l|cl|pcs|piece|u|un|x|pack|promo)\b/g, ' ')
+        .replace(/\b(\d+[\.,]?\d*)\s*(kg|gr|g|ml|lt|l|cl|pcs|piece|u|un|x|pack|promo|bt|bte|bouteille|sachet)\b/g, ' ')
         // Retirer les chiffres isolés qui sont souvent des quantités
         .replace(/\b\d+\b/g, ' ')
         .replace(/[^a-z0-9]/g, ' ')
         .replace(/\s+/g, ' ')
         .trim();
+
+    return raw.split(' ').map(stemWord).join(' ');
 }
 
 /**
@@ -126,7 +139,7 @@ export class SmartMatchingService {
     private static CUSTOM_INGREDIENTS_KEY = 'custom_ingredients';
 
     /**
-     * Trouve l'ingrédient correspondant à un nom brut de Lawra9
+     * Trouve l'ingrédient correspondant à un nom brut de Lawra9 ou d'un ticket
      */
     static async findMatch(rawName: string, allIngredients: Ingredient[]): Promise<{ ingredient?: Ingredient; confidence: number; isAlias: boolean }> {
         const normRaw = normalize(rawName);
@@ -144,7 +157,6 @@ export class SmartMatchingService {
         if (exactMatch) return { ingredient: exactMatch, confidence: 1, isAlias: false };
 
         // 3. Recherche par containment et similarité de mots
-        // Ceci permet de matcher "Lait" avec "Lait demi écrémé" ou "Delio" avec "Delio aroma g"
         let bestContainmentMatch: Ingredient | undefined;
         let bestContainmentScore = 0;
 
@@ -152,18 +164,12 @@ export class SmartMatchingService {
             const normIng = normalize(ing.name);
 
             // Priorité absolue : Le nom MAC est un préfixe exact ou contenu exact du nom importé
-            // Ex: MAC "Eau" -> Import "Eau Pristine"
-            // Ex: MAC "Lait" -> Import "Lait Delice"
-
-            // Score 0.95 : Le nom importé COMMENCE par le nom MAC + espace (ex: "Eau X")
             if (normRaw.startsWith(normIng + ' ') && normIng.length >= 2) {
                 if (0.95 > bestContainmentScore) { bestContainmentMatch = ing; bestContainmentScore = 0.95; }
             }
-            // Score 0.9 : Le nom MAC est contenu dans le nom importé (ex: "Pack Eau X")
             else if (normRaw.includes(' ' + normIng + ' ') || normRaw.endsWith(' ' + normIng) || normRaw === normIng) {
                 if (0.9 > bestContainmentScore) { bestContainmentMatch = ing; bestContainmentScore = 0.9; }
             }
-            // Cas simple 'includes' mais attention aux faux positifs courts
             else if (normRaw.includes(normIng) && normIng.length >= 4) {
                 if (0.85 > bestContainmentScore) { bestContainmentMatch = ing; bestContainmentScore = 0.85; }
             }
@@ -173,21 +179,16 @@ export class SmartMatchingService {
             return { ingredient: bestContainmentMatch, confidence: bestContainmentScore, isAlias: false };
         }
 
-        // 4. Fuzzy Matching (Levenshtein) - pour les fautes de frappe uniquement
-        // On n'applique le fuzzy QUE si les chaînes ont une longueur similaire
-        // (évite "Yab To Mix" → "Pain de mie" qui ont des longueurs proches mais rien en commun)
-
+        // 4. Fuzzy Matching (Levenshtein)
         let bestMatch: Ingredient | undefined;
         let bestScore = 0;
 
         for (const ing of allIngredients) {
             const normIng = normalize(ing.name);
 
-            // Ignorer si la différence de longueur est trop grande (> 50%)
             const lenRatio = Math.min(normRaw.length, normIng.length) / Math.max(normRaw.length, normIng.length);
             if (lenRatio < 0.5) continue;
 
-            // Exiger au moins un mot en commun (≥ 3 lettres) avant le calcul Levenshtein
             const rawWords = normRaw.split(' ').filter(w => w.length >= 3);
             const ingWords = normIng.split(' ').filter(w => w.length >= 3);
             const hasCommonWord = rawWords.some(w => ingWords.some(iw => iw === w || iw.startsWith(w) || w.startsWith(iw)));
@@ -203,7 +204,6 @@ export class SmartMatchingService {
             }
         }
 
-        // Seuil relevé à 0.65 pour éviter les faux positifs
         if (bestScore < 0.65) {
             return { ingredient: undefined, confidence: 0, isAlias: false };
         }
@@ -213,6 +213,81 @@ export class SmartMatchingService {
             confidence: bestScore,
             isAlias: false
         };
+    }
+
+    /**
+     * Recherche haute fidélité pour faire correspondre un libellé de ticket à un article du panier
+     */
+    static async findMatchInBasket<T extends { id: string; name: string }>(
+        rawLabel: string,
+        items: T[]
+    ): Promise<{ item?: T; confidence: number }> {
+        if (!items || items.length === 0) return { confidence: 0 };
+
+        const normRaw = normalize(rawLabel);
+
+        // 1. Alias connus
+        const aliases = await db.get<ProductAlias[]>(this.ALIASES_KEY) || [];
+        const alias = aliases.find(a => normalize(a.rawName) === normRaw);
+        if (alias) {
+            const found = items.find(i => i.id === alias.ingredientId);
+            if (found) return { item: found, confidence: 1 };
+        }
+
+        // 2. Égalité exacte après normalisation & lemmatisation (ex: "Tomates" == "Tomate")
+        const exact = items.find(i => normalize(i.name) === normRaw);
+        if (exact) return { item: exact, confidence: 1 };
+
+        // 3. Containment strict
+        let bestContainment: T | undefined;
+        let bestContainmentScore = 0;
+
+        for (const it of items) {
+            const normIt = normalize(it.name);
+            if (normRaw.startsWith(normIt + ' ') && normIt.length >= 2) {
+                if (0.95 > bestContainmentScore) { bestContainment = it; bestContainmentScore = 0.95; }
+            } else if (normRaw.includes(' ' + normIt + ' ') || normRaw.endsWith(' ' + normIt)) {
+                if (0.9 > bestContainmentScore) { bestContainment = it; bestContainmentScore = 0.9; }
+            } else if (normRaw.includes(normIt) && normIt.length >= 4) {
+                if (0.85 > bestContainmentScore) { bestContainment = it; bestContainmentScore = 0.85; }
+            } else if (normIt.includes(normRaw) && normRaw.length >= 4) {
+                if (0.85 > bestContainmentScore) { bestContainment = it; bestContainmentScore = 0.85; }
+            }
+        }
+
+        if (bestContainment) {
+            return { item: bestContainment, confidence: bestContainmentScore };
+        }
+
+        // 4. Fuzzy Levenshtein avec filtre de mot en commun
+        let bestMatch: T | undefined;
+        let bestScore = 0;
+
+        for (const it of items) {
+            const normIt = normalize(it.name);
+            const lenRatio = Math.min(normRaw.length, normIt.length) / Math.max(normRaw.length, normIt.length);
+            if (lenRatio < 0.45) continue;
+
+            const rawWords = normRaw.split(' ').filter(w => w.length >= 3);
+            const itWords = normIt.split(' ').filter(w => w.length >= 3);
+            const hasCommonWord = rawWords.some(w => itWords.some(iw => iw === w || iw.startsWith(w) || w.startsWith(iw)));
+            if (!hasCommonWord) continue;
+
+            const dist = getLevenshteinDistance(normRaw, normIt);
+            const maxL = Math.max(normRaw.length, normIt.length);
+            const score = maxL === 0 ? 0 : 1 - (dist / maxL);
+
+            if (score > bestScore) {
+                bestScore = score;
+                bestMatch = it;
+            }
+        }
+
+        if (bestScore >= 0.60 && bestMatch) {
+            return { item: bestMatch, confidence: bestScore };
+        }
+
+        return { item: undefined, confidence: 0 };
     }
 
     /**

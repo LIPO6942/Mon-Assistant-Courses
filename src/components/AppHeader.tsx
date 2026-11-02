@@ -1,15 +1,14 @@
-
 'use client';
 
+import { useState } from 'react';
 import { ChefHat, ShoppingBasket, BookHeart, Refrigerator, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetTrigger } from '@/components/ui/sheet';
 import BasketSheet from './BasketSheet';
 import SavedRecipesSheet from './SavedRecipesSheet';
-import type { BasketItem, Recipe, PurchaseHistory, DbaratiItem } from '@/lib/types';
 import FridgeScannerSheet from './FridgeScannerSheet';
-import { useState } from 'react';
+import type { BasketItem, Recipe, PurchaseHistory, DbaratiItem } from '@/lib/types';
 import { useAuth } from '@/context/AuthContext';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 
@@ -29,6 +28,7 @@ interface AppHeaderProps {
   onFridgeScan: (ingredients: string[]) => void;
   purchaseHistory: PurchaseHistory;
   dbarati?: DbaratiItem[];
+  onScanReceipt?: () => void;
 }
 
 export default function AppHeader({
@@ -47,6 +47,7 @@ export default function AppHeader({
   onFridgeScan,
   purchaseHistory,
   dbarati,
+  onScanReceipt,
 }: AppHeaderProps) {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const { user, signOut } = useAuth();
@@ -61,7 +62,7 @@ export default function AppHeader({
         </div>
 
         <div className="flex items-center gap-2">
-          {/* User avatar & Sign out button - left of fridge */}
+          {/* User avatar & Sign out button */}
           {user && (
             <Button
               variant="outline"
@@ -82,6 +83,7 @@ export default function AppHeader({
               )}
             </Button>
           )}
+
           <Sheet open={isScannerOpen} onOpenChange={setIsScannerOpen}>
             <SheetTrigger asChild>
               <Button variant="outline" size="icon" className="relative rounded-full">
@@ -124,6 +126,7 @@ export default function AppHeader({
               onTogglePurchaseStatus={onTogglePurchaseStatus}
               purchaseHistory={purchaseHistory}
               dbarati={dbarati}
+              onScanReceipt={onScanReceipt}
             />
           </Sheet>
         </div>
@@ -131,4 +134,3 @@ export default function AppHeader({
     </header>
   );
 }
-

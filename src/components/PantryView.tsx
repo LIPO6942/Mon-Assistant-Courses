@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -12,7 +11,6 @@ import { cn, getProductStatus, isNonFoodItem } from '@/lib/utils';
 import { Sheet, SheetTrigger } from '@/components/ui/sheet';
 import QuickReorderSheet from './QuickReorderSheet';
 import ReminderSheet from './ReminderSheet';
-import { ImportFromLawra9Dialog } from './ImportFromLawra9Dialog';
 
 interface PantryViewProps {
   dbarati?: DbaratiItem[];
@@ -29,17 +27,15 @@ interface PantryViewProps {
   onToggleChandyekIngredient: (ingredientName: string) => void;
   chandyekIngredientsList: string[];
   initialBudget: number;
-  setInitialBudget: (budget: number) => void;
-  basketTotalToPay: number;
   totalSpent: number;
   clearBasket: () => void;
   resetTotalSpent: () => void;
   basketItemCount: number;
   remainingBudget: number;
-  purchaseHistory: PurchaseHistory;
   pantry: Ingredient[];
   onAddToBasket: (ingredient: Ingredient, quantity: number) => void;
-  onDeleteFromHistory: (id: string) => void;
+  purchaseHistory: PurchaseHistory;
+  onDeleteFromHistory?: (ingredientId: string, purchaseIndex: number) => void;
   onUpdatePrices: (updates: { id: string; price: number }[]) => void;
   onAddIngredients: (newIngredients: Omit<Ingredient, 'id'>[]) => void;
   onSaveReceipt?: (receipt: Receipt) => void;
@@ -49,6 +45,7 @@ interface PantryViewProps {
 }
 
 export default function PantryView({
+  dbarati,
   groupedIngredients,
   categories,
   searchQuery,
@@ -62,16 +59,14 @@ export default function PantryView({
   onToggleChandyekIngredient,
   chandyekIngredientsList,
   initialBudget,
-  setInitialBudget,
-  basketTotalToPay,
   totalSpent,
   clearBasket,
   resetTotalSpent,
   basketItemCount,
   remainingBudget,
-  purchaseHistory,
   pantry,
   onAddToBasket,
+  purchaseHistory,
   onDeleteFromHistory,
   onUpdatePrices,
   onAddIngredients,
@@ -79,14 +74,11 @@ export default function PantryView({
   onViewCategoryTrends,
   onMoveCategory,
   userId,
-  dbarati,
 }: PantryViewProps) {
   return (
     <div>
       <BudgetManager
         initialBudget={initialBudget}
-        setInitialBudget={setInitialBudget}
-        basketTotalToPay={basketTotalToPay}
         totalSpent={totalSpent}
         clearBasket={clearBasket}
         resetTotalSpent={resetTotalSpent}
@@ -109,13 +101,6 @@ export default function PantryView({
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input type="search" placeholder="Rechercher un ingrédient..." className="pl-11 rounded-full h-11 text-base" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
         </div>
-        <ImportFromLawra9Dialog
-          allIngredients={pantry}
-          categories={categories}
-          onUpdatePrices={onUpdatePrices}
-          onAddIngredients={onAddIngredients}
-          onSaveReceipt={onSaveReceipt}
-        />
         <Sheet>
           <SheetTrigger asChild>
             <Button variant="outline" size="icon" className="h-11 w-11 rounded-full shadow-sm shrink-0" title="Historique / Re-commande">
@@ -168,7 +153,7 @@ export default function PantryView({
                       title="Monter"
                       disabled={index === 0}
                     >
-                      <ChevronUp className="h-3.5 w-3.5" />
+                      <ChevronUp className="h-4 w-4" />
                     </button>
                     <button
                       className={cn('h-6 w-6 flex items-center justify-center rounded-md transition-colors', palette.icon, palette.buttonHover, index === filledCategories.length - 1 ? 'opacity-20 pointer-events-none' : '')}
@@ -176,24 +161,34 @@ export default function PantryView({
                       title="Descendre"
                       disabled={index === filledCategories.length - 1}
                     >
-                      <ChevronDown className="h-3.5 w-3.5" />
+                      <ChevronDown className="h-4 w-4" />
                     </button>
-                    <Button variant="ghost" size="icon" className={cn("h-7 w-7 transition-colors", palette.icon, palette.buttonHover)} onClick={() => openCategoryDialog(category)}><Pencil className="h-3.5 w-3.5" /></Button>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors" onClick={() => handleDeleteCategory(category.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                    <Button variant="ghost" size="icon" className={cn('h-6 w-6 transition-colors', palette.buttonHover)} onClick={() => openCategoryDialog(category)}>
+                      <Pencil className="h-3 w-3" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className='h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors' onClick={() => handleDeleteCategory(category.id)}>
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
                   </div>}
                 </CardHeader>
                 <CardContent className="flex-grow p-3">
-                  <ScrollArea className="h-64">
-                    <ul className="space-y-2 pr-4">
-                      {items.map(item => {
-                        const isSelectedForChandyek = chandyekIngredientsList.includes(item.name);
-                        // Masquer le bouton Ch3andek pour les articles non-alimentaires (maison, bien-être, piles, etc.)
+                  <ScrollArea className="h-48 pr-2">
+                    <ul className="space-y-1.5">
+                      {items.map((item) => {
                         const isNonFood = isNonFoodItem(item.name, item.category);
+                        const isSelectedForChandyek = !isNonFood && chandyekIngredientsList.some(name => name.toLowerCase() === item.name.toLowerCase());
+
                         return (
-                          <li key={item.id} className="flex items-center justify-between p-2 rounded-2xl bg-background/50 border border-border/20 shadow-sm hover:shadow-md hover:bg-background/80 transition-all duration-300 group/item">
-                            <div className="flex flex-col gap-0.5 min-w-0 flex-1 mr-1">
+                          <li
+                            key={item.id}
+                            className={cn(
+                              "flex justify-between items-center p-2 rounded-xl border border-transparent transition-all duration-200",
+                              "hover:bg-white/60 dark:hover:bg-black/20 hover:border-black/5 dark:hover:border-white/5 hover:shadow-xs group/item"
+                            )}
+                          >
+                            <div className="flex-1 min-w-0 pr-2">
                               <div className="flex items-center gap-1.5">
-                                <span className='font-semibold text-sm whitespace-normal break-words leading-tight'>{item.name}</span>
+                                <p className="font-semibold text-xs tracking-tight truncate text-foreground/90">{item.name}</p>
                                 {(() => {
                                   const status = getProductStatus(purchaseHistory[item.id], item.name, dbarati);
                                   if (!status) return null;

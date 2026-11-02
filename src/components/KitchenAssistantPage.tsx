@@ -18,6 +18,9 @@ import MarketPricesView from './MarketPricesView';
 import ReceiptsView from './ReceiptsView';
 import CategoryPriceEvolutionDialog from './CategoryPriceEvolutionDialog';
 import SettingsPage from './SettingsPage';
+import { UploadReceiptDialog } from './UploadReceiptDialog';
+import { ReconciliationSummaryDialog, ReconciliationReport, ReconciledItemSummary } from './ReconciliationSummaryDialog';
+import { SmartMatchingService, isReceiptNoise } from '@/lib/smart-matching';
 import { db } from '@/lib/idb';
 import { isInAppBrowser, getProductStatus, cn, isExcludedFromMarketPrices, isNonFoodItem } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -98,12 +101,18 @@ export default function KitchenAssistantPage() {
   // Price Evolution State
   const [viewingCategoryTrends, setViewingCategoryTrends] = useState<CategoryDef | null>(null);
 
+  // Receipt & Basket Reconciliation State
+  const [isBasketReceiptScanOpen, setIsBasketReceiptScanOpen] = useState(false);
+  const [reconciliationDialogOpen, setReconciliationDialogOpen] = useState(false);
+  const [reconciliationReport, setReconciliationReport] = useState<ReconciliationReport | null>(null);
+  const [undoSnapshot, setUndoSnapshot] = useState<any | null>(null);
+
   // In-App Sharing Receiving State
   const [incomingShare, setIncomingShare] = useState<any | null>(null);
 
   // Ref to track URL-based share data even after URL is cleaned
   const lastUrlEncodedData = useRef<string | null>(null);
-  
+
   // Track which shares have been notified as "seen"
   const [notifiedShares, setNotifiedShares] = useState<Set<string>>(new Set());
 
@@ -255,7 +264,7 @@ export default function KitchenAssistantPage() {
             localStorageBasket = lsParsed.items ?? null;
             localStorageSavedAt = lsParsed.savedAt ?? 0;
           }
-        } catch (_) {}
+        } catch (_) { }
 
         // 3. Fallback to IndexedDB
         const [
@@ -267,7 +276,7 @@ export default function KitchenAssistantPage() {
           budgetData,
           totalSpentData,
           healthConditionsData,
-                    purchaseHistoryData,
+          purchaseHistoryData,
           dbaratiData,
           receiptsData,
         ] = await Promise.all([
@@ -324,7 +333,7 @@ export default function KitchenAssistantPage() {
         try {
           const lsRaw = localStorage.getItem('mac_receipts');
           if (lsRaw) { lsReceipts = JSON.parse(lsRaw).items ?? null; }
-        } catch (_) {}
+        } catch (_) { }
         const resolvedReceipts = lsReceipts ?? cloudData?.receipts ?? receiptsData ?? [];
         console.log('[MAC-DEBUG] loadData receipts:', {
           localStorage: lsReceipts?.length ?? 'null',
@@ -339,19 +348,19 @@ export default function KitchenAssistantPage() {
         // Ne PAS réinitialiser à vide — essayer IndexedDB d'abord pour éviter de perdre les données
         try {
           const [idbPantry, idbBasket, idbCats, idbSavedRecipes, idbUserRecipes,
-                 idbBudget, idbSpent, idbHealth, idbHistory, idbDbarati, idbReceipts] = await Promise.all([
-            db.get<Ingredient[]>('pantry'),
-            db.get<BasketItem[]>('basket'),
-            db.get<CategoryDef[]>('categories'),
-            db.get<Recipe[]>('savedRecipes'),
-            db.get<UserRecipe[]>('userRecipes'),
-            db.get<number>('budget'),
-            db.get<number>('totalSpent'),
-            db.get<HealthConditionCategory[]>('healthConditions'),
-            db.get<PurchaseHistory>('purchaseHistory'),
-            db.get<DbaratiItem[]>('dbarati'),
-            db.get<Receipt[]>('receipts'),
-          ]);
+            idbBudget, idbSpent, idbHealth, idbHistory, idbDbarati, idbReceipts] = await Promise.all([
+              db.get<Ingredient[]>('pantry'),
+              db.get<BasketItem[]>('basket'),
+              db.get<CategoryDef[]>('categories'),
+              db.get<Recipe[]>('savedRecipes'),
+              db.get<UserRecipe[]>('userRecipes'),
+              db.get<number>('budget'),
+              db.get<number>('totalSpent'),
+              db.get<HealthConditionCategory[]>('healthConditions'),
+              db.get<PurchaseHistory>('purchaseHistory'),
+              db.get<DbaratiItem[]>('dbarati'),
+              db.get<Receipt[]>('receipts'),
+            ]);
           setPantry(idbPantry ?? predefinedIngredients);
           setBasket(idbBasket ?? []);
           setCategories(idbCats ?? initialCategories);
@@ -373,7 +382,7 @@ export default function KitchenAssistantPage() {
           try {
             const lsRaw = localStorage.getItem('mac_receipts');
             if (lsRaw) { fallbackLsReceipts = JSON.parse(lsRaw).items ?? null; }
-          } catch (_) {}
+          } catch (_) { }
           setReceipts(fallbackLsReceipts ?? idbReceipts ?? []);
         } catch (_) {
           // Dernier recours : données par défaut (ne devrait jamais arriver)
@@ -406,7 +415,7 @@ export default function KitchenAssistantPage() {
     try {
       const slim = list.map(({ ocrText, ...rest }) => rest);
       localStorage.setItem('mac_receipts', JSON.stringify({ items: slim, savedAt: Date.now() }));
-    } catch (_) {}
+    } catch (_) { }
     // 2. IndexedDB (async)
     db.set('receipts', list).catch(e => console.error('IDB receipts save error:', e));
     // 3. Firestore (async)
@@ -428,7 +437,7 @@ export default function KitchenAssistantPage() {
       // Sauvegarde synchrone dans localStorage : toujours complète avant un rechargement de page
       try {
         localStorage.setItem('mac_basket_v2', JSON.stringify({ items: basket, savedAt: Date.now() }));
-      } catch (_) {}
+      } catch (_) { }
       // Sauvegarde asynchrone dans IndexedDB et Firestore
       try { db.set('basket', basket); } catch (e) { console.error(e); }
       if (userUid) saveBasket(userUid, basket);
@@ -438,16 +447,16 @@ export default function KitchenAssistantPage() {
   useEffect(() => { if (!isInitialMount.current && isDataLoaded) { try { db.set('savedRecipes', savedRecipes); } catch (e) { console.error(e); } if (userUid) saveSavedRecipes(userUid, savedRecipes); } }, [savedRecipes]);
   useEffect(() => { if (!isInitialMount.current && isDataLoaded) { try { db.set('userRecipes', userRecipes); } catch (e) { console.error(e); } if (userUid) saveUserRecipes(userUid, userRecipes); } }, [userRecipes]);
   useEffect(() => { if (!isInitialMount.current && isDataLoaded) { try { db.set('purchaseHistory', purchaseHistory); } catch (e) { console.error(e); } if (userUid) savePurchaseHistory(userUid, purchaseHistory); } }, [purchaseHistory]);
-  useEffect(() => { 
-    if (!isInitialMount.current && isDataLoaded) { 
-      try { 
-        db.set('budget', initialBudget); 
+  useEffect(() => {
+    if (!isInitialMount.current && isDataLoaded) {
+      try {
+        db.set('budget', initialBudget);
         db.set('totalSpent', totalSpent);
-      } catch (e) { 
-        console.error(e); 
-      } 
-      if (userUid) saveBudget(userUid, initialBudget, totalSpent); 
-    } 
+      } catch (e) {
+        console.error(e);
+      }
+      if (userUid) saveBudget(userUid, initialBudget, totalSpent);
+    }
   }, [initialBudget, totalSpent]);
   useEffect(() => { if (!isInitialMount.current && isDataLoaded) { try { db.set('healthConditions', healthConditions); } catch (e) { console.error(e); } if (userUid) saveHealthConditions(userUid, healthConditions); } }, [healthConditions]);
   useEffect(() => { if (!isInitialMount.current && isDataLoaded) { try { db.set('dbarati', dbarati); } catch (e) { console.error(e); } if (userUid) saveDbarati(userUid, dbarati); } }, [dbarati]);
@@ -464,11 +473,11 @@ export default function KitchenAssistantPage() {
     if (isDataLoaded && Array.isArray(dbarati) && dbarati.length > 0) {
       const ONE_MONTH_MS = 30 * 24 * 60 * 60 * 1000;
       const now = Date.now();
-      
-      const needsUpdate = dbarati.some(item => 
+
+      const needsUpdate = dbarati.some(item =>
         item &&
-        item.done && 
-        item.lastPreparedAt && 
+        item.done &&
+        item.lastPreparedAt &&
         (now - new Date(item.lastPreparedAt).getTime() > ONE_MONTH_MS)
       );
 
@@ -767,7 +776,7 @@ export default function KitchenAssistantPage() {
       return newArr;
     });
   };
-  
+
   const handleAddReceipt = (receipt: Receipt) => {
     setReceipts(prev => {
       const next = [receipt, ...prev.filter(r => r.id !== receipt.id)];
@@ -850,6 +859,175 @@ export default function KitchenAssistantPage() {
         return newHistory;
       });
     }
+  };
+
+  const handleReconcileReceiptWithBasket = async (receipt: Receipt) => {
+    const receiptDate = receipt.purchaseAt || new Date().toISOString();
+    const storeName = receipt.storeName;
+
+    // Snapshot complet pour permettre l'annulation (Undo)
+    const snapshot = {
+      basket: [...basket],
+      purchaseHistory: JSON.parse(JSON.stringify(purchaseHistory)),
+      chandyekIngredients,
+      pantry: [...pantry],
+      receiptId: receipt.id,
+      receipts: [...receipts],
+    };
+
+    let currentBasket = [...basket];
+    const newHistory: PurchaseHistory = { ...purchaseHistory };
+    let currentPantry = [...pantry];
+    let chandyekList = chandyekIngredients ? chandyekIngredients.split(', ').filter(Boolean) : [];
+    const chandyekAdded: string[] = [];
+
+    const fullyPurchased: ReconciledItemSummary[] = [];
+    const partiallyPurchased: ReconciledItemSummary[] = [];
+    let priceUpdatesCount = 0;
+
+    const lines = receipt.lines || [];
+
+    for (const line of lines) {
+      const rawLabel = line.normalizedLabel || line.rawLabel || '';
+      if (isReceiptNoise(rawLabel) || isReceiptNoise(line.rawLabel || '')) continue;
+
+      const receiptQty = line.quantity && line.quantity > 0 ? line.quantity : 1;
+      const unitPrice = line.unitPrice != null
+        ? line.unitPrice
+        : (line.lineTotal && receiptQty > 0 ? parseFloat((line.lineTotal / receiptQty).toFixed(3)) : 0);
+
+      // Correspondance haute fidélité dans le panier
+      const match = await SmartMatchingService.findMatchInBasket(rawLabel, currentBasket);
+
+      if (match.item && match.confidence >= 0.45) {
+        const basketItem = match.item;
+        const plannedQty = basketItem.quantity;
+        const effectivePrice = unitPrice > 0 ? unitPrice : basketItem.price;
+
+        if (plannedQty > receiptQty) {
+          // Acheté partiellement : ex: prévu 2 boîtes de tomates, acheté 1 seule -> on garde 1 boîte dans le panier !
+          const qtyPurchased = receiptQty;
+          const qtyRemaining = plannedQty - receiptQty;
+
+          currentBasket = currentBasket.map(b =>
+            b.id === basketItem.id ? { ...b, quantity: qtyRemaining } : b
+          );
+
+          partiallyPurchased.push({
+            name: basketItem.name,
+            purchasedQty: qtyPurchased,
+            remainingQty: qtyRemaining,
+            unit: basketItem.unit,
+            price: effectivePrice,
+          });
+
+          if (!newHistory[basketItem.id]) newHistory[basketItem.id] = [];
+          newHistory[basketItem.id].push({
+            date: receiptDate,
+            quantity: qtyPurchased,
+            unit: basketItem.unit,
+            price: effectivePrice,
+            ...(storeName ? { store: storeName } : {}),
+            ...(basketItem.remark ? { remark: basketItem.remark } : {}),
+            ...(basketItem.brand ? {
+              brand: basketItem.brand,
+              brandLogoUrl: basketItem.brandLogoUrl || getBrandLogoUrl(basketItem.brand, basketItem.name, basketItem.category),
+            } : {}),
+          });
+        } else {
+          // Acheté en totalité : retiré du panier
+          const qtyPurchased = plannedQty;
+          currentBasket = currentBasket.filter(b => b.id !== basketItem.id);
+
+          fullyPurchased.push({
+            name: basketItem.name,
+            purchasedQty: qtyPurchased,
+            remainingQty: 0,
+            unit: basketItem.unit,
+            price: effectivePrice,
+          });
+
+          if (!newHistory[basketItem.id]) newHistory[basketItem.id] = [];
+          newHistory[basketItem.id].push({
+            date: receiptDate,
+            quantity: qtyPurchased,
+            unit: basketItem.unit,
+            price: effectivePrice,
+            ...(storeName ? { store: storeName } : {}),
+            ...(basketItem.remark ? { remark: basketItem.remark } : {}),
+            ...(basketItem.brand ? {
+              brand: basketItem.brand,
+              brandLogoUrl: basketItem.brandLogoUrl || getBrandLogoUrl(basketItem.brand, basketItem.name, basketItem.category),
+            } : {}),
+          });
+        }
+
+        // Ajout automatique au module Ch3andek si produit alimentaire
+        if (!isNonFoodItem(basketItem.name, basketItem.category)) {
+          if (!chandyekList.some(n => n.toLowerCase() === basketItem.name.toLowerCase())) {
+            chandyekList.push(basketItem.name);
+            chandyekAdded.push(basketItem.name);
+          }
+        }
+
+        // Mise à jour du prix dans le garde-manger si nouveau prix valide
+        if (effectivePrice > 0) {
+          currentPantry = currentPantry.map(p =>
+            p.id === basketItem.id ? { ...p, price: effectivePrice } : p
+          );
+          priceUpdatesCount++;
+        }
+
+        // Marque communautaire si présente
+        if (basketItem.brand && basketItem.brand.trim()) {
+          recordCommunityBrand(basketItem.brand, basketItem.name, basketItem.category, basketItem.id).catch(() => { });
+        }
+      }
+    }
+
+    // Sauvegarder le ticket scanné dans la liste des reçus
+    const nextReceipts = [receipt, ...receipts.filter(r => r.id !== receipt.id)];
+    setReceipts(nextReceipts);
+    persistReceipts(nextReceipts);
+
+    // Mettre à jour tous les états de l'application
+    setBasket(currentBasket);
+    setPurchaseHistory(newHistory);
+    setPantry(currentPantry);
+    if (chandyekAdded.length > 0) {
+      setChandyekIngredients(chandyekList.join(', '));
+    }
+
+    // Rapport de synthèse pour la modale informative
+    const report: ReconciliationReport = {
+      storeName: receipt.storeName,
+      purchaseDate: receiptDate,
+      totalAmount: receipt.total || 0,
+      fullyPurchased,
+      partiallyPurchased,
+      unmatchedInBasket: currentBasket.map(b => b.name),
+      chandyekAdded,
+      priceUpdatesCount,
+    };
+
+    setUndoSnapshot(snapshot);
+    setReconciliationReport(report);
+    setReconciliationDialogOpen(true);
+  };
+
+  const handleUndoReconciliation = () => {
+    if (!undoSnapshot) return;
+
+    setBasket(undoSnapshot.basket);
+    setPurchaseHistory(undoSnapshot.purchaseHistory);
+    setChandyekIngredients(undoSnapshot.chandyekIngredients);
+    setPantry(undoSnapshot.pantry);
+    setReceipts(undoSnapshot.receipts);
+    persistReceipts(undoSnapshot.receipts);
+
+    setReconciliationDialogOpen(false);
+    setUndoSnapshot(null);
+    alert("Action annulée : Votre panier et vos données ont été restaurés dans leur état précédent.");
   };
 
   const handleUpdatePrices = (updates: { id: string; price: number }[]) => {
@@ -954,7 +1132,7 @@ export default function KitchenAssistantPage() {
 
         // Record community brand usage for confirmed purchases
         if (item.brand && item.brand.trim()) {
-          recordCommunityBrand(item.brand, item.name, item.category, item.id).catch(() => {});
+          recordCommunityBrand(item.brand, item.name, item.category, item.id).catch(() => { });
         }
 
         // Add to Ch3andek if not present and is a food item (strictly exclude home and wellness products)
@@ -1326,6 +1504,7 @@ export default function KitchenAssistantPage() {
         onFridgeScan={handleFridgeScan}
         purchaseHistory={purchaseHistory}
         dbarati={Array.isArray(dbarati) ? dbarati : []}
+        onScanReceipt={() => setIsBasketReceiptScanOpen(true)}
       />
       <AppNav
         activeTab={activeTab}
@@ -1363,7 +1542,7 @@ export default function KitchenAssistantPage() {
               onDeleteFromHistory={handleDeleteFromHistory}
               onUpdatePrices={handleUpdatePrices}
               onAddIngredients={handleAddIngredients}
-                onSaveReceipt={handleAddReceipt}
+              onSaveReceipt={handleAddReceipt}
               onViewCategoryTrends={setViewingCategoryTrends}
               onMoveCategory={handleMoveCategory}
               userId={userUid}
@@ -1371,17 +1550,17 @@ export default function KitchenAssistantPage() {
             />
           )}
           {activeTab === 'receipts' && (
-              <ReceiptsView
-                receipts={receipts}
-                pantry={pantry}
-                categories={categories}
-                onAddReceipt={handleAddReceipt}
-                onUpdateReceipt={handleUpdateReceipt}
-                onDeleteReceipt={handleDeleteReceipt}
-                onSyncWithPantry={handleSyncReceiptWithPantry}
-              />
-            )}
-            {activeTab === 'recipes' && (
+            <ReceiptsView
+              receipts={receipts}
+              pantry={pantry}
+              categories={categories}
+              onAddReceipt={handleAddReceipt}
+              onUpdateReceipt={handleUpdateReceipt}
+              onDeleteReceipt={handleDeleteReceipt}
+              onSyncWithPantry={handleSyncReceiptWithPantry}
+            />
+          )}
+          {activeTab === 'recipes' && (
             <RecipesView
               setViewingRecipe={setViewingRecipe}
               discoverableRecipes={discoverableRecipes}
@@ -1752,6 +1931,20 @@ export default function KitchenAssistantPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {/* Dialogue de scan de ticket depuis le panier */}
+      <UploadReceiptDialog
+        open={isBasketReceiptScanOpen}
+        onOpenChange={setIsBasketReceiptScanOpen}
+        onReceiptProcessed={handleReconcileReceiptWithBasket}
+      />
+
+
+      <ReconciliationSummaryDialog
+        open={reconciliationDialogOpen}
+        onOpenChange={setReconciliationDialogOpen}
+        report={reconciliationReport}
+        onUndo={handleUndoReconciliation}
+      />
     </div >
   );
 }
