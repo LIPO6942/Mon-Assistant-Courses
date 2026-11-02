@@ -37,7 +37,7 @@ interface PantryViewProps {
   pantry: Ingredient[];
   onAddToBasket: (ingredient: Ingredient, quantity: number) => void;
   purchaseHistory: PurchaseHistory;
-  onDeleteFromHistory?: (ingredientId: string, purchaseIndex: number) => void;
+  onDeleteFromHistory: (id: string) => void;
   onUpdatePrices: (updates: { id: string; price: number }[]) => void;
   onAddIngredients: (newIngredients: Omit<Ingredient, 'id'>[]) => void;
   onSaveReceipt?: (receipt: Receipt) => void;
