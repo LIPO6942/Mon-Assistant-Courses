@@ -13,6 +13,73 @@ import { cn, getProductStatus, formatDbaratiDate } from '@/lib/utils';
 import Image from 'next/image';
 import { listenCommunityPurchases } from '@/lib/firestore-sync';
 import { calculateMarketPrices, calculateRecipeCost, getRecipeAvailabilityPercentage, formatPrice } from '@/lib/price-utils';
+
+// Mapping pays -> couleurs drapeau (gradient) + emoji
+const COUNTRY_FLAG_MAP: Record<string, { colors: string; emoji: string }> = {
+  'Tunisie': { colors: 'from-red-500/20 via-white/10 to-red-500/20', emoji: '🇹🇳' },
+  'France': { colors: 'from-blue-500/20 via-white/10 to-red-500/20', emoji: '🇫🇷' },
+  'Italie': { colors: 'from-green-500/20 via-white/10 to-red-500/20', emoji: '🇮🇹' },
+  'Japon': { colors: 'from-white/10 via-red-500/25 to-white/10', emoji: '🇯🇵' },
+  'Mexique': { colors: 'from-green-600/20 via-white/10 to-red-600/20', emoji: '🇲🇽' },
+  'Maroc': { colors: 'from-red-600/20 via-green-600/15 to-red-600/20', emoji: '🇲🇦' },
+  'Espagne': { colors: 'from-red-500/20 via-yellow-400/20 to-red-500/20', emoji: '🇪🇸' },
+  'Grèce': { colors: 'from-blue-600/20 via-white/10 to-blue-600/20', emoji: '🇬🇷' },
+  'Inde': { colors: 'from-orange-500/20 via-white/10 to-green-600/20', emoji: '🇮🇳' },
+  'Thaïlande': { colors: 'from-red-500/15 via-blue-600/20 to-red-500/15', emoji: '🇹🇭' },
+  'Chine': { colors: 'from-red-600/20 via-yellow-400/15 to-red-600/20', emoji: '🇨🇳' },
+  'Corée du Sud': { colors: 'from-blue-500/15 via-white/10 to-red-500/15', emoji: '🇰🇷' },
+  'Turquie': { colors: 'from-red-600/20 via-white/10 to-red-600/20', emoji: '🇹🇷' },
+  'Liban': { colors: 'from-red-500/15 via-green-600/15 to-red-500/15', emoji: '🇱🇧' },
+  'Argentine': { colors: 'from-sky-400/20 via-white/10 to-sky-400/20', emoji: '🇦🇷' },
+  'Brésil': { colors: 'from-green-500/20 via-yellow-400/20 to-green-500/20', emoji: '🇧🇷' },
+  'USA': { colors: 'from-blue-600/15 via-white/10 to-red-500/15', emoji: '🇺🇸' },
+  'États-Unis': { colors: 'from-blue-600/15 via-white/10 to-red-500/15', emoji: '🇺🇸' },
+  'Vietnam': { colors: 'from-red-600/20 via-yellow-400/15 to-red-600/20', emoji: '🇻🇳' },
+  'Pérou': { colors: 'from-red-600/20 via-white/10 to-red-600/20', emoji: '🇵🇪' },
+  'Royaume-Uni': { colors: 'from-blue-600/15 via-red-500/15 to-white/10', emoji: '🇬🇧' },
+  'Belgique': { colors: 'from-black/10 via-yellow-400/20 to-red-600/20', emoji: '🇧🇪' },
+  'Pologne': { colors: 'from-white/10 via-white/5 to-red-500/20', emoji: '🇵🇱' },
+  'Hongrie': { colors: 'from-red-500/15 via-white/10 to-green-600/15', emoji: '🇭🇺' },
+  'Suède': { colors: 'from-blue-600/20 via-yellow-400/20 to-blue-600/20', emoji: '🇸🇪' },
+  'Iran': { colors: 'from-green-600/15 via-white/10 to-red-600/15', emoji: '🇮🇷' },
+  'Indonésie': { colors: 'from-red-500/20 via-white/10 to-red-500/20', emoji: '🇮🇩' },
+  'Philippines': { colors: 'from-blue-600/15 via-red-500/15 to-yellow-400/15', emoji: '🇵🇭' },
+  'Cuba': { colors: 'from-blue-600/15 via-white/10 to-red-500/15', emoji: '🇨🇺' },
+  'Sénégal': { colors: 'from-green-600/15 via-yellow-400/15 to-red-500/15', emoji: '🇸🇳' },
+  'Éthiopie': { colors: 'from-green-600/15 via-yellow-400/15 to-red-500/15', emoji: '🇪🇹' },
+  'Pakistan': { colors: 'from-green-700/20 via-white/10 to-green-700/20', emoji: '🇵🇰' },
+  'Jordanie': { colors: 'from-black/10 via-green-600/15 to-red-500/15', emoji: '🇯🇴' },
+  'Australie': { colors: 'from-blue-700/15 via-white/10 to-blue-700/15', emoji: '🇦🇺' },
+  'Canada': { colors: 'from-red-600/20 via-white/10 to-red-600/20', emoji: '🇨🇦' },
+  'Autriche': { colors: 'from-red-500/20 via-white/10 to-red-500/20', emoji: '🇦🇹' },
+  'Roumanie': { colors: 'from-blue-600/15 via-yellow-400/15 to-red-500/15', emoji: '🇷🇴' },
+  'Venezuela': { colors: 'from-yellow-400/15 via-blue-600/15 to-red-500/15', emoji: '🇻🇪' },
+  'Géorgie': { colors: 'from-white/10 via-red-600/20 to-white/10', emoji: '🇬🇪' },
+  'Salvador': { colors: 'from-blue-600/20 via-white/10 to-blue-600/20', emoji: '🇸🇻' },
+  'Slovaquie': { colors: 'from-white/10 via-blue-600/15 to-red-500/15', emoji: '🇸🇰' },
+  'Russie': { colors: 'from-white/10 via-blue-600/15 to-red-500/15', emoji: '🇷🇺' },
+  'Singapour': { colors: 'from-red-500/15 via-white/10 to-red-500/15', emoji: '🇸🇬' },
+  'Malaisie': { colors: 'from-blue-600/15 via-yellow-400/15 to-red-500/15', emoji: '🇲🇾' },
+};
+
+function getCountryFlag(tags?: string): { colors: string; emoji: string } | null {
+  if (!tags) return null;
+  const tagList = tags.split(',').map(t => t.trim().toLowerCase());
+  for (const [country, data] of Object.entries(COUNTRY_FLAG_MAP)) {
+    if (tagList.some(t => country.toLowerCase().includes(t) || t.includes(country.toLowerCase()))) {
+      return data;
+    }
+  }
+  // Fallback: check compound countries
+  for (const tag of tagList) {
+    for (const [country, data] of Object.entries(COUNTRY_FLAG_MAP)) {
+      if (tag.includes(country.toLowerCase()) || country.toLowerCase().includes(tag)) {
+        return data;
+      }
+    }
+  }
+  return null;
+}
 import {
   Accordion,
   AccordionContent,
@@ -543,15 +610,18 @@ export default function RecipesView({
               {filteredUserRecipes.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-6">
                   {filteredUserRecipes.map(recipe => (
-                    <Card key={recipe.id} className="cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col" onClick={() => onViewUserRecipe(recipe)}>
+                    <Card key={recipe.id} className={cn("cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col overflow-hidden", getCountryFlag(recipe.tags) ? 'bg-gradient-to-r ' + getCountryFlag(recipe.tags)!.colors : '')} onClick={() => onViewUserRecipe(recipe)}>
                       <CardContent className='p-3 flex items-center gap-3'>
-                        <div className="relative w-12 h-12 aspect-square shrink-0">
+                        <div className="relative w-14 h-14 aspect-square shrink-0">
                           {recipe.photoDataUri ? (
-                            <Image src={recipe.photoDataUri} alt={recipe.title} layout="fill" objectFit="cover" className="rounded-md" />
+                            <Image src={recipe.photoDataUri} alt={recipe.title} fill className="object-cover rounded-lg" sizes="56px" />
                           ) : (
-                            <div className="w-full h-full bg-secondary flex items-center justify-center rounded-md">
+                            <div className={cn("w-full h-full flex items-center justify-center rounded-lg", getCountryFlag(recipe.tags) ? 'bg-gradient-to-br ' + getCountryFlag(recipe.tags)!.colors : 'bg-secondary')}>
                               <Utensils className="h-6 w-6 text-muted-foreground" />
                             </div>
+                          )}
+                          {getCountryFlag(recipe.tags) && (
+                            <span className="absolute -top-1 -right-1 text-sm drop-shadow">{getCountryFlag(recipe.tags)!.emoji}</span>
                           )}
                         </div>
                         <div className="flex flex-col overflow-hidden">
