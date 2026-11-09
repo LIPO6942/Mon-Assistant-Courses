@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { BrainCircuit, Salad, X, Lightbulb, Loader2, Terminal, PlusCircle, Clock, Coins, ExternalLink, UtensilsCrossed } from 'lucide-react';
+import { BrainCircuit, Salad, X, Lightbulb, Loader2, Terminal, PlusCircle, Clock, Coins, ExternalLink, UtensilsCrossed, BookUser } from 'lucide-react';
 import type { Recipe } from '@/lib/types';
 import type { SuggestRecipeOutput } from '@/ai/types';
 import { Alert, AlertTitle, AlertDescription } from './ui/alert';
@@ -59,6 +59,7 @@ interface ChandyekViewProps {
   onRemoveIngredient: (ingredient: string) => void;
   onClearIngredients: () => void;
   isOnline: boolean;
+  onAddToRecetteti?: (recipe: SuggestRecipeOutput) => void;
 }
 
 export default function ChandyekView({
@@ -71,7 +72,8 @@ export default function ChandyekView({
   onViewRecipe,
   onRemoveIngredient,
   onClearIngredients,
-  isOnline
+  isOnline,
+  onAddToRecetteti,
 }: ChandyekViewProps) {
 
   return (
@@ -250,15 +252,29 @@ export default function ChandyekView({
                           </Button>
                         )}
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full h-8 text-[10px] text-muted-foreground hover:text-primary transition-colors gap-1"
-                        onClick={() => onSaveRecipe(recipe)}
-                      >
-                        <PlusCircle className='h-3 w-3' />
-                        Enregistrer l&apos;idée
-                      </Button>
+                      <div className="flex gap-1.5 w-full">
+                        {onAddToRecetteti && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 h-8 text-[10px] gap-1"
+                            title="Ajouter à Recetteti"
+                            onClick={() => onAddToRecetteti(recipe)}
+                          >
+                            <BookUser className="h-3 w-3" />
+                            Recetteti
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="flex-1 h-8 text-[10px] text-muted-foreground hover:text-primary transition-colors gap-1"
+                          onClick={() => onSaveRecipe(recipe)}
+                        >
+                          <PlusCircle className='h-3 w-3' />
+                          Sauvegarder
+                        </Button>
+                      </div>
                     </CardFooter>
                   </Card>
                 ))}

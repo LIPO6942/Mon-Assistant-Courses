@@ -63,6 +63,7 @@ interface RecipesViewProps {
   onUpdateDbaratiItemPlatTag: (id: string, platTag: 'Pates' | 'Sauces' | 'Sandwich' | 'Autres') => void;
   onUpdateDbaratiItemDessertTag?: (id: string, dessertTag: 'Gâteau' | 'Crème' | 'Fruits' | 'Pâtisserie' | 'Autres') => void;
   onRemovePrepDate?: (id: string, dateIsoToRemove: string) => void;
+  onAddToRecetteti?: (recipe: Recipe) => void;
 }
 
 export default function RecipesView({
@@ -79,6 +80,7 @@ export default function RecipesView({
   onToggleDbaratiItem,
   onMarkPrepared,
   onRemovePrepDate,
+  onAddToRecetteti,
   onSetDbaratiItemDone,
   onDeleteDbaratiItem,
   onUpdateDbaratiItem,
@@ -561,6 +563,18 @@ export default function RecipesView({
                           </div>
                         </div>
                       </CardContent>
+                      <div className="px-3 pb-2 pt-0 flex justify-end">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-[10px] text-muted-foreground hover:text-primary gap-1 rounded-lg"
+                          title="Ajouter à Dbarati"
+                          onClick={(e) => { e.stopPropagation(); onAddDbaratiItem(recipe.title, 'plat'); }}
+                        >
+                          <ClipboardList className="h-3 w-3" />
+                          Dbarati
+                        </Button>
+                      </div>
                     </Card>
                   ))}
                 </div>
@@ -1834,13 +1848,28 @@ export default function RecipesView({
                 </CardContent>
                 <CardFooter className="flex justify-between mt-auto bg-secondary/30 pt-4 gap-2">
                   <Button onClick={() => setViewingRecipe({ ...recipe, targetPortions: ideaPortions })}>Voir la recette</Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => handleSaveRecipe(recipe)}
-                  >
-                    <PlusCircle className="h-4 w-4" />
-                  </Button>
+                  <div className="flex items-center gap-1.5">
+                    {onAddToRecetteti && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-1.5 text-xs"
+                        title="Ajouter à Recetteti"
+                        onClick={() => onAddToRecetteti(recipe)}
+                      >
+                        <BookUser className="h-3.5 w-3.5" />
+                        <span className="hidden sm:inline">Recetteti</span>
+                      </Button>
+                    )}
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => handleSaveRecipe(recipe)}
+                      title="Sauvegarder dans mes favoris"
+                    >
+                      <PlusCircle className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </CardFooter>
               </Card>
             );

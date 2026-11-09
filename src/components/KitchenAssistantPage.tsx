@@ -1409,6 +1409,27 @@ export default function KitchenAssistantPage() {
     setEditingUserRecipe(null);
   };
 
+  // Convertir une Recipe (découverte / suggestion) en UserRecipe et l'ajouter à Recetteti
+  const handleAddToRecetteti = (recipe: Recipe) => {
+    // Vérifier doublon
+    if (userRecipes.some(r => r.title.toLowerCase() === recipe.title.toLowerCase())) {
+      alert(`"${recipe.title}" est déjà dans Recetteti !`);
+      return;
+    }
+    const userRecipe: UserRecipe = {
+      id: self.crypto.randomUUID(),
+      title: recipe.title,
+      category: (recipe.country === 'Tunisie' ? 'Plat' : ['Entrée', 'Plat', 'Dessert', 'Autre'].includes(recipe.country) ? recipe.country as any : 'Plat') as any,
+      portions: recipe.portions || recipe.targetPortions || 4,
+      ingredients: recipe.ingredients,
+      preparation: recipe.preparation || recipe.description || '',
+      preparationTime: recipe.preparationTime || 30,
+      photoDataUri: recipe.imageUrl,
+      tags: [recipe.country, recipe.isEconomical ? 'économique' : ''].filter(Boolean).join(', '),
+    };
+    handleSaveUserRecipe(userRecipe);
+  };
+
   const handleConfirmPantryAdd = (itemsToAdd: Omit<Ingredient, 'id'>[]) => {
     // 1. Check if any categories are new and add them
     const uniqueCategoryNames = Array.from(new Set(itemsToAdd.map(i => i.category)));
@@ -1658,6 +1679,7 @@ export default function KitchenAssistantPage() {
               onUpdateDbaratiItem={(id: string, text: string) => {
                 setDbarati(prev => prev.map(item => item.id === id ? { ...item, text: text.trim() } : item));
               }}
+              onAddToRecetteti={handleAddToRecetteti}
               onMoveDbaratiItem={(id: string, direction: 'up' | 'down') => {
                 setDbarati(prev => {
                   const idx = prev.findIndex(i => i.id === id);
@@ -1684,6 +1706,7 @@ export default function KitchenAssistantPage() {
               onRemoveIngredient={handleToggleChandyekIngredient}
               onClearIngredients={handleClearChandyekIngredients}
               isOnline={isOnline}
+              onAddToRecetteti={(recipe: any) => handleAddToRecetteti(recipe as any)}
             />
           )}
           {activeTab === 'guide' && (
