@@ -614,7 +614,7 @@ export default function RecipesView({
                       <CardContent className='p-3 flex items-center gap-3'>
                         <div className="relative w-14 h-14 aspect-square shrink-0 rounded-lg overflow-hidden">
                           {recipe.photoDataUri ? (
-                            <Image src={recipe.photoDataUri} alt={recipe.title} layout="fill" objectFit="cover" className="rounded-lg" />
+                            <img src={recipe.photoDataUri} alt={recipe.title} className="w-full h-full object-cover" />
                           ) : (
                             <div className={cn("w-full h-full flex items-center justify-center", getCountryFlag(recipe.tags) ? 'bg-gradient-to-br ' + getCountryFlag(recipe.tags)!.colors : 'bg-secondary')}>
                               <Utensils className="h-6 w-6 text-muted-foreground" />
