@@ -612,16 +612,13 @@ export default function RecipesView({
                   {filteredUserRecipes.map(recipe => (
                     <Card key={recipe.id} className={cn("cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col overflow-hidden", getCountryFlag(recipe.tags) ? 'bg-gradient-to-r ' + getCountryFlag(recipe.tags)!.colors : '')} onClick={() => onViewUserRecipe(recipe)}>
                       <CardContent className='p-3 flex items-center gap-3'>
-                        <div className="relative w-14 h-14 aspect-square shrink-0">
+                        <div className="relative w-14 h-14 aspect-square shrink-0 rounded-lg overflow-hidden">
                           {recipe.photoDataUri ? (
-                            <Image src={recipe.photoDataUri} alt={recipe.title} fill className="object-cover rounded-lg" sizes="56px" />
+                            <Image src={recipe.photoDataUri} alt={recipe.title} layout="fill" objectFit="cover" className="rounded-lg" />
                           ) : (
-                            <div className={cn("w-full h-full flex items-center justify-center rounded-lg", getCountryFlag(recipe.tags) ? 'bg-gradient-to-br ' + getCountryFlag(recipe.tags)!.colors : 'bg-secondary')}>
+                            <div className={cn("w-full h-full flex items-center justify-center", getCountryFlag(recipe.tags) ? 'bg-gradient-to-br ' + getCountryFlag(recipe.tags)!.colors : 'bg-secondary')}>
                               <Utensils className="h-6 w-6 text-muted-foreground" />
                             </div>
-                          )}
-                          {getCountryFlag(recipe.tags) && (
-                            <span className="absolute -top-1 -right-1 text-sm drop-shadow">{getCountryFlag(recipe.tags)!.emoji}</span>
                           )}
                         </div>
                         <div className="flex flex-col overflow-hidden">
@@ -629,9 +626,17 @@ export default function RecipesView({
                           <div className="flex flex-wrap items-center gap-1 mt-1">
                             <Badge variant="outline" className="text-xs">{recipe.category}</Badge>
                             <Badge variant="outline" className="flex items-center gap-1 text-xs"><Clock className="h-3 w-3" />{recipe.preparationTime} min</Badge>
-                            {recipe.tags && recipe.tags.split(',').map(tag => tag.trim() && (
-                              <Badge key={tag.trim()} variant="secondary" className="text-xs flex items-center gap-1"><Tag className="h-3 w-3" />{tag.trim()}</Badge>
-                            ))}
+                            {recipe.tags && recipe.tags.split(',').map(tag => {
+                              const trimmed = tag.trim();
+                              if (!trimmed) return null;
+                              const flag = getCountryFlag(trimmed);
+                              return (
+                                <Badge key={trimmed} variant="secondary" className="text-xs flex items-center gap-1">
+                                  {flag ? <span className="text-sm">{flag.emoji}</span> : <Tag className="h-3 w-3" />}
+                                  {trimmed}
+                                </Badge>
+                              );
+                            })}
                           </div>
                         </div>
                       </CardContent>
