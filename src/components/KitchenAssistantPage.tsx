@@ -334,12 +334,19 @@ export default function KitchenAssistantPage() {
           const lsRaw = localStorage.getItem('mac_receipts');
           if (lsRaw) { lsReceipts = JSON.parse(lsRaw).items ?? null; }
         } catch (_) { }
-        const resolvedReceipts = lsReceipts ?? cloudData?.receipts ?? receiptsData ?? [];
-        console.log('[MAC-DEBUG] loadData receipts:', {
-          localStorage: lsReceipts?.length ?? 'null',
-          cloud: cloudData?.receipts?.length ?? 'null',
-          idb: receiptsData?.length ?? 'null',
-          resolved: resolvedReceipts.length,
+        const rawReceipts = lsReceipts ?? cloudData?.receipts ?? receiptsData ?? [];
+        // Migration : corriger les dates hallucinées dans les tickets existants
+        const NINETY_DAYS_MS = 90 * 24 * 60 * 60 * 1000;
+        const nowMs = Date.now();
+        const resolvedReceipts = rawReceipts.map((r: Receipt) => {
+          if (!r.purchaseAt) return { ...r, purchaseAt: new Date().toISOString() };
+          const parsed = new Date(r.purchaseAt);
+          if (isNaN(parsed.getTime())) return { ...r, purchaseAt: new Date().toISOString() };
+          const diffMs = nowMs - parsed.getTime();
+          if (diffMs > NINETY_DAYS_MS || diffMs < -24 * 60 * 60 * 1000) {
+            return { ...r, purchaseAt: new Date().toISOString() };
+          }
+          return r;
         });
         setReceipts(resolvedReceipts);
 
@@ -383,7 +390,20 @@ export default function KitchenAssistantPage() {
             const lsRaw = localStorage.getItem('mac_receipts');
             if (lsRaw) { fallbackLsReceipts = JSON.parse(lsRaw).items ?? null; }
           } catch (_) { }
-          setReceipts(fallbackLsReceipts ?? idbReceipts ?? []);
+          const fallbackRawReceipts = fallbackLsReceipts ?? idbReceipts ?? [];
+          const NINETY_DAYS_FB = 90 * 24 * 60 * 60 * 1000;
+          const nowFb = Date.now();
+          const fallbackResolvedReceipts = fallbackRawReceipts.map((r: Receipt) => {
+            if (!r.purchaseAt) return { ...r, purchaseAt: new Date().toISOString() };
+            const parsed = new Date(r.purchaseAt);
+            if (isNaN(parsed.getTime())) return { ...r, purchaseAt: new Date().toISOString() };
+            const diffMs = nowFb - parsed.getTime();
+            if (diffMs > NINETY_DAYS_FB || diffMs < -24 * 60 * 60 * 1000) {
+              return { ...r, purchaseAt: new Date().toISOString() };
+            }
+            return r;
+          });
+          setReceipts(fallbackResolvedReceipts);
         } catch (_) {
           // Dernier recours : données par défaut (ne devrait jamais arriver)
           setPantry(predefinedIngredients);
@@ -1390,7 +1410,7 @@ export default function KitchenAssistantPage() {
         price: 0
       }));
       setMissingIngredients(newPantryItems);
-      setPendingRecipeSave({ recipe: finalRecipe, isNew });
+        setPendingRecipeSave({ recipe: finalRecipe, isNew });
       setConfirmPantryAddOpen(true);
       return; // Stop here, wait for user confirmation
     }
@@ -1399,9 +1419,14 @@ export default function KitchenAssistantPage() {
     completeRecipeSave(finalRecipe, isNew);
   };
 
+  const [recettetiAddedName, setRecettetiAddedName] = useState<string | null>(null);
+
   const completeRecipeSave = (finalRecipe: UserRecipe, isNew: boolean) => {
     if (isNew) {
       setUserRecipes(prev => [...prev, finalRecipe]);
+      // Notification visuelle
+      setRecettetiAddedName(finalRecipe.title);
+      setTimeout(() => setRecettetiAddedName(null), 3500);
     } else {
       setUserRecipes(prev => prev.map(r => r.id === finalRecipe.id ? finalRecipe : r));
     }
@@ -1416,10 +1441,9 @@ export default function KitchenAssistantPage() {
       alert(`"${recipe.title}" est déjà dans Recetteti !`);
       return;
     }
-    const userRecipe: UserRecipe = {
-      id: self.crypto.randomUUID(),
+    const userRecipeData: Omit<UserRecipe, 'id'> = {
       title: recipe.title,
-      category: (recipe.country === 'Tunisie' ? 'Plat' : ['Entrée', 'Plat', 'Dessert', 'Autre'].includes(recipe.country) ? recipe.country as any : 'Plat') as any,
+      category: (['Entrée', 'Plat', 'Dessert', 'Autre'].includes(recipe.country) ? recipe.country as any : 'Plat') as any,
       portions: recipe.portions || recipe.targetPortions || 4,
       ingredients: recipe.ingredients,
       preparation: recipe.preparation || recipe.description || '',
@@ -1427,7 +1451,7 @@ export default function KitchenAssistantPage() {
       photoDataUri: recipe.imageUrl,
       tags: [recipe.country, recipe.isEconomical ? 'économique' : ''].filter(Boolean).join(', '),
     };
-    handleSaveUserRecipe(userRecipe);
+    handleSaveUserRecipe(userRecipeData as any);
   };
 
   const handleConfirmPantryAdd = (itemsToAdd: Omit<Ingredient, 'id'>[]) => {
@@ -1509,6 +1533,15 @@ export default function KitchenAssistantPage() {
   // --- RENDER ---
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
+      {/* Notification Recetteti */}
+      {recettetiAddedName && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="bg-green-600 text-white px-6 py-3 rounded-full shadow-lg flex items-center gap-2 text-sm font-medium">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+            &quot;{recettetiAddedName}&quot; ajouté à Recetteti !
+          </div>
+        </div>
+      )}
       <AppHeader
         basket={basket}
         basketTotal={basketTotalToPay}
@@ -1526,6 +1559,7 @@ export default function KitchenAssistantPage() {
         purchaseHistory={purchaseHistory}
         dbarati={Array.isArray(dbarati) ? dbarati : []}
         onScanReceipt={() => setIsBasketReceiptScanOpen(true)}
+        onAddToRecetteti={handleAddToRecetteti}
       />
       <AppNav
         activeTab={activeTab}
@@ -1931,6 +1965,8 @@ export default function KitchenAssistantPage() {
             <Button variant="ghost" className="text-muted-foreground text-xs" onClick={() => {
               if (pendingRecipeSave) completeRecipeSave(pendingRecipeSave.recipe, pendingRecipeSave.isNew);
               setConfirmPantryAddOpen(false);
+              setPendingRecipeSave(null);
+              setMissingIngredients([]);
             }}>
               Ignorer et enregistrer la recette
             </Button>

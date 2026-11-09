@@ -6,7 +6,7 @@ import { SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { Recipe } from '@/lib/types';
-import { BookOpen, Trash2, Share2, ExternalLink } from 'lucide-react';
+import { BookOpen, Trash2, Share2, ExternalLink, BookUser } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface SavedRecipesSheetProps {
@@ -14,6 +14,7 @@ interface SavedRecipesSheetProps {
   onViewRecipe: (recipe: (Omit<Recipe, 'id'> & { id?: string })) => void;
   onDeleteRecipe: (recipeId: string) => void;
   onShareRecipe: (recipe: Recipe) => void;
+  onAddToRecetteti?: (recipe: Recipe) => void;
 }
 
 export default function SavedRecipesSheet({
@@ -21,6 +22,7 @@ export default function SavedRecipesSheet({
   onViewRecipe,
   onDeleteRecipe,
   onShareRecipe,
+  onAddToRecetteti,
 }: SavedRecipesSheetProps) {
   return (
     <SheetContent className="flex flex-col w-full sm:max-w-lg">
@@ -73,9 +75,23 @@ export default function SavedRecipesSheet({
                     </div>
                   )}
                   <div className="flex justify-between items-center w-full">
-                    <Button size="sm" variant="secondary" className="h-8 text-xs px-4" onClick={() => onViewRecipe(recipe)}>
-                      Détails
-                    </Button>
+                    <div className="flex items-center gap-1.5">
+                      <Button size="sm" variant="secondary" className="h-8 text-xs px-4" onClick={() => onViewRecipe(recipe)}>
+                        Détails
+                      </Button>
+                      {onAddToRecetteti && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 text-xs px-3 gap-1"
+                          title="Ajouter à Recetteti"
+                          onClick={() => onAddToRecetteti(recipe)}
+                        >
+                          <BookUser className="h-3.5 w-3.5" />
+                          Recetteti
+                        </Button>
+                      )}
+                    </div>
                     <div className="flex items-center">
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onShareRecipe(recipe)} aria-label="Partager la recette">
                         <Share2 className="h-4 w-4 text-primary" />

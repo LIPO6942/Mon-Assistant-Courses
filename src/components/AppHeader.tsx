@@ -29,6 +29,7 @@ interface AppHeaderProps {
   purchaseHistory: PurchaseHistory;
   dbarati?: DbaratiItem[];
   onScanReceipt?: () => void;
+  onAddToRecetteti?: (recipe: Recipe) => void;
 }
 
 export default function AppHeader({
@@ -48,6 +49,7 @@ export default function AppHeader({
   purchaseHistory,
   dbarati,
   onScanReceipt,
+  onAddToRecetteti,
 }: AppHeaderProps) {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const { user, signOut } = useAuth();
@@ -105,6 +107,7 @@ export default function AppHeader({
               onViewRecipe={onViewRecipe}
               onDeleteRecipe={onDeleteRecipe}
               onShareRecipe={onShareRecipe}
+              onAddToRecetteti={onAddToRecetteti}
             />
           </Sheet>
 

@@ -95,6 +95,8 @@ export default function RecipesView({
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const dbaratiIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  const [dbaratiAddedId, setDbaratiAddedId] = useState<string | null>(null);
+
   const [filterQuick, setFilterQuick] = useState(false);
   const [filterEconomical, setFilterEconomical] = useState(false);
   const [ideaPortions, setIdeaPortions] = useState<number>(() => {
@@ -565,14 +567,27 @@ export default function RecipesView({
                       </CardContent>
                       <div className="px-3 pb-2 pt-0 flex justify-end">
                         <Button
-                          variant="ghost"
+                          variant={dbaratiAddedId === recipe.id ? "default" : "ghost"}
                           size="sm"
-                          className="h-7 text-[10px] text-muted-foreground hover:text-primary gap-1 rounded-lg"
+                          className={cn(
+                            "h-7 text-[10px] gap-1 rounded-lg transition-all",
+                            dbaratiAddedId === recipe.id
+                              ? "bg-green-500 hover:bg-green-500 text-white pointer-events-none"
+                              : "text-muted-foreground hover:text-primary"
+                          )}
                           title="Ajouter à Dbarati"
-                          onClick={(e) => { e.stopPropagation(); onAddDbaratiItem(recipe.title, 'plat'); }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onAddDbaratiItem(recipe.title, 'plat');
+                            setDbaratiAddedId(recipe.id);
+                            setTimeout(() => setDbaratiAddedId(null), 2000);
+                          }}
                         >
-                          <ClipboardList className="h-3 w-3" />
-                          Dbarati
+                          {dbaratiAddedId === recipe.id ? (
+                            <><Check className="h-3 w-3" /> Ajouté !</>
+                          ) : (
+                            <><ClipboardList className="h-3 w-3" /> Dbarati</>
+                          )}
                         </Button>
                       </div>
                     </Card>
