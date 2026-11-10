@@ -11,6 +11,7 @@ import { cn, getProductStatus, isNonFoodItem } from '@/lib/utils';
 import { Sheet, SheetTrigger } from '@/components/ui/sheet';
 import QuickReorderSheet from './QuickReorderSheet';
 import ReminderSheet from './ReminderSheet';
+import { getPantryCategoryTheme } from '@/lib/pantry-categories';
 
 interface PantryViewProps {
   dbarati?: DbaratiItem[];
@@ -126,31 +127,32 @@ export default function PantryView({
         {(() => {
           const filledCategories = Object.entries(groupedIngredients).filter(([, items]) => items.length > 0);
           return filledCategories.map(([categoryName, items], index) => {
-            const category = categories.find(c => c.name === categoryName) || { id: 'c-autre', name: 'Autre' };
+            const category = categories.find(c => c.name === categoryName) || { id: 'c-autre', name: categoryName || 'Autre' };
 
-            // Define a vibrant color palette
-            const colorPalettes = [
-              { name: 'emerald', border: 'border-emerald-200/50', bg: 'bg-emerald-50/30', header: 'bg-gradient-to-r from-emerald-100/80 to-emerald-50/20', text: 'text-emerald-700', icon: 'text-emerald-600', buttonHover: 'hover:bg-emerald-100 hover:text-emerald-700' },
-              { name: 'blue', border: 'border-blue-200/50', bg: 'bg-blue-50/30', header: 'bg-gradient-to-r from-blue-100/80 to-blue-50/20', text: 'text-blue-700', icon: 'text-blue-600', buttonHover: 'hover:bg-blue-100 hover:text-blue-700' },
-              { name: 'violet', border: 'border-violet-200/50', bg: 'bg-violet-50/30', header: 'bg-gradient-to-r from-violet-100/80 to-violet-50/20', text: 'text-violet-700', icon: 'text-violet-600', buttonHover: 'hover:bg-violet-100 hover:text-violet-700' },
-              { name: 'amber', border: 'border-amber-200/50', bg: 'bg-amber-50/30', header: 'bg-gradient-to-r from-amber-100/80 to-amber-50/20', text: 'text-amber-700', icon: 'text-amber-600', buttonHover: 'hover:bg-amber-100 hover:text-amber-700' },
-              { name: 'rose', border: 'border-rose-200/50', bg: 'bg-rose-50/30', header: 'bg-gradient-to-r from-rose-100/80 to-rose-50/20', text: 'text-rose-700', icon: 'text-rose-600', buttonHover: 'hover:bg-rose-100 hover:text-rose-700' },
-              { name: 'cyan', border: 'border-cyan-200/50', bg: 'bg-cyan-50/30', header: 'bg-gradient-to-r from-cyan-100/80 to-cyan-50/20', text: 'text-cyan-700', icon: 'text-cyan-600', buttonHover: 'hover:bg-cyan-100 hover:text-cyan-700' },
-              { name: 'orange', border: 'border-orange-200/50', bg: 'bg-orange-50/30', header: 'bg-gradient-to-r from-orange-100/80 to-orange-50/20', text: 'text-orange-700', icon: 'text-orange-600', buttonHover: 'hover:bg-orange-100 hover:text-orange-700' },
-              { name: 'indigo', border: 'border-indigo-200/50', bg: 'bg-indigo-50/30', header: 'bg-gradient-to-r from-indigo-100/80 to-indigo-50/20', text: 'text-indigo-700', icon: 'text-indigo-600', buttonHover: 'hover:bg-indigo-100 hover:text-indigo-700' },
-            ];
-
-            const palette = colorPalettes[index % colorPalettes.length];
+            // Thème visuel intelligent : détection sémantique d'émoji et palette (produits laitiers / crèmerie en JAUNE)
+            const palette = getPantryCategoryTheme(category.name);
 
             return (
               <Card key={category.id} className={cn("flex flex-col backdrop-blur-xl shadow-sm rounded-3xl overflow-hidden border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group/card", palette.bg, palette.border)}>
                 <CardHeader className={cn("flex flex-row items-center justify-between pb-3 border-b border-border/10", palette.header)}>
                   <CardTitle
-                    className={cn("text-lg font-bold tracking-tight px-1 cursor-pointer hover:underline decoration-dashed decoration-2 underline-offset-4 transition-all", palette.text)}
+                    className="cursor-pointer min-w-0"
                     onClick={() => onViewCategoryTrends(category)}
                     title="Voir l'évolution des prix"
                   >
-                    {category.name}
+                    <span
+                      className={cn(
+                        "inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs sm:text-sm font-bold shadow-2xs border transition-all duration-200 hover:scale-[1.03] active:scale-95 truncate max-w-full",
+                        palette.pillBg,
+                        palette.pillBorder,
+                        palette.pillText
+                      )}
+                    >
+                      <span className="text-base sm:text-lg leading-none shrink-0" role="img" aria-label={category.name}>
+                        {palette.emoji}
+                      </span>
+                      <span className="truncate">{category.name}</span>
+                    </span>
                   </CardTitle>
                   {category.name !== 'Autre' && <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover/card:opacity-100 transition-opacity">
                     <button
