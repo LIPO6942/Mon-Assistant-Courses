@@ -1869,14 +1869,27 @@ export default function RecipesView({
                 <Card
                   key={recipe.id}
                   className={cn(
-                    "cursor-pointer hover:shadow-md transition-all border-primary/20 bg-primary/5 group relative",
+                    "cursor-pointer hover:shadow-md transition-all border-primary/20 bg-primary/5 group relative overflow-hidden flex flex-col",
                     isDiscovery ? "border-zinc-200 bg-zinc-50/50" : "border-primary/20 bg-primary/5"
                   )}
                   onClick={() => setViewingRecipe({ ...recipe, targetPortions: ideaPortions })}
                 >
+                  <div className="relative h-28 w-full overflow-hidden bg-secondary">
+                    <img
+                      src={recipe.imageUrl || getRecipeImageUrl(recipe)}
+                      alt={recipe.title}
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      loading="lazy"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&auto=format&fit=crop&q=80';
+                      }}
+                    />
+                    <Badge variant="outline" className="text-[9px] w-fit h-5 px-1.5 absolute top-2 right-2 bg-black/60 text-white border-none backdrop-blur-sm font-medium">
+                      {recipe.country}
+                    </Badge>
+                  </div>
                   <CardHeader className="p-3 pb-0">
-                    <CardTitle className="text-sm group-hover:text-primary transition-colors">{recipe.title}</CardTitle>
-                    <Badge variant="outline" className="text-[8px] w-fit h-4 px-1 absolute top-2 right-2 opacity-50">{recipe.country}</Badge>
+                    <CardTitle className="text-sm group-hover:text-primary transition-colors line-clamp-1">{recipe.title}</CardTitle>
                   </CardHeader>
                   <CardContent className="p-3 pt-2">
                     <p className="text-[10px] text-muted-foreground line-clamp-2 mb-2">{recipe.description}</p>
@@ -1918,6 +1931,24 @@ export default function RecipesView({
               
               return (
               <Card key={recipe.id} className="overflow-hidden flex flex-col bg-card shadow-lg rounded-xl border border-border/50">
+                <div className="relative h-44 w-full overflow-hidden bg-secondary">
+                  <img
+                    src={recipe.imageUrl || getRecipeImageUrl(recipe)}
+                    alt={recipe.title}
+                    className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                    loading="lazy"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&auto=format&fit=crop&q=80';
+                    }}
+                  />
+                  <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5">
+                    {recipe.calories !== undefined && (
+                      <Badge variant="secondary" className="bg-black/60 text-white backdrop-blur-sm border-none text-[11px] font-semibold">
+                        {recipe.calories} kcal
+                      </Badge>
+                    )}
+                  </div>
+                </div>
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <div className="pr-2 flex-1">

@@ -1443,10 +1443,10 @@ export default function KitchenAssistantPage() {
       alert(`"${recipe.title}" est déjà dans Recetteti !`);
       return;
     }
-    const resolvedImage = recipe.imageUrl || getRecipeImageUrl(recipe);
+    const resolvedImage = getRecipeImageUrl(recipe);
     const userRecipeData: Omit<UserRecipe, 'id'> = {
       title: recipe.title,
-      category: (['Entrée', 'Plat', 'Dessert', 'Autre'].includes(recipe.country) ? recipe.country as any : 'Plat') as any,
+      category: (recipe.category && ['Entrée', 'Plat', 'Dessert', 'Autre'].includes(recipe.category) ? recipe.category as any : 'Plat') as any,
       portions: recipe.portions || recipe.targetPortions || 4,
       ingredients: recipe.ingredients,
       preparation: recipe.preparation || recipe.description || '',

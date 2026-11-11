@@ -177,7 +177,7 @@ export const discoverableRecipes: Recipe[] = [
     portions: 4,
     preparationTime: 60,
     isEconomical: false,
-    imageUrl: 'https://images.unsplash.com/photo-1541518763669-27fef04b14ea?w=600&auto=format&fit=crop&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1584278433742-b91a7c73dbca?w=800&auto=format&fit=crop&q=80',
     ingredients: [
       { name: 'Cuisses de poulet', quantity: 4, unit: 'pièce' },
       { name: 'Oignons', quantity: 2, unit: 'pièce' },
