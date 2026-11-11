@@ -6,6 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Minus, Plus, Users, Maximize2, Minimize2, CheckCircle2, ListFilter } from 'lucide-react';
 import { cn, getProductStatus, calculateAdjustedQuantity } from '@/lib/utils';
+import { isIngredientMatch } from '@/lib/smart-ingredient-matching';
 import type { RecipeIngredient, Ingredient, PurchaseHistory, DbaratiItem } from '@/lib/types';
 
 interface RecipeContentProps {
@@ -93,7 +94,7 @@ export default function RecipeContent({
                             </div>
                             <div className="grid grid-cols-1 gap-2">
                                 {ingredients.map((ing, i) => {
-                                    const pantryItem = pantry.find(p => p.name.toLowerCase() === ing.name.toLowerCase());
+                                    const pantryItem = pantry.find(p => isIngredientMatch(p.name, ing.name));
                                     let statusColor = 'bg-zinc-200 dark:bg-zinc-800';
 
                                     if (pantryItem) {

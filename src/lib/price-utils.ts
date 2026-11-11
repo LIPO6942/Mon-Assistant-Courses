@@ -1,4 +1,5 @@
 import type { CommunityPurchase, RecipeIngredient } from './types';
+import { isIngredientMatch, cleanIngredientName } from './smart-ingredient-matching';
 
 export interface IngredientMarketPrice {
   name: string;
@@ -96,9 +97,10 @@ export function findMarketPrice(
   marketPrices: Map<string, IngredientMarketPrice>,
   preferredUnit?: string
 ): IngredientMarketPrice | null {
-  const searchName = ingredientName.toLowerCase().trim();
+  const searchName = cleanIngredientName(ingredientName);
+  if (!searchName) return null;
 
-  // Try exact match with preferred unit first
+  // 1. Try exact match with preferred unit first
   if (preferredUnit) {
     const exactKey = `${searchName}|${preferredUnit}`;
     if (marketPrices.has(exactKey)) {
@@ -106,27 +108,32 @@ export function findMarketPrice(
     }
   }
 
-  // Try exact match with any unit
+  // 2. Try exact match with any unit
   for (const [key, price] of marketPrices.entries()) {
     if (key.startsWith(`${searchName}|`)) {
       return price;
     }
   }
 
-  // Try fuzzy matching (contains search)
+  // 3. Try smart matching (gère ordre des mots "tomate concentré" vs "concentré de tomate", émojis, singulier/pluriel)
   let bestMatch: IngredientMarketPrice | null = null;
   let bestScore = 0;
 
   const searchWords = searchName.split(/\s+/).filter(w => w.length > 2 || w === 'ail' || w === 'riz' || w === 'sel');
 
   for (const [_, price] of marketPrices.entries()) {
-    const priceName = price.name.toLowerCase();
-    const priceWords = priceName.split(/\s+/);
+    const priceCleanName = cleanIngredientName(price.name);
+    const priceWords = priceCleanName.split(/\s+/);
 
     let score = 0;
 
-    // Exact name match or singular/plural exact match gets absolute priority
-    if (priceName === searchName || priceName === searchName + 's' || priceName + 's' === searchName) {
+    // Correspondance sémantique intelligente forte
+    if (isIngredientMatch(ingredientName, price.name)) {
+      score += 25;
+      if (preferredUnit && price.unit === preferredUnit) {
+        score += 15;
+      }
+    } else if (priceCleanName === searchName || priceCleanName === searchName + 's' || priceCleanName + 's' === searchName) {
       score += 10;
     }
 
@@ -142,7 +149,7 @@ export function findMarketPrice(
 
     // Penalize if the parsed market ingredient has many extra words (e.g., search 'tomate', found 'sauce tomate purée')
     if (score > 0) {
-      score -= (priceWords.length - searchWords.length) * 0.1;
+      score -= Math.abs(priceWords.length - searchWords.length) * 0.1;
     }
 
     if (score > bestScore && score > 0.5) { // Needs a minimum valid score

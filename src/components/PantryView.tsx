@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -11,7 +12,7 @@ import { cn, getProductStatus, isNonFoodItem } from '@/lib/utils';
 import { Sheet, SheetTrigger } from '@/components/ui/sheet';
 import QuickReorderSheet from './QuickReorderSheet';
 import ReminderSheet from './ReminderSheet';
-import { getPantryCategoryTheme } from '@/lib/pantry-categories';
+import { getPantryCategoryTheme, getPantryCategoryThemesMap } from '@/lib/pantry-categories';
 
 interface PantryViewProps {
   dbarati?: DbaratiItem[];
@@ -126,35 +127,42 @@ export default function PantryView({
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {(() => {
           const filledCategories = Object.entries(groupedIngredients).filter(([, items]) => items.length > 0);
+          // Calculer les thèmes avec unicité absolue des émojis (aucun doublon)
+          const categoryNames = filledCategories.map(([categoryName]) => {
+            const cat = categories.find(c => c.name === categoryName);
+            return cat?.name || categoryName || 'Autre';
+          });
+          const categoryThemesMap = getPantryCategoryThemesMap(categoryNames);
+
           return filledCategories.map(([categoryName, items], index) => {
             const category = categories.find(c => c.name === categoryName) || { id: 'c-autre', name: categoryName || 'Autre' };
 
             // Thème visuel intelligent : détection sémantique d'émoji et palette (produits laitiers / crèmerie en JAUNE)
-            const palette = getPantryCategoryTheme(category.name);
+            const palette = categoryThemesMap[category.name] || getPantryCategoryTheme(category.name);
 
             return (
               <Card key={category.id} className={cn("flex flex-col backdrop-blur-xl shadow-sm rounded-3xl overflow-hidden border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group/card", palette.bg, palette.border)}>
-                <CardHeader className={cn("flex flex-row items-center justify-between pb-3 border-b border-border/10", palette.header)}>
+                <CardHeader className={cn("flex flex-row items-center justify-between gap-2 p-3 sm:p-4 border-b border-border/10", palette.header)}>
                   <CardTitle
-                    className="cursor-pointer min-w-0"
+                    className="cursor-pointer flex-1 min-w-0"
                     onClick={() => onViewCategoryTrends(category)}
                     title="Voir l'évolution des prix"
                   >
                     <span
                       className={cn(
-                        "inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs sm:text-sm font-bold shadow-2xs border transition-all duration-200 hover:scale-[1.03] active:scale-95 truncate max-w-full",
+                        "inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-2xl text-xs sm:text-sm font-bold shadow-xs border transition-all duration-200 hover:shadow-sm active:scale-[0.98] leading-snug break-words text-left max-w-full",
                         palette.pillBg,
                         palette.pillBorder,
                         palette.pillText
                       )}
                     >
-                      <span className="text-base sm:text-lg leading-none shrink-0" role="img" aria-label={category.name}>
+                      <span className="text-base sm:text-lg leading-none shrink-0 select-none" role="img" aria-label={category.name}>
                         {palette.emoji}
                       </span>
-                      <span className="truncate">{category.name}</span>
+                      <span className="break-words font-semibold tracking-tight">{category.name}</span>
                     </span>
                   </CardTitle>
-                  {category.name !== 'Autre' && <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover/card:opacity-100 transition-opacity">
+                  {category.name !== 'Autre' && <div className="flex items-center gap-1 shrink-0 opacity-100 md:opacity-0 md:group-hover/card:opacity-100 transition-opacity ml-1">
                     <button
                       className={cn('h-6 w-6 flex items-center justify-center rounded-md transition-colors', palette.icon, palette.buttonHover, index === 0 ? 'opacity-20 pointer-events-none' : '')}
                       onClick={() => onMoveCategory(category.id, 'up')}

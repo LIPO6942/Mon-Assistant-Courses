@@ -23,6 +23,7 @@ import { ReconciliationSummaryDialog, ReconciliationReport, ReconciledItemSummar
 import { SmartMatchingService, isReceiptNoise } from '@/lib/smart-matching';
 import { db } from '@/lib/idb';
 import { isInAppBrowser, getProductStatus, cn, isExcludedFromMarketPrices, isNonFoodItem } from '@/lib/utils';
+import { isIngredientMatch } from '@/lib/smart-ingredient-matching';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -1396,9 +1397,9 @@ export default function KitchenAssistantPage() {
       ? { ...recipeData, id: self.crypto.randomUUID() } as UserRecipe
       : recipeData as UserRecipe;
 
-    // Check for missing ingredients in pantry
+    // Check for missing ingredients in pantry (avec correspondance intelligente : ordre des mots, émojis, singulier/pluriel)
     const missing = finalRecipe.ingredients.filter(recipeIng => {
-      return !pantry.some(pantryIng => pantryIng.name.toLowerCase() === recipeIng.name.toLowerCase());
+      return !pantry.some(pantryIng => isIngredientMatch(pantryIng.name, recipeIng.name));
     });
 
     if (missing.length > 0) {
@@ -1410,7 +1411,7 @@ export default function KitchenAssistantPage() {
         price: 0
       }));
       setMissingIngredients(newPantryItems);
-        setPendingRecipeSave({ recipe: finalRecipe, isNew });
+      setPendingRecipeSave({ recipe: finalRecipe, isNew });
       setConfirmPantryAddOpen(true);
       return; // Stop here, wait for user confirmation
     }

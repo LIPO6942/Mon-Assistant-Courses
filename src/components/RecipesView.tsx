@@ -435,11 +435,17 @@ export default function RecipesView({
   const filteredDiscoverableRecipes = useMemo(() => {
     return discoverableRecipes.filter(recipe => {
       if (isTunisianRecipe(recipe)) return false;
+      // Exclure les recettes déjà présentes dans Recetteti (userRecipes)
+      const isAlreadyInRecetteti = userRecipes.some(
+        ur => ur.title.toLowerCase().trim() === recipe.title.toLowerCase().trim()
+      );
+      if (isAlreadyInRecetteti) return false;
+
       const quickMatch = !filterQuick || (recipe.preparationTime !== undefined && recipe.preparationTime <= 15);
       const economicalMatch = !filterEconomical || !!recipe.isEconomical;
       return quickMatch && economicalMatch;
     });
-  }, [discoverableRecipes, filterQuick, filterEconomical]);
+  }, [discoverableRecipes, userRecipes, filterQuick, filterEconomical]);
 
   const filteredUserRecipes = useMemo(() => {
     if (!userRecipeTagFilter) return userRecipes;
@@ -506,9 +512,19 @@ export default function RecipesView({
     };
   };
 
+  // Purger automatiquement les recettes suggérées dès qu'elles sont enregistrées dans Recetteti
+  useEffect(() => {
+    setSuggestedRecipes(prev =>
+      prev.filter(r => !userRecipes.some(ur => ur.title.toLowerCase().trim() === r.title.toLowerCase().trim()))
+    );
+  }, [userRecipes]);
+
   // --- Basket-based Recommendations ---
   const basketBasedRecipes = useMemo(() => {
-    const nonTunisianDiscoverables = discoverableRecipes.filter(r => !isTunisianRecipe(r));
+    const nonTunisianDiscoverables = discoverableRecipes.filter(r =>
+      !isTunisianRecipe(r) &&
+      !userRecipes.some(ur => ur.title.toLowerCase().trim() === r.title.toLowerCase().trim())
+    );
     const hasHistory = basket.length > 0 || Object.keys(purchaseHistory).length > 0;
 
     // 1. If history exists, use the matching algorithm
@@ -1945,7 +1961,10 @@ export default function RecipesView({
                         size="sm"
                         className="gap-1.5 text-xs"
                         title="Ajouter à Recetteti"
-                        onClick={() => onAddToRecetteti(recipe)}
+                        onClick={() => {
+                          onAddToRecetteti(recipe);
+                          setSuggestedRecipes(prev => prev.filter(r => r.id !== recipe.id));
+                        }}
                       >
                         <BookUser className="h-3.5 w-3.5" />
                         <span className="hidden sm:inline">Recetteti</span>
