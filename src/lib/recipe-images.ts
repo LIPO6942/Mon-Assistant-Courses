@@ -17,7 +17,7 @@ const CULINARY_KEYWORD_IMAGES: { keywords: string[]; url: string }[] = [
     url: 'https://images.unsplash.com/photo-1559847844-5315695dadae?w=800&auto=format&fit=crop&q=80'
   },
   {
-    keywords: ['pho', 'ramen', 'soupe', 'bouillon', 'chorba', 'laksa'],
+    keywords: ['pho', 'ramen', 'soupe', 'bouillon', 'chorba', 'laksa', 'khao soi', 'kapustnica'],
     url: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=800&auto=format&fit=crop&q=80'
   },
   {
@@ -29,23 +29,23 @@ const CULINARY_KEYWORD_IMAGES: { keywords: string[]; url: string }[] = [
     url: 'https://images.unsplash.com/photo-1541518763669-27fef04b14ea?w=800&auto=format&fit=crop&q=80'
   },
   {
-    keywords: ['salade', 'césar', 'cesar', 'grecque', 'niçoise', 'nicoise'],
+    keywords: ['salade', 'césar', 'cesar', 'grecque', 'niçoise', 'nicoise', 'gado-gado', 'concombre'],
     url: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&auto=format&fit=crop&q=80'
   },
   {
-    keywords: ['couscous'],
+    keywords: ['couscous', 'mansaf'],
     url: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=800&auto=format&fit=crop&q=80'
   },
   {
-    keywords: ['chili con carne', 'haricots rouges'],
+    keywords: ['chili con carne', 'haricots rouges', 'feijoada', 'picadillo'],
     url: 'https://images.unsplash.com/photo-1541832676-9b763b0239ab?w=800&auto=format&fit=crop&q=80'
   },
   {
-    keywords: ['ratatouille', 'tian', 'légumes'],
+    keywords: ['ratatouille', 'tian', 'légumes', 'sarmale'],
     url: 'https://images.unsplash.com/photo-1572449043416-55f4685c9bb7?w=800&auto=format&fit=crop&q=80'
   },
   {
-    keywords: ['omelette', 'œuf', 'oeuf', 'tortilla'],
+    keywords: ['omelette', 'œuf', 'oeuf', 'tortilla', 'bobotie'],
     url: 'https://images.unsplash.com/photo-1510693206972-df098062cb71?w=800&auto=format&fit=crop&q=80'
   },
   {
@@ -57,7 +57,7 @@ const CULINARY_KEYWORD_IMAGES: { keywords: string[]; url: string }[] = [
     url: 'https://images.unsplash.com/photo-1541832676-9b763b0239ab?w=800&auto=format&fit=crop&q=80'
   },
   {
-    keywords: ['crevette', 'gambas', 'fruits de mer'],
+    keywords: ['crevette', 'gambas', 'fruits de mer', 'tom yum', 'moules'],
     url: 'https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?w=800&auto=format&fit=crop&q=80'
   },
   {
@@ -65,11 +65,11 @@ const CULINARY_KEYWORD_IMAGES: { keywords: string[]; url: string }[] = [
     url: 'https://images.unsplash.com/photo-1572695157366-5e585ab2b69f?w=800&auto=format&fit=crop&q=80'
   },
   {
-    keywords: ['goulash', 'bourguignon', 'bœuf', 'boeuf', 'carbonnade', 'ragoût', 'ragout', 'osso buco'],
+    keywords: ['goulash', 'bourguignon', 'bœuf', 'boeuf', 'carbonnade', 'ragoût', 'ragout', 'osso buco', 'stroganoff', 'nihari', 'rendang', 'bigos', 'lomo saltado', 'bulgogi', 'tibs'],
     url: 'https://images.unsplash.com/photo-1534939561126-855b8675edd7?w=800&auto=format&fit=crop&q=80'
   },
   {
-    keywords: ['ceviche'],
+    keywords: ['ceviche', 'gravlax'],
     url: 'https://images.unsplash.com/photo-1535400255456-984241443b29?w=800&auto=format&fit=crop&q=80'
   },
   {
@@ -77,15 +77,15 @@ const CULINARY_KEYWORD_IMAGES: { keywords: string[]; url: string }[] = [
     url: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=800&auto=format&fit=crop&q=80'
   },
   {
-    keywords: ['schnitzel', 'escalope', 'katsu', 'poulet'],
+    keywords: ['schnitzel', 'escalope', 'katsu', 'poulet', 'adobo', 'doro wat', 'yassa', 'chakhokhbili', 'mole poblano', 'chich taouk', 'souvlaki'],
     url: 'https://images.unsplash.com/photo-1599921841143-8190253ae33f?w=800&auto=format&fit=crop&q=80'
   },
   {
-    keywords: ['bibimbap', 'poke bowl', 'bowl'],
+    keywords: ['bibimbap', 'poke bowl', 'bowl', 'bun cha', 'mapo tofu'],
     url: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&auto=format&fit=crop&q=80'
   },
   {
-    keywords: ['spaghetti', 'pâtes', 'pates', 'carbonara', 'pesto', 'penne', 'tagliatelle', 'lasagne', 'makarouna'],
+    keywords: ['spaghetti', 'pâtes', 'pates', 'carbonara', 'pesto', 'penne', 'tagliatelle', 'lasagne', 'makarouna', 'gnocchi', 'pastitsio'],
     url: 'https://images.unsplash.com/photo-1621996346565-e3d5d62816f9?w=800&auto=format&fit=crop&q=80'
   },
   {
@@ -93,15 +93,15 @@ const CULINARY_KEYWORD_IMAGES: { keywords: string[]; url: string }[] = [
     url: 'https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=800&auto=format&fit=crop&q=80'
   },
   {
-    keywords: ['samosa', 'brik', 'coxinha', 'empanada'],
+    keywords: ['samosa', 'brik', 'coxinha', 'empanada', 'pupusa', 'pupusas', 'arepa', 'arepas'],
     url: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=800&auto=format&fit=crop&q=80'
   },
   {
-    keywords: ['avocado toast', 'avocat', 'guacamole'],
+    keywords: ['avocado toast', 'avocat', 'guacamole', 'nachos'],
     url: 'https://images.unsplash.com/photo-1525351484163-7529414344d8?w=800&auto=format&fit=crop&q=80'
   },
   {
-    keywords: ['quesadilla', 'tacos', 'fajita', 'mexicain', 'arepas'],
+    keywords: ['quesadilla', 'tacos', 'fajita', 'mexicain', 'enchilada', 'enchiladas', 'pide', 'khachapuri', 'pizza'],
     url: 'https://images.unsplash.com/photo-1551504734-5ee1c4a1479b?w=800&auto=format&fit=crop&q=80'
   },
   {
@@ -109,20 +109,28 @@ const CULINARY_KEYWORD_IMAGES: { keywords: string[]; url: string }[] = [
     url: 'https://images.unsplash.com/photo-1590412200988-a436970781fa?w=800&auto=format&fit=crop&q=80'
   },
   {
-    keywords: ['risotto', 'riz', 'biryani', 'plov'],
+    keywords: ['risotto', 'riz', 'biryani', 'plov', 'tahchin', 'fried rice', 'nasi goreng'],
     url: 'https://images.unsplash.com/photo-1633964913295-ceb43826e7c9?w=800&auto=format&fit=crop&q=80'
   },
   {
-    keywords: ['tajine', 'yassa', 'chich taouk', 'kofta'],
+    keywords: ['tajine', 'kofta', 'kefta'],
     url: 'https://images.unsplash.com/photo-1541518763669-27fef04b14ea?w=800&auto=format&fit=crop&q=80'
   },
   {
-    keywords: ['gyoza', 'ravioli', 'dumpling'],
+    keywords: ['gyoza', 'ravioli', 'dumpling', 'tteokbokki'],
     url: 'https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?w=800&auto=format&fit=crop&q=80'
   },
   {
-    keywords: ['moussaka', 'gratin', 'pastitsio'],
+    keywords: ['moussaka', 'gratin'],
     url: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=800&auto=format&fit=crop&q=80'
+  },
+  {
+    keywords: ['poutine'],
+    url: 'https://images.unsplash.com/photo-1586190848861-99aa4a171e90?w=800&auto=format&fit=crop&q=80'
+  },
+  {
+    keywords: ['tiramisu', 'panna cotta', 'dessert', 'gâteau', 'gateau', 'chocolat', 'crêpe', 'crepe', 'pancake', 'pancakes', 'baklava', 'cannoli'],
+    url: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=800&auto=format&fit=crop&q=80'
   }
 ];
 

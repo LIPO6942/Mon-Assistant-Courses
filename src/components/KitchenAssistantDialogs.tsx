@@ -194,6 +194,9 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
                   alt={currentRecipe.title}
                   className="w-full h-full object-cover brightness-90"
                   loading="lazy"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&auto=format&fit=crop&q=80';
+                  }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-6">
                   <div className="flex justify-between items-end gap-4">
@@ -225,12 +228,13 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
                       </div>
                     </div>
 
-                    {(currentRecipe as UserRecipe).photoDataUri && (
+                    {getRecipeImageUrl(currentRecipe) && (
                       <Button
                         variant="secondary"
                         size="icon"
                         className="rounded-full bg-white/20 backdrop-blur-md border-none text-white hover:bg-white/40"
                         onClick={() => setIsPreviewPhotoOpen(true)}
+                        title="Agrandir l'image"
                       >
                         <ExternalLink className="h-4 w-4" />
                       </Button>
@@ -538,12 +542,14 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
               <Minus className="h-6 w-6 text-white" />
               <span className="sr-only">Fermer</span>
             </DialogClose>
-            {currentRecipe && (currentRecipe as UserRecipe).photoDataUri && (
-              <Image
-                src={(currentRecipe as UserRecipe).photoDataUri!}
+            {currentRecipe && (
+              <img
+                src={getRecipeImageUrl(currentRecipe)}
                 alt={currentRecipe.title}
-                className="object-contain"
-                fill
+                className="max-h-full max-w-full object-contain"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&auto=format&fit=crop&q=80';
+                }}
               />
             )}
           </div>

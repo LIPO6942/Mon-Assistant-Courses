@@ -24,6 +24,7 @@ import { SmartMatchingService, isReceiptNoise } from '@/lib/smart-matching';
 import { db } from '@/lib/idb';
 import { isInAppBrowser, getProductStatus, cn, isExcludedFromMarketPrices, isNonFoodItem } from '@/lib/utils';
 import { isIngredientMatch } from '@/lib/smart-ingredient-matching';
+import { getRecipeImageUrl } from '@/lib/recipe-images';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -1442,6 +1443,7 @@ export default function KitchenAssistantPage() {
       alert(`"${recipe.title}" est déjà dans Recetteti !`);
       return;
     }
+    const resolvedImage = recipe.imageUrl || getRecipeImageUrl(recipe);
     const userRecipeData: Omit<UserRecipe, 'id'> = {
       title: recipe.title,
       category: (['Entrée', 'Plat', 'Dessert', 'Autre'].includes(recipe.country) ? recipe.country as any : 'Plat') as any,
@@ -1449,7 +1451,7 @@ export default function KitchenAssistantPage() {
       ingredients: recipe.ingredients,
       preparation: recipe.preparation || recipe.description || '',
       preparationTime: recipe.preparationTime || 30,
-      photoDataUri: recipe.imageUrl,
+      photoDataUri: resolvedImage,
       tags: [recipe.country, recipe.isEconomical ? 'économique' : ''].filter(Boolean).join(', '),
     };
     handleSaveUserRecipe(userRecipeData as any);

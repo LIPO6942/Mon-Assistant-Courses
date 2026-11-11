@@ -15,6 +15,7 @@ import { Trash2, Sparkles, Loader2, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ImagePicker from './ImagePicker';
 import { ocrRecipeFromImage } from '@/ai/flows/ocr-recipe-flow';
+import { getRecipeImageUrl } from '@/lib/recipe-images';
 import type { Ingredient } from '@/lib/types';
 
 interface UserRecipeFormProps {
@@ -31,7 +32,9 @@ type FormData = Omit<UserRecipe, 'id' | 'preparationTime' | 'portions'> & {
 };
 
 export default function UserRecipeForm({ initialData, onSave, formId, pantry }: UserRecipeFormProps) {
-  const [photoDataUri, setPhotoDataUri] = React.useState<string | undefined>(initialData?.photoDataUri);
+  const [photoDataUri, setPhotoDataUri] = React.useState<string | undefined>(
+    initialData?.photoDataUri || (initialData ? getRecipeImageUrl(initialData) : undefined)
+  );
   const [isOcrLoading, setIsOcrLoading] = React.useState(false);
   const [focusedIngredientIndex, setFocusedIngredientIndex] = React.useState<number | null>(null);
 

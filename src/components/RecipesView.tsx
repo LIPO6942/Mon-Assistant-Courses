@@ -13,6 +13,7 @@ import { cn, getProductStatus, formatDbaratiDate } from '@/lib/utils';
 import Image from 'next/image';
 import { listenCommunityPurchases } from '@/lib/firestore-sync';
 import { calculateMarketPrices, calculateRecipeCost, getRecipeAvailabilityPercentage, formatPrice } from '@/lib/price-utils';
+import { getRecipeImageUrl } from '@/lib/recipe-images';
 
 // Mapping pays -> couleurs drapeau (gradient) + emoji
 const COUNTRY_FLAG_MAP: Record<string, { colors: string; emoji: string }> = {
@@ -628,14 +629,16 @@ export default function RecipesView({
                   {filteredUserRecipes.map(recipe => (
                     <Card key={recipe.id} className={cn("cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col overflow-hidden", getCountryFlag(recipe.tags) ? 'bg-gradient-to-r ' + getCountryFlag(recipe.tags)!.colors : '')} onClick={() => onViewUserRecipe(recipe)}>
                       <CardContent className='p-3 flex items-center gap-3'>
-                        <div className="relative w-14 h-14 aspect-square shrink-0 rounded-lg overflow-hidden">
-                          {recipe.photoDataUri ? (
-                            <img src={recipe.photoDataUri} alt={recipe.title} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className={cn("w-full h-full flex items-center justify-center", getCountryFlag(recipe.tags) ? 'bg-gradient-to-br ' + getCountryFlag(recipe.tags)!.colors : 'bg-secondary')}>
-                              <Utensils className="h-6 w-6 text-muted-foreground" />
-                            </div>
-                          )}
+                        <div className="relative w-14 h-14 aspect-square shrink-0 rounded-lg overflow-hidden bg-secondary">
+                          <img
+                            src={recipe.photoDataUri || getRecipeImageUrl(recipe)}
+                            alt={recipe.title}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&auto=format&fit=crop&q=80';
+                            }}
+                          />
                         </div>
                         <div className="flex flex-col overflow-hidden">
                           <CardTitle className='text-base font-semibold truncate'>{recipe.title}</CardTitle>
