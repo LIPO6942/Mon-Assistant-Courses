@@ -2063,7 +2063,7 @@ export default function RecipesView({
                     </CardHeader>
                     <CardContent className="p-3 pt-2">
                       <p className="text-[10px] text-muted-foreground line-clamp-2 mb-2">{recipe.description}</p>
-                      
+
                       {/* Badge disponibilité garde-manger */}
                       <div className="mb-2">
                         <div className={cn(
