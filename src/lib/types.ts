@@ -25,6 +25,7 @@ export interface Recipe {
   title: string;
   description: string;
   country: string;
+  category?: RecipeCategory | string;
   portions?: number;
   targetPortions?: number;
   ingredients: RecipeIngredient[];

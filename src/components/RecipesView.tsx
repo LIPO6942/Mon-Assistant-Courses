@@ -563,7 +563,7 @@ export default function RecipesView({
       matchedNames: [],
       isDiscovery: true
     }));
-  }, [discoverableRecipes, basket, purchaseHistory, dbarati]);
+  }, [discoverableRecipes, basket, purchaseHistory, dbarati, userRecipes]);
 
   const findRandomRecipes = () => {
     if (filteredDiscoverableRecipes.length === 0) {

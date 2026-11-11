@@ -1444,9 +1444,10 @@ export default function KitchenAssistantPage() {
       return;
     }
     const resolvedImage = getRecipeImageUrl(recipe);
+    const recipeCategory = recipe.category;
     const userRecipeData: Omit<UserRecipe, 'id'> = {
       title: recipe.title,
-      category: (recipe.category && ['Entrée', 'Plat', 'Dessert', 'Autre'].includes(recipe.category) ? recipe.category as any : 'Plat') as any,
+      category: (recipeCategory && ['Entrée', 'Plat', 'Dessert', 'Autre'].includes(recipeCategory) ? recipeCategory as any : 'Plat') as any,
       portions: recipe.portions || recipe.targetPortions || 4,
       ingredients: recipe.ingredients,
       preparation: recipe.preparation || recipe.description || '',
