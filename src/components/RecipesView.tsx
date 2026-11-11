@@ -6,14 +6,15 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, Shuffle, Dices, Clock, Coins, Utensils, BookUser, Search, Tag, Sparkles, TrendingDown, ClipboardList, Check, Trash2, Plus, Minus, Users, ChevronUp, ChevronDown, Loader2, X, Calendar, AlertCircle, Cake } from 'lucide-react';
-import type { Recipe, UserRecipe, BasketItem, PurchaseHistory, CommunityPurchase, DbaratiItem } from '@/lib/types';
+import { PlusCircle, Shuffle, Dices, Clock, Coins, Utensils, BookUser, Search, Tag, Sparkles, TrendingDown, ClipboardList, Check, Trash2, Plus, Minus, Users, ChevronUp, ChevronDown, Loader2, X, Calendar, AlertCircle, Cake, PackageCheck, CheckCircle2, Globe } from 'lucide-react';
+import type { Recipe, UserRecipe, BasketItem, PurchaseHistory, CommunityPurchase, DbaratiItem, Ingredient, RecipeIngredient } from '@/lib/types';
 import { streetFoodOptions } from '@/lib/data';
 import { cn, getProductStatus, formatDbaratiDate } from '@/lib/utils';
 import Image from 'next/image';
 import { listenCommunityPurchases } from '@/lib/firestore-sync';
 import { calculateMarketPrices, calculateRecipeCost, getRecipeAvailabilityPercentage, formatPrice } from '@/lib/price-utils';
 import { getRecipeImageUrl } from '@/lib/recipe-images';
+import { isIngredientMatch } from '@/lib/smart-ingredient-matching';
 
 // Mapping pays -> couleurs drapeau (gradient) + emoji
 const COUNTRY_FLAG_MAP: Record<string, { colors: string; emoji: string }> = {
@@ -105,6 +106,56 @@ const normalizeString = (s: string) =>
     .replace(/[^a-z0-9 ]/g, "") // remove other special chars
     .trim();
 
+export type ContinentFilter = 'Tous' | 'Europe' | 'Asie' | 'Amériques' | 'Afrique' | 'Océanie';
+
+export function getRecipeContinent(country?: string): ContinentFilter {
+  if (!country) return 'Europe';
+  const c = country.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+  if (c.includes('oceanie') || c.includes('australie') || c.includes('zelande') || c.includes('polynesie') || c.includes('tahiti') || c.includes('fidji')) {
+    return 'Océanie';
+  }
+  if (c.includes('afrique') || c.includes('senegal') || c.includes('maroc') || c.includes('ethiopie') || c.includes('tunisie') || c.includes('liban') || c.includes('jordanie') || c.includes('iran') || c.includes('turquie') || c.includes('moyen orient') || c.includes('moyen-orient')) {
+    return 'Afrique';
+  }
+  if (c.includes('asie') || c.includes('japon') || c.includes('coree') || c.includes('thailande') || c.includes('taiwan') || c.includes('chine') || c.includes('vietnam') || c.includes('inde') || c.includes('pakistan') || c.includes('indonesie') || c.includes('singapour') || c.includes('malaisie') || c.includes('philippines') || c.includes('ouzbekistan')) {
+    return 'Asie';
+  }
+  if (c.includes('amerique') || c.includes('mexique') || c.includes('perou') || c.includes('etats unis') || c.includes('usa') || c.includes('bresil') || c.includes('argentine') || c.includes('canada') || c.includes('quebec') || c.includes('cuba') || c.includes('salvador') || c.includes('venezuela') || c.includes('hawai')) {
+    return 'Amériques';
+  }
+  return 'Europe';
+}
+
+export function getRecipePantryAvailability(
+  recipeIngredients: RecipeIngredient[],
+  pantry: Ingredient[] = []
+): {
+  availableCount: number;
+  totalCount: number;
+  percentage: number;
+} {
+  if (!recipeIngredients || recipeIngredients.length === 0) {
+    return { availableCount: 0, totalCount: 0, percentage: 100 };
+  }
+  if (!pantry || pantry.length === 0) {
+    return { availableCount: 0, totalCount: recipeIngredients.length, percentage: 0 };
+  }
+
+  let matched = 0;
+  for (const ing of recipeIngredients) {
+    if (pantry.some(p => isIngredientMatch(p.name, ing.name))) {
+      matched++;
+    }
+  }
+
+  return {
+    availableCount: matched,
+    totalCount: recipeIngredients.length,
+    percentage: Math.round((matched / recipeIngredients.length) * 100),
+  };
+}
+
 interface RecipesViewProps {
   setViewingRecipe: (recipe: (Omit<Recipe, 'id'> & { id?: string; }) | null) => void;
   discoverableRecipes: Recipe[];
@@ -115,6 +166,7 @@ interface RecipesViewProps {
   basket: BasketItem[];
   purchaseHistory: PurchaseHistory;
   dbarati: DbaratiItem[];
+  pantry?: Ingredient[];
   onAddDbaratiItem: (
     text: string,
     type?: 'plat' | 'entree' | 'dessert',
@@ -144,6 +196,7 @@ export default function RecipesView({
   basket,
   purchaseHistory,
   dbarati,
+  pantry = [],
   onAddDbaratiItem,
   onToggleDbaratiItem,
   onMarkPrepared,
@@ -157,6 +210,8 @@ export default function RecipesView({
   onUpdateDbaratiItemDessertTag,
 }: RecipesViewProps) {
   const [suggestedRecipes, setSuggestedRecipes] = useState<Recipe[]>([]);
+  const [selectedContinent, setSelectedContinent] = useState<ContinentFilter>('Tous');
+  const [sortByAvailability, setSortByAvailability] = useState(false);
   const [selectedStreetFood, setSelectedStreetFood] = useState<string | null>(null);
   const [isSpinning, setIsSpinning] = useState(false);
   const [displayedFood, setDisplayedFood] = useState<string | null>(null);
@@ -442,11 +497,17 @@ export default function RecipesView({
       );
       if (isAlreadyInRecetteti) return false;
 
-      const quickMatch = !filterQuick || (recipe.preparationTime !== undefined && recipe.preparationTime <= 15);
+      // Filtre par continent
+      if (selectedContinent !== 'Tous') {
+        const continent = getRecipeContinent(recipe.country);
+        if (continent !== selectedContinent) return false;
+      }
+
+      const quickMatch = !filterQuick || (recipe.preparationTime !== undefined && recipe.preparationTime <= 30);
       const economicalMatch = !filterEconomical || !!recipe.isEconomical;
       return quickMatch && economicalMatch;
     });
-  }, [discoverableRecipes, userRecipes, filterQuick, filterEconomical]);
+  }, [discoverableRecipes, userRecipes, selectedContinent, filterQuick, filterEconomical]);
 
   const filteredUserRecipes = useMemo(() => {
     if (!userRecipeTagFilter) return userRecipes;
@@ -570,9 +631,42 @@ export default function RecipesView({
       setSuggestedRecipes([]);
       return;
     }
-    const shuffled = [...filteredDiscoverableRecipes].sort(() => 0.5 - Math.random());
-    setSuggestedRecipes(shuffled.slice(0, 2));
+    if (sortByAvailability) {
+      // Tri du plus présent au moins présent selon les ingrédients du garde-manger !
+      const sorted = [...filteredDiscoverableRecipes].sort((a, b) => {
+        const pA = getRecipePantryAvailability(a.ingredients, pantry).percentage;
+        const pB = getRecipePantryAvailability(b.ingredients, pantry).percentage;
+        return pB - pA;
+      });
+      setSuggestedRecipes(sorted.slice(0, 4));
+    } else {
+      // Aléatoire standard
+      const shuffled = [...filteredDiscoverableRecipes].sort(() => 0.5 - Math.random());
+      setSuggestedRecipes(shuffled.slice(0, 2));
+    }
   };
+
+  // Réactualiser automatiquement les suggestions si l'utilisateur change de continent ou bascule le tri
+  useEffect(() => {
+    if (suggestedRecipes.length > 0) {
+      if (filteredDiscoverableRecipes.length === 0) {
+        setSuggestedRecipes([]);
+        return;
+      }
+      if (sortByAvailability) {
+        const sorted = [...filteredDiscoverableRecipes].sort((a, b) => {
+          const pA = getRecipePantryAvailability(a.ingredients, pantry).percentage;
+          const pB = getRecipePantryAvailability(b.ingredients, pantry).percentage;
+          return pB - pA;
+        });
+        setSuggestedRecipes(sorted.slice(0, 4));
+      } else {
+        const shuffled = [...filteredDiscoverableRecipes].sort(() => 0.5 - Math.random());
+        setSuggestedRecipes(shuffled.slice(0, 2));
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sortByAvailability, selectedContinent, filterQuick, filterEconomical]);
 
   const handleSpin = () => {
     if (isSpinning) return;
@@ -1831,31 +1925,102 @@ export default function RecipesView({
           </div>
         </div>
 
-        <div className="flex flex-wrap justify-center gap-4 mb-6">
+        {/* Continents horizontal scrollable pills */}
+        <div className="flex items-center justify-center gap-1.5 overflow-x-auto no-scrollbar py-1 px-1 mb-3">
+          {[
+            { id: 'Tous', label: 'Tous', icon: '🌐' },
+            { id: 'Europe', label: 'Europe', icon: '🇪🇺' },
+            { id: 'Asie', label: 'Asie', icon: '🥢' },
+            { id: 'Amériques', label: 'Amériques', icon: '🌮' },
+            { id: 'Afrique', label: 'Afrique & Orient', icon: '🌍' },
+            { id: 'Océanie', label: 'Océanie', icon: '🦘' },
+          ].map(tab => {
+            const isSelected = selectedContinent === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setSelectedContinent(tab.id as ContinentFilter)}
+                className={cn(
+                  "inline-flex items-center gap-1 px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-semibold shrink-0 transition-all cursor-pointer border",
+                  isSelected
+                    ? "bg-primary text-primary-foreground border-primary shadow-xs scale-102"
+                    : "bg-background/80 hover:bg-muted text-muted-foreground border-border/60 hover:text-foreground"
+                )}
+              >
+                <span>{tab.icon}</span>
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Action toggles (Disponibilité Garde-manger, Rapide, Éco) */}
+        <div className="flex flex-wrap items-center justify-center gap-2 mb-5">
+          <Button
+            type="button"
+            variant={sortByAvailability ? "default" : "outline"}
+            size="sm"
+            onClick={() => setSortByAvailability(prev => !prev)}
+            className={cn(
+              "h-8 rounded-full text-xs font-bold gap-1.5 transition-all shadow-xs",
+              sortByAvailability
+                ? "bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600 ring-2 ring-emerald-500/20"
+                : "border-emerald-600/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10"
+            )}
+            title="Activer pour trier les recettes de la plus réalisable à la moins réalisable selon votre stock"
+          >
+            <PackageCheck className="h-3.5 w-3.5 shrink-0" />
+            <span>Trier par garde-manger ({sortByAvailability ? "du + au - dispo" : "inactif"})</span>
+          </Button>
+
           <Button
             size="sm"
             variant={filterQuick ? "secondary" : "outline"}
             onClick={() => setFilterQuick(!filterQuick)}
-            className={cn(filterQuick && 'ring-2 ring-primary')}
+            className={cn(
+              "h-8 rounded-full text-xs font-medium gap-1.5 transition-all",
+              filterQuick && 'ring-2 ring-primary font-bold bg-primary/15 text-primary'
+            )}
           >
-            <Clock className="mr-2 h-4 w-4" /> Je suis pressé(e)
+            <Clock className="h-3.5 w-3.5 shrink-0" />
+            <span>≤ 30 min</span>
           </Button>
+
           <Button
             size="sm"
             variant={filterEconomical ? "secondary" : "outline"}
             onClick={() => setFilterEconomical(!filterEconomical)}
-            className={cn(filterEconomical && 'ring-2 ring-primary')}
+            className={cn(
+              "h-8 rounded-full text-xs font-medium gap-1.5 transition-all",
+              filterEconomical && 'ring-2 ring-primary font-bold bg-primary/15 text-primary'
+            )}
           >
-            <Coins className="mr-2 h-4 w-4" /> Économique
+            <Coins className="h-3.5 w-3.5 shrink-0" />
+            <span>Économique</span>
           </Button>
         </div>
 
         <Button
           onClick={findRandomRecipes}
-          className="h-11 rounded-md px-4 sm:px-8 text-sm sm:text-base whitespace-normal sm:whitespace-nowrap"
+          className={cn(
+            "h-11 rounded-full px-5 sm:px-8 text-sm sm:text-base font-bold shadow-md transition-all gap-2",
+            sortByAvailability
+              ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+              : ""
+          )}
         >
-          <Shuffle className="mr-2 h-5 w-5 shrink-0" />
-          Trouver une idée de recette
+          {sortByAvailability ? (
+            <>
+              <PackageCheck className="h-5 w-5 shrink-0" />
+              <span>Voir les recettes les plus disponibles</span>
+            </>
+          ) : (
+            <>
+              <Shuffle className="h-5 w-5 shrink-0" />
+              <span>Trouver une idée de recette</span>
+            </>
+          )}
         </Button>
 
         {basketBasedRecipes.length > 0 && (
@@ -1868,6 +2033,7 @@ export default function RecipesView({
               {basketBasedRecipes.map(({ recipe, matchedNames, isDiscovery }) => {
                 const { totalCost, perPersonCost } = getAdjustedRecipeCost(recipe);
                 const availabilityPercent = getRecipeAvailabilityPercentage(recipe.ingredients, marketPrices);
+                const { availableCount, totalCount, percentage: pantryPercent } = getRecipePantryAvailability(recipe.ingredients, pantry);
 
                 return (
                   <Card
@@ -1897,6 +2063,26 @@ export default function RecipesView({
                     </CardHeader>
                     <CardContent className="p-3 pt-2">
                       <p className="text-[10px] text-muted-foreground line-clamp-2 mb-2">{recipe.description}</p>
+                      
+                      {/* Badge disponibilité garde-manger */}
+                      <div className="mb-2">
+                        <div className={cn(
+                          "inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded border",
+                          pantryPercent === 100
+                            ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
+                            : pantryPercent >= 50
+                              ? "bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-500/30"
+                              : "bg-muted text-muted-foreground border-border/40"
+                        )}>
+                          <span className={cn(
+                            "w-1.5 h-1.5 rounded-full shrink-0",
+                            pantryPercent === 100 ? "bg-emerald-500" : pantryPercent >= 50 ? "bg-amber-500" : "bg-zinc-400"
+                          )} />
+                          <span>{pantryPercent}% en stock</span>
+                          <span className="opacity-75 font-normal">({availableCount}/{totalCount})</span>
+                        </div>
+                      </div>
+
                       <div className="flex flex-wrap gap-1">
                         {isDiscovery ? (
                           <div className="text-[9px] text-muted-foreground italic flex items-center gap-1">
@@ -1927,11 +2113,40 @@ export default function RecipesView({
           </div>
         )}
 
+        {suggestedRecipes.length > 0 && (
+          <div className="mt-8 mb-2 max-w-4xl mx-auto flex flex-wrap items-center justify-between gap-2 px-1 animate-in fade-in">
+            <div className={cn(
+              "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border",
+              sortByAvailability
+                ? "bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border-emerald-500/30 font-semibold"
+                : "bg-muted/60 text-muted-foreground border-border/50"
+            )}>
+              {sortByAvailability ? (
+                <>
+                  <PackageCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <span>Recettes triées selon votre garde-manger (du plus disponible au moins disponible)</span>
+                </>
+              ) : (
+                <>
+                  <Shuffle className="h-3.5 w-3.5 shrink-0" />
+                  <span>Suggestions aléatoires ({suggestedRecipes.length})</span>
+                </>
+              )}
+            </div>
+            {selectedContinent !== 'Tous' && (
+              <Badge variant="outline" className="text-xs bg-background/80">
+                Continent : {selectedContinent}
+              </Badge>
+            )}
+          </div>
+        )}
+
         {suggestedRecipes.length > 0 ? (
-          <div className='mt-8 max-w-4xl mx-auto text-left animate-in fade-in-50 grid grid-cols-1 md:grid-cols-2 gap-6'>
+          <div className='mt-3 max-w-4xl mx-auto text-left animate-in fade-in-50 grid grid-cols-1 md:grid-cols-2 gap-6'>
             {suggestedRecipes.map(recipe => {
               const { totalCost, perPersonCost } = getAdjustedRecipeCost(recipe);
               const availabilityPercent = getRecipeAvailabilityPercentage(recipe.ingredients, marketPrices);
+              const { availableCount, totalCount, percentage: pantryPercent } = getRecipePantryAvailability(recipe.ingredients, pantry);
 
               return (
                 <Card key={recipe.id} className="overflow-hidden flex flex-col bg-card shadow-lg rounded-xl border border-border/50">
@@ -1959,6 +2174,27 @@ export default function RecipesView({
                         <CardTitle>{recipe.title}</CardTitle>
                         <div className="flex items-center gap-2 mt-2 flex-wrap">
                           <Badge variant="secondary" className="w-fit">{recipe.country}</Badge>
+
+                          {/* Badge de disponibilité garde-manger */}
+                          <Badge
+                            className={cn(
+                              "flex items-center gap-1.5 text-[11px] font-bold border transition-colors",
+                              pantryPercent === 100
+                                ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/40"
+                                : pantryPercent >= 50
+                                  ? "bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-500/40"
+                                  : "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700"
+                            )}
+                            title={`${availableCount} sur ${totalCount} ingrédients déjà dans votre garde-manger`}
+                          >
+                            <span className={cn(
+                              "w-1.5 h-1.5 rounded-full shrink-0",
+                              pantryPercent === 100 ? "bg-emerald-500" : pantryPercent >= 50 ? "bg-amber-500" : "bg-zinc-400"
+                            )} />
+                            <span>{pantryPercent}% dispo</span>
+                            <span className="text-[9px] opacity-75 font-normal">({availableCount}/{totalCount})</span>
+                          </Badge>
+
                           {recipe.preparationTime !== undefined && (
                             <Badge variant="outline" className="flex items-center gap-1"><Clock className="h-3 w-3" />{recipe.preparationTime} min</Badge>
                           )}

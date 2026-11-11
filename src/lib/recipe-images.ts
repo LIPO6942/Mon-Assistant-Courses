@@ -310,6 +310,18 @@ const CULINARY_KEYWORD_IMAGES: CulinaryEntry[] = [
   {
     keywords: ['brownie', 'brownies'],
     url: 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=800&auto=format&fit=crop&q=80'
+  },
+  {
+    keywords: ['pavlova'],
+    url: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=800&auto=format&fit=crop&q=80'
+  },
+  {
+    keywords: ['meat pie', 'tourte'],
+    url: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=800&auto=format&fit=crop&q=80'
+  },
+  {
+    keywords: ['poisson cru', 'tahitienne'],
+    url: 'https://images.unsplash.com/photo-1535400255456-984241443b29?w=800&auto=format&fit=crop&q=80'
   }
 ];
 

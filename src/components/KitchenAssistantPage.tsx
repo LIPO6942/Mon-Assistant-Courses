@@ -1630,6 +1630,7 @@ export default function KitchenAssistantPage() {
               basket={basket}
               purchaseHistory={purchaseHistory}
               dbarati={dbarati}
+              pantry={pantry}
               onAddDbaratiItem={(
                 text: string,
                 type: 'plat' | 'entree' | 'dessert' = 'plat',
