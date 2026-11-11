@@ -98,12 +98,12 @@ import {
 import { Input } from './ui/input';
 import { Checkbox } from './ui/checkbox';
 
-const normalizeString = (s: string) => 
+const normalizeString = (s: string) =>
   s.toLowerCase()
-   .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // remove accents
-   .replace(/['’\-]/g, " ") // replace apostrophes and dashes with space
-   .replace(/[^a-z0-9 ]/g, "") // remove other special chars
-   .trim();
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // remove accents
+    .replace(/['’\-]/g, " ") // replace apostrophes and dashes with space
+    .replace(/[^a-z0-9 ]/g, "") // remove other special chars
+    .trim();
 
 interface RecipesViewProps {
   setViewingRecipe: (recipe: (Omit<Recipe, 'id'> & { id?: string; }) | null) => void;
@@ -175,7 +175,7 @@ export default function RecipesView({
           const parsed = parseInt(saved, 10);
           if (!isNaN(parsed) && parsed >= 1 && parsed <= 20) return parsed;
         }
-      } catch {}
+      } catch { }
     }
     return 4;
   });
@@ -186,7 +186,7 @@ export default function RecipesView({
       const clamped = Math.max(1, Math.min(20, next));
       try {
         localStorage.setItem('mac_idea_portions', clamped.toString());
-      } catch {}
+      } catch { }
       return clamped;
     });
   };
@@ -775,8 +775,8 @@ export default function RecipesView({
                                   isSelected
                                     ? "bg-indigo-600 text-white border-indigo-700 shadow-sm scale-102"
                                     : isToday
-                                    ? "bg-indigo-100/70 dark:bg-indigo-900/40 border-indigo-300/80 dark:border-indigo-700/60 hover:bg-indigo-100"
-                                    : "bg-white/80 dark:bg-zinc-900/40 border-border/30 hover:bg-muted/40 hover:border-indigo-200"
+                                      ? "bg-indigo-100/70 dark:bg-indigo-900/40 border-indigo-300/80 dark:border-indigo-700/60 hover:bg-indigo-100"
+                                      : "bg-white/80 dark:bg-zinc-900/40 border-border/30 hover:bg-muted/40 hover:border-indigo-200"
                                 )}
                               >
                                 <div className="flex items-center justify-center gap-0.5">
@@ -785,8 +785,8 @@ export default function RecipesView({
                                     isSelected
                                       ? "text-white"
                                       : isToday
-                                      ? "text-indigo-600 dark:text-indigo-400 font-extrabold"
-                                      : "text-muted-foreground"
+                                        ? "text-indigo-600 dark:text-indigo-400 font-extrabold"
+                                        : "text-muted-foreground"
                                   )}>
                                     {day.dayShort}
                                   </span>
@@ -801,10 +801,10 @@ export default function RecipesView({
                                       isSelected
                                         ? "bg-white/95"
                                         : day.count > 0
-                                        ? isTop
-                                          ? "bg-gradient-to-t from-amber-500 to-indigo-500"
-                                          : "bg-indigo-500/80 dark:bg-indigo-400/80"
-                                        : "bg-muted/40 h-0.5"
+                                          ? isTop
+                                            ? "bg-gradient-to-t from-amber-500 to-indigo-500"
+                                            : "bg-indigo-500/80 dark:bg-indigo-400/80"
+                                          : "bg-muted/40 h-0.5"
                                     )}
                                     style={{ height: day.count > 0 ? `${heightPct}%` : '2px' }}
                                   />
@@ -815,8 +815,8 @@ export default function RecipesView({
                                   isSelected
                                     ? "text-white"
                                     : day.count > 0
-                                    ? "text-foreground"
-                                    : "text-muted-foreground/40"
+                                      ? "text-foreground"
+                                      : "text-muted-foreground/40"
                                 )}>
                                   {day.count}
                                 </span>
@@ -920,7 +920,7 @@ export default function RecipesView({
 
               {/* Entrées Section (Collapsible) - Moved Above Random Wheel */}
               <div className="max-w-4xl mx-auto mb-8 bg-white/30 dark:bg-zinc-900/10 rounded-2xl p-4 border border-border/20 shadow-sm">
-                <button 
+                <button
                   onClick={() => setIsEntreesExpanded(!isEntreesExpanded)}
                   className="w-full flex justify-between items-center py-2 text-sm font-semibold text-muted-foreground hover:text-primary transition-colors focus:outline-none"
                 >
@@ -932,10 +932,10 @@ export default function RecipesView({
                   </span>
                   {isEntreesExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                 </button>
-                
+
                 {isEntreesExpanded && (
                   <div className="animate-in slide-in-from-top-2 fade-in duration-300 pt-4">
-                    
+
                     {/* Add new Entree - Multiline Layout */}
                     <div className="max-w-md mx-auto mb-6 scale-95 origin-top">
                       <form
@@ -948,13 +948,13 @@ export default function RecipesView({
                           }
                         }}
                       >
-                         <Input
+                        <Input
                           placeholder="Ajouter une entrée..."
                           className="rounded-xl h-10 text-sm border-primary/20 bg-background/50 w-full"
                           value={newEntreeText}
                           onChange={(e) => setNewEntreeText(e.target.value)}
                         />
-                        
+
                         {newEntreeText.length > 0 && (
                           <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-1 duration-200">
                             <div className="flex border border-primary/20 rounded-xl overflow-hidden shadow-sm h-10 flex-1">
@@ -972,10 +972,10 @@ export default function RecipesView({
                                 </button>
                               ))}
                             </div>
-                            <Button 
-                              type="submit" 
-                              size="icon" 
-                              className="h-10 w-10 rounded-xl shrink-0" 
+                            <Button
+                              type="submit"
+                              size="icon"
+                              className="h-10 w-10 rounded-xl shrink-0"
                               disabled={!newEntreeText.trim()}
                             >
                               <Plus className="h-4 w-4" />
@@ -989,7 +989,7 @@ export default function RecipesView({
                     {dbarati.filter(i => i.type === 'entree').length > 0 && (
                       <div className="flex gap-2 mb-4 overflow-x-auto pb-1.5 no-scrollbar px-1 snap-x scroll-smooth w-full">
                         {(['Toutes', 'Soupe', 'Salade', 'Sauce'] as const).map(filter => (
-                          <Badge 
+                          <Badge
                             key={filter}
                             variant={activeEntreeFilter === filter ? "default" : "outline"}
                             className="shrink-0 cursor-pointer text-[10px] py-1 px-3 snap-center"
@@ -1009,38 +1009,38 @@ export default function RecipesView({
                           .filter(i => activeEntreeFilter === 'Toutes' || i.tag === activeEntreeFilter)
                           .sort((a, b) => Number(a.done) - Number(b.done))
                           .map((item) => (
-                          <div
-                            key={item.id}
-                            className={cn(
-                              "relative p-2 rounded-lg border transition-all duration-300 group flex items-center justify-between",
-                              item.done 
-                                ? "bg-muted/40 border-border/40 opacity-70" 
-                                : "bg-white dark:bg-card border-border/60 hover:border-primary/40 hover:shadow-sm"
-                            )}
-                          >
-                            <div className="flex items-center gap-2 flex-1 min-w-0">
-                              <Checkbox
-                                id={`dbarati-${item.id}`}
-                                checked={item.done}
-                                onCheckedChange={() => onToggleDbaratiItem(item.id)}
-                                className="h-4 w-4 rounded border-primary/20 data-[state=checked]:bg-primary shrink-0"
-                              />
-                               <label
-                                htmlFor={`dbarati-${item.id}`}
-                                className={cn(
-                                  "text-xs font-semibold cursor-pointer truncate flex-1",
-                                  item.done ? "line-through text-muted-foreground" : "text-foreground"
-                                )}
-                              >
-                                {item.text}
-                              </label>
-                              {item.tag && (
-                                <Badge variant="secondary" className="text-[8px] px-1 py-0 h-3 font-medium opacity-70 shrink-0">
-                                  {item.tag}
-                                </Badge>
+                            <div
+                              key={item.id}
+                              className={cn(
+                                "relative p-2 rounded-lg border transition-all duration-300 group flex items-center justify-between",
+                                item.done
+                                  ? "bg-muted/40 border-border/40 opacity-70"
+                                  : "bg-white dark:bg-card border-border/60 hover:border-primary/40 hover:shadow-sm"
                               )}
-                            </div>
-                             <div className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-2">
+                            >
+                              <div className="flex items-center gap-2 flex-1 min-w-0">
+                                <Checkbox
+                                  id={`dbarati-${item.id}`}
+                                  checked={item.done}
+                                  onCheckedChange={() => onToggleDbaratiItem(item.id)}
+                                  className="h-4 w-4 rounded border-primary/20 data-[state=checked]:bg-primary shrink-0"
+                                />
+                                <label
+                                  htmlFor={`dbarati-${item.id}`}
+                                  className={cn(
+                                    "text-xs font-semibold cursor-pointer truncate flex-1",
+                                    item.done ? "line-through text-muted-foreground" : "text-foreground"
+                                  )}
+                                >
+                                  {item.text}
+                                </label>
+                                {item.tag && (
+                                  <Badge variant="secondary" className="text-[8px] px-1 py-0 h-3 font-medium opacity-70 shrink-0">
+                                    {item.tag}
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-2">
                                 <Button
                                   variant="ghost"
                                   size="icon"
@@ -1050,8 +1050,8 @@ export default function RecipesView({
                                   <Trash2 className="h-3 w-3" />
                                 </Button>
                               </div>
-                          </div>
-                        ))}
+                            </div>
+                          ))}
                       </div>
                     ) : (
                       <div className="text-center py-4 rounded-xl border border-dashed border-border/40 bg-muted/5 scale-95">
@@ -1291,11 +1291,11 @@ export default function RecipesView({
                                   <div className="absolute inset-0 z-10 bg-background/95 rounded-xl flex items-center justify-between px-4 animate-in fade-in duration-150 border-2 border-primary/20 shadow-sm">
                                     <div className="flex items-center gap-2 flex-1">
                                       <Tag className="h-3.5 w-3.5 text-primary" />
-                                      <select 
+                                      <select
                                         className="w-full bg-transparent text-sm font-bold text-primary outline-none focus:ring-0 cursor-pointer appearance-none"
                                         value={item.platTag || ''}
                                         onChange={(e) => {
-                                          if(e.target.value) {
+                                          if (e.target.value) {
                                             onUpdateDbaratiItemPlatTag(item.id, e.target.value as any);
                                             setLongPressItemId(null);
                                           }
@@ -1310,9 +1310,9 @@ export default function RecipesView({
                                         <option value="Autres">Autres</option>
                                       </select>
                                     </div>
-                                    <Button 
-                                      variant="ghost" 
-                                      size="icon" 
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
                                       className="h-8 w-8 rounded-full text-muted-foreground hover:bg-muted"
                                       onClick={() => setLongPressItemId(null)}
                                     >
@@ -1374,32 +1374,32 @@ export default function RecipesView({
                                       )}
                                     </div>
 
-                                      <div className="flex items-center gap-1.5 mt-1 flex-nowrap whitespace-nowrap">
-                                        {(item.prepCount || 0) > 0 && (
-                                          <span className="bg-primary/5 text-primary px-1.5 py-0 rounded-full text-[9px] font-bold shrink-0">
-                                            {item.prepCount}x
+                                    <div className="flex items-center gap-1.5 mt-1 flex-nowrap whitespace-nowrap">
+                                      {(item.prepCount || 0) > 0 && (
+                                        <span className="bg-primary/5 text-primary px-1.5 py-0 rounded-full text-[9px] font-bold shrink-0">
+                                          {item.prepCount}x
+                                        </span>
+                                      )}
+                                      {item.lastPreparedAt && (
+                                        <span className="text-[10px] text-muted-foreground italic truncate">
+                                          {formatDbaratiDate(item.lastPreparedAt)}
+                                          <span className="opacity-70 ml-1">
+                                            (il y a {Math.floor((Date.now() - new Date(item.lastPreparedAt).getTime()) / (1000 * 60 * 60 * 24))} j)
                                           </span>
-                                        )}
-                                        {item.lastPreparedAt && (
-                                          <span className="text-[10px] text-muted-foreground italic truncate">
-                                            {formatDbaratiDate(item.lastPreparedAt)}
-                                            <span className="opacity-70 ml-1">
-                                              (il y a {Math.floor((Date.now() - new Date(item.lastPreparedAt).getTime()) / (1000 * 60 * 60 * 24))} j)
-                                            </span>
-                                          </span>
-                                        )}
+                                        </span>
+                                      )}
 
-                                        {/* Bouton historique : visible seulement si ≥2 préparations */}
-                                        {(item.prepHistory?.length || 0) >= 2 && (
-                                          <button
-                                            title="Voir l'historique"
-                                            onClick={(e) => { e.stopPropagation(); setOpenHistoryId(openHistoryId === item.id ? null : item.id); }}
-                                            className="inline-flex items-center justify-center text-muted-foreground hover:text-primary text-[11px] rounded-full px-1 py-0.5 transition-colors shrink-0"
-                                          >
-                                            📅
-                                          </button>
-                                        )}
-                                      </div>
+                                      {/* Bouton historique : visible seulement si ≥2 préparations */}
+                                      {(item.prepHistory?.length || 0) >= 2 && (
+                                        <button
+                                          title="Voir l'historique"
+                                          onClick={(e) => { e.stopPropagation(); setOpenHistoryId(openHistoryId === item.id ? null : item.id); }}
+                                          className="inline-flex items-center justify-center text-muted-foreground hover:text-primary text-[11px] rounded-full px-1 py-0.5 transition-colors shrink-0"
+                                        >
+                                          📅
+                                        </button>
+                                      )}
+                                    </div>
                                     {/* Mini-historique inline */}
                                     {openHistoryId === item.id && item.prepHistory && item.prepHistory.length > 0 && (
                                       <div className="mt-1.5 text-[9px] text-muted-foreground bg-muted/30 rounded-lg px-2 py-1.5 space-y-0.5 animate-in fade-in slide-in-from-top-1 duration-200">
@@ -1782,7 +1782,7 @@ export default function RecipesView({
               <Users className="h-3.5 w-3.5 text-primary" />
               <span className="hidden xs:inline">Pour</span>
             </div>
-            
+
             <div className="flex items-center gap-0.5 bg-muted/80 dark:bg-zinc-800/80 rounded-full p-0.5 shrink-0">
               <Button
                 type="button"
@@ -1868,59 +1868,59 @@ export default function RecipesView({
               {basketBasedRecipes.map(({ recipe, matchedNames, isDiscovery }) => {
                 const { totalCost, perPersonCost } = getAdjustedRecipeCost(recipe);
                 const availabilityPercent = getRecipeAvailabilityPercentage(recipe.ingredients, marketPrices);
-                
+
                 return (
-                <Card
-                  key={recipe.id}
-                  className={cn(
-                    "cursor-pointer hover:shadow-md transition-all border-primary/20 bg-primary/5 group relative overflow-hidden flex flex-col",
-                    isDiscovery ? "border-zinc-200 bg-zinc-50/50" : "border-primary/20 bg-primary/5"
-                  )}
-                  onClick={() => setViewingRecipe({ ...recipe, targetPortions: ideaPortions })}
-                >
-                  <div className="relative h-28 w-full overflow-hidden bg-secondary">
-                    <img
-                      src={recipe.imageUrl || getRecipeImageUrl(recipe)}
-                      alt={recipe.title}
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      loading="lazy"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&auto=format&fit=crop&q=80';
-                      }}
-                    />
-                    <Badge variant="outline" className="text-[9px] w-fit h-5 px-1.5 absolute top-2 right-2 bg-black/60 text-white border-none backdrop-blur-sm font-medium">
-                      {recipe.country}
-                    </Badge>
-                  </div>
-                  <CardHeader className="p-3 pb-0">
-                    <CardTitle className="text-sm group-hover:text-primary transition-colors line-clamp-1">{recipe.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-3 pt-2">
-                    <p className="text-[10px] text-muted-foreground line-clamp-2 mb-2">{recipe.description}</p>
-                    <div className="flex flex-wrap gap-1">
-                      {isDiscovery ? (
-                        <div className="text-[9px] text-muted-foreground italic flex items-center gap-1">
-                          <PlusCircle className="h-2 w-2" />
-                          Nouvelle idée à tester
-                        </div>
-                      ) : (
-                        matchedNames.slice(0, 3).map(name => (
-                          <div key={name} className="flex items-center gap-1 bg-background px-1.5 py-0.5 rounded text-[9px] border border-primary/10">
-                            <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                            {name}
-                          </div>
-                        ))
-                      )}
-                      {!isDiscovery && matchedNames.length > 3 && <span className="text-[9px] text-muted-foreground">+{matchedNames.length - 3}</span>}
-                    </div>
-                    {totalCost !== null && (
-                      <div className="mt-2 text-[9px] font-bold text-green-700 dark:text-green-400 flex items-center justify-between bg-green-500/10 px-1.5 py-0.5 rounded border border-green-500/20">
-                        <span>Est. {formatPrice(totalCost)}</span>
-                        <span className="text-[8px] font-normal opacity-80">({ideaPortions} pers.)</span>
-                      </div>
+                  <Card
+                    key={recipe.id}
+                    className={cn(
+                      "cursor-pointer hover:shadow-md transition-all border-primary/20 bg-primary/5 group relative overflow-hidden flex flex-col",
+                      isDiscovery ? "border-zinc-200 bg-zinc-50/50" : "border-primary/20 bg-primary/5"
                     )}
-                  </CardContent>
-                </Card>
+                    onClick={() => setViewingRecipe({ ...recipe, targetPortions: ideaPortions })}
+                  >
+                    <div className="relative h-28 w-full overflow-hidden bg-secondary">
+                      <img
+                        src={recipe.imageUrl || getRecipeImageUrl(recipe)}
+                        alt={recipe.title}
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        loading="lazy"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&auto=format&fit=crop&q=80';
+                        }}
+                      />
+                      <Badge variant="outline" className="text-[9px] w-fit h-5 px-1.5 absolute top-2 right-2 bg-black/60 text-white border-none backdrop-blur-sm font-medium">
+                        {recipe.country}
+                      </Badge>
+                    </div>
+                    <CardHeader className="p-3 pb-0">
+                      <CardTitle className="text-sm group-hover:text-primary transition-colors line-clamp-1">{recipe.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-3 pt-2">
+                      <p className="text-[10px] text-muted-foreground line-clamp-2 mb-2">{recipe.description}</p>
+                      <div className="flex flex-wrap gap-1">
+                        {isDiscovery ? (
+                          <div className="text-[9px] text-muted-foreground italic flex items-center gap-1">
+                            <PlusCircle className="h-2 w-2" />
+                            Nouvelle idée à tester
+                          </div>
+                        ) : (
+                          matchedNames.slice(0, 3).map(name => (
+                            <div key={name} className="flex items-center gap-1 bg-background px-1.5 py-0.5 rounded text-[9px] border border-primary/10">
+                              <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                              {name}
+                            </div>
+                          ))
+                        )}
+                        {!isDiscovery && matchedNames.length > 3 && <span className="text-[9px] text-muted-foreground">+{matchedNames.length - 3}</span>}
+                      </div>
+                      {totalCost !== null && (
+                        <div className="mt-2 text-[9px] font-bold text-green-700 dark:text-green-400 flex items-center justify-between bg-green-500/10 px-1.5 py-0.5 rounded border border-green-500/20">
+                          <span>Est. {formatPrice(totalCost)}</span>
+                          <span className="text-[8px] font-normal opacity-80">({ideaPortions} pers.)</span>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
                 );
               })}
             </div>
@@ -1932,94 +1932,94 @@ export default function RecipesView({
             {suggestedRecipes.map(recipe => {
               const { totalCost, perPersonCost } = getAdjustedRecipeCost(recipe);
               const availabilityPercent = getRecipeAvailabilityPercentage(recipe.ingredients, marketPrices);
-              
+
               return (
-              <Card key={recipe.id} className="overflow-hidden flex flex-col bg-card shadow-lg rounded-xl border border-border/50">
-                <div className="relative h-44 w-full overflow-hidden bg-secondary">
-                  <img
-                    src={recipe.imageUrl || getRecipeImageUrl(recipe)}
-                    alt={recipe.title}
-                    className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                    loading="lazy"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&auto=format&fit=crop&q=80';
-                    }}
-                  />
-                  <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5">
-                    {recipe.calories !== undefined && (
-                      <Badge variant="secondary" className="bg-black/60 text-white backdrop-blur-sm border-none text-[11px] font-semibold">
-                        {recipe.calories} kcal
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div className="pr-2 flex-1">
-                      <CardTitle>{recipe.title}</CardTitle>
-                      <div className="flex items-center gap-2 mt-2 flex-wrap">
-                        <Badge variant="secondary" className="w-fit">{recipe.country}</Badge>
-                        {recipe.preparationTime !== undefined && (
-                          <Badge variant="outline" className="flex items-center gap-1"><Clock className="h-3 w-3" />{recipe.preparationTime} min</Badge>
-                        )}
-                        {recipe.isEconomical && <Badge variant="outline" className="flex items-center gap-1"><Coins className="h-3 w-3" />Éco</Badge>}
-                        {totalCost !== null && (
-                          <Badge className="flex items-center gap-1.5 bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/30">
-                            <TrendingDown className="h-3 w-3" />
-                            <span className="font-bold">{formatPrice(totalCost)}</span>
-                            <span className="text-[10px] font-normal opacity-85">({ideaPortions} {ideaPortions > 1 ? 'pers.' : 'pers.'})</span>
-                            {perPersonCost !== null && ideaPortions > 1 && (
-                              <span className="text-[9px] opacity-75 border-l border-green-500/30 pl-1.5 ml-0.5 font-normal">
-                                ~{formatPrice(perPersonCost)}/pers.
-                              </span>
-                            )}
-                          </Badge>
-                        )}
-                      </div>
-                      {communityPurchases.length > 0 && availabilityPercent < 100 && (
-                        <p className="text-[11px] text-muted-foreground mt-1">
-                          {availabilityPercent}% d&apos;ingrédients trouvés sur le marché
-                        </p>
+                <Card key={recipe.id} className="overflow-hidden flex flex-col bg-card shadow-lg rounded-xl border border-border/50">
+                  <div className="relative h-44 w-full overflow-hidden bg-secondary">
+                    <img
+                      src={recipe.imageUrl || getRecipeImageUrl(recipe)}
+                      alt={recipe.title}
+                      className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                      loading="lazy"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&auto=format&fit=crop&q=80';
+                      }}
+                    />
+                    <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5">
+                      {recipe.calories !== undefined && (
+                        <Badge variant="secondary" className="bg-black/60 text-white backdrop-blur-sm border-none text-[11px] font-semibold">
+                          {recipe.calories} kcal
+                        </Badge>
                       )}
                     </div>
-                    {recipe.calories !== undefined && (
-                      <Badge variant="outline" className="whitespace-nowrap">{recipe.calories} kcal</Badge>
-                    )}
                   </div>
-                </CardHeader>
-                <CardContent className="flex-grow">
-                  <p className="text-sm text-muted-foreground">{recipe.description}</p>
-                </CardContent>
-                <CardFooter className="flex justify-between mt-auto bg-secondary/30 pt-4 gap-2">
-                  <Button onClick={() => setViewingRecipe({ ...recipe, targetPortions: ideaPortions })}>Voir la recette</Button>
-                  <div className="flex items-center gap-1.5">
-                    {onAddToRecetteti && (
+                  <CardHeader>
+                    <div className="flex justify-between items-start">
+                      <div className="pr-2 flex-1">
+                        <CardTitle>{recipe.title}</CardTitle>
+                        <div className="flex items-center gap-2 mt-2 flex-wrap">
+                          <Badge variant="secondary" className="w-fit">{recipe.country}</Badge>
+                          {recipe.preparationTime !== undefined && (
+                            <Badge variant="outline" className="flex items-center gap-1"><Clock className="h-3 w-3" />{recipe.preparationTime} min</Badge>
+                          )}
+                          {recipe.isEconomical && <Badge variant="outline" className="flex items-center gap-1"><Coins className="h-3 w-3" />Éco</Badge>}
+                          {totalCost !== null && (
+                            <Badge className="flex items-center gap-1.5 bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/30">
+                              <TrendingDown className="h-3 w-3" />
+                              <span className="font-bold">{formatPrice(totalCost)}</span>
+                              <span className="text-[10px] font-normal opacity-85">({ideaPortions} {ideaPortions > 1 ? 'pers.' : 'pers.'})</span>
+                              {perPersonCost !== null && ideaPortions > 1 && (
+                                <span className="text-[9px] opacity-75 border-l border-green-500/30 pl-1.5 ml-0.5 font-normal">
+                                  ~{formatPrice(perPersonCost)}/pers.
+                                </span>
+                              )}
+                            </Badge>
+                          )}
+                        </div>
+                        {communityPurchases.length > 0 && availabilityPercent < 100 && (
+                          <p className="text-[11px] text-muted-foreground mt-1">
+                            {availabilityPercent}% d&apos;ingrédients trouvés sur le marché
+                          </p>
+                        )}
+                      </div>
+                      {recipe.calories !== undefined && (
+                        <Badge variant="outline" className="whitespace-nowrap">{recipe.calories} kcal</Badge>
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardContent className="flex-grow">
+                    <p className="text-sm text-muted-foreground">{recipe.description}</p>
+                  </CardContent>
+                  <CardFooter className="flex justify-between mt-auto bg-secondary/30 pt-4 gap-2">
+                    <Button onClick={() => setViewingRecipe({ ...recipe, targetPortions: ideaPortions })}>Voir la recette</Button>
+                    <div className="flex items-center gap-1.5">
+                      {onAddToRecetteti && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-1.5 text-xs"
+                          title="Ajouter à Recetteti"
+                          onClick={() => {
+                            onAddToRecetteti(recipe);
+                            setSuggestedRecipes(prev => prev.filter(r => r.id !== recipe.id));
+                          }}
+                        >
+                          <BookUser className="h-3.5 w-3.5" />
+                          <span className="hidden sm:inline">Recetteti</span>
+                        </Button>
+                      )}
                       <Button
                         variant="outline"
-                        size="sm"
-                        className="gap-1.5 text-xs"
-                        title="Ajouter à Recetteti"
-                        onClick={() => {
-                          onAddToRecetteti(recipe);
-                          setSuggestedRecipes(prev => prev.filter(r => r.id !== recipe.id));
-                        }}
+                        size="icon"
+                        onClick={() => handleSaveRecipe(recipe)}
+                        title="Sauvegarder dans mes favoris"
                       >
-                        <BookUser className="h-3.5 w-3.5" />
-                        <span className="hidden sm:inline">Recetteti</span>
+                        <PlusCircle className="h-4 w-4" />
                       </Button>
-                    )}
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => handleSaveRecipe(recipe)}
-                      title="Sauvegarder dans mes favoris"
-                    >
-                      <PlusCircle className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardFooter>
-              </Card>
-            );
+                    </div>
+                  </CardFooter>
+                </Card>
+              );
             })}
           </div>
         ) : (
