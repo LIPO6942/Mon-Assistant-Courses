@@ -100,8 +100,12 @@ const CULINARY_KEYWORD_IMAGES: CulinaryEntry[] = [
     url: 'https://images.unsplash.com/photo-1547592166-23ac45744acd?w=800&auto=format&fit=crop&q=80'
   },
   {
-    keywords: ['souvlaki', 'chich taouk', 'kofta', 'kefta', 'brochette', 'brochettes'],
+    keywords: ['souvlaki', 'gyros', 'gyro', 'chich taouk', 'kofta', 'kefta', 'brochette', 'brochettes'],
     url: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&auto=format&fit=crop&q=80'
+  },
+  {
+    keywords: ['bacalhau'],
+    url: 'https://images.unsplash.com/photo-1534080564583-6be75777b70a?w=800&auto=format&fit=crop&q=80'
   },
 
   // 3. Spécialités Américaines & Mexicaines
@@ -114,7 +118,7 @@ const CULINARY_KEYWORD_IMAGES: CulinaryEntry[] = [
     url: 'https://images.unsplash.com/photo-1551504734-5ee1c4a1479b?w=800&auto=format&fit=crop&q=80'
   },
   {
-    keywords: ['tacos', 'taco'],
+    keywords: ['tacos', 'taco', 'birria'],
     url: 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=800&auto=format&fit=crop&q=80'
   },
   {
@@ -168,8 +172,16 @@ const CULINARY_KEYWORD_IMAGES: CulinaryEntry[] = [
     url: 'https://images.unsplash.com/photo-1585032226651-759b368d7246?w=800&auto=format&fit=crop&q=80'
   },
   {
-    keywords: ['curry vert', 'green curry'],
+    keywords: ['curry vert', 'green curry', 'massaman', 'curry massaman'],
     url: 'https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?w=800&auto=format&fit=crop&q=80'
+  },
+  {
+    keywords: ['palak paneer', 'paneer'],
+    url: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=800&auto=format&fit=crop&q=80'
+  },
+  {
+    keywords: ['bao', 'baos', 'bao bun', 'char siu'],
+    url: 'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=800&auto=format&fit=crop&q=80'
   },
   {
     keywords: ['butter chicken', 'makhani', 'tikka masala'],
@@ -290,6 +302,14 @@ const CULINARY_KEYWORD_IMAGES: CulinaryEntry[] = [
   {
     keywords: ['cannoli'],
     url: 'https://images.unsplash.com/photo-1621236378699-8597faf6a176?w=800&auto=format&fit=crop&q=80'
+  },
+  {
+    keywords: ['pastel de nata', 'flan'],
+    url: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800&auto=format&fit=crop&q=80'
+  },
+  {
+    keywords: ['brownie', 'brownies'],
+    url: 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=800&auto=format&fit=crop&q=80'
   }
 ];
 

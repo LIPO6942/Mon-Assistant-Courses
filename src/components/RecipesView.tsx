@@ -1768,8 +1768,12 @@ export default function RecipesView({
       </Accordion>
 
       <div className='text-center py-8 px-4 rounded-xl bg-gradient-to-br from-primary/10 via-card to-card border-2 border-primary/20 shadow-lg'>
-        <h2 className='text-2xl font-bold mb-2'>À court d&apos;idées ?</h2>
-        <p className='text-muted-foreground mb-4'>Utilisez les filtres pour affiner les suggestions aléatoires !</p>
+        <h2 className='text-2xl font-bold mb-1'>À court d&apos;idées ?</h2>
+        <p className='text-xs sm:text-sm font-semibold text-primary tracking-wide mb-1.5 flex items-center justify-center gap-1.5'>
+          <span>🌍</span>
+          <span>Voyager gustativement — Essayez des recettes du monde</span>
+        </p>
+        <p className='text-muted-foreground text-xs sm:text-sm mb-4'>Utilisez les filtres pour affiner les suggestions aléatoires !</p>
 
         {/* Dynamic Portion Selector */}
         <div className="flex justify-center mb-5 w-full px-1">
