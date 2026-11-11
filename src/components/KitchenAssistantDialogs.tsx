@@ -6,7 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { BasketShareDialog } from './BasketShareDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Minus, Plus, Pencil, Trash2, Users, Share2, AlertTriangle, ExternalLink, Search, PlusCircle, Check } from 'lucide-react';
+import { Minus, Plus, Pencil, Trash2, Users, Share2, AlertTriangle, ExternalLink, Search, PlusCircle, Check, Clock } from 'lucide-react';
 import IngredientForm from './IngredientForm';
 import CategoryForm from './CategoryForm';
 import HealthConditionManager from './HealthConditionManager';
@@ -184,11 +184,11 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
           setViewingUserRecipe(null);
         }
       }}>
-        <DialogContent className="w-[94vw] max-w-md p-0 overflow-hidden bg-white dark:bg-zinc-950 rounded-2xl sm:rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-2xl">
+        <DialogContent className="w-[94vw] max-w-lg sm:max-w-xl p-0 overflow-hidden bg-white dark:bg-zinc-950 rounded-2xl sm:rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-2xl">
           {currentRecipe && (
             <div className="flex flex-col h-[85dvh] max-h-[88vh] w-full max-w-full overflow-hidden">
               {/* Image Header / Title Section */}
-              <div className="relative h-36 shrink-0 overflow-hidden">
+              <div className="relative h-40 sm:h-48 shrink-0 overflow-hidden">
                 <img
                   src={getRecipeImageUrl(currentRecipe)}
                   alt={currentRecipe.title}
@@ -221,7 +221,7 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
                         </div>
                         {'preparationTime' in currentRecipe && currentRecipe.preparationTime && (
                           <div className="flex items-center gap-1">
-                            <Plus className="h-3 w-3" />
+                            <Clock className="h-3 w-3" />
                             <span>{currentRecipe.preparationTime} min</span>
                           </div>
                         )}
@@ -245,8 +245,8 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
 
               {/* Action Buttons & Video Tutorials (YouTube, TikTok, Google) */}
               {currentRecipe && (
-                <div className="px-3 py-2 flex items-center gap-1.5 overflow-x-auto no-scrollbar border-b border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/80 dark:bg-zinc-900/60 shrink-0 w-full max-w-full">
-                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider shrink-0 mr-0.5 ml-1">
+                <div className="px-3 py-1.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar border-b border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/60 dark:bg-zinc-900/40 shrink-0 w-full max-w-full">
+                  <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider shrink-0 mr-0.5 ml-1">
                     Tutos :
                   </span>
 
@@ -254,7 +254,7 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-7 px-2.5 rounded-full text-[11px] font-bold shrink-0 gap-1.5 border-red-200 dark:border-red-900/50 bg-red-500/10 text-red-700 dark:text-red-400 hover:bg-red-500/20"
+                    className="h-6 px-2 rounded-full text-[10px] font-medium shrink-0 gap-1 border-red-200 dark:border-red-900/50 bg-red-500/10 text-red-700 dark:text-red-400 hover:bg-red-500/20"
                     asChild
                   >
                     <a
@@ -262,7 +262,7 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      <svg className="h-3.5 w-3.5 fill-current" viewBox="0 0 24 24">
+                      <svg className="h-3 w-3 fill-current" viewBox="0 0 24 24">
                         <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
                       </svg>
                       <span>YouTube</span>
@@ -273,7 +273,7 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-7 px-2.5 rounded-full text-[11px] font-bold shrink-0 gap-1.5 border-zinc-300 dark:border-zinc-700 bg-zinc-900/10 dark:bg-zinc-100/10 text-foreground hover:bg-muted"
+                    className="h-6 px-2 rounded-full text-[10px] font-medium shrink-0 gap-1 border-zinc-300 dark:border-zinc-700 bg-zinc-900/10 dark:bg-zinc-100/10 text-foreground hover:bg-muted"
                     asChild
                   >
                     <a
@@ -281,7 +281,7 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      <svg className="h-3.5 w-3.5 fill-current" viewBox="0 0 24 24">
+                      <svg className="h-3 w-3 fill-current" viewBox="0 0 24 24">
                         <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.24 1.07-.14 1.61.24 1.14 1.17 2.06 2.3 2.29 1.05.21 2.19-.07 2.95-.81.65-.62.98-1.52.99-2.42.02-3.83.01-7.66.01-11.49-.01-2.22-.01-4.44-.02-6.66z"/>
                       </svg>
                       <span>TikTok</span>
@@ -292,7 +292,7 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-7 px-2 rounded-full text-[11px] font-medium shrink-0 gap-1 text-muted-foreground hover:text-foreground"
+                    className="h-6 px-2 rounded-full text-[10px] font-medium shrink-0 gap-1 text-muted-foreground hover:text-foreground"
                     asChild
                   >
                     <a

@@ -92,7 +92,7 @@ export default function RecipeContent({
                                 <ListFilter className="h-4 w-4 text-primary" />
                                 <h3 className="text-xs font-black uppercase tracking-widest">Ingrédients</h3>
                             </div>
-                            <div className="grid grid-cols-1 gap-2">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                 {ingredients.map((ing, i) => {
                                     const pantryItem = pantry.find(p => isIngredientMatch(p.name, ing.name));
                                     let statusColor = 'bg-zinc-200 dark:bg-zinc-800';
@@ -154,30 +154,31 @@ export default function RecipeContent({
                                 </Button>
                             </div>
 
-                            <div className="space-y-3">
+                            <div className="space-y-2.5">
                                 {preparationSteps.map((step, index) => (
                                     <div
                                         key={index}
                                         className={cn(
-                                            "flex items-start gap-3 p-3 rounded-xl border transition-all duration-300",
+                                            "flex items-start gap-3 p-3 rounded-xl border transition-all duration-200",
                                             checkedSteps.has(index)
-                                                ? "bg-zinc-50 dark:bg-zinc-900/20 border-transparent opacity-40 scale-[0.99]"
-                                                : "bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 shadow-sm"
+                                                ? "bg-zinc-100/50 dark:bg-zinc-900/30 border-transparent opacity-40"
+                                                : "bg-white dark:bg-zinc-900/80 border-zinc-150 dark:border-zinc-800/80 hover:border-primary/30 shadow-2xs"
                                         )}
                                     >
                                         <Checkbox
                                             id={`step-${index}`}
                                             checked={checkedSteps.has(index)}
                                             onCheckedChange={() => handleToggleStep(index)}
-                                            className="mt-1 h-4 w-4 rounded-full border-2 shrink-0"
+                                            className="mt-0.5 h-4 w-4 rounded-full border-2 shrink-0 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                                         />
                                         <label
                                             htmlFor={`step-${index}`}
                                             className={cn(
-                                                "flex-1 text-xs sm:text-sm leading-relaxed cursor-pointer font-medium break-words min-w-0",
+                                                "flex-1 text-xs sm:text-sm leading-relaxed cursor-pointer font-normal break-words min-w-0",
                                                 checkedSteps.has(index) ? "line-through text-muted-foreground" : "text-foreground"
                                             )}
                                         >
+                                            <span className="text-[11px] font-bold text-primary mr-1.5 opacity-80">Étape {index + 1}.</span>
                                             {step}
                                         </label>
                                     </div>

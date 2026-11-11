@@ -1861,13 +1861,12 @@ export default function RecipesView({
         </AccordionItem>
       </Accordion>
 
-      <div className='text-center py-8 px-4 rounded-xl bg-gradient-to-br from-primary/10 via-card to-card border-2 border-primary/20 shadow-lg'>
+      <div className='text-center py-6 sm:py-8 px-4 rounded-xl bg-gradient-to-br from-primary/10 via-card to-card border-2 border-primary/20 shadow-lg'>
         <h2 className='text-2xl font-bold mb-1'>À court d&apos;idées ?</h2>
-        <p className='text-xs sm:text-sm font-semibold text-primary tracking-wide mb-1.5 flex items-center justify-center gap-1.5'>
+        <p className='text-xs sm:text-sm font-semibold text-primary tracking-wide mb-4 flex items-center justify-center gap-1.5'>
           <span>🌍</span>
-          <span>Voyager gustativement — Essayez des recettes du monde</span>
+          <span>Voyager gustativement — Recettes du monde</span>
         </p>
-        <p className='text-muted-foreground text-xs sm:text-sm mb-4'>Utilisez les filtres pour affiner les suggestions aléatoires !</p>
 
         {/* Dynamic Portion Selector */}
         <div className="flex justify-center mb-5 w-full px-1">
@@ -1925,7 +1924,7 @@ export default function RecipesView({
           </div>
         </div>
 
-        {/* Continents horizontal scrollable pills */}
+        {/* Continents horizontal scrollable pills with toggle on/off */}
         <div className="flex items-center justify-center gap-1.5 overflow-x-auto no-scrollbar py-1 px-1 mb-3">
           {[
             { id: 'Tous', label: 'Tous', icon: '🌐' },
@@ -1940,16 +1939,26 @@ export default function RecipesView({
               <button
                 key={tab.id}
                 type="button"
-                onClick={() => setSelectedContinent(tab.id as ContinentFilter)}
+                onClick={() => {
+                  if (tab.id === 'Tous') {
+                    setSelectedContinent('Tous');
+                  } else {
+                    setSelectedContinent(prev => prev === tab.id ? 'Tous' : (tab.id as ContinentFilter));
+                  }
+                }}
                 className={cn(
                   "inline-flex items-center gap-1 px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-semibold shrink-0 transition-all cursor-pointer border",
                   isSelected
                     ? "bg-primary text-primary-foreground border-primary shadow-xs scale-102"
                     : "bg-background/80 hover:bg-muted text-muted-foreground border-border/60 hover:text-foreground"
                 )}
+                title={isSelected && tab.id !== 'Tous' ? "Cliquer pour désactiver et revenir à l'aléatoire mondial" : undefined}
               >
                 <span>{tab.icon}</span>
                 <span>{tab.label}</span>
+                {isSelected && tab.id !== 'Tous' && (
+                  <X className="h-3 w-3 ml-0.5 opacity-80 hover:opacity-100" />
+                )}
               </button>
             );
           })}
@@ -1963,15 +1972,16 @@ export default function RecipesView({
             size="sm"
             onClick={() => setSortByAvailability(prev => !prev)}
             className={cn(
-              "h-8 rounded-full text-xs font-bold gap-1.5 transition-all shadow-xs",
+              "h-8 rounded-full text-xs font-semibold gap-1.5 transition-all shadow-xs",
               sortByAvailability
                 ? "bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600 ring-2 ring-emerald-500/20"
                 : "border-emerald-600/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10"
             )}
-            title="Activer pour trier les recettes de la plus réalisable à la moins réalisable selon votre stock"
+            title="Activer pour trier selon le % d'ingrédients disponibles dans votre garde-manger"
           >
             <PackageCheck className="h-3.5 w-3.5 shrink-0" />
-            <span>Trier par garde-manger ({sortByAvailability ? "du + au - dispo" : "inactif"})</span>
+            <span>En stock d&apos;abord</span>
+            {sortByAvailability && <X className="h-3 w-3 ml-0.5 opacity-80 hover:opacity-100" />}
           </Button>
 
           <Button
@@ -2004,7 +2014,7 @@ export default function RecipesView({
         <Button
           onClick={findRandomRecipes}
           className={cn(
-            "h-11 rounded-full px-5 sm:px-8 text-sm sm:text-base font-bold shadow-md transition-all gap-2",
+            "h-10 sm:h-11 rounded-full px-6 sm:px-8 text-sm sm:text-base font-bold shadow-md transition-all gap-2",
             sortByAvailability
               ? "bg-emerald-600 hover:bg-emerald-700 text-white"
               : ""
@@ -2012,13 +2022,13 @@ export default function RecipesView({
         >
           {sortByAvailability ? (
             <>
-              <PackageCheck className="h-5 w-5 shrink-0" />
-              <span>Voir les recettes les plus disponibles</span>
+              <PackageCheck className="h-4 w-4 shrink-0" />
+              <span>Voir les recettes en stock</span>
             </>
           ) : (
             <>
-              <Shuffle className="h-5 w-5 shrink-0" />
-              <span>Trouver une idée de recette</span>
+              <Shuffle className="h-4 w-4 shrink-0" />
+              <span>Trouver une idée</span>
             </>
           )}
         </Button>
@@ -2114,29 +2124,24 @@ export default function RecipesView({
         )}
 
         {suggestedRecipes.length > 0 && (
-          <div className="mt-8 mb-2 max-w-4xl mx-auto flex flex-wrap items-center justify-between gap-2 px-1 animate-in fade-in">
-            <div className={cn(
-              "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border",
-              sortByAvailability
-                ? "bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border-emerald-500/30 font-semibold"
-                : "bg-muted/60 text-muted-foreground border-border/50"
-            )}>
+          <div className="mt-6 mb-2 max-w-4xl mx-auto flex items-center justify-between gap-2 px-2 text-xs text-muted-foreground animate-in fade-in">
+            <span className="font-semibold flex items-center gap-1.5">
               {sortByAvailability ? (
                 <>
-                  <PackageCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                  <span>Recettes triées selon votre garde-manger (du plus disponible au moins disponible)</span>
+                  <PackageCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                  <span>Classées par disponibilité du stock</span>
                 </>
               ) : (
                 <>
-                  <Shuffle className="h-3.5 w-3.5 shrink-0" />
-                  <span>Suggestions aléatoires ({suggestedRecipes.length})</span>
+                  <Shuffle className="h-3.5 w-3.5 text-primary" />
+                  <span>Suggestions ({suggestedRecipes.length})</span>
                 </>
               )}
-            </div>
+            </span>
             {selectedContinent !== 'Tous' && (
-              <Badge variant="outline" className="text-xs bg-background/80">
-                Continent : {selectedContinent}
-              </Badge>
+              <span className="bg-muted px-2 py-0.5 rounded-full text-[11px] font-medium border border-border/50">
+                {selectedContinent}
+              </span>
             )}
           </div>
         )}
@@ -2145,7 +2150,6 @@ export default function RecipesView({
           <div className='mt-3 max-w-4xl mx-auto text-left animate-in fade-in-50 grid grid-cols-1 md:grid-cols-2 gap-6'>
             {suggestedRecipes.map(recipe => {
               const { totalCost, perPersonCost } = getAdjustedRecipeCost(recipe);
-              const availabilityPercent = getRecipeAvailabilityPercentage(recipe.ingredients, marketPrices);
               const { availableCount, totalCount, percentage: pantryPercent } = getRecipePantryAvailability(recipe.ingredients, pantry);
 
               return (
@@ -2212,11 +2216,6 @@ export default function RecipesView({
                             </Badge>
                           )}
                         </div>
-                        {communityPurchases.length > 0 && availabilityPercent < 100 && (
-                          <p className="text-[11px] text-muted-foreground mt-1">
-                            {availabilityPercent}% d&apos;ingrédients trouvés sur le marché
-                          </p>
-                        )}
                       </div>
                       {recipe.calories !== undefined && (
                         <Badge variant="outline" className="whitespace-nowrap">{recipe.calories} kcal</Badge>
