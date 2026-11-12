@@ -162,6 +162,37 @@ export function getRecipePantryAvailability(
   };
 }
 
+export function containsRhum(recipe: Recipe): boolean {
+  const hasRhum = (s?: string) => s ? /\b(rhum|rum)\b/i.test(s) : false;
+  if (hasRhum(recipe.title) || hasRhum(recipe.description) || hasRhum(recipe.preparation)) return true;
+  return (recipe.ingredients || []).some(ing => hasRhum(ing.name));
+}
+
+export function isDessertRecipe(recipe: Recipe): boolean {
+  if (recipe.category === 'Dessert') return true;
+  if (recipe.category === 'Plat' || recipe.category === 'Entrée') return false;
+
+  const dessertIds = new Set([
+    'r128', 'r131', 'r134', 'r139', 'r141', 'r142', 'r161', 'r162', 'r165',
+    'r184', 'r187', 'r189', 'r190', 'r191', 'r192', 'r193', 'r194', 'r195', 'r196', 'r197', 'r198'
+  ]);
+  if (recipe.id && dessertIds.has(recipe.id)) return true;
+
+  const title = (recipe.title || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const desc = (recipe.description || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+  const dessertKeywords = [
+    'tiramisu', 'panna cotta', 'crepes sucrees', 'baklava', 'pancake',
+    'cannoli', 'pastel de nata', 'brownie', 'pavlova', 'flan coco',
+    'blanc-manger', 'mousse au chocolat', 'tarte tatin', 'creme brulee',
+    'churros', 'cheesecake', 'dorayaki', 'crumble', 'fondant au chocolat',
+    'mahalabia', 'tres leches', 'mango sticky rice'
+  ];
+  return dessertKeywords.some(kw => title.includes(kw) || desc.includes(kw));
+}
+
+export type DishCourseFilter = 'plat' | 'dessert' | 'all';
+
 interface RecipesViewProps {
   setViewingRecipe: (recipe: (Omit<Recipe, 'id'> & { id?: string; }) | null) => void;
   discoverableRecipes: Recipe[];
@@ -216,6 +247,7 @@ export default function RecipesView({
   onUpdateDbaratiItemDessertTag,
 }: RecipesViewProps) {
   const [suggestedRecipes, setSuggestedRecipes] = useState<Recipe[]>([]);
+  const [dishCourseFilter, setDishCourseFilter] = useState<DishCourseFilter>('plat');
   const [selectedContinent, setSelectedContinent] = useState<ContinentFilter>('Tous');
   const [sortByAvailability, setSortByAvailability] = useState(false);
   const [selectedStreetFood, setSelectedStreetFood] = useState<string | null>(null);
@@ -494,14 +526,27 @@ export default function RecipesView({
     return tunisianKeywords.some(kw => title.includes(kw));
   };
 
+  const savoryCount = useMemo(() => {
+    return discoverableRecipes.filter(r => !containsRhum(r) && !isTunisianRecipe(r) && !isDessertRecipe(r)).length;
+  }, [discoverableRecipes]);
+
+  const dessertCount = useMemo(() => {
+    return discoverableRecipes.filter(r => !containsRhum(r) && !isTunisianRecipe(r) && isDessertRecipe(r)).length;
+  }, [discoverableRecipes]);
+
   const filteredDiscoverableRecipes = useMemo(() => {
     return discoverableRecipes.filter(recipe => {
+      if (containsRhum(recipe)) return false;
       if (isTunisianRecipe(recipe)) return false;
       // Exclure les recettes déjà présentes dans Recetteti (userRecipes)
       const isAlreadyInRecetteti = userRecipes.some(
         ur => ur.title.toLowerCase().trim() === recipe.title.toLowerCase().trim()
       );
       if (isAlreadyInRecetteti) return false;
+
+      // Filtre Plats (salé) vs Desserts (sucré)
+      if (dishCourseFilter === 'plat' && isDessertRecipe(recipe)) return false;
+      if (dishCourseFilter === 'dessert' && !isDessertRecipe(recipe)) return false;
 
       // Filtre par continent
       if (selectedContinent !== 'Tous') {
@@ -513,7 +558,7 @@ export default function RecipesView({
       const economicalMatch = !filterEconomical || !!recipe.isEconomical;
       return quickMatch && economicalMatch;
     });
-  }, [discoverableRecipes, userRecipes, selectedContinent, filterQuick, filterEconomical]);
+  }, [discoverableRecipes, userRecipes, dishCourseFilter, selectedContinent, filterQuick, filterEconomical]);
 
   const filteredUserRecipes = useMemo(() => {
     if (!userRecipeTagFilter) return userRecipes;
@@ -590,8 +635,10 @@ export default function RecipesView({
   // --- Basket-based Recommendations ---
   const basketBasedRecipes = useMemo(() => {
     const nonTunisianDiscoverables = discoverableRecipes.filter(r =>
+      !containsRhum(r) &&
       !isTunisianRecipe(r) &&
-      !userRecipes.some(ur => ur.title.toLowerCase().trim() === r.title.toLowerCase().trim())
+      !userRecipes.some(ur => ur.title.toLowerCase().trim() === r.title.toLowerCase().trim()) &&
+      (dishCourseFilter === 'all' || (dishCourseFilter === 'plat' ? !isDessertRecipe(r) : isDessertRecipe(r)))
     );
     const hasHistory = basket.length > 0 || Object.keys(purchaseHistory).length > 0;
 
@@ -630,7 +677,7 @@ export default function RecipesView({
       matchedNames: [],
       isDiscovery: true
     }));
-  }, [discoverableRecipes, basket, purchaseHistory, dbarati, userRecipes]);
+  }, [discoverableRecipes, basket, purchaseHistory, dbarati, userRecipes, dishCourseFilter]);
 
   const findRandomRecipes = () => {
     if (filteredDiscoverableRecipes.length === 0) {
@@ -646,13 +693,28 @@ export default function RecipesView({
       });
       setSuggestedRecipes(sorted.slice(0, 4));
     } else {
-      // Aléatoire standard
+      // Aléatoire standard : en mode 'all', proposer un duo équilibré (1 plat + 1 dessert) si disponibles
+      if (dishCourseFilter === 'all') {
+        const savories = filteredDiscoverableRecipes.filter(r => !isDessertRecipe(r));
+        const desserts = filteredDiscoverableRecipes.filter(r => isDessertRecipe(r));
+        const picked: Recipe[] = [];
+        if (savories.length > 0) {
+          picked.push(savories[Math.floor(Math.random() * savories.length)]);
+        }
+        if (desserts.length > 0) {
+          picked.push(desserts[Math.floor(Math.random() * desserts.length)]);
+        }
+        if (picked.length > 0) {
+          setSuggestedRecipes(picked);
+          return;
+        }
+      }
       const shuffled = [...filteredDiscoverableRecipes].sort(() => 0.5 - Math.random());
       setSuggestedRecipes(shuffled.slice(0, 2));
     }
   };
 
-  // Réactualiser automatiquement les suggestions si l'utilisateur change de continent ou bascule le tri
+  // Réactualiser automatiquement les suggestions si l'utilisateur change de continent, de filtre ou bascule le tri
   useEffect(() => {
     if (suggestedRecipes.length > 0) {
       if (filteredDiscoverableRecipes.length === 0) {
@@ -667,12 +729,27 @@ export default function RecipesView({
         });
         setSuggestedRecipes(sorted.slice(0, 4));
       } else {
+        if (dishCourseFilter === 'all') {
+          const savories = filteredDiscoverableRecipes.filter(r => !isDessertRecipe(r));
+          const desserts = filteredDiscoverableRecipes.filter(r => isDessertRecipe(r));
+          const picked: Recipe[] = [];
+          if (savories.length > 0) {
+            picked.push(savories[Math.floor(Math.random() * savories.length)]);
+          }
+          if (desserts.length > 0) {
+            picked.push(desserts[Math.floor(Math.random() * desserts.length)]);
+          }
+          if (picked.length > 0) {
+            setSuggestedRecipes(picked);
+            return;
+          }
+        }
         const shuffled = [...filteredDiscoverableRecipes].sort(() => 0.5 - Math.random());
         setSuggestedRecipes(shuffled.slice(0, 2));
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sortByAvailability, selectedContinent, filterQuick, filterEconomical]);
+  }, [sortByAvailability, selectedContinent, filterQuick, filterEconomical, dishCourseFilter]);
 
   const handleSpin = () => {
     if (isSpinning) return;
@@ -1874,6 +1951,65 @@ export default function RecipesView({
           <span>Voyager gustativement — Recettes du monde</span>
         </p>
 
+        {/* Séparateur Plats (Salé) vs Desserts (Sucré) */}
+        <div className="flex justify-center mb-4">
+          <div className="inline-flex items-center p-1 bg-background/90 dark:bg-zinc-900/90 rounded-full border border-primary/25 shadow-xs gap-1">
+            <button
+              type="button"
+              onClick={() => setDishCourseFilter('plat')}
+              className={cn(
+                "inline-flex items-center gap-1.5 px-3 sm:px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer",
+                dishCourseFilter === 'plat'
+                  ? "bg-primary text-primary-foreground shadow-sm scale-102"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+              )}
+            >
+              <Utensils className="h-3.5 w-3.5" />
+              <span>Plats salés</span>
+              <span className={cn(
+                "ml-0.5 text-[10px] px-1.5 py-0.2 rounded-full font-semibold",
+                dishCourseFilter === 'plat' ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted text-muted-foreground"
+              )}>
+                {savoryCount}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setDishCourseFilter('dessert')}
+              className={cn(
+                "inline-flex items-center gap-1.5 px-3 sm:px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer",
+                dishCourseFilter === 'dessert'
+                  ? "bg-pink-600 text-white shadow-sm scale-102"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+              )}
+            >
+              <Cake className="h-3.5 w-3.5" />
+              <span>Desserts &amp; Sucré</span>
+              <span className={cn(
+                "ml-0.5 text-[10px] px-1.5 py-0.2 rounded-full font-semibold",
+                dishCourseFilter === 'dessert' ? "bg-white/20 text-white" : "bg-muted text-muted-foreground"
+              )}>
+                {dessertCount}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setDishCourseFilter('all')}
+              className={cn(
+                "inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer",
+                dishCourseFilter === 'all'
+                  ? "bg-accent/80 text-foreground shadow-xs font-bold border border-border"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+              )}
+            >
+              <Sparkles className="h-3.5 w-3.5 text-primary" />
+              <span>Tous</span>
+            </button>
+          </div>
+        </div>
+
         {/* Dynamic Portion Selector */}
         <div className="flex justify-center mb-5 w-full px-1">
           <div className="inline-flex items-center justify-center gap-1.5 sm:gap-2.5 bg-background/95 dark:bg-zinc-900/95 border border-primary/25 rounded-full p-1 sm:px-3 sm:py-1.5 shadow-sm max-w-[95%]">
@@ -2023,18 +2159,40 @@ export default function RecipesView({
             "h-10 sm:h-11 rounded-full px-6 sm:px-8 text-sm sm:text-base font-bold shadow-md transition-all gap-2",
             sortByAvailability
               ? "bg-emerald-600 hover:bg-emerald-700 text-white"
-              : ""
+              : dishCourseFilter === 'dessert'
+                ? "bg-pink-600 hover:bg-pink-700 text-white"
+                : ""
           )}
         >
           {sortByAvailability ? (
             <>
               <PackageCheck className="h-4 w-4 shrink-0" />
-              <span>Voir les recettes en stock</span>
+              <span>
+                {dishCourseFilter === 'plat'
+                  ? "Voir les plats en stock"
+                  : dishCourseFilter === 'dessert'
+                    ? "Voir les desserts en stock"
+                    : "Voir les recettes en stock"}
+              </span>
             </>
           ) : (
             <>
-              <Shuffle className="h-4 w-4 shrink-0" />
-              <span>Trouver une idée</span>
+              {dishCourseFilter === 'plat' ? (
+                <>
+                  <Utensils className="h-4 w-4 shrink-0" />
+                  <span>Trouver un plat salé</span>
+                </>
+              ) : dishCourseFilter === 'dessert' ? (
+                <>
+                  <Cake className="h-4 w-4 shrink-0" />
+                  <span>Trouver un dessert sucré</span>
+                </>
+              ) : (
+                <>
+                  <Shuffle className="h-4 w-4 shrink-0" />
+                  <span>Trouver une idée (Plat + Dessert)</span>
+                </>
+              )}
             </>
           )}
         </Button>
@@ -2043,13 +2201,24 @@ export default function RecipesView({
           <div className="mt-10 animate-in fade-in slide-in-from-bottom-5 duration-700">
             <h3 className="text-sm font-bold uppercase tracking-widest text-primary mb-4 flex items-center gap-2 justify-center">
               <Sparkles className="h-4 w-4" />
-              {basketBasedRecipes[0].isDiscovery ? "Découverte du jour" : "Basé sur votre panier & achats"}
+              {basketBasedRecipes[0].isDiscovery
+                ? (dishCourseFilter === 'dessert'
+                    ? "Desserts & Douceurs du jour"
+                    : dishCourseFilter === 'plat'
+                      ? "Plats salés du jour"
+                      : "Découverte du jour")
+                : (dishCourseFilter === 'dessert'
+                    ? "Desserts basés sur votre panier & achats"
+                    : dishCourseFilter === 'plat'
+                      ? "Plats basés sur votre panier & achats"
+                      : "Basé sur votre panier & achats")}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {basketBasedRecipes.map(({ recipe, matchedNames, isDiscovery }) => {
                 const { totalCost, perPersonCost } = getAdjustedRecipeCost(recipe);
                 const availabilityPercent = getRecipeAvailabilityPercentage(recipe.ingredients, marketPrices);
                 const { availableCount, totalCount, percentage: pantryPercent } = getRecipePantryAvailability(recipe.ingredients, pantry);
+                const isDessert = isDessertRecipe(recipe);
 
                 return (
                   <Card
@@ -2070,6 +2239,19 @@ export default function RecipesView({
                           (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&auto=format&fit=crop&q=80';
                         }}
                       />
+                      <div className="absolute top-2 left-2 z-10">
+                        {isDessert ? (
+                          <Badge className="text-[9px] h-5 px-1.5 bg-pink-600/90 text-white border-none backdrop-blur-sm font-semibold flex items-center gap-1 shadow-xs">
+                            <Cake className="h-2.5 w-2.5" />
+                            <span>Dessert</span>
+                          </Badge>
+                        ) : (
+                          <Badge className="text-[9px] h-5 px-1.5 bg-amber-600/90 text-white border-none backdrop-blur-sm font-semibold flex items-center gap-1 shadow-xs">
+                            <Utensils className="h-2.5 w-2.5" />
+                            <span>Plat</span>
+                          </Badge>
+                        )}
+                      </div>
                       <Badge variant="outline" className="text-[9px] w-fit h-5 px-1.5 absolute top-2 right-2 bg-black/60 text-white border-none backdrop-blur-sm font-medium">
                         {recipe.country}
                       </Badge>
@@ -2140,15 +2322,33 @@ export default function RecipesView({
               ) : (
                 <>
                   <Shuffle className="h-3.5 w-3.5 text-primary" />
-                  <span>Suggestions ({suggestedRecipes.length})</span>
+                  <span>
+                    {dishCourseFilter === 'plat'
+                      ? `Suggestions de plats salés (${suggestedRecipes.length})`
+                      : dishCourseFilter === 'dessert'
+                        ? `Suggestions de desserts sucrés (${suggestedRecipes.length})`
+                        : `Suggestions (${suggestedRecipes.length})`}
+                  </span>
                 </>
               )}
             </span>
-            {selectedContinent !== 'Tous' && (
-              <span className="bg-muted px-2 py-0.5 rounded-full text-[11px] font-medium border border-border/50">
-                {selectedContinent}
-              </span>
-            )}
+            <div className="flex items-center gap-1.5">
+              {dishCourseFilter === 'plat' && (
+                <span className="bg-amber-500/10 text-amber-800 dark:text-amber-300 px-2 py-0.5 rounded-full text-[11px] font-semibold border border-amber-500/20 flex items-center gap-1">
+                  <Utensils className="h-3 w-3" /> Plats salés
+                </span>
+              )}
+              {dishCourseFilter === 'dessert' && (
+                <span className="bg-pink-500/10 text-pink-700 dark:text-pink-300 px-2 py-0.5 rounded-full text-[11px] font-semibold border border-pink-500/20 flex items-center gap-1">
+                  <Cake className="h-3 w-3" /> Desserts sucrés
+                </span>
+              )}
+              {selectedContinent !== 'Tous' && (
+                <span className="bg-muted px-2 py-0.5 rounded-full text-[11px] font-medium border border-border/50">
+                  {selectedContinent}
+                </span>
+              )}
+            </div>
           </div>
         )}
 
@@ -2157,6 +2357,7 @@ export default function RecipesView({
             {suggestedRecipes.map(recipe => {
               const { totalCost, perPersonCost } = getAdjustedRecipeCost(recipe);
               const { availableCount, totalCount, percentage: pantryPercent } = getRecipePantryAvailability(recipe.ingredients, pantry);
+              const isDessert = isDessertRecipe(recipe);
 
               return (
                 <Card key={recipe.id} className="overflow-hidden flex flex-col bg-card shadow-lg rounded-xl border border-border/50">
@@ -2170,6 +2371,19 @@ export default function RecipesView({
                         (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&auto=format&fit=crop&q=80';
                       }}
                     />
+                    <div className="absolute top-2.5 left-2.5 flex items-center gap-1 z-10">
+                      {isDessert ? (
+                        <Badge className="text-[10px] h-5.5 px-2 bg-pink-600/90 text-white border-none backdrop-blur-sm font-semibold flex items-center gap-1 shadow-xs">
+                          <Cake className="h-3 w-3" />
+                          <span>Dessert</span>
+                        </Badge>
+                      ) : (
+                        <Badge className="text-[10px] h-5.5 px-2 bg-amber-600/90 text-white border-none backdrop-blur-sm font-semibold flex items-center gap-1 shadow-xs">
+                          <Utensils className="h-3 w-3" />
+                          <span>Plat salé</span>
+                        </Badge>
+                      )}
+                    </div>
                     <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5">
                       {recipe.calories !== undefined && (
                         <Badge variant="secondary" className="bg-black/60 text-white backdrop-blur-sm border-none text-[11px] font-semibold">
@@ -2184,6 +2398,16 @@ export default function RecipesView({
                         <CardTitle>{recipe.title}</CardTitle>
                         <div className="flex items-center gap-2 mt-2 flex-wrap">
                           <Badge variant="secondary" className="w-fit">{recipe.country}</Badge>
+
+                          <Badge variant="outline" className={cn(
+                            "w-fit text-[11px] font-semibold flex items-center gap-1",
+                            isDessert
+                              ? "text-pink-600 dark:text-pink-400 border-pink-400/40 bg-pink-500/5"
+                              : "text-amber-700 dark:text-amber-300 border-amber-400/40 bg-amber-500/5"
+                          )}>
+                            {isDessert ? <Cake className="h-3 w-3" /> : <Utensils className="h-3 w-3" />}
+                            {isDessert ? 'Dessert sucré' : 'Plat salé'}
+                          </Badge>
 
                           {/* Badge de disponibilité garde-manger */}
                           <Badge
@@ -2264,7 +2488,15 @@ export default function RecipesView({
             })}
           </div>
         ) : (
-          filteredDiscoverableRecipes.length === 0 && <p className="text-muted-foreground mt-4 text-sm">Aucune recette ne correspond à vos filtres. Essayez d&apos;en retirer un.</p>
+          filteredDiscoverableRecipes.length === 0 && (
+            <p className="text-muted-foreground mt-4 text-sm">
+              {dishCourseFilter === 'plat'
+                ? "Aucun plat salé ne correspond à vos filtres. Essayez d'en retirer un."
+                : dishCourseFilter === 'dessert'
+                  ? "Aucun dessert ne correspond à vos filtres. Essayez d'en retirer un."
+                  : "Aucune recette ne correspond à vos filtres. Essayez d'en retirer un."}
+            </p>
+          )
         )}
       </div>
 
