@@ -526,13 +526,6 @@ export default function RecipesView({
     return tunisianKeywords.some(kw => title.includes(kw));
   };
 
-  const savoryCount = useMemo(() => {
-    return discoverableRecipes.filter(r => !containsRhum(r) && !isTunisianRecipe(r) && !isDessertRecipe(r)).length;
-  }, [discoverableRecipes]);
-
-  const dessertCount = useMemo(() => {
-    return discoverableRecipes.filter(r => !containsRhum(r) && !isTunisianRecipe(r) && isDessertRecipe(r)).length;
-  }, [discoverableRecipes]);
 
   const filteredDiscoverableRecipes = useMemo(() => {
     return discoverableRecipes.filter(recipe => {
@@ -1952,59 +1945,47 @@ export default function RecipesView({
         </p>
 
         {/* Séparateur Plats (Salé) vs Desserts (Sucré) */}
-        <div className="flex justify-center mb-4">
-          <div className="inline-flex items-center p-1 bg-background/90 dark:bg-zinc-900/90 rounded-full border border-primary/25 shadow-xs gap-1">
+        <div className="flex justify-center mb-4 px-1 max-w-full">
+          <div className="inline-flex items-center p-1 bg-background/90 dark:bg-zinc-900/90 rounded-full border border-primary/25 shadow-xs gap-1 max-w-full overflow-x-auto">
             <button
               type="button"
               onClick={() => setDishCourseFilter('plat')}
               className={cn(
-                "inline-flex items-center gap-1.5 px-3 sm:px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer",
+                "inline-flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer shrink-0",
                 dishCourseFilter === 'plat'
                   ? "bg-primary text-primary-foreground shadow-sm scale-102"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted"
               )}
             >
-              <Utensils className="h-3.5 w-3.5" />
+              <Utensils className="h-3.5 w-3.5 shrink-0" />
               <span>Plats salés</span>
-              <span className={cn(
-                "ml-0.5 text-[10px] px-1.5 py-0.2 rounded-full font-semibold",
-                dishCourseFilter === 'plat' ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted text-muted-foreground"
-              )}>
-                {savoryCount}
-              </span>
             </button>
 
             <button
               type="button"
               onClick={() => setDishCourseFilter('dessert')}
               className={cn(
-                "inline-flex items-center gap-1.5 px-3 sm:px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer",
+                "inline-flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer shrink-0",
                 dishCourseFilter === 'dessert'
                   ? "bg-pink-600 text-white shadow-sm scale-102"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted"
               )}
             >
-              <Cake className="h-3.5 w-3.5" />
+              <Cake className="h-3.5 w-3.5 shrink-0" />
               <span>Desserts &amp; Sucré</span>
-              <span className={cn(
-                "ml-0.5 text-[10px] px-1.5 py-0.2 rounded-full font-semibold",
-                dishCourseFilter === 'dessert' ? "bg-white/20 text-white" : "bg-muted text-muted-foreground"
-              )}>
-                {dessertCount}
-              </span>
             </button>
 
             <button
               type="button"
               onClick={() => setDishCourseFilter('all')}
               className={cn(
-                "inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer",
+                "inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer shrink-0",
                 dishCourseFilter === 'all'
                   ? "bg-accent/80 text-foreground shadow-xs font-bold border border-border"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted"
               )}
             >
-              <Sparkles className="h-3.5 w-3.5 text-primary" />
+              <Sparkles className="h-3.5 w-3.5 text-primary shrink-0" />
               <span>Tous</span>
             </button>
           </div>
@@ -2203,15 +2184,15 @@ export default function RecipesView({
               <Sparkles className="h-4 w-4" />
               {basketBasedRecipes[0].isDiscovery
                 ? (dishCourseFilter === 'dessert'
-                    ? "Desserts & Douceurs du jour"
-                    : dishCourseFilter === 'plat'
-                      ? "Plats salés du jour"
-                      : "Découverte du jour")
+                  ? "Desserts & Douceurs du jour"
+                  : dishCourseFilter === 'plat'
+                    ? "Plats salés du jour"
+                    : "Découverte du jour")
                 : (dishCourseFilter === 'dessert'
-                    ? "Desserts basés sur votre panier & achats"
-                    : dishCourseFilter === 'plat'
-                      ? "Plats basés sur votre panier & achats"
-                      : "Basé sur votre panier & achats")}
+                  ? "Desserts basés sur votre panier & achats"
+                  : dishCourseFilter === 'plat'
+                    ? "Plats basés sur votre panier & achats"
+                    : "Basé sur votre panier & achats")}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {basketBasedRecipes.map(({ recipe, matchedNames, isDiscovery }) => {
@@ -2239,47 +2220,42 @@ export default function RecipesView({
                           (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&auto=format&fit=crop&q=80';
                         }}
                       />
-                      <div className="absolute top-2 left-2 z-10">
-                        {isDessert ? (
+                      {isDessert && (
+                        <div className="absolute top-2 left-2 z-10">
                           <Badge className="text-[9px] h-5 px-1.5 bg-pink-600/90 text-white border-none backdrop-blur-sm font-semibold flex items-center gap-1 shadow-xs">
                             <Cake className="h-2.5 w-2.5" />
                             <span>Dessert</span>
                           </Badge>
-                        ) : (
-                          <Badge className="text-[9px] h-5 px-1.5 bg-amber-600/90 text-white border-none backdrop-blur-sm font-semibold flex items-center gap-1 shadow-xs">
-                            <Utensils className="h-2.5 w-2.5" />
-                            <span>Plat</span>
-                          </Badge>
-                        )}
+                        </div>
+                      )}
+                      <div className="absolute top-2 right-2 flex items-center gap-1 z-10">
+                        <Badge variant="outline" className="text-[9px] w-fit h-5 px-1.5 bg-black/60 text-white border-none backdrop-blur-sm font-medium">
+                          {recipe.country}
+                        </Badge>
+                        <Badge
+                          className={cn(
+                            "text-[9px] h-5 px-1.5 border-none backdrop-blur-sm font-bold flex items-center gap-1 shadow-xs",
+                            pantryPercent === 100
+                              ? "bg-emerald-600/90 text-white"
+                              : pantryPercent >= 50
+                                ? "bg-amber-600/90 text-white"
+                                : "bg-zinc-800/80 text-zinc-200"
+                          )}
+                          title={`${availableCount}/${totalCount} ingrédients disponibles`}
+                        >
+                          <span className={cn(
+                            "w-1 h-1 rounded-full shrink-0",
+                            pantryPercent === 100 ? "bg-emerald-300" : pantryPercent >= 50 ? "bg-amber-300" : "bg-zinc-400"
+                          )} />
+                          <span>{pantryPercent}% dispo</span>
+                        </Badge>
                       </div>
-                      <Badge variant="outline" className="text-[9px] w-fit h-5 px-1.5 absolute top-2 right-2 bg-black/60 text-white border-none backdrop-blur-sm font-medium">
-                        {recipe.country}
-                      </Badge>
                     </div>
                     <CardHeader className="p-3 pb-0">
                       <CardTitle className="text-sm group-hover:text-primary transition-colors line-clamp-1">{recipe.title}</CardTitle>
                     </CardHeader>
                     <CardContent className="p-3 pt-2">
                       <p className="text-[10px] text-muted-foreground line-clamp-2 mb-2">{recipe.description}</p>
-
-                      {/* Badge disponibilité garde-manger */}
-                      <div className="mb-2">
-                        <div className={cn(
-                          "inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded border",
-                          pantryPercent === 100
-                            ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
-                            : pantryPercent >= 50
-                              ? "bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-500/30"
-                              : "bg-muted text-muted-foreground border-border/40"
-                        )}>
-                          <span className={cn(
-                            "w-1.5 h-1.5 rounded-full shrink-0",
-                            pantryPercent === 100 ? "bg-emerald-500" : pantryPercent >= 50 ? "bg-amber-500" : "bg-zinc-400"
-                          )} />
-                          <span>{pantryPercent}% en stock</span>
-                          <span className="opacity-75 font-normal">({availableCount}/{totalCount})</span>
-                        </div>
-                      </div>
 
                       <div className="flex flex-wrap gap-1">
                         {isDiscovery ? (
@@ -2371,19 +2347,14 @@ export default function RecipesView({
                         (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&auto=format&fit=crop&q=80';
                       }}
                     />
-                    <div className="absolute top-2.5 left-2.5 flex items-center gap-1 z-10">
-                      {isDessert ? (
+                    {isDessert && (
+                      <div className="absolute top-2.5 left-2.5 flex items-center gap-1 z-10">
                         <Badge className="text-[10px] h-5.5 px-2 bg-pink-600/90 text-white border-none backdrop-blur-sm font-semibold flex items-center gap-1 shadow-xs">
                           <Cake className="h-3 w-3" />
                           <span>Dessert</span>
                         </Badge>
-                      ) : (
-                        <Badge className="text-[10px] h-5.5 px-2 bg-amber-600/90 text-white border-none backdrop-blur-sm font-semibold flex items-center gap-1 shadow-xs">
-                          <Utensils className="h-3 w-3" />
-                          <span>Plat salé</span>
-                        </Badge>
-                      )}
-                    </div>
+                      </div>
+                    )}
                     <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5">
                       {recipe.calories !== undefined && (
                         <Badge variant="secondary" className="bg-black/60 text-white backdrop-blur-sm border-none text-[11px] font-semibold">
@@ -2399,17 +2370,7 @@ export default function RecipesView({
                         <div className="flex items-center gap-2 mt-2 flex-wrap">
                           <Badge variant="secondary" className="w-fit">{recipe.country}</Badge>
 
-                          <Badge variant="outline" className={cn(
-                            "w-fit text-[11px] font-semibold flex items-center gap-1",
-                            isDessert
-                              ? "text-pink-600 dark:text-pink-400 border-pink-400/40 bg-pink-500/5"
-                              : "text-amber-700 dark:text-amber-300 border-amber-400/40 bg-amber-500/5"
-                          )}>
-                            {isDessert ? <Cake className="h-3 w-3" /> : <Utensils className="h-3 w-3" />}
-                            {isDessert ? 'Dessert sucré' : 'Plat salé'}
-                          </Badge>
-
-                          {/* Badge de disponibilité garde-manger */}
+                          {/* % de disponibilité directement à côté du pays */}
                           <Badge
                             className={cn(
                               "flex items-center gap-1.5 text-[11px] font-bold border transition-colors",
