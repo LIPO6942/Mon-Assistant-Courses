@@ -267,3 +267,96 @@ export function findMatchingPantryItem(
 
   return undefined;
 }
+
+/**
+ * Extrait les termes / options présents entre parenthèses dans un libellé d'ingrédient
+ * (ex: "Filet de poisson blanc très frais (daurade, cabillaud)" -> ["daurade", "cabillaud"])
+ */
+export function extractParenthesisKeywords(name: string): string[] {
+  if (!name) return [];
+  const matches = name.matchAll(/\(([^)]+)\)/g);
+  const keywords: string[] = [];
+  for (const match of matches) {
+    const content = match[1];
+    // Ignorer les indications purement techniques ou de quantité
+    if (/^\s*(?:\d+|environ|\d+%\s*mg|facultatif|surgel[eé]s?|au\s+choix|selon\s+go[uû]t)/i.test(content)) {
+      continue;
+    }
+    // Séparer par virgule, point-virgule, slash ou "ou"
+    const parts = content.split(/[,;/]|\bou\b/i).map(s => s.replace(/\betc\.?$/i, '').trim()).filter(Boolean);
+    for (const part of parts) {
+      if (part.length >= 3 && !/^(?:etc|autre|au choix)$/i.test(part)) {
+        keywords.push(part);
+      }
+    }
+  }
+  return keywords;
+}
+
+/**
+ * Nettoie et simplifie un libellé d'ingrédient de recette pour générer un nom
+ * d'article concis, logique et adapté au garde-manger.
+ * Ex: "Filet de poisson blanc très frais (daurade, cabillaud)" -> "Poisson blanc"
+ * Ex: "Oignon rouge émincé en très fines lamelles" -> "Oignon rouge"
+ * Ex: "Gousses d'ail pilées" -> "Ail"
+ * Ex: "Cuisses de poulet fermier désossées" -> "Poulet fermier"
+ */
+export function simplifyIngredientForPantry(rawName: string): string {
+  if (!rawName) return '';
+
+  let name = rawName.trim();
+
+  // 1. Retirer ce qui est entre parenthèses
+  name = name.replace(/\s*\([^)]*\)/g, ' ').trim();
+
+  // 2. Gestion des alternatives "ou" / "/" : prendre la première option principale
+  if (/\b(?:ou)\b|\//i.test(name)) {
+    const parts = name.split(/\b(?:ou)\b|\//i).map(s => s.trim()).filter(Boolean);
+    if (parts.length > 0) {
+      name = parts[0];
+    }
+  }
+
+  // 3. Retrait des préfixes de coupe, morceaux, conditionnement
+  const prefixes = [
+    /^(?:filets?|pav[eé]s?|morceaux?|tranches?|cubes?|rondelles?|lamelles?|b[aâ]tonnets?)\s+(?:de|d'|du|des)?\s*/i,
+    /^(?:gousses?|gousse)\s+(?:d'|de|du|des)?\s*/i,
+    /^(?:zestes?|jus)\s+(?:de|d'|du|des)?\s*/i,
+    /^(?:feuilles?|branches?|brins?|bottes?|brin)\s+(?:de|d'|du|des)?\s*/i,
+    /^(?:escalopes?|blancs?|cuisses?|poitrine|morceau)\s+(?:de|d'|du|des)?\s*/i,
+    /^(?:bo[iî]tes?|bocal|conserves?|sachets?|paquets?|pots?)\s+(?:de|d'|du|des)?\s*/i,
+    /^(?:poudre|graines?|pur[eé]e)\s+(?:de|d'|du|des)?\s*/i,
+    /^(?:petites?|gros|grosses?)\s+/i,
+  ];
+  for (const regex of prefixes) {
+    name = name.replace(regex, '');
+  }
+
+  // 4. Retrait des qualificatifs d'état, de cuisson ou de découpe
+  const culinaryAdjectives = [
+    /\b(?:tr[eèé]s|bien)\b/gi,
+    /\b(?:fra[iî]che?s?|frais)\b/gi,
+    /\b(?:fermes?|m[uû]res?|m[uû]rs?)\b/gi,
+    /\b(?:[eé]minc[eé]e?s?|hach[eé]e?s?|r[aâ]p[eé]e?s?|pil[eé]e?s?|[eé]cras[eé]e?s?|cisel[eé]e?s?)\b/gi,
+    /\b(?:d[eé]cortiqu[eé]e?s?|d[eé]soss[eé]e?s?|pel[eé]e?s?|[eé]goutt[eé]e?s?|d[eé]graiss[eé]e?s?|moulue?s?|grill[eé]e?s?)\b/gi,
+    /\b(?:en\s+(?:bo[iî]te|conserve|d[eé]s|morceaux|lamelles|tranches|poudre|bocaux))\b/gi,
+    /\b(?:en\s+(?:tr[eèé]s\s+)?fines?\s+lamelles?)\b/gi,
+    /\b(?:fin|fine|fines|fins|finement|grossi[eè]rement)\b/gi,
+    /\b(?:cuits?|cuites?|crus?|crues?|press[eé]e?s?|concass[eé]e?s?)\b/gi,
+  ];
+  for (const regex of culinaryAdjectives) {
+    name = name.replace(regex, ' ');
+  }
+
+  // 5. Nettoyage des petits mots de liaison au début ou résiduels
+  name = name.replace(/^(?:de|d'|du|des|le|la|les|un|une)\s+/i, '');
+  name = name.replace(/\s+/g, ' ').trim();
+
+  // Si le résultat est vide ou trop court (< 3 caractères), repli sur le nom brut nettoyé de parenthèses
+  if (!name || name.length < 3) {
+    name = rawName.replace(/\s*\([^)]*\)/g, '').trim();
+  }
+
+  // 6. Majuscule sur la première lettre
+  return name.charAt(0).toUpperCase() + name.slice(1);
+}

@@ -20,10 +20,10 @@ import CategoryPriceEvolutionDialog from './CategoryPriceEvolutionDialog';
 import SettingsPage from './SettingsPage';
 import { UploadReceiptDialog } from './UploadReceiptDialog';
 import { ReconciliationSummaryDialog, ReconciliationReport, ReconciledItemSummary } from './ReconciliationSummaryDialog';
-import { SmartMatchingService, isReceiptNoise } from '@/lib/smart-matching';
+import { SmartMatchingService, isReceiptNoise, guessCategoryForProduct } from '@/lib/smart-matching';
 import { db } from '@/lib/idb';
 import { isInAppBrowser, getProductStatus, cn, isExcludedFromMarketPrices, isNonFoodItem } from '@/lib/utils';
-import { isIngredientMatch } from '@/lib/smart-ingredient-matching';
+import { isIngredientMatch, simplifyIngredientForPantry, extractParenthesisKeywords } from '@/lib/smart-ingredient-matching';
 import { getRecipeImageUrl } from '@/lib/recipe-images';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -1398,20 +1398,48 @@ export default function KitchenAssistantPage() {
       ? { ...recipeData, id: self.crypto.randomUUID() } as UserRecipe
       : recipeData as UserRecipe;
 
-    // Check for missing ingredients in pantry (avec correspondance intelligente : ordre des mots, émojis, singulier/pluriel)
-    const missing = finalRecipe.ingredients.filter(recipeIng => {
-      return !pantry.some(pantryIng => isIngredientMatch(pantryIng.name, recipeIng.name));
-    });
+    // Check for missing ingredients in pantry avec triple vérification intelligente :
+    // 1. Nom brut de la recette
+    // 2. Nom simplifié / logique pour le garde-manger
+    // 3. Mots-clés / alternatives entre parenthèses (ex: daurade dans "poisson blanc (daurade, cabillaud)")
+    const missingItems: Omit<Ingredient, 'id'>[] = [];
+    const seenSimplifiedNames = new Set<string>();
 
-    if (missing.length > 0) {
-      // Prepare potential new ingredients with default category
-      const newPantryItems: Omit<Ingredient, 'id'>[] = missing.map(ing => ({
-        name: ing.name,
-        category: 'Autre', // Default category, user can edit later
-        unit: ing.unit,
+    for (const recipeIng of finalRecipe.ingredients) {
+      // 1. Correspondance avec le nom brut
+      const matchRaw = pantry.some(p => isIngredientMatch(p.name, recipeIng.name));
+      if (matchRaw) continue;
+
+      // 2. Nom simplifié adapté au garde-manger
+      const simplified = simplifyIngredientForPantry(recipeIng.name);
+
+      // Correspondance avec le nom simplifié
+      const matchSimplified = pantry.some(p => isIngredientMatch(p.name, simplified));
+      if (matchSimplified) continue;
+
+      // 3. Correspondance avec les termes entre parenthèses
+      const parenKeywords = extractParenthesisKeywords(recipeIng.name);
+      const matchParenthesis = parenKeywords.some(kw => pantry.some(p => isIngredientMatch(p.name, kw)));
+      if (matchParenthesis) continue;
+
+      // 4. Éviter les doublons au sein de la même recette
+      const lowerKey = simplified.toLowerCase();
+      if (seenSimplifiedNames.has(lowerKey)) continue;
+      seenSimplifiedNames.add(lowerKey);
+
+      // 5. Prédire la catégorie la plus pertinente
+      const autoCat = guessCategoryForProduct(simplified, '', categories);
+
+      missingItems.push({
+        name: simplified,
+        category: autoCat && autoCat !== 'Autre' ? autoCat : (categories[0]?.name || 'Autre'),
+        unit: recipeIng.unit || 'pièce',
         price: 0
-      }));
-      setMissingIngredients(newPantryItems);
+      });
+    }
+
+    if (missingItems.length > 0) {
+      setMissingIngredients(missingItems);
       setPendingRecipeSave({ recipe: finalRecipe, isNew });
       setConfirmPantryAddOpen(true);
       return; // Stop here, wait for user confirmation
@@ -1917,9 +1945,18 @@ export default function KitchenAssistantPage() {
                 const isCreatingNew = ing.category.startsWith("NEW:");
                 return (
                   <div key={idx} className="bg-zinc-50 dark:bg-zinc-900/50 p-3 rounded-xl border border-zinc-100 dark:border-zinc-800 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="font-semibold text-sm">{ing.name}</span>
-                      <span className="text-[10px] uppercase font-bold text-muted-foreground">{ing.unit}</span>
+                    <div className="flex items-center justify-between gap-2">
+                      <Input
+                        value={ing.name}
+                        onChange={(e) => {
+                          const updated = [...missingIngredients];
+                          updated[idx].name = e.target.value;
+                          setMissingIngredients(updated);
+                        }}
+                        className="h-8 text-sm font-semibold bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700"
+                        placeholder="Nom de l'ingrédient"
+                      />
+                      <span className="text-[10px] uppercase font-bold text-muted-foreground whitespace-nowrap">{ing.unit}</span>
                     </div>
 
                     <div className="space-y-2">
