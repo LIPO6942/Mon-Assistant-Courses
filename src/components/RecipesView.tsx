@@ -636,69 +636,6 @@ export default function RecipesView({
     );
   }, [userRecipes]);
 
-  // --- Basket-based Recommendations ---
-  const basketBasedRecipes = useMemo(() => {
-    const nonTunisianDiscoverables = discoverableRecipes.filter(r =>
-      !containsRhum(r) &&
-      !isTunisianRecipe(r) &&
-      !userRecipes.some(ur => ur.title.toLowerCase().trim() === r.title.toLowerCase().trim()) &&
-      (dishCourseFilter === 'all' || (dishCourseFilter === 'plat' ? !isDessertRecipe(r) : isDessertRecipe(r)))
-    );
-    const hasHistory = basket.length > 0 || Object.keys(purchaseHistory).length > 0;
-
-    // 1. If history exists, use the matching algorithm
-    if (hasHistory) {
-      const matchedIngredientNames = new Set<string>();
-      basket.forEach(item => matchedIngredientNames.add(item.name.toLowerCase()));
-
-      return nonTunisianDiscoverables.map(recipe => {
-        const matches = recipe.ingredients.filter(ing => {
-          // 1. Détecter dans le panier
-          if (basket.some(b => isIngredientMatch(b.name, ing.name))) return true;
-          // 2. Détecter dans le garde-manger avec statut Dbarati
-          if (pantry && pantry.length > 0) {
-            const pantryMatch = findMatchingPantryItem(ing.name, pantry);
-            if (pantryMatch) {
-              const history = purchaseHistory[pantryMatch.id] || purchaseHistory[pantryMatch.name] || purchaseHistory[pantryMatch.name.toLowerCase()];
-              const status = getProductStatus(history, pantryMatch.name, dbarati);
-              if (status === 'green' || status === 'orange' || status === null) return true;
-              if (status === 'red') return false;
-            }
-          }
-          // 3. Détecter dans l'historique d'achat direct
-          for (const [key, records] of Object.entries(purchaseHistory)) {
-            if (isIngredientMatch(key, ing.name)) {
-              const status = getProductStatus(records, key, dbarati);
-              return status === 'green' || status === 'orange';
-            }
-          }
-          return false;
-        });
-
-        return {
-          recipe,
-          matchCount: matches.length,
-          matchPercentage: matches.length / recipe.ingredients.length,
-          matchedNames: matches.map(m => m.name),
-          isDiscovery: false
-        };
-      })
-        .filter(m => m.matchCount > 0)
-        .sort((a, b) => b.matchPercentage - a.matchPercentage)
-        .slice(0, 4);
-    }
-
-    // 2. If NO history, show discovery recipes (random subset of 4)
-    const shuffled = [...nonTunisianDiscoverables].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, 4).map(recipe => ({
-      recipe,
-      matchCount: 0,
-      matchPercentage: 0,
-      matchedNames: [],
-      isDiscovery: true
-    }));
-  }, [discoverableRecipes, basket, purchaseHistory, dbarati, userRecipes, dishCourseFilter, pantry]);
-
   const findRandomRecipes = () => {
     if (filteredDiscoverableRecipes.length === 0) {
       setSuggestedRecipes([]);
@@ -2205,117 +2142,8 @@ export default function RecipesView({
           )}
         </Button>
 
-        {basketBasedRecipes.length > 0 && (
-          <div className="mt-10 animate-in fade-in slide-in-from-bottom-5 duration-700">
-            <h3 className="text-sm font-bold uppercase tracking-widest text-primary mb-4 flex items-center gap-2 justify-center">
-              <Sparkles className="h-4 w-4" />
-              {basketBasedRecipes[0].isDiscovery
-                ? (dishCourseFilter === 'dessert'
-                  ? "Desserts & Douceurs du jour"
-                  : dishCourseFilter === 'plat'
-                    ? "Plats salés du jour"
-                    : "Découverte du jour")
-                : (dishCourseFilter === 'dessert'
-                  ? "Desserts basés sur votre panier & achats"
-                  : dishCourseFilter === 'plat'
-                    ? "Plats basés sur votre panier & achats"
-                    : "Basé sur votre panier & achats")}
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {basketBasedRecipes.map(({ recipe, matchedNames, isDiscovery }) => {
-                const { totalCost, perPersonCost } = getAdjustedRecipeCost(recipe);
-                const availabilityPercent = getRecipeAvailabilityPercentage(recipe.ingredients, marketPrices);
-                const { availableCount, totalCount, percentage: pantryPercent } = getRecipePantryAvailability(recipe.ingredients, pantry, purchaseHistory, dbarati);
-                const isDessert = isDessertRecipe(recipe);
-
-                return (
-                  <Card
-                    key={recipe.id}
-                    className={cn(
-                      "cursor-pointer hover:shadow-md transition-all border-primary/20 bg-primary/5 group relative overflow-hidden flex flex-col",
-                      isDiscovery ? "border-zinc-200 bg-zinc-50/50" : "border-primary/20 bg-primary/5"
-                    )}
-                    onClick={() => setViewingRecipe({ ...recipe, targetPortions: ideaPortions })}
-                  >
-                    <div className="relative h-28 w-full overflow-hidden bg-secondary">
-                      <img
-                        src={recipe.imageUrl || getRecipeImageUrl(recipe)}
-                        alt={recipe.title}
-                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                        loading="lazy"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&auto=format&fit=crop&q=80';
-                        }}
-                      />
-                      {isDessert && (
-                        <div className="absolute top-2 left-2 z-10">
-                          <Badge className="text-[9px] h-5 px-1.5 bg-pink-600/90 text-white border-none backdrop-blur-sm font-semibold flex items-center gap-1 shadow-xs">
-                            <Cake className="h-2.5 w-2.5" />
-                            <span>Dessert</span>
-                          </Badge>
-                        </div>
-                      )}
-                      <div className="absolute top-2 right-2 flex items-center gap-1 z-10">
-                        <Badge variant="outline" className="text-[9px] w-fit h-5 px-1.5 bg-black/60 text-white border-none backdrop-blur-sm font-medium">
-                          {recipe.country}
-                        </Badge>
-                        <Badge
-                          className={cn(
-                            "text-[9px] h-5 px-1.5 border-none backdrop-blur-sm font-bold flex items-center gap-1 shadow-xs",
-                            pantryPercent === 100
-                              ? "bg-emerald-600/90 text-white"
-                              : pantryPercent >= 50
-                                ? "bg-amber-600/90 text-white"
-                                : "bg-zinc-800/80 text-zinc-200"
-                          )}
-                          title={`${availableCount}/${totalCount} ingrédients disponibles`}
-                        >
-                          <span className={cn(
-                            "w-1 h-1 rounded-full shrink-0",
-                            pantryPercent === 100 ? "bg-emerald-300" : pantryPercent >= 50 ? "bg-amber-300" : "bg-zinc-400"
-                          )} />
-                          <span>{pantryPercent}% dispo</span>
-                        </Badge>
-                      </div>
-                    </div>
-                    <CardHeader className="p-3 pb-0">
-                      <CardTitle className="text-sm group-hover:text-primary transition-colors line-clamp-1">{recipe.title}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-3 pt-2">
-                      <p className="text-[10px] text-muted-foreground line-clamp-2 mb-2">{recipe.description}</p>
-
-                      <div className="flex flex-wrap gap-1">
-                        {isDiscovery ? (
-                          <div className="text-[9px] text-muted-foreground italic flex items-center gap-1">
-                            <PlusCircle className="h-2 w-2" />
-                            Nouvelle idée à tester
-                          </div>
-                        ) : (
-                          matchedNames.slice(0, 3).map(name => (
-                            <div key={name} className="flex items-center gap-1 bg-background px-1.5 py-0.5 rounded text-[9px] border border-primary/10">
-                              <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                              {name}
-                            </div>
-                          ))
-                        )}
-                        {!isDiscovery && matchedNames.length > 3 && <span className="text-[9px] text-muted-foreground">+{matchedNames.length - 3}</span>}
-                      </div>
-                      {totalCost !== null && (
-                        <div className="mt-2 text-[9px] font-bold text-green-700 dark:text-green-400 flex items-center justify-between bg-green-500/10 px-1.5 py-0.5 rounded border border-green-500/20">
-                          <span>Est. {formatPrice(totalCost)}</span>
-                          <span className="text-[8px] font-normal opacity-80">({ideaPortions} pers.)</span>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
         {suggestedRecipes.length > 0 && (
-          <div className="mt-6 mb-2 max-w-4xl mx-auto flex items-center justify-between gap-2 px-2 text-xs text-muted-foreground animate-in fade-in">
+          <div className="mt-8 mb-2 max-w-4xl mx-auto flex items-center justify-between gap-2 px-2 text-xs text-muted-foreground animate-in fade-in">
             <span className="font-semibold flex items-center gap-1.5">
               {sortByAvailability ? (
                 <>
@@ -2374,17 +2202,41 @@ export default function RecipesView({
                         (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&auto=format&fit=crop&q=80';
                       }}
                     />
-                    {isDessert && (
-                      <div className="absolute top-2.5 left-2.5 flex items-center gap-1 z-10">
-                        <Badge className="text-[10px] h-5.5 px-2 bg-pink-600/90 text-white border-none backdrop-blur-sm font-semibold flex items-center gap-1 shadow-xs">
-                          <Cake className="h-3 w-3" />
+
+                    {/* Pays, disponibilité et type de plat sur la photo en petits caractères */}
+                    <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 z-10 flex-wrap max-w-[85%]">
+                      {isDessert && (
+                        <Badge className="text-[9px] h-5 px-1.5 bg-pink-600/90 text-white border-none backdrop-blur-sm font-semibold flex items-center gap-1 shadow-xs">
+                          <Cake className="h-2.5 w-2.5" />
                           <span>Dessert</span>
                         </Badge>
-                      </div>
-                    )}
-                    <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5">
+                      )}
+                      <Badge variant="outline" className="text-[9px] h-5 px-1.5 bg-black/60 text-white border-none backdrop-blur-sm font-medium shadow-xs">
+                        {recipe.country}
+                      </Badge>
+                      <Badge
+                        className={cn(
+                          "text-[9px] h-5 px-1.5 border-none backdrop-blur-sm font-bold flex items-center gap-1 shadow-xs",
+                          pantryPercent === 100
+                            ? "bg-emerald-600/90 text-white"
+                            : pantryPercent >= 50
+                              ? "bg-amber-600/90 text-white"
+                              : "bg-zinc-800/80 text-zinc-200"
+                        )}
+                        title={`${availableCount}/${totalCount} ingrédients disponibles dans le garde-manger`}
+                      >
+                        <span className={cn(
+                          "w-1 h-1 rounded-full shrink-0",
+                          pantryPercent === 100 ? "bg-emerald-300" : pantryPercent >= 50 ? "bg-amber-300" : "bg-zinc-400"
+                        )} />
+                        <span>{pantryPercent}% dispo</span>
+                        <span className="text-[8px] opacity-80 font-normal">({availableCount}/{totalCount})</span>
+                      </Badge>
+                    </div>
+
+                    <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5 z-10">
                       {recipe.calories !== undefined && (
-                        <Badge variant="secondary" className="bg-black/60 text-white backdrop-blur-sm border-none text-[11px] font-semibold">
+                        <Badge variant="secondary" className="bg-black/60 text-white backdrop-blur-sm border-none text-[9px] font-semibold h-5 px-1.5">
                           {recipe.calories} kcal
                         </Badge>
                       )}
@@ -2395,34 +2247,12 @@ export default function RecipesView({
                       <div className="pr-2 flex-1">
                         <CardTitle>{recipe.title}</CardTitle>
                         <div className="flex items-center gap-2 mt-2 flex-wrap">
-                          <Badge variant="secondary" className="w-fit">{recipe.country}</Badge>
-
-                          {/* % de disponibilité directement à côté du pays */}
-                          <Badge
-                            className={cn(
-                              "flex items-center gap-1.5 text-[11px] font-bold border transition-colors",
-                              pantryPercent === 100
-                                ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/40"
-                                : pantryPercent >= 50
-                                  ? "bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-500/40"
-                                  : "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700"
-                            )}
-                            title={`${availableCount} sur ${totalCount} ingrédients déjà dans votre garde-manger`}
-                          >
-                            <span className={cn(
-                              "w-1.5 h-1.5 rounded-full shrink-0",
-                              pantryPercent === 100 ? "bg-emerald-500" : pantryPercent >= 50 ? "bg-amber-500" : "bg-zinc-400"
-                            )} />
-                            <span>{pantryPercent}% dispo</span>
-                            <span className="text-[9px] opacity-75 font-normal">({availableCount}/{totalCount})</span>
-                          </Badge>
-
                           {recipe.preparationTime !== undefined && (
-                            <Badge variant="outline" className="flex items-center gap-1"><Clock className="h-3 w-3" />{recipe.preparationTime} min</Badge>
+                            <Badge variant="outline" className="flex items-center gap-1 text-[11px]"><Clock className="h-3 w-3" />{recipe.preparationTime} min</Badge>
                           )}
-                          {recipe.isEconomical && <Badge variant="outline" className="flex items-center gap-1"><Coins className="h-3 w-3" />Éco</Badge>}
+                          {recipe.isEconomical && <Badge variant="outline" className="flex items-center gap-1 text-[11px]"><Coins className="h-3 w-3" />Éco</Badge>}
                           {totalCost !== null && (
-                            <Badge className="flex items-center gap-1.5 bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/30">
+                            <Badge className="flex items-center gap-1.5 bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/30 text-[11px]">
                               <TrendingDown className="h-3 w-3" />
                               <span className="font-bold">{formatPrice(totalCost)}</span>
                               <span className="text-[10px] font-normal opacity-85">({ideaPortions} {ideaPortions > 1 ? 'pers.' : 'pers.'})</span>
