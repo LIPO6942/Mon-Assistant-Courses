@@ -322,6 +322,68 @@ const CULINARY_KEYWORD_IMAGES: CulinaryEntry[] = [
   {
     keywords: ['poisson cru', 'tahitienne'],
     url: 'https://images.unsplash.com/photo-1535400255456-984241443b29?w=800&auto=format&fit=crop&q=80'
+  },
+
+  // 7. Spécialités Antillaises & Créoles
+  {
+    keywords: ['colombo'],
+    url: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=800&auto=format&fit=crop&q=80'
+  },
+  {
+    keywords: ['accras', 'acras'],
+    url: 'https://images.unsplash.com/photo-1541544741938-0af808871cc0?w=800&auto=format&fit=crop&q=80'
+  },
+  {
+    keywords: ['bokit'],
+    url: 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=800&auto=format&fit=crop&q=80'
+  },
+  {
+    keywords: ['court-bouillon', 'court bouillon', 'blaff'],
+    url: 'https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?w=800&auto=format&fit=crop&q=80'
+  },
+  {
+    keywords: ['boucane', 'boucané', 'sauce chien'],
+    url: 'https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?w=800&auto=format&fit=crop&q=80'
+  },
+  {
+    keywords: ['chatrou'],
+    url: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=800&auto=format&fit=crop&q=80'
+  },
+  {
+    keywords: ['christophine', 'chayotte'],
+    url: 'https://images.unsplash.com/photo-1572449043416-55f4685c9bb7?w=800&auto=format&fit=crop&q=80'
+  },
+  {
+    keywords: ['matete', 'matété'],
+    url: 'https://images.unsplash.com/photo-1559847844-5315695dadae?w=800&auto=format&fit=crop&q=80'
+  },
+  {
+    keywords: ['ouassous', 'dombres', 'dombrés'],
+    url: 'https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?w=800&auto=format&fit=crop&q=80'
+  },
+  {
+    keywords: ['rougail'],
+    url: 'https://images.unsplash.com/photo-1534939561126-855b8675edd7?w=800&auto=format&fit=crop&q=80'
+  },
+  {
+    keywords: ['chiquetaille', 'ti-nain', 'ti nain'],
+    url: 'https://images.unsplash.com/photo-1535400255456-984241443b29?w=800&auto=format&fit=crop&q=80'
+  },
+  {
+    keywords: ['blanc-manger', 'blanc manger', 'flan coco'],
+    url: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800&auto=format&fit=crop&q=80'
+  },
+  {
+    keywords: ['tourment d amour', 'tourment d\'amour'],
+    url: 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=800&auto=format&fit=crop&q=80'
+  },
+  {
+    keywords: ['gateau renverse a l ananas', 'gateau a l ananas', 'gâteau renversé à l\'ananas', 'gâteau à l\'ananas'],
+    url: 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=800&auto=format&fit=crop&q=80'
+  },
+  {
+    keywords: ['pates sales', 'pâtés salés'],
+    url: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=800&auto=format&fit=crop&q=80'
   }
 ];
 

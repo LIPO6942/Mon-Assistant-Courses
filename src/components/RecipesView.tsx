@@ -62,6 +62,12 @@ const COUNTRY_FLAG_MAP: Record<string, { colors: string; emoji: string }> = {
   'Russie': { colors: 'from-white/10 via-blue-600/15 to-red-500/15', emoji: '🇷🇺' },
   'Singapour': { colors: 'from-red-500/15 via-white/10 to-red-500/15', emoji: '🇸🇬' },
   'Malaisie': { colors: 'from-blue-600/15 via-yellow-400/15 to-red-500/15', emoji: '🇲🇾' },
+  'Antilles': { colors: 'from-blue-500/20 via-yellow-400/20 to-green-500/20', emoji: '🏝️' },
+  'Martinique': { colors: 'from-blue-600/20 via-white/10 to-blue-600/20', emoji: '🇲🇶' },
+  'Guadeloupe': { colors: 'from-blue-600/20 via-yellow-400/20 to-red-500/20', emoji: '🇬🇵' },
+  'Caraïbes': { colors: 'from-cyan-500/20 via-yellow-400/20 to-emerald-500/20', emoji: '🌴' },
+  'Haïti': { colors: 'from-blue-600/20 via-red-600/20 to-blue-600/20', emoji: '🇭🇹' },
+  'Jamaïque': { colors: 'from-green-600/20 via-yellow-400/20 to-black/20', emoji: '🇯🇲' },
 };
 
 function getCountryFlag(tags?: string): { colors: string; emoji: string } | null {
@@ -121,7 +127,7 @@ export function getRecipeContinent(country?: string): ContinentFilter {
   if (c.includes('asie') || c.includes('japon') || c.includes('coree') || c.includes('thailande') || c.includes('taiwan') || c.includes('chine') || c.includes('vietnam') || c.includes('inde') || c.includes('pakistan') || c.includes('indonesie') || c.includes('singapour') || c.includes('malaisie') || c.includes('philippines') || c.includes('ouzbekistan')) {
     return 'Asie';
   }
-  if (c.includes('amerique') || c.includes('mexique') || c.includes('perou') || c.includes('etats unis') || c.includes('usa') || c.includes('bresil') || c.includes('argentine') || c.includes('canada') || c.includes('quebec') || c.includes('cuba') || c.includes('salvador') || c.includes('venezuela') || c.includes('hawai')) {
+  if (c.includes('amerique') || c.includes('mexique') || c.includes('perou') || c.includes('etats unis') || c.includes('usa') || c.includes('bresil') || c.includes('argentine') || c.includes('canada') || c.includes('quebec') || c.includes('cuba') || c.includes('salvador') || c.includes('venezuela') || c.includes('hawai') || c.includes('antilles') || c.includes('martinique') || c.includes('guadeloupe') || c.includes('caraibes') || c.includes('haiti') || c.includes('jamaique')) {
     return 'Amériques';
   }
   return 'Europe';
