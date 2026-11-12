@@ -2243,31 +2243,26 @@ export default function RecipesView({
                     </div>
                   </div>
                   <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div className="pr-2 flex-1">
-                        <CardTitle>{recipe.title}</CardTitle>
-                        <div className="flex items-center gap-2 mt-2 flex-wrap">
-                          {recipe.preparationTime !== undefined && (
-                            <Badge variant="outline" className="flex items-center gap-1 text-[11px]"><Clock className="h-3 w-3" />{recipe.preparationTime} min</Badge>
-                          )}
-                          {recipe.isEconomical && <Badge variant="outline" className="flex items-center gap-1 text-[11px]"><Coins className="h-3 w-3" />Éco</Badge>}
-                          {totalCost !== null && (
-                            <Badge className="flex items-center gap-1.5 bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/30 text-[11px]">
-                              <TrendingDown className="h-3 w-3" />
-                              <span className="font-bold">{formatPrice(totalCost)}</span>
-                              <span className="text-[10px] font-normal opacity-85">({ideaPortions} {ideaPortions > 1 ? 'pers.' : 'pers.'})</span>
-                              {perPersonCost !== null && ideaPortions > 1 && (
-                                <span className="text-[9px] opacity-75 border-l border-green-500/30 pl-1.5 ml-0.5 font-normal">
-                                  ~{formatPrice(perPersonCost)}/pers.
-                                </span>
-                              )}
-                            </Badge>
-                          )}
-                        </div>
+                    <div>
+                      <CardTitle>{recipe.title}</CardTitle>
+                      <div className="flex items-center gap-2 mt-2 flex-wrap">
+                        {recipe.preparationTime !== undefined && (
+                          <Badge variant="outline" className="flex items-center gap-1 text-[11px]"><Clock className="h-3 w-3" />{recipe.preparationTime} min</Badge>
+                        )}
+                        {recipe.isEconomical && <Badge variant="outline" className="flex items-center gap-1 text-[11px]"><Coins className="h-3 w-3" />Éco</Badge>}
+                        {totalCost !== null && (
+                          <Badge className="flex items-center gap-1.5 bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/30 text-[11px]">
+                            <TrendingDown className="h-3 w-3" />
+                            <span className="font-bold">{formatPrice(totalCost)}</span>
+                            <span className="text-[10px] font-normal opacity-85">({ideaPortions} {ideaPortions > 1 ? 'pers.' : 'pers.'})</span>
+                            {perPersonCost !== null && ideaPortions > 1 && (
+                              <span className="text-[9px] opacity-75 border-l border-green-500/30 pl-1.5 ml-0.5 font-normal">
+                                ~{formatPrice(perPersonCost)}/pers.
+                              </span>
+                            )}
+                          </Badge>
+                        )}
                       </div>
-                      {recipe.calories !== undefined && (
-                        <Badge variant="outline" className="whitespace-nowrap">{recipe.calories} kcal</Badge>
-                      )}
                     </div>
                   </CardHeader>
                   <CardContent className="flex-grow">
