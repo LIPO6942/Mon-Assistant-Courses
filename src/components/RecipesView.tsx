@@ -14,7 +14,7 @@ import Image from 'next/image';
 import { listenCommunityPurchases } from '@/lib/firestore-sync';
 import { calculateMarketPrices, calculateRecipeCost, getRecipeAvailabilityPercentage, formatPrice } from '@/lib/price-utils';
 import { getRecipeImageUrl } from '@/lib/recipe-images';
-import { isIngredientMatch } from '@/lib/smart-ingredient-matching';
+import { isIngredientMatch, findMatchingPantryItem } from '@/lib/smart-ingredient-matching';
 
 // Mapping pays -> couleurs drapeau (gradient) + emoji
 const COUNTRY_FLAG_MAP: Record<string, { colors: string; emoji: string }> = {
@@ -135,7 +135,9 @@ export function getRecipeContinent(country?: string): ContinentFilter {
 
 export function getRecipePantryAvailability(
   recipeIngredients: RecipeIngredient[],
-  pantry: Ingredient[] = []
+  pantry: Ingredient[] = [],
+  purchaseHistory?: PurchaseHistory,
+  dbarati?: DbaratiItem[]
 ): {
   availableCount: number;
   totalCount: number;
@@ -150,7 +152,16 @@ export function getRecipePantryAvailability(
 
   let matched = 0;
   for (const ing of recipeIngredients) {
-    if (pantry.some(p => isIngredientMatch(p.name, ing.name))) {
+    const pantryItem = findMatchingPantryItem(ing.name, pantry);
+    if (pantryItem) {
+      if (purchaseHistory && dbarati) {
+        const history = purchaseHistory[pantryItem.id] || purchaseHistory[pantryItem.name] || purchaseHistory[pantryItem.name.toLowerCase()];
+        const status = getProductStatus(history, pantryItem.name, dbarati);
+        // Si le produit est épuisé ou consommé dans Dbarati (statut rouge), il n'est plus disponible
+        if (status === 'red') {
+          continue;
+        }
+      }
       matched++;
     }
   }
@@ -642,10 +653,26 @@ export default function RecipesView({
 
       return nonTunisianDiscoverables.map(recipe => {
         const matches = recipe.ingredients.filter(ing => {
-          const name = ing.name.toLowerCase();
-          if (matchedIngredientNames.has(name)) return true;
-          const status = getProductStatus(purchaseHistory[ing.name] || purchaseHistory[ing.name.toLowerCase()], ing.name, dbarati);
-          return status === 'green' || status === 'orange';
+          // 1. Détecter dans le panier
+          if (basket.some(b => isIngredientMatch(b.name, ing.name))) return true;
+          // 2. Détecter dans le garde-manger avec statut Dbarati
+          if (pantry && pantry.length > 0) {
+            const pantryMatch = findMatchingPantryItem(ing.name, pantry);
+            if (pantryMatch) {
+              const history = purchaseHistory[pantryMatch.id] || purchaseHistory[pantryMatch.name] || purchaseHistory[pantryMatch.name.toLowerCase()];
+              const status = getProductStatus(history, pantryMatch.name, dbarati);
+              if (status === 'green' || status === 'orange' || status === null) return true;
+              if (status === 'red') return false;
+            }
+          }
+          // 3. Détecter dans l'historique d'achat direct
+          for (const [key, records] of Object.entries(purchaseHistory)) {
+            if (isIngredientMatch(key, ing.name)) {
+              const status = getProductStatus(records, key, dbarati);
+              return status === 'green' || status === 'orange';
+            }
+          }
+          return false;
         });
 
         return {
@@ -670,7 +697,7 @@ export default function RecipesView({
       matchedNames: [],
       isDiscovery: true
     }));
-  }, [discoverableRecipes, basket, purchaseHistory, dbarati, userRecipes, dishCourseFilter]);
+  }, [discoverableRecipes, basket, purchaseHistory, dbarati, userRecipes, dishCourseFilter, pantry]);
 
   const findRandomRecipes = () => {
     if (filteredDiscoverableRecipes.length === 0) {
@@ -678,10 +705,10 @@ export default function RecipesView({
       return;
     }
     if (sortByAvailability) {
-      // Tri du plus présent au moins présent selon les ingrédients du garde-manger !
+      // Tri du plus présent au moins présent selon les ingrédients du garde-manger (prenant en compte Dbarati) !
       const sorted = [...filteredDiscoverableRecipes].sort((a, b) => {
-        const pA = getRecipePantryAvailability(a.ingredients, pantry).percentage;
-        const pB = getRecipePantryAvailability(b.ingredients, pantry).percentage;
+        const pA = getRecipePantryAvailability(a.ingredients, pantry, purchaseHistory, dbarati).percentage;
+        const pB = getRecipePantryAvailability(b.ingredients, pantry, purchaseHistory, dbarati).percentage;
         return pB - pA;
       });
       setSuggestedRecipes(sorted.slice(0, 4));
@@ -716,8 +743,8 @@ export default function RecipesView({
       }
       if (sortByAvailability) {
         const sorted = [...filteredDiscoverableRecipes].sort((a, b) => {
-          const pA = getRecipePantryAvailability(a.ingredients, pantry).percentage;
-          const pB = getRecipePantryAvailability(b.ingredients, pantry).percentage;
+          const pA = getRecipePantryAvailability(a.ingredients, pantry, purchaseHistory, dbarati).percentage;
+          const pB = getRecipePantryAvailability(b.ingredients, pantry, purchaseHistory, dbarati).percentage;
           return pB - pA;
         });
         setSuggestedRecipes(sorted.slice(0, 4));
@@ -2198,7 +2225,7 @@ export default function RecipesView({
               {basketBasedRecipes.map(({ recipe, matchedNames, isDiscovery }) => {
                 const { totalCost, perPersonCost } = getAdjustedRecipeCost(recipe);
                 const availabilityPercent = getRecipeAvailabilityPercentage(recipe.ingredients, marketPrices);
-                const { availableCount, totalCount, percentage: pantryPercent } = getRecipePantryAvailability(recipe.ingredients, pantry);
+                const { availableCount, totalCount, percentage: pantryPercent } = getRecipePantryAvailability(recipe.ingredients, pantry, purchaseHistory, dbarati);
                 const isDessert = isDessertRecipe(recipe);
 
                 return (
@@ -2332,7 +2359,7 @@ export default function RecipesView({
           <div className='mt-3 max-w-4xl mx-auto text-left animate-in fade-in-50 grid grid-cols-1 md:grid-cols-2 gap-6'>
             {suggestedRecipes.map(recipe => {
               const { totalCost, perPersonCost } = getAdjustedRecipeCost(recipe);
-              const { availableCount, totalCount, percentage: pantryPercent } = getRecipePantryAvailability(recipe.ingredients, pantry);
+              const { availableCount, totalCount, percentage: pantryPercent } = getRecipePantryAvailability(recipe.ingredients, pantry, purchaseHistory, dbarati);
               const isDessert = isDessertRecipe(recipe);
 
               return (

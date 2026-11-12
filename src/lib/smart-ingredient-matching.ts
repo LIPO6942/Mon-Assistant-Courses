@@ -20,12 +20,22 @@ export function cleanIngredientName(name: string): string {
 }
 
 /**
- * Mots vides (stop-words) alimentaires en français qui ne modifient pas l'identité du produit
+ * Mots vides (stop-words) alimentaires en français et qualificatifs culinaires
+ * de découpe/préparation qui ne modifient pas l'identité fondamentale du produit.
  */
 const STOP_WORDS = new Set([
   'de', 'd', 'du', 'des', 'le', 'la', 'les', 'l', 'un', 'une',
   'a', 'au', 'aux', 'en', 'et', 'pour', 'sur', 'dans', 'par',
-  'frais', 'fraiche', 'fraiches'
+  'frais', 'fraiche', 'fraiches', 'bien', 'tres', 'pur', 'pure', 'doux', 'douce',
+  'extra', 'vierge', 'qualite', 'degraisse', 'egoutte', 'entier', 'entiere',
+  'murs', 'mures', 'sec', 'seche', 'seches', 'sechee', 'sechees',
+  'moulu', 'moulue', 'moulus', 'moulues', 'rape', 'rapee', 'rapes', 'rapees',
+  'hache', 'hachee', 'haches', 'hachees', 'pile', 'pilee', 'piles', 'pilees',
+  'emince', 'emincee', 'eminces', 'emincees', 'coupe', 'coupee', 'coupes', 'coupees',
+  'morceaux', 'rondelles', 'tranches', 'filets', 'filet', 'gousses', 'gousse',
+  'cuisses', 'cuisse', 'blancs', 'blanc', 'chair', 'cubes', 'fines', 'fins',
+  'poudre', 'feuilles', 'feuille', 'branches', 'branche', 'botte', 'bottes',
+  'boite', 'boites', 'conserve', 'conserves', 'pave', 'paves', 'chair'
 ]);
 
 /**
@@ -40,15 +50,18 @@ const INVARIANT_WORDS = new Set([
  */
 function normalizeWordToken(word: string): string {
   if (!word || word.length <= 2) return word;
-  
-  // Féminins courants
+
+  // Féminins et terminaisons courantes
   if (word.endsWith('e') && word.length > 4) {
     if (word.endsWith('concentree')) return 'concentre';
     if (word.endsWith('hachee')) return 'hache';
     if (word.endsWith('moulue')) return 'moulu';
     if (word.endsWith('rapee')) return 'rape';
-    if (word.endsWith('sechee')) return 'sec';
-    if (word.endsWith('seche')) return 'sec';
+    if (word.endsWith('sechee') || word.endsWith('seche')) return 'sec';
+    if (word.endsWith('fraiche')) return 'frais';
+    if (word.endsWith('rouge')) return 'rouge';
+    if (word.endsWith('jaune')) return 'jaune';
+    if (word.endsWith('verte')) return 'vert';
   }
 
   // Pluriels simples (s ou x)
@@ -63,6 +76,21 @@ function normalizeWordToken(word: string): string {
 
   return word;
 }
+
+/**
+ * Ingrédients composés connus où un mot-clé unique ne doit PAS suffire
+ * afin d'éviter les faux positifs (ex: "pomme" ne doit pas valider "pomme de terre").
+ */
+const COMPOUND_EXCLUSIONS: Record<string, string[]> = {
+  'pomme': ['terre'],
+  'lait': ['coco', 'amande', 'avoine', 'soja', 'riz'],
+  'creme': ['coco', 'marron', 'marrons'],
+  'sauce': ['soja', 'huitre', 'poisson', 'barbecue', 'worcestershire', 'nuoc'],
+  'pate': ['arachide', 'pistache', 'curry', 'tartiner'],
+  'sucre': ['vanille', 'glace', 'roux'],
+  'vinaigre': ['balsamique', 'riz', 'cidre'],
+  'farine': ['pois', 'chiche', 'mais'],
+};
 
 /**
  * Extrait les tokens significatifs et normalisés d'un ingrédient
@@ -88,9 +116,6 @@ export function getIngredientTokens(name: string): string[] {
 
 /**
  * Génère une clé canonique invariable selon l'ordre des mots
- * Ex: "Concentré de tomate" -> "concentre tomate"
- *     "Tomate concentré"    -> "concentre tomate"
- *     "Oignon 🧅"           -> "oignon"
  */
 export function getCanonicalIngredientKey(name: string): string {
   const tokens = getIngredientTokens(name);
@@ -98,10 +123,9 @@ export function getCanonicalIngredientKey(name: string): string {
 }
 
 /**
- * Vérifie si deux noms d'ingrédients désignent le même produit
- * (gère les inversions de mots, émojis, singulier/pluriel, accents, stop-words)
+ * Comparaison élémentaire entre deux chaînes simples
  */
-export function isIngredientMatch(nameA: string, nameB: string): boolean {
+function isSingleIngredientMatch(nameA: string, nameB: string): boolean {
   if (!nameA || !nameB) return false;
 
   const cleanA = cleanIngredientName(nameA);
@@ -110,7 +134,7 @@ export function isIngredientMatch(nameA: string, nameB: string): boolean {
   // 1. Égalité stricte ou après nettoyage
   if (cleanA === cleanB) return true;
 
-  // 2. Clé canonique triée (gère "concentré de tomate" vs "tomate concentré")
+  // 2. Clé canonique triée (ex: "concentré de tomate" vs "tomate concentré")
   const keyA = getCanonicalIngredientKey(nameA);
   const keyB = getCanonicalIngredientKey(nameB);
   if (keyA && keyB && keyA === keyB) return true;
@@ -121,7 +145,6 @@ export function isIngredientMatch(nameA: string, nameB: string): boolean {
 
   if (tokensA.length === 0 || tokensB.length === 0) return false;
 
-  // Si tous les tokens de l'un sont dans l'autre (ex: "filet de poulet" vs "poulet filet")
   const setA = new Set(tokensA);
   const setB = new Set(tokensB);
 
@@ -130,13 +153,34 @@ export function isIngredientMatch(nameA: string, nameB: string): boolean {
 
   if (aInB && bInA) return true;
 
-  // Si l'un est un sous-ensemble complet de l'autre avec au moins 2 mots clés partagés
-  // Ex: "double concentré de tomate" et "concentré de tomate"
-  if (minTokensLength(tokensA, tokensB) >= 2 && (aInB || bInA)) {
+  const minLen = Math.min(tokensA.length, tokensB.length);
+
+  // Si au moins 2 mots clés sont partagés et l'un est sous-ensemble de l'autre
+  if (minLen >= 2 && (aInB || bInA)) {
     return true;
   }
 
-  // Calcul du score de Jaccard sur les tokens
+  // 4. Reconnaissance intelligente par ingrédient pivot (ex: "poulet" dans "cuisses de poulet")
+  if (minLen === 1) {
+    const singleToken = tokensA.length === 1 ? tokensA[0] : tokensB[0];
+    const multiTokens = tokensA.length === 1 ? tokensB : tokensA;
+    const multiSet = tokensA.length === 1 ? setB : setA;
+
+    if (multiSet.has(singleToken)) {
+      // Vérifier les exclusions composées (ex: pomme vs pomme de terre, lait vs lait de coco)
+      const exclusions = COMPOUND_EXCLUSIONS[singleToken];
+      if (exclusions && exclusions.length > 0) {
+        const hasExcludedToken = exclusions.some(ex => multiTokens.includes(ex));
+        if (!hasExcludedToken) {
+          return true;
+        }
+      } else {
+        return true;
+      }
+    }
+  }
+
+  // 5. Calcul du score de Jaccard sur les tokens (seuil abaissé à 60% avec les stop-words nettoyés)
   let overlapCount = 0;
   for (const t of tokensA) {
     if (setB.has(t)) overlapCount++;
@@ -145,18 +189,50 @@ export function isIngredientMatch(nameA: string, nameB: string): boolean {
   const unionSize = new Set([...tokensA, ...tokensB]).size;
   const jaccard = unionSize > 0 ? overlapCount / unionSize : 0;
 
-  // Si la similarité est supérieure à 70%
-  if (jaccard >= 0.7) return true;
+  if (jaccard >= 0.6) return true;
 
   return false;
 }
 
-function minTokensLength(a: string[], b: string[]): number {
-  return Math.min(a.length, b.length);
+/**
+ * Découpe une chaîne en alternatives possibles si elle contient "ou", "/", ou ";"
+ * Ex: "Filets de barramundi ou daurade royale" -> ["Filets de barramundi", "daurade royale"]
+ */
+function splitAlternatives(name: string): string[] {
+  if (!name) return [];
+  // Éviter de découper si c'est juste un mot
+  if (!/\b(?:ou)\b|\/|;/i.test(name)) return [name];
+  return name
+    .split(/\b(?:ou)\b|\/|;/i)
+    .map(part => part.trim())
+    .filter(Boolean);
+}
+
+/**
+ * Vérifie si deux noms d'ingrédients désignent le même produit
+ * (gère les inversions, les alternatives "ou /", les singuliers/pluriels,
+ * les qualificatifs culinaires et les ingrédients pivots).
+ */
+export function isIngredientMatch(nameA: string, nameB: string): boolean {
+  if (!nameA || !nameB) return false;
+
+  const partsA = splitAlternatives(nameA);
+  const partsB = splitAlternatives(nameB);
+
+  for (const partA of partsA) {
+    for (const partB of partsB) {
+      if (isSingleIngredientMatch(partA, partB)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
 }
 
 /**
  * Trouve l'ingrédient correspondant dans le garde-manger en utilisant la correspondance intelligente
+ * Gère également les lignes combinées avec "et" (ex: "Oignon haché et gousses d'ail").
  */
 export function findMatchingPantryItem(
   ingredientName: string,
@@ -176,7 +252,18 @@ export function findMatchingPantryItem(
     if (canonicalMatch) return canonicalMatch;
   }
 
-  // 3. Recherche par correspondance intelligente
-  return pantry.find(p => isIngredientMatch(p.name, ingredientName));
-}
+  // 3. Recherche par correspondance intelligente directe
+  const match = pantry.find(p => isIngredientMatch(p.name, ingredientName));
+  if (match) return match;
 
+  // 4. Si la ligne est combinée avec "et" (ex: "Oignon haché et gousses d'ail pilées")
+  if (/\bet\b/i.test(ingredientName)) {
+    const subParts = ingredientName.split(/\bet\b/i).map(s => s.trim()).filter(Boolean);
+    for (const subPart of subParts) {
+      const subMatch = pantry.find(p => isIngredientMatch(p.name, subPart));
+      if (subMatch) return subMatch;
+    }
+  }
+
+  return undefined;
+}

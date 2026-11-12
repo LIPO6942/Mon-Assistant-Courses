@@ -6,7 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Minus, Plus, Users, Maximize2, Minimize2, CheckCircle2, ListFilter } from 'lucide-react';
 import { cn, getProductStatus, calculateAdjustedQuantity } from '@/lib/utils';
-import { isIngredientMatch } from '@/lib/smart-ingredient-matching';
+import { isIngredientMatch, findMatchingPantryItem } from '@/lib/smart-ingredient-matching';
 import type { RecipeIngredient, Ingredient, PurchaseHistory, DbaratiItem } from '@/lib/types';
 
 interface RecipeContentProps {
@@ -94,20 +94,35 @@ export default function RecipeContent({
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                 {ingredients.map((ing, i) => {
-                                    const pantryItem = pantry.find(p => isIngredientMatch(p.name, ing.name));
-                                    let statusColor = 'bg-zinc-200 dark:bg-zinc-800';
+                                    const pantryItem = findMatchingPantryItem(ing.name, pantry);
+                                    let statusColor = 'bg-zinc-300 dark:bg-zinc-700';
+                                    let statusTitle = "Non disponible au garde-manger";
 
                                     if (pantryItem) {
-                                        const status = getProductStatus(purchaseHistory[pantryItem.id], pantryItem.name, dbarati);
-                                        statusColor = status === 'green' ? 'bg-green-500' : status === 'orange' ? 'bg-amber-500' : 'bg-red-500';
+                                        const history = purchaseHistory[pantryItem.id] || purchaseHistory[pantryItem.name] || purchaseHistory[pantryItem.name.toLowerCase()];
+                                        const status = getProductStatus(history, pantryItem.name, dbarati);
+                                        if (status === 'green') {
+                                            statusColor = 'bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.6)]';
+                                            statusTitle = "En stock & frais (garde-manger)";
+                                        } else if (status === 'orange') {
+                                            statusColor = 'bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.6)]';
+                                            statusTitle = "En stock (à renouveler / dernières portions)";
+                                        } else if (status === 'red') {
+                                            statusColor = 'bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.6)]';
+                                            statusTitle = "Épuisé ou consommé dans Dbarati";
+                                        } else {
+                                            statusColor = 'bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.6)]';
+                                            statusTitle = "Disponible au garde-manger";
+                                        }
                                     } else {
-                                        statusColor = 'bg-red-500';
+                                        statusColor = 'bg-zinc-300 dark:bg-zinc-700';
+                                        statusTitle = "Non disponible au garde-manger";
                                     }
 
                                     return (
                                         <div key={i} className="flex items-center justify-between p-2 bg-zinc-50 dark:bg-zinc-900/50 rounded-lg border border-zinc-100 dark:border-zinc-800/50 gap-2 min-w-0">
                                             <div className="flex items-center gap-2 min-w-0 flex-1">
-                                                <div className={cn("w-1.5 h-1.5 rounded-full shrink-0", statusColor)} />
+                                                <div className={cn("w-2 h-2 rounded-full shrink-0", statusColor)} title={statusTitle} />
                                                 <span className="text-xs sm:text-sm font-medium truncate">{ing.name}</span>
                                             </div>
                                             <span className="text-[10px] font-bold bg-white dark:bg-zinc-900 px-1.5 py-0.5 rounded border border-zinc-100 dark:border-zinc-800 shadow-xs shrink-0 whitespace-nowrap">
