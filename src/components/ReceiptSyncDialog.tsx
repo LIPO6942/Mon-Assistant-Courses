@@ -217,15 +217,15 @@ export function ReceiptSyncDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl h-[90vh] flex flex-col p-0 overflow-hidden rounded-2xl">
+      <DialogContent className="w-[95vw] sm:max-w-2xl h-[92vh] flex flex-col p-0 overflow-hidden rounded-2xl">
         {/* Header */}
-        <DialogHeader className="px-6 pt-6 pb-3 border-b">
+        <DialogHeader className="px-4 sm:px-6 pt-5 pb-3 border-b">
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
               <Sparkles className="h-5 w-5" />
             </div>
             <div>
-              <DialogTitle className="text-lg font-bold">
+              <DialogTitle className="text-base sm:text-lg font-bold">
                 Synchronisation Garde-Manger
               </DialogTitle>
               <DialogDescription className="text-xs mt-0.5">
@@ -237,7 +237,7 @@ export function ReceiptSyncDialog({
 
         {/* Corps scrollable */}
         <div className="flex-1 overflow-y-auto overscroll-contain">
-          <div className="px-6 py-4 space-y-6">
+          <div className="px-3 sm:px-6 py-4 space-y-6">
 
             {/* État : analyse en cours */}
             {isAnalyzing && (
@@ -282,40 +282,42 @@ export function ReceiptSyncDialog({
                         key={m.line.id || idx}
                         onClick={() => toggleMatchedConfirm(idx)}
                         className={cn(
-                          'w-full text-left px-4 py-3 flex items-center gap-3 transition-colors',
+                          'w-full text-left px-3 sm:px-4 py-2.5 sm:py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 transition-colors',
                           m.confirmed
                             ? 'bg-green-50 dark:bg-green-950/20 hover:bg-green-100 dark:hover:bg-green-950/30'
                             : 'bg-muted/30 hover:bg-muted/50'
                         )}
                       >
-                        {/* Icône statut */}
-                        <div className="shrink-0">
-                          {m.confirmed ? (
-                            <CheckCircle2 className="h-5 w-5 text-green-600" />
-                          ) : (
-                            <XCircle className="h-5 w-5 text-muted-foreground/50" />
-                          )}
-                        </div>
+                        <div className="flex items-start gap-2.5 sm:gap-3 min-w-0 flex-1">
+                          {/* Icône statut */}
+                          <div className="shrink-0 mt-0.5">
+                            {m.confirmed ? (
+                              <CheckCircle2 className="h-5 w-5 text-green-600" />
+                            ) : (
+                              <XCircle className="h-5 w-5 text-muted-foreground/50" />
+                            )}
+                          </div>
 
-                        {/* Infos produit */}
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-sm text-foreground truncate">
-                            {m.ingredient.name}
-                          </p>
-                          <p className="text-[10px] text-muted-foreground italic truncate">
-                            Brut ticket : {m.line.normalizedLabel || m.line.rawLabel}
-                          </p>
+                          {/* Infos produit */}
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-xs sm:text-sm text-foreground break-words leading-tight">
+                              {m.ingredient.name}
+                            </p>
+                            <p className="text-[10px] text-muted-foreground italic break-words line-clamp-1 mt-0.5">
+                              Brut ticket : {m.line.normalizedLabel || m.line.rawLabel}
+                            </p>
+                          </div>
                         </div>
 
                         {/* Prix ancien → nouveau */}
-                        <div className="shrink-0 text-right space-y-0.5">
-                          <div className="flex items-center gap-1.5 justify-end">
-                            <span className="text-xs text-muted-foreground line-through">
+                        <div className="shrink-0 flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-2 sm:gap-0.5 pl-7 sm:pl-0 pt-1.5 sm:pt-0 border-t sm:border-0 border-border/20">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[11px] sm:text-xs text-muted-foreground line-through">
                               {m.oldPrice.toFixed(3)} DT
                             </span>
                             <ArrowRight className="h-3 w-3 text-muted-foreground" />
                             <span className={cn(
-                              'text-sm font-bold',
+                              'text-xs sm:text-sm font-bold',
                               m.confirmed ? 'text-green-700 dark:text-green-400' : 'text-foreground'
                             )}>
                               {m.newPrice.toFixed(3)} DT
@@ -380,34 +382,36 @@ export function ReceiptSyncDialog({
                       {/* Ligne header cliquable */}
                       <button
                         onClick={() => toggleUnmatchedInclude(idx)}
-                        className="w-full text-left px-4 py-3 flex items-center gap-3"
+                        className="w-full text-left px-3 sm:px-4 py-2.5 sm:py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3"
                       >
-                        <div className="shrink-0">
-                          {u.include ? (
-                            <PlusCircle className="h-5 w-5 text-primary" />
-                          ) : (
-                            <PlusCircle className="h-5 w-5 text-muted-foreground/40" />
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <p className="font-semibold text-sm text-foreground truncate">
-                              {u.suggestedName}
-                            </p>
-                            <span className="inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded-md bg-secondary text-secondary-foreground border shrink-0">
-                              {u.selectedCategory}
-                            </span>
+                        <div className="flex items-start gap-2.5 sm:gap-3 min-w-0 flex-1">
+                          <div className="shrink-0 mt-0.5">
+                            {u.include ? (
+                              <PlusCircle className="h-5 w-5 text-primary" />
+                            ) : (
+                              <PlusCircle className="h-5 w-5 text-muted-foreground/40" />
+                            )}
                           </div>
-                          <p className="text-[10px] text-muted-foreground italic truncate">
-                            Brut : {u.line.rawLabel}
-                          </p>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className="font-semibold text-xs sm:text-sm text-foreground break-words leading-tight">
+                                {u.suggestedName}
+                              </p>
+                              <span className="inline-flex items-center text-[9px] sm:text-[10px] font-medium px-2 py-0.5 rounded-md bg-secondary text-secondary-foreground border shrink-0">
+                                {u.selectedCategory}
+                              </span>
+                            </div>
+                            <p className="text-[10px] text-muted-foreground italic break-words line-clamp-1 mt-0.5">
+                              Brut : {u.line.rawLabel}
+                            </p>
+                          </div>
                         </div>
-                        <div className="shrink-0 text-right">
-                          <span className="text-sm font-bold text-foreground">
+                        <div className="shrink-0 flex items-center sm:flex-col sm:items-end justify-between sm:justify-center gap-1 pl-7 sm:pl-0 pt-1.5 sm:pt-0 border-t sm:border-0 border-border/20">
+                          <span className="text-xs sm:text-sm font-bold text-foreground">
                             {(u.line.unitPrice ?? 0).toFixed(3)} DT
                           </span>
                           <p className="text-[10px] text-muted-foreground">
-                            {u.line.unit || 'pièce'}
+                            / {u.line.unit || 'pièce'}
                           </p>
                         </div>
                       </button>
@@ -472,7 +476,7 @@ export function ReceiptSyncDialog({
         </div>
 
         {/* Footer */}
-        <DialogFooter className="px-6 py-4 border-t bg-muted/20 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <DialogFooter className="px-4 sm:px-6 py-3 sm:py-4 border-t bg-muted/20 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="text-xs text-muted-foreground">
             {!isAnalyzing && (
               <>

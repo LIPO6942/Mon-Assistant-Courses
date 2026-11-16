@@ -134,6 +134,16 @@ function isSingleIngredientMatch(nameA: string, nameB: string): boolean {
   // 1. Égalité stricte ou après nettoyage
   if (cleanA === cleanB) return true;
 
+  // 1b. Égalité stricte sans séparateurs (tirets, espaces ignorés : ex: "Dan-up" vs "Danup")
+  const noSpaceA = cleanA.replace(/\s+/g, '');
+  const noSpaceB = cleanB.replace(/\s+/g, '');
+  if (noSpaceA.length >= 3 && noSpaceA === noSpaceB) return true;
+  if (noSpaceA.length >= 4 && noSpaceB.length >= 4 && (noSpaceA.includes(noSpaceB) || noSpaceB.includes(noSpaceA))) {
+    const minLen = Math.min(noSpaceA.length, noSpaceB.length);
+    const maxLen = Math.max(noSpaceA.length, noSpaceB.length);
+    if (minLen / maxLen >= 0.6) return true;
+  }
+
   // 2. Clé canonique triée (ex: "concentré de tomate" vs "tomate concentré")
   const keyA = getCanonicalIngredientKey(nameA);
   const keyB = getCanonicalIngredientKey(nameB);
@@ -244,6 +254,13 @@ export function findMatchingPantryItem(
   const lower = ingredientName.toLowerCase().trim();
   const exact = pantry.find(p => p.name.toLowerCase().trim() === lower);
   if (exact) return exact;
+
+  // 1b. Recherche par rapprochement sans séparateurs (ex: "Dan-up" -> "Danup")
+  const cleanInputNoSpace = cleanIngredientName(ingredientName).replace(/\s+/g, '');
+  if (cleanInputNoSpace.length >= 3) {
+    const collapsedMatch = pantry.find(p => cleanIngredientName(p.name).replace(/\s+/g, '') === cleanInputNoSpace);
+    if (collapsedMatch) return collapsedMatch;
+  }
 
   // 2. Recherche par clé canonique
   const key = getCanonicalIngredientKey(ingredientName);

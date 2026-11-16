@@ -384,6 +384,16 @@ export class SmartMatchingService {
             }
         }
 
+        // 2c. Rapprochement sans séparateurs (tirets, espaces ignorés : ex: "Dan-up" vs "Danup", "Coca-cola" vs "Cocacola")
+        const rawNoSpace = normRaw.replace(/\s+/g, '');
+        if (rawNoSpace.length >= 3) {
+            const collapsedExact = allIngredients.find(i => {
+                const ingNoSpace = normalize(i.name).replace(/\s+/g, '');
+                return ingNoSpace === rawNoSpace;
+            });
+            if (collapsedExact) return { ingredient: collapsedExact, confidence: 1, isAlias: false };
+        }
+
         // 3. Recherche par containment et similarité de mots
         let bestContainmentMatch: Ingredient | undefined;
         let bestContainmentScore = 0;
@@ -400,6 +410,13 @@ export class SmartMatchingService {
             }
             else if (normRaw.includes(normIng) && normIng.length >= 4) {
                 if (0.85 > bestContainmentScore) { bestContainmentMatch = ing; bestContainmentScore = 0.85; }
+            }
+            // Rapprochement par inclusion sans séparateurs (ex: "YAOURT DAN-UP FRAISE" contient "danup")
+            else if (rawNoSpace.length >= 4) {
+                const ingNoSpace = normIng.replace(/\s+/g, '');
+                if (ingNoSpace.length >= 4 && (rawNoSpace.includes(ingNoSpace) || (ingNoSpace.includes(rawNoSpace) && rawNoSpace.length >= 5))) {
+                    if (0.92 > bestContainmentScore) { bestContainmentMatch = ing; bestContainmentScore = 0.92; }
+                }
             }
         }
 
@@ -479,6 +496,16 @@ export class SmartMatchingService {
             }
         }
 
+        // 2c. Rapprochement sans séparateurs (tirets, espaces ignorés : ex: "Dan-up" vs "Danup")
+        const rawNoSpace = normRaw.replace(/\s+/g, '');
+        if (rawNoSpace.length >= 3) {
+            const collapsed = items.find(i => {
+                const itNoSpace = normalize(i.name).replace(/\s+/g, '');
+                return itNoSpace === rawNoSpace;
+            });
+            if (collapsed) return { item: collapsed, confidence: 1 };
+        }
+
         // 3. Containment strict
         let bestContainment: T | undefined;
         let bestContainmentScore = 0;
@@ -493,6 +520,11 @@ export class SmartMatchingService {
                 if (0.85 > bestContainmentScore) { bestContainment = it; bestContainmentScore = 0.85; }
             } else if (normIt.includes(normRaw) && normRaw.length >= 4) {
                 if (0.85 > bestContainmentScore) { bestContainment = it; bestContainmentScore = 0.85; }
+            } else if (rawNoSpace.length >= 4) {
+                const itNoSpace = normIt.replace(/\s+/g, '');
+                if (itNoSpace.length >= 4 && (rawNoSpace.includes(itNoSpace) || (itNoSpace.includes(rawNoSpace) && rawNoSpace.length >= 5))) {
+                    if (0.92 > bestContainmentScore) { bestContainment = it; bestContainmentScore = 0.92; }
+                }
             }
         }
 
