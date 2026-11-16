@@ -176,7 +176,7 @@ export function UploadReceiptDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       {children && <DialogTrigger asChild>{children}</DialogTrigger>}
-      <DialogContent className="sm:max-w-md p-6 overflow-hidden rounded-2xl">
+      <DialogContent className="w-[96vw] max-w-[96vw] sm:max-w-md p-4 sm:p-6 overflow-hidden rounded-xl sm:rounded-2xl">
         <DialogHeader className="space-y-2">
           <div className="flex items-center gap-2">
             <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary">

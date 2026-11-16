@@ -372,29 +372,32 @@ export default function ReceiptsView({
 
                 {/* Section dépliée : liste des lignes */}
                 {isExpanded && (
-                  <div className="bg-muted/20 border-t px-4 py-3 sm:px-6">
+                  <div className="bg-muted/20 border-t px-3 py-3 sm:px-6">
                     <div className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-2">
                       Articles sur le ticket
                     </div>
                     <div className="divide-y divide-border/40">
                       {(rcpt.lines || []).map((line, idx) => (
-                        <div key={line.id || idx} className="py-2 flex items-center justify-between text-xs">
-                          <div className="flex-1 pr-4">
-                            <p className="font-semibold text-foreground">
+                        <div
+                          key={line.id || idx}
+                          className="py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4 text-xs"
+                        >
+                          <div className="flex-1 min-w-0 pr-0 sm:pr-4">
+                            <p className="font-semibold text-foreground break-words leading-tight">
                               {line.normalizedLabel || line.rawLabel}
                             </p>
                             {line.normalizedLabel && line.normalizedLabel !== line.rawLabel && (
-                              <p className="text-[10px] text-muted-foreground italic truncate">
+                              <p className="text-[10px] text-muted-foreground italic break-words line-clamp-1 mt-0.5">
                                 Brut: {line.rawLabel}
                               </p>
                             )}
                           </div>
-                          <div className="text-right shrink-0">
-                            <span className="text-muted-foreground mr-3">
+                          <div className="flex items-center justify-between sm:justify-end gap-3 text-right shrink-0 mt-0.5 sm:mt-0 pt-1 sm:pt-0 border-t border-border/20 sm:border-0">
+                            <span className="text-muted-foreground text-[11px] sm:text-xs">
                               {line.quantity || 1} {line.unit || 'pcs'}
                               {line.unitPrice != null && ` × ${line.unitPrice.toFixed(3)}`}
                             </span>
-                            <span className="font-bold text-foreground">
+                            <span className="font-bold text-foreground text-xs sm:text-sm shrink-0">
                               {line.lineTotal != null
                                 ? line.lineTotal.toFixed(3)
                                 : line.unitPrice && line.quantity
@@ -416,7 +419,7 @@ export default function ReceiptsView({
 
       {/* Modal Édition Magasin & Date */}
       <Dialog open={basicEditorOpen} onOpenChange={setBasicEditorOpen}>
-        <DialogContent className="sm:max-w-md rounded-2xl">
+        <DialogContent className="w-[96vw] max-w-[96vw] sm:max-w-md p-4 sm:p-6 rounded-xl sm:rounded-2xl">
           <DialogHeader>
             <DialogTitle>Modifier le ticket</DialogTitle>
             <DialogDescription>Ajustez l&apos;enseigne et la date d&apos;achat du ticket.</DialogDescription>
@@ -458,18 +461,18 @@ export default function ReceiptsView({
 
       {/* Modal Édition des Lignes */}
       <Dialog open={lineEditorOpen} onOpenChange={setLineEditorOpen}>
-        <DialogContent className="sm:max-w-3xl max-h-[85vh] flex flex-col p-0 overflow-hidden rounded-2xl">
-          <DialogHeader className="p-6 pb-2">
-            <DialogTitle>Modifier les articles du ticket</DialogTitle>
-            <DialogDescription>
+        <DialogContent className="w-[98vw] max-w-[98vw] sm:max-w-3xl lg:max-w-4xl h-[95vh] sm:h-[88vh] flex flex-col p-0 overflow-hidden rounded-xl sm:rounded-2xl">
+          <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-2.5 border-b shrink-0">
+            <DialogTitle className="text-base sm:text-lg font-bold">Modifier les articles du ticket</DialogTitle>
+            <DialogDescription className="text-xs">
               Ajustez les quantités, prix unitaires ou supprimez des lignes. Les totaux sont recalculés automatiquement.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="flex-1 overflow-y-auto px-6 py-2 divide-y divide-border/40">
+          <div className="flex-1 overflow-y-auto px-2.5 sm:px-6 py-2 divide-y divide-border/40">
             {lineDrafts.map((line, idx) => (
-              <div key={line.id || idx} className="py-3 flex flex-col sm:flex-row sm:items-center gap-2">
-                <div className="flex-1 min-w-0">
+              <div key={line.id || idx} className="py-2.5 sm:py-3 flex flex-col sm:flex-row sm:items-center gap-2">
+                <div className="w-full sm:flex-1 min-w-0">
                   <Input
                     value={line.normalizedLabel || line.rawLabel}
                     onChange={(e) => {
@@ -480,44 +483,46 @@ export default function ReceiptsView({
                         return next;
                       });
                     }}
-                    className="h-9 text-xs rounded-xl font-semibold"
+                    placeholder="Nom de l'article"
+                    className="h-8 sm:h-9 text-xs rounded-xl font-semibold w-full"
                   />
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <div className="w-20">
-                    <label className="text-[10px] text-muted-foreground block">Quantité</label>
+                <div className="grid grid-cols-[1fr_1.2fr_1.2fr_auto] items-end gap-1.5 sm:flex sm:items-center sm:gap-2 w-full sm:w-auto shrink-0">
+                  <div className="min-w-0 sm:w-20">
+                    <label className="text-[10px] font-medium text-muted-foreground block truncate">Quantité</label>
                     <Input
                       type="number"
                       step="any"
                       value={line.quantity ?? ''}
                       onChange={(e) => setDraftField(idx, 'quantity', e.target.value)}
-                      className="h-8 text-xs rounded-xl"
+                      className="h-8 text-xs rounded-xl px-1.5 sm:px-2.5 text-center sm:text-left"
                     />
                   </div>
-                  <div className="w-24">
-                    <label className="text-[10px] text-muted-foreground block">Prix Unit.</label>
+                  <div className="min-w-0 sm:w-24">
+                    <label className="text-[10px] font-medium text-muted-foreground block truncate">Prix Unit.</label>
                     <Input
                       type="number"
                       step="0.001"
                       value={line.unitPrice ?? ''}
                       onChange={(e) => setDraftField(idx, 'unitPrice', e.target.value)}
-                      className="h-8 text-xs rounded-xl"
+                      className="h-8 text-xs rounded-xl px-1.5 sm:px-2.5 text-center sm:text-left"
                     />
                   </div>
-                  <div className="w-24">
-                    <label className="text-[10px] text-muted-foreground block">Total Ligne</label>
+                  <div className="min-w-0 sm:w-24">
+                    <label className="text-[10px] font-medium text-muted-foreground block truncate">Total</label>
                     <Input
                       type="number"
                       step="0.001"
                       value={line.lineTotal ?? ''}
                       onChange={(e) => setDraftField(idx, 'lineTotal', e.target.value)}
-                      className="h-8 text-xs rounded-xl font-bold"
+                      className="h-8 text-xs rounded-xl font-bold px-1.5 sm:px-2.5 text-center sm:text-left"
                     />
                   </div>
                   <Button
                     size="icon"
                     variant="ghost"
-                    className="h-8 w-8 text-destructive self-end rounded-xl"
+                    className="h-8 w-8 text-destructive shrink-0 rounded-xl hover:bg-destructive/10"
+                    title="Supprimer cette ligne"
                     onClick={() => deleteDraftLine(idx)}
                   >
                     <Trash2 className="h-4 w-4" />
@@ -527,20 +532,22 @@ export default function ReceiptsView({
             ))}
           </div>
 
-          <DialogFooter className="p-4 bg-muted/20 border-t flex items-center justify-between">
-            <div className="text-xs font-bold text-foreground">
-              Total recalculé :{' '}
-              {lineDrafts
-                .reduce((acc, l) => acc + (l.lineTotal || 0), 0)
-                .toFixed(3)}{' '}
-              DT
+          <DialogFooter className="p-3 sm:p-4 bg-muted/20 border-t flex flex-col sm:flex-row gap-2.5 sm:items-center sm:justify-between shrink-0">
+            <div className="text-xs sm:text-sm font-bold text-foreground flex items-center justify-between sm:justify-start gap-2 w-full sm:w-auto">
+              <span className="text-muted-foreground font-normal">Total recalculé :</span>
+              <span>
+                {lineDrafts
+                  .reduce((acc, l) => acc + (l.lineTotal || 0), 0)
+                  .toFixed(3)}{' '}
+                DT
+              </span>
             </div>
-            <div className="flex gap-2">
-              <Button variant="ghost" onClick={() => setLineEditorOpen(false)} className="rounded-xl text-xs">
+            <div className="flex items-center gap-2 justify-end w-full sm:w-auto">
+              <Button variant="ghost" onClick={() => setLineEditorOpen(false)} className="rounded-xl text-xs flex-1 sm:flex-initial">
                 Annuler
               </Button>
-              <Button onClick={saveLineEditor} className="rounded-xl text-xs">
-                Enregistrer les modifications
+              <Button onClick={saveLineEditor} className="rounded-xl text-xs flex-1 sm:flex-initial">
+                Enregistrer
               </Button>
             </div>
           </DialogFooter>

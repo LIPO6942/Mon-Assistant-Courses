@@ -142,8 +142,8 @@ export function ImportFromLawra9Dialog({ allIngredients, categories, onUpdatePri
                     <span className="hidden sm:inline">Scanner un ticket</span>
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-xl max-h-[90vh] flex flex-col p-0 overflow-hidden rounded-2xl">
-                <DialogHeader className="p-6 pb-2">
+            <DialogContent className="w-[98vw] max-w-[98vw] sm:max-w-xl max-h-[92vh] flex flex-col p-0 overflow-hidden rounded-xl sm:rounded-2xl">
+                <DialogHeader className="p-4 sm:p-6 pb-2">
                     <DialogTitle className="flex items-center gap-2 text-2xl font-bold">
                         <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
                             <Sparkles className="h-5 w-5 text-primary" />
@@ -157,7 +157,7 @@ export function ImportFromLawra9Dialog({ allIngredients, categories, onUpdatePri
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="flex-1 overflow-hidden px-6 py-2">
+                <div className="flex-1 overflow-hidden px-3 sm:px-6 py-2">
                     {step === 'input' ? (
                         <div className="space-y-4">
                             {/* Option 1: Scan direct par caméra ou upload */}

@@ -237,9 +237,9 @@ export function ReceiptSyncDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] sm:max-w-2xl h-[92vh] flex flex-col p-0 overflow-hidden rounded-2xl">
+      <DialogContent className="w-[98vw] max-w-[98vw] sm:max-w-3xl lg:max-w-4xl h-[95vh] sm:h-[90vh] flex flex-col p-0 overflow-hidden rounded-xl sm:rounded-2xl">
         {/* Header */}
-        <DialogHeader className="px-4 sm:px-6 pt-5 pb-3 border-b">
+        <DialogHeader className="px-3 sm:px-6 pt-4 sm:pt-5 pb-3 border-b shrink-0">
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
               <Sparkles className="h-5 w-5" />
@@ -257,7 +257,7 @@ export function ReceiptSyncDialog({
 
         {/* Corps scrollable */}
         <div className="flex-1 overflow-y-auto overscroll-contain">
-          <div className="px-3 sm:px-6 py-4 space-y-6">
+          <div className="px-2.5 sm:px-6 py-3.5 space-y-4 sm:space-y-6">
 
             {/* État : analyse en cours */}
             {isAnalyzing && (
