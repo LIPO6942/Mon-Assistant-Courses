@@ -528,12 +528,19 @@ export class SmartMatchingService {
     static async findMatch(rawName: string, allIngredients: Ingredient[]): Promise<{ ingredient?: Ingredient; confidence: number; isAlias: boolean }> {
         const normRaw = normalize(rawName);
 
-        // 1. Vérifier dans les alias enregistrés
+        // 1. Vérifier dans les alias enregistrés (apprentissage personnalisé)
         const aliases = await db.get<ProductAlias[]>(this.ALIASES_KEY) || [];
-        const alias = aliases.find(a => normalize(a.rawName) === normRaw);
+        let alias = aliases.find(a => normalize(a.rawName) === normRaw);
+        if (!alias) {
+            // Si pas d'alias direct sur le libellé complet, vérifier si la base sans arôme a déjà été apprise
+            const baseRaw = normalize(stripProductFlavors(rawName));
+            if (baseRaw.length >= 3) {
+                alias = aliases.find(a => normalize(a.rawName) === baseRaw);
+            }
+        }
         if (alias) {
-            const found = allIngredients.find(i => i.id === alias.ingredientId);
-            if (found) return { ingredient: found, confidence: 1, isAlias: true };
+            const found = allIngredients.find(i => i.id === alias!.ingredientId);
+            if (found) return { ingredient: found, confidence: alias.confidenceScore ?? 1, isAlias: true };
         }
 
         // 2. Priorité absolue : Rapprochement par produit de base pur sans arôme
@@ -686,12 +693,18 @@ export class SmartMatchingService {
 
         const normRaw = normalize(rawLabel);
 
-        // 1. Alias connus
+        // 1. Alias connus (apprentissage personnalisé)
         const aliases = await db.get<ProductAlias[]>(this.ALIASES_KEY) || [];
-        const alias = aliases.find(a => normalize(a.rawName) === normRaw);
+        let alias = aliases.find(a => normalize(a.rawName) === normRaw);
+        if (!alias) {
+            const baseRaw = normalize(stripProductFlavors(rawLabel));
+            if (baseRaw.length >= 3) {
+                alias = aliases.find(a => normalize(a.rawName) === baseRaw);
+            }
+        }
         if (alias) {
-            const found = items.find(i => i.id === alias.ingredientId);
-            if (found) return { item: found, confidence: 1 };
+            const found = items.find(i => i.id === alias!.ingredientId);
+            if (found) return { item: found, confidence: alias.confidenceScore ?? 1 };
         }
 
         // 2. Priorité absolue : Rapprochement par produit de base pur sans arôme
@@ -823,21 +836,61 @@ export class SmartMatchingService {
     }
 
     /**
-     * Enregistre un nouvel alias pour le futur
+     * Enregistre un nouvel alias appris pour l'utilisateur, avec renforcement et abstraction d'arôme
      */
-    static async saveAlias(rawName: string, ingredientId: string): Promise<void> {
+    static async saveAlias(rawName: string, ingredientId: string, storeName?: string): Promise<void> {
+        if (!rawName || !ingredientId) return;
+        const normRaw = normalize(rawName);
+        if (!normRaw || normRaw.length < 2) return;
+
         const aliases = await db.get<ProductAlias[]>(this.ALIASES_KEY) || [];
-        const existingIndex = aliases.findIndex(a => normalize(a.rawName) === normalize(rawName));
+        const now = new Date().toISOString();
+        const existingIndex = aliases.findIndex(a => normalize(a.rawName) === normRaw);
 
         if (existingIndex >= 0) {
-            aliases[existingIndex].ingredientId = ingredientId;
+            const existing = aliases[existingIndex];
+            aliases[existingIndex] = {
+                ...existing,
+                ingredientId, // Met à jour vers le dernier ingrédient confirmé
+                storeName: storeName || existing.storeName,
+                timesValidated: (existing.timesValidated || 1) + 1,
+                confidenceScore: Math.min(1, (existing.confidenceScore || 0.85) + 0.05),
+                lastConfirmedAt: now
+            };
         } else {
             aliases.push({
                 id: `alias-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
                 rawName,
-                ingredientId
+                ingredientId,
+                storeName,
+                timesValidated: 1,
+                confidenceScore: 0.95,
+                lastConfirmedAt: now
             });
         }
+
+        // Abstraction intelligente : si rawName comportait un arôme (ex: "Danup Fraise"),
+        // mémoriser également que la racine générique ("Danup") est reliée à cet ingrédient
+        const baseRaw = normalize(stripProductFlavors(rawName));
+        if (baseRaw.length >= 3 && baseRaw !== normRaw) {
+            const baseIndex = aliases.findIndex(a => normalize(a.rawName) === baseRaw);
+            if (baseIndex >= 0) {
+                aliases[baseIndex].timesValidated = (aliases[baseIndex].timesValidated || 1) + 1;
+                aliases[baseIndex].confidenceScore = Math.min(1, (aliases[baseIndex].confidenceScore || 0.85) + 0.05);
+                aliases[baseIndex].lastConfirmedAt = now;
+            } else {
+                aliases.push({
+                    id: `alias-base-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+                    rawName: baseRaw,
+                    ingredientId,
+                    storeName,
+                    timesValidated: 1,
+                    confidenceScore: 0.9,
+                    lastConfirmedAt: now
+                });
+            }
+        }
+
         await db.set(this.ALIASES_KEY, aliases);
     }
 }

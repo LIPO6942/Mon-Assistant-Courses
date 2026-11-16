@@ -28,7 +28,7 @@ import {
   ArrowRight,
   Loader2,
 } from 'lucide-react';
-import { Receipt, ReceiptLine, Ingredient, CategoryDef } from '@/lib/types';
+import { Receipt, ReceiptLine, Ingredient, CategoryDef, PurchaseHistory } from '@/lib/types';
 import { SmartMatchingService, isReceiptNoise, cleanReceiptLabel, guessCategoryForProduct, stripProductFlavors } from '@/lib/smart-matching';
 import { cn } from '@/lib/utils';
 
@@ -40,6 +40,7 @@ interface MatchedLine {
   newPrice: number;
   oldPrice: number;
   confirmed: boolean; // true = l'utilisateur veut mettre à jour ce prix
+  alreadyValidatedFromBasket: boolean; // true = déjà validé depuis Mon Panier pour ce ticket
 }
 
 interface UnmatchedLine {
@@ -55,6 +56,7 @@ interface ReceiptSyncDialogProps {
   receipt: Receipt | null;
   pantry: Ingredient[];
   categories: CategoryDef[];
+  purchaseHistory?: PurchaseHistory;
   onConfirm: (
     priceUpdates: { id: string; price: number; ingredientId: string; newPrice: number; line: ReceiptLine }[],
     newIngredients: Omit<Ingredient, 'id'>[],
@@ -70,6 +72,7 @@ export function ReceiptSyncDialog({
   receipt,
   pantry,
   categories,
+  purchaseHistory,
   onConfirm,
 }: ReceiptSyncDialogProps) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -123,6 +126,12 @@ export function ReceiptSyncDialog({
             }
           }
 
+          // Détection anti-doublon : ce produit a-t-il déjà été validé depuis Mon Panier pour ce ticket ?
+          const alreadyValidated = Boolean(
+            (line.reconciledWithBasket && line.ingredientId === matchedIng.id) ||
+            (purchaseHistory && matchedIng && purchaseHistory[matchedIng.id]?.some(r => r.receiptId === receipt.id))
+          );
+
           // Dédoublonnage dans newMatched par id et par produit de base
           const resultBase = stripProductFlavors(matchedIng.name).toLowerCase().replace(/\s+/g, '');
           const existingMatchedIdx = newMatched.findIndex(m => {
@@ -139,6 +148,9 @@ export function ReceiptSyncDialog({
             if (matchedIng.name.length < newMatched[existingMatchedIdx].ingredient.name.length) {
               newMatched[existingMatchedIdx].ingredient = matchedIng;
             }
+            if (alreadyValidated) {
+              newMatched[existingMatchedIdx].alreadyValidatedFromBasket = true;
+            }
             continue;
           }
 
@@ -148,6 +160,7 @@ export function ReceiptSyncDialog({
             newPrice,
             oldPrice: matchedIng.price,
             confirmed: true,
+            alreadyValidatedFromBasket: alreadyValidated,
           });
         } else {
           // Produit non trouvé → proposer de l'ajouter
@@ -183,7 +196,7 @@ export function ReceiptSyncDialog({
     };
 
     analyze();
-  }, [open, receipt, pantry, categories]);
+  }, [open, receipt, pantry, categories, purchaseHistory]);
 
   // ─── Handlers ─────────────────────────────────────────────────────────────
 
@@ -299,6 +312,19 @@ export function ReceiptSyncDialog({
               </div>
             )}
 
+            {/* Bannière d'information anti-doublon */}
+            {!isAnalyzing && matched.some(m => m.alreadyValidatedFromBasket) && (
+              <div className="rounded-xl border border-emerald-500/30 bg-emerald-50/70 dark:bg-emerald-950/20 p-2.5 sm:p-3 flex items-start gap-2.5 text-xs text-emerald-800 dark:text-emerald-300">
+                <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-xs text-emerald-900 dark:text-emerald-200">Protection anti-doublon active</p>
+                  <p className="text-[11px] text-emerald-700/90 dark:text-emerald-400/90 mt-0.5 leading-snug">
+                    Les articles marqués <span className="font-semibold">« Déjà validé via Panier »</span> ont déjà été décomptés et ajoutés à votre historique lors du scan. Leur sélection permet uniquement d&apos;actualiser le prix de référence du garde-manger sans créer de doublon d&apos;achat.
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Section A — Produits trouvés dans le garde-manger */}
             {!isAnalyzing && matched.length > 0 && (
               <div className="space-y-3">
@@ -352,11 +378,20 @@ export function ReceiptSyncDialog({
 
                           {/* Infos produit */}
                           <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-xs sm:text-sm text-foreground break-words leading-tight">
-                              {m.ingredient.name}
-                            </p>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <p className="font-semibold text-xs sm:text-sm text-foreground break-words leading-tight">
+                                {m.ingredient.name}
+                              </p>
+                              {m.alreadyValidatedFromBasket && (
+                                <Badge variant="outline" className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 text-[9px] sm:text-[10px] font-semibold py-0 px-1.5 h-4 flex items-center gap-1">
+                                  <CheckCircle2 className="h-2.5 w-2.5 text-emerald-600 dark:text-emerald-400" />
+                                  Déjà validé via Panier
+                                </Badge>
+                              )}
+                            </div>
                             <p className="text-[10px] text-muted-foreground italic break-words line-clamp-1 mt-0.5">
                               Brut ticket : {m.line.normalizedLabel || m.line.rawLabel}
+                              {m.alreadyValidatedFromBasket && ' • Prix synchronisé (zéro doublon)'}
                             </p>
                           </div>
                         </div>

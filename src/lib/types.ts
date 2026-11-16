@@ -120,8 +120,12 @@ export interface BasketShareInvitation {
 
 export interface ProductAlias {
   id: string;
-  rawName: string; // The messy name from Lawra9
-  ingredientId: string; // The clean name in MAC
+  rawName: string; // Nom brut scanné ou importé (ex: "DAN-UP VANILLE", "SIC COND TOM")
+  ingredientId: string; // ID de l'ingrédient canonique dans MAC
+  storeName?: string; // Enseigne associée si connue (ex: "Monoprix", "Carrefour")
+  confidenceScore?: number; // Score de confiance appris (0 à 1)
+  timesValidated?: number; // Nombre de fois validé par l'utilisateur
+  lastConfirmedAt?: string; // Horodatage ISO de dernière confirmation
 }
 
 export interface Lawra9Product {
@@ -188,6 +192,8 @@ export interface ReceiptLine {
   stdUnit?: 'kg' | 'L' | 'pcs';
   stdQty?: number;
   standardUnitPrice?: number;
+  reconciledWithBasket?: boolean;
+  ingredientId?: string;
 }
 
 export interface Receipt {
@@ -203,4 +209,6 @@ export interface Receipt {
   status?: 'parsed' | 'needs_review' | 'confirmed';
   confidence?: number;
   lines: ReceiptLine[];
+  reconciledWithBasket?: boolean;
+  reconciledAt?: string;
 }

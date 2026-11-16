@@ -87,3 +87,9 @@ Pour rendre votre application accessible depuis n'importe où sans dépendre de 
     -   Cliquez sur **"Deploy"**.
 
 Après quelques instants, Vercel vous fournira une URL publique pour votre application (par exemple : `mon-assistant.vercel.app`), accessible depuis n'importe quel appareil connecté à internet.
+
+## Documentation Technique
+
+Pour en savoir plus sur l'architecture et les fonctionnalités avancées :
+- [Synchronisation des Tickets & Apprentissage Intelligent](docs/GESTION_TICKETS_ET_APPRENTISSAGE.md) : Idempotence anti-doublon d'achats (Panier ↔ Tickets) et moteur d'apprentissage continu par utilisateur.
+

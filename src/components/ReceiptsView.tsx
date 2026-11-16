@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Receipt, ReceiptLine, Ingredient, CategoryDef } from '@/lib/types';
+import { Receipt, ReceiptLine, Ingredient, CategoryDef, PurchaseHistory } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -39,6 +39,7 @@ interface ReceiptsViewProps {
   receipts: Receipt[];
   pantry: Ingredient[];
   categories: CategoryDef[];
+  purchaseHistory?: PurchaseHistory;
   onAddReceipt: (receipt: Receipt) => void;
   onUpdateReceipt: (id: string, updated: Partial<Receipt>) => void;
   onDeleteReceipt: (id: string) => void;
@@ -53,6 +54,7 @@ export default function ReceiptsView({
   receipts,
   pantry,
   categories,
+  purchaseHistory,
   onAddReceipt,
   onUpdateReceipt,
   onDeleteReceipt,
@@ -298,6 +300,11 @@ export default function ReceiptsView({
                         <Badge variant="outline" className="text-[10px] uppercase font-bold">
                           {rcpt.lines?.length || 0} articles
                         </Badge>
+                        {rcpt.reconciledWithBasket && (
+                          <Badge variant="outline" className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 text-[10px] font-bold">
+                            ✓ Panier synchronisé
+                          </Badge>
+                        )}
                       </div>
                       <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
                         <span className="flex items-center gap-1">
@@ -561,6 +568,7 @@ export default function ReceiptsView({
         receipt={syncReceipt}
         pantry={pantry}
         categories={categories}
+        purchaseHistory={purchaseHistory}
         onConfirm={onSyncWithPantry}
       />
     </div>

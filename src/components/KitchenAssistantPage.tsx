@@ -831,7 +831,7 @@ export default function KitchenAssistantPage() {
     const now = receipt.purchaseAt || new Date().toISOString();
     const store = receipt.storeName;
 
-    // 1. Mettre à jour les prix + enregistrer dans l'historique d'achats
+    // 1. Mettre à jour les prix + enregistrer dans l'historique d'achats avec protection ANTI-DOUBLON
     if (priceUpdates.length > 0) {
       setPantry(prev => {
         const updated = prev.map(ing => {
@@ -853,24 +853,43 @@ export default function KitchenAssistantPage() {
         });
       });
 
-      // Enregistrer dans l'historique d'achats
+      // Enregistrer dans l'historique d'achats de façon idempotente (pas de doublon si déjà validé via panier)
       setPurchaseHistory(prev => {
         const newHistory = { ...prev };
         priceUpdates.forEach(u => {
           if (!newHistory[u.id]) newHistory[u.id] = [];
-          newHistory[u.id] = [
-            ...newHistory[u.id],
-            {
-              date: now,
-              quantity: u.line?.quantity ?? 1,
-              unit: u.line?.unit || 'pièce',
-              price: u.newPrice,
-              ...(store ? { store } : {}),
-              receiptId: receipt.id,
-              scannedFromReceipt: true,
-              receiptInfo: store ? `Ticket ${store}` : 'Ticket scanné',
-            },
-          ];
+
+          const existingIdx = newHistory[u.id].findIndex(r => r.receiptId === receipt.id);
+          if (existingIdx !== -1) {
+            // Déjà validé (ex: depuis Mon Panier) : mettre à jour le prix sans créer un deuxième achat !
+            const existing = newHistory[u.id][existingIdx];
+            newHistory[u.id][existingIdx] = {
+              ...existing,
+              price: u.newPrice || existing.price,
+              ...(store && !existing.store ? { store } : {}),
+            };
+          } else {
+            // Premier enregistrement pour ce ticket
+            newHistory[u.id] = [
+              ...newHistory[u.id],
+              {
+                date: now,
+                quantity: u.line?.quantity ?? 1,
+                unit: u.line?.unit || 'pièce',
+                price: u.newPrice,
+                ...(store ? { store } : {}),
+                receiptId: receipt.id,
+                scannedFromReceipt: true,
+                receiptInfo: store ? `Ticket ${store}` : 'Ticket scanné',
+              },
+            ];
+          }
+
+          // Apprentissage continu : mémoriser le lien libellé ticket -> ingrédient pour cet utilisateur
+          const rawLabel = u.line?.normalizedLabel || u.line?.rawLabel;
+          if (rawLabel) {
+            SmartMatchingService.saveAlias(rawLabel, u.id, store).catch(() => {});
+          }
         });
         return newHistory;
       });
@@ -894,7 +913,13 @@ export default function KitchenAssistantPage() {
             unit: ing.unit || 'pièce',
             price: ing.price,
             ...(store ? { store } : {}),
+            receiptId: receipt.id,
+            scannedFromReceipt: true,
+            receiptInfo: store ? `Ticket ${store}` : 'Ticket scanné',
           }];
+
+          // Apprentissage pour le nouvel ingrédient
+          SmartMatchingService.saveAlias(ing.name, ing.id, store).catch(() => {});
         });
         return newHistory;
       });
@@ -925,9 +950,9 @@ export default function KitchenAssistantPage() {
     const partiallyPurchased: ReconciledItemSummary[] = [];
     let priceUpdatesCount = 0;
 
-    const lines = receipt.lines || [];
+    const updatedLines = (receipt.lines || []).map(line => ({ ...line }));
 
-    for (const line of lines) {
+    for (const line of updatedLines) {
       const rawLabel = line.normalizedLabel || line.rawLabel || '';
       if (isReceiptNoise(rawLabel) || isReceiptNoise(line.rawLabel || '')) continue;
 
@@ -943,6 +968,13 @@ export default function KitchenAssistantPage() {
         const basketItem = match.item;
         const plannedQty = basketItem.quantity;
         const effectivePrice = unitPrice > 0 ? unitPrice : basketItem.price;
+
+        // Marquer la ligne du ticket comme réconciliée avec cet article du panier
+        line.reconciledWithBasket = true;
+        line.ingredientId = basketItem.id;
+
+        // Apprentissage intelligent permanent : mémoriser pour l'utilisateur ce libellé ticket -> ingrédient
+        SmartMatchingService.saveAlias(rawLabel, basketItem.id, storeName).catch(() => {});
 
         if (plannedQty > receiptQty) {
           // Acheté partiellement : ex: prévu 2 boîtes de tomates, acheté 1 seule -> on garde 1 boîte dans le panier !
@@ -1039,8 +1071,14 @@ export default function KitchenAssistantPage() {
       }
     }
 
-    // Sauvegarder le ticket scanné dans la liste des reçus
-    const nextReceipts = [receipt, ...receipts.filter(r => r.id !== receipt.id)];
+    // Sauvegarder le ticket scanné dans la liste des reçus avec statut réconcilié
+    const reconciledReceipt: Receipt = {
+      ...receipt,
+      lines: updatedLines,
+      reconciledWithBasket: true,
+      reconciledAt: receiptDate,
+    };
+    const nextReceipts = [reconciledReceipt, ...receipts.filter(r => r.id !== receipt.id)];
     setReceipts(nextReceipts);
     persistReceipts(nextReceipts);
 
@@ -1673,6 +1711,7 @@ export default function KitchenAssistantPage() {
               receipts={receipts}
               pantry={pantry}
               categories={categories}
+              purchaseHistory={purchaseHistory}
               onAddReceipt={handleAddReceipt}
               onUpdateReceipt={handleUpdateReceipt}
               onDeleteReceipt={handleDeleteReceipt}
