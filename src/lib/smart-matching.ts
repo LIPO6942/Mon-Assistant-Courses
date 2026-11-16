@@ -235,6 +235,18 @@ export const BRAND_TO_GENERIC_PRODUCT: Record<string, { genericName: string; bra
 };
 
 /**
+ * Variétés spécifiques de pâtes alimentaires.
+ * Permet d'associer immédiatement "Pâtes penne" à "Penne", "Barilla Penne", "Penne Rigate", etc.
+ */
+export const PASTA_VARIETIES: string[] = [
+    'penne', 'spaghetti', 'macaroni', 'fusilli', 'tagliatelle',
+    'farfalle', 'coquillette', 'rigatoni', 'lasagne', 'linguine',
+    'fettuccine', 'vermicelle', 'tortellini', 'ravioli', 'gnocchi',
+    'cannelloni', 'risoni', 'orzo', 'chorba', 'nwasser', 'nouasser',
+    'tlitli', 'rechta', 'plomb'
+];
+
+/**
  * Détecte si un libellé de ticket correspond à une marque phare qui doit être assimilée à son article générique
  */
 export function resolveBrandToGenericProduct(rawLabel: string): { genericName: string; brand: string; category: string } | null {
@@ -585,6 +597,18 @@ export class SmartMatchingService {
             }
         }
 
+        // 3e. Reconnaissance par variété spécifique de pâtes (ex: "Pâtes penne" vs "Penne", "Penne Rigate", "Barilla Penne")
+        const rawPasta = PASTA_VARIETIES.find(p => normRaw.split(' ').some(w => w === p || w.startsWith(p)));
+        if (rawPasta) {
+            const pastaMatch = allIngredients.find(i => {
+                const normI = normalize(i.name);
+                return normI.split(' ').some(w => w === rawPasta || w.startsWith(rawPasta));
+            });
+            if (pastaMatch) {
+                return { ingredient: pastaMatch, confidence: 0.96, isAlias: false };
+            }
+        }
+
         // 3. Recherche par containment et similarité de mots
         let bestContainmentMatch: Ingredient | undefined;
         let bestContainmentScore = 0;
@@ -726,6 +750,18 @@ export class SmartMatchingService {
             });
             if (baseMatch) {
                 return { item: baseMatch, confidence: 0.98 };
+            }
+        }
+
+        // 3e. Reconnaissance par variété spécifique de pâtes (ex: "Pâtes penne" vs "Penne", "Penne Rigate", "Barilla Penne")
+        const rawPasta = PASTA_VARIETIES.find(p => normRaw.split(' ').some(w => w === p || w.startsWith(p)));
+        if (rawPasta) {
+            const pastaMatch = items.find(i => {
+                const normI = normalize(i.name);
+                return normI.split(' ').some(w => w === rawPasta || w.startsWith(rawPasta));
+            });
+            if (pastaMatch) {
+                return { item: pastaMatch, confidence: 0.96 };
             }
         }
 
