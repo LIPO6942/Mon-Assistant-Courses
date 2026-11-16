@@ -29,7 +29,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { Receipt, ReceiptLine, Ingredient, CategoryDef } from '@/lib/types';
-import { SmartMatchingService, isReceiptNoise, cleanReceiptLabel, guessCategoryForProduct } from '@/lib/smart-matching';
+import { SmartMatchingService, isReceiptNoise, cleanReceiptLabel, guessCategoryForProduct, stripProductFlavors } from '@/lib/smart-matching';
 import { cn } from '@/lib/utils';
 
 // ─── Types internes ─────────────────────────────────────────────────────────
@@ -109,12 +109,44 @@ export function ReceiptSyncDialog({
         // Matching intelligent contre le garde-manger
         const result = await SmartMatchingService.findMatch(label, pantry);
 
-        if (result.ingredient && result.confidence >= 0.4) {
+        let matchedIng = result.ingredient;
+        if (matchedIng && result.confidence >= 0.4) {
+          // Si l'ingrédient associé comporte un arôme mais que le garde-manger possède aussi le produit de base pur (ex: "Danup")
+          const ingBase = stripProductFlavors(matchedIng.name).toLowerCase().replace(/\s+/g, '');
+          if (ingBase.length >= 3) {
+            const canonicalPure = pantry.find(p => {
+              const pNorm = p.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
+              return pNorm === ingBase;
+            });
+            if (canonicalPure) {
+              matchedIng = canonicalPure;
+            }
+          }
+
+          // Dédoublonnage dans newMatched par id et par produit de base
+          const resultBase = stripProductFlavors(matchedIng.name).toLowerCase().replace(/\s+/g, '');
+          const existingMatchedIdx = newMatched.findIndex(m => {
+            if (m.ingredient.id === matchedIng!.id) return true;
+            const mBase = stripProductFlavors(m.ingredient.name).toLowerCase().replace(/\s+/g, '');
+            return mBase.length >= 3 && mBase === resultBase;
+          });
+
+          if (existingMatchedIdx !== -1) {
+            // Déjà présent : on met à jour le prix avec le prix le plus pertinent
+            if (newPrice > 0) {
+              newMatched[existingMatchedIdx].newPrice = newPrice;
+            }
+            if (matchedIng.name.length < newMatched[existingMatchedIdx].ingredient.name.length) {
+              newMatched[existingMatchedIdx].ingredient = matchedIng;
+            }
+            continue;
+          }
+
           newMatched.push({
             line,
-            ingredient: result.ingredient,
+            ingredient: matchedIng,
             newPrice,
-            oldPrice: result.ingredient.price,
+            oldPrice: matchedIng.price,
             confirmed: true,
           });
         } else {

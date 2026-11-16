@@ -20,7 +20,7 @@ import CategoryPriceEvolutionDialog from './CategoryPriceEvolutionDialog';
 import SettingsPage from './SettingsPage';
 import { UploadReceiptDialog } from './UploadReceiptDialog';
 import { ReconciliationSummaryDialog, ReconciliationReport, ReconciledItemSummary } from './ReconciliationSummaryDialog';
-import { SmartMatchingService, isReceiptNoise, guessCategoryForProduct, resolveBrandToGenericProduct } from '@/lib/smart-matching';
+import { SmartMatchingService, isReceiptNoise, guessCategoryForProduct, resolveBrandToGenericProduct, stripProductFlavors } from '@/lib/smart-matching';
 import { db } from '@/lib/idb';
 import { isInAppBrowser, getProductStatus, cn, isExcludedFromMarketPrices, isNonFoodItem } from '@/lib/utils';
 import { isIngredientMatch, simplifyIngredientForPantry, extractParenthesisKeywords } from '@/lib/smart-ingredient-matching';
@@ -833,10 +833,25 @@ export default function KitchenAssistantPage() {
 
     // 1. Mettre à jour les prix + enregistrer dans l'historique d'achats
     if (priceUpdates.length > 0) {
-      setPantry(prev => prev.map(ing => {
-        const update = priceUpdates.find(u => u.id === ing.id);
-        return update ? { ...ing, price: update.price } : ing;
-      }));
+      setPantry(prev => {
+        const updated = prev.map(ing => {
+          const update = priceUpdates.find(u => u.id === ing.id);
+          return update ? { ...ing, price: update.price } : ing;
+        });
+
+        // Harmonisation : si le produit de base "Danup" est mis à jour et qu'il existait
+        // un ancien doublon avec arôme (ex: "Dan-up vanille"), synchroniser aussi son prix
+        return updated.map(ing => {
+          const ingBase = stripProductFlavors(ing.name).toLowerCase().replace(/\s+/g, '');
+          const matchingUpdate = priceUpdates.find(u => {
+            const uIng = prev.find(p => p.id === u.id);
+            if (!uIng) return false;
+            const uBase = stripProductFlavors(uIng.name).toLowerCase().replace(/\s+/g, '');
+            return uBase.length >= 3 && uBase === ingBase;
+          });
+          return matchingUpdate ? { ...ing, price: matchingUpdate.price } : ing;
+        });
+      });
 
       // Enregistrer dans l'historique d'achats
       setPurchaseHistory(prev => {

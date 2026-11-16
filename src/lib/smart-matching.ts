@@ -524,11 +524,27 @@ export class SmartMatchingService {
             if (found) return { ingredient: found, confidence: 1, isAlias: true };
         }
 
-        // 2. Recherche exacte sur le nom normalisé
+        // 2. Priorité absolue : Rapprochement par produit de base pur sans arôme
+        // Si le libellé contient un arôme (ex: "Dan-up vanille", "Danup fraise"), on cherche en priorité absolue
+        // l'article générique de base ("Danup") déjà présent dans le garde-manger.
+        const baseRaw = normalize(stripProductFlavors(rawName));
+        const baseRawNoSpace = baseRaw.replace(/\s+/g, '');
+
+        if (baseRawNoSpace.length >= 3) {
+            const pureBase = allIngredients.find(i => {
+                const normI = normalize(i.name);
+                return normI === baseRaw || normI.replace(/\s+/g, '') === baseRawNoSpace;
+            });
+            if (pureBase) {
+                return { ingredient: pureBase, confidence: 1, isAlias: false };
+            }
+        }
+
+        // 3. Recherche exacte sur le nom normalisé
         const exactMatch = allIngredients.find(i => normalize(i.name) === normRaw);
         if (exactMatch) return { ingredient: exactMatch, confidence: 1, isAlias: false };
 
-        // 2b. Reconnaissance automatique de marque phare (ex: "Denya", "Marwa", "Safia" -> "Eau minérale")
+        // 3b. Reconnaissance automatique de marque phare (ex: "Denya", "Marwa", "Safia" -> "Eau minérale")
         const brandMapping = resolveBrandToGenericProduct(rawName);
         if (brandMapping) {
             const genericNorm = normalize(brandMapping.genericName);
@@ -541,7 +557,7 @@ export class SmartMatchingService {
             }
         }
 
-        // 2c. Rapprochement sans séparateurs (tirets, espaces ignorés : ex: "Dan-up" vs "Danup", "Coca-cola" vs "Cocacola")
+        // 3c. Rapprochement sans séparateurs (tirets, espaces ignorés : ex: "Dan-up" vs "Danup", "Coca-cola" vs "Cocacola")
         const rawNoSpace = normRaw.replace(/\s+/g, '');
         if (rawNoSpace.length >= 3) {
             const collapsedExact = allIngredients.find(i => {
@@ -551,11 +567,7 @@ export class SmartMatchingService {
             if (collapsedExact) return { ingredient: collapsedExact, confidence: 1, isAlias: false };
         }
 
-        // 2d. Rapprochement par article de base sans arôme/parfum
-        // (ex: "Danup vanille", "danup, frais", "Dan-up , mangue" -> "Danup", "Yaourt Fraise" -> "Yaourt")
-        const baseRaw = normalize(stripProductFlavors(rawName));
-        const baseRawNoSpace = baseRaw.replace(/\s+/g, '');
-
+        // 3d. Rapprochement par article de base (même si l'ingrédient du garde-manger avait lui aussi une mention d'arôme : ex "Danup fraise")
         if (baseRawNoSpace.length >= 3) {
             const baseMatch = allIngredients.find(i => {
                 const normI = normalize(i.name);
@@ -563,7 +575,6 @@ export class SmartMatchingService {
                 const iNoSpace = normI.replace(/\s+/g, '');
                 if (iNoSpace === baseRawNoSpace) return true;
 
-                // Si l'ingrédient du garde-manger avait lui aussi une mention d'arôme (ex: "Danup Fraise" dans le garde-manger)
                 const baseI = normalize(stripProductFlavors(i.name));
                 if (baseI === baseRaw) return true;
                 const baseINoSpace = baseI.replace(/\s+/g, '');
@@ -659,11 +670,25 @@ export class SmartMatchingService {
             if (found) return { item: found, confidence: 1 };
         }
 
-        // 2. Égalité exacte après normalisation & lemmatisation (ex: "Tomates" == "Tomate")
+        // 2. Priorité absolue : Rapprochement par produit de base pur sans arôme
+        const baseRaw = normalize(stripProductFlavors(rawLabel));
+        const baseRawNoSpace = baseRaw.replace(/\s+/g, '');
+
+        if (baseRawNoSpace.length >= 3) {
+            const pureBase = items.find(i => {
+                const normI = normalize(i.name);
+                return normI === baseRaw || normI.replace(/\s+/g, '') === baseRawNoSpace;
+            });
+            if (pureBase) {
+                return { item: pureBase, confidence: 1 };
+            }
+        }
+
+        // 3. Égalité exacte après normalisation & lemmatisation (ex: "Tomates" == "Tomate")
         const exact = items.find(i => normalize(i.name) === normRaw);
         if (exact) return { item: exact, confidence: 1 };
 
-        // 2b. Reconnaissance automatique de marque phare (ex: "Denya", "Marwa", "Safia" -> "Eau minérale")
+        // 3b. Reconnaissance automatique de marque phare (ex: "Denya", "Marwa", "Safia" -> "Eau minérale")
         const brandMapping = resolveBrandToGenericProduct(rawLabel);
         if (brandMapping) {
             const genericNorm = normalize(brandMapping.genericName);
@@ -676,7 +701,7 @@ export class SmartMatchingService {
             }
         }
 
-        // 2c. Rapprochement sans séparateurs (tirets, espaces ignorés : ex: "Dan-up" vs "Danup")
+        // 3c. Rapprochement sans séparateurs (tirets, espaces ignorés : ex: "Dan-up" vs "Danup")
         const rawNoSpace = normRaw.replace(/\s+/g, '');
         if (rawNoSpace.length >= 3) {
             const collapsed = items.find(i => {
@@ -686,10 +711,7 @@ export class SmartMatchingService {
             if (collapsed) return { item: collapsed, confidence: 1 };
         }
 
-        // 2d. Rapprochement par article de base sans arôme/parfum (ex: "Danup vanille" -> "Danup", "Yaourt Fraise" -> "Yaourt")
-        const baseRaw = normalize(stripProductFlavors(rawLabel));
-        const baseRawNoSpace = baseRaw.replace(/\s+/g, '');
-
+        // 3d. Rapprochement par article de base (même si le panier avait un arôme : ex: "Danup Fraise" dans le panier)
         if (baseRawNoSpace.length >= 3) {
             const baseMatch = items.find(i => {
                 const normI = normalize(i.name);
