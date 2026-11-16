@@ -111,7 +111,7 @@ export default function PantryView({
         </div>
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="outline" size="icon" className="h-11 w-11 rounded-full shadow-sm shrink-0" title="Historique / Re-commande">
+            <Button variant="outline" size="icon" className="h-11 w-11 rounded-full shadow-sm shrink-0" title="Historique d'achats">
               <History className="h-5 w-5" />
             </Button>
           </SheetTrigger>
