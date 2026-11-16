@@ -20,7 +20,7 @@ import CategoryPriceEvolutionDialog from './CategoryPriceEvolutionDialog';
 import SettingsPage from './SettingsPage';
 import { UploadReceiptDialog } from './UploadReceiptDialog';
 import { ReconciliationSummaryDialog, ReconciliationReport, ReconciledItemSummary } from './ReconciliationSummaryDialog';
-import { SmartMatchingService, isReceiptNoise, guessCategoryForProduct } from '@/lib/smart-matching';
+import { SmartMatchingService, isReceiptNoise, guessCategoryForProduct, resolveBrandToGenericProduct } from '@/lib/smart-matching';
 import { db } from '@/lib/idb';
 import { isInAppBrowser, getProductStatus, cn, isExcludedFromMarketPrices, isNonFoodItem } from '@/lib/utils';
 import { isIngredientMatch, simplifyIngredientForPantry, extractParenthesisKeywords } from '@/lib/smart-ingredient-matching';
@@ -851,6 +851,9 @@ export default function KitchenAssistantPage() {
               unit: u.line?.unit || 'pièce',
               price: u.newPrice,
               ...(store ? { store } : {}),
+              receiptId: receipt.id,
+              scannedFromReceipt: true,
+              receiptInfo: store ? `Ticket ${store}` : 'Ticket scanné',
             },
           ];
         });
@@ -943,6 +946,10 @@ export default function KitchenAssistantPage() {
             price: effectivePrice,
           });
 
+          const detectedBrandInfo = resolveBrandToGenericProduct(rawLabel);
+          const effectiveBrand = basketItem.brand || detectedBrandInfo?.brand;
+          const effectiveBrandLogo = basketItem.brandLogoUrl || (effectiveBrand ? getBrandLogoUrl(effectiveBrand, basketItem.name, basketItem.category) : undefined);
+
           if (!newHistory[basketItem.id]) newHistory[basketItem.id] = [];
           newHistory[basketItem.id].push({
             date: receiptDate,
@@ -951,10 +958,13 @@ export default function KitchenAssistantPage() {
             price: effectivePrice,
             ...(storeName ? { store: storeName } : {}),
             ...(basketItem.remark ? { remark: basketItem.remark } : {}),
-            ...(basketItem.brand ? {
-              brand: basketItem.brand,
-              brandLogoUrl: basketItem.brandLogoUrl || getBrandLogoUrl(basketItem.brand, basketItem.name, basketItem.category),
+            ...(effectiveBrand ? {
+              brand: effectiveBrand,
+              brandLogoUrl: effectiveBrandLogo,
             } : {}),
+            receiptId: receipt.id,
+            scannedFromReceipt: true,
+            receiptInfo: storeName ? `Ticket ${storeName}` : 'Ticket scanné',
           });
         } else {
           // Acheté en totalité : retiré du panier
@@ -969,6 +979,10 @@ export default function KitchenAssistantPage() {
             price: effectivePrice,
           });
 
+          const detectedBrandInfo = resolveBrandToGenericProduct(rawLabel);
+          const effectiveBrand = basketItem.brand || detectedBrandInfo?.brand;
+          const effectiveBrandLogo = basketItem.brandLogoUrl || (effectiveBrand ? getBrandLogoUrl(effectiveBrand, basketItem.name, basketItem.category) : undefined);
+
           if (!newHistory[basketItem.id]) newHistory[basketItem.id] = [];
           newHistory[basketItem.id].push({
             date: receiptDate,
@@ -977,10 +991,13 @@ export default function KitchenAssistantPage() {
             price: effectivePrice,
             ...(storeName ? { store: storeName } : {}),
             ...(basketItem.remark ? { remark: basketItem.remark } : {}),
-            ...(basketItem.brand ? {
-              brand: basketItem.brand,
-              brandLogoUrl: basketItem.brandLogoUrl || getBrandLogoUrl(basketItem.brand, basketItem.name, basketItem.category),
+            ...(effectiveBrand ? {
+              brand: effectiveBrand,
+              brandLogoUrl: effectiveBrandLogo,
             } : {}),
+            receiptId: receipt.id,
+            scannedFromReceipt: true,
+            receiptInfo: storeName ? `Ticket ${storeName}` : 'Ticket scanné',
           });
         }
 

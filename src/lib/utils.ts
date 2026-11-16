@@ -14,7 +14,8 @@ export function cn(...inputs: ClassValue[]) {
 export function getProductStatus(
   history: PurchaseRecord[] | undefined,
   ingredientName?: string,
-  dbaratiItems?: DbaratiItem[]
+  dbaratiItems?: DbaratiItem[],
+  categoryName?: string
 ): 'green' | 'orange' | 'red' | null {
   if (!history || history.length === 0) return null;
 
@@ -22,6 +23,8 @@ export function getProductStatus(
   const lastPurchase = new Date(sortedHistory[sortedHistory.length - 1].date);
   const now = new Date();
   const diffDays = Math.max(0, (now.getTime() - lastPurchase.getTime()) / (1000 * 60 * 60 * 24));
+
+  const isNonFood = isNonFoodItem(ingredientName, categoryName);
 
   // Calcul de l'intervalle moyen d'achat
   let avgInterval = 7;
@@ -35,6 +38,25 @@ export function getProductStatus(
     }
     avgInterval = totalDays / (sortedHistory.length - 1);
     if (avgInterval <= 0) avgInterval = 7;
+  } else {
+    // Si achat unique : cycle d'achat estimé réaliste selon la nature du produit
+    const rawLower = (ingredientName || '').toLowerCase();
+    if (/\b(eau|boisson|soda|jus|biscuit|cake|snack|gouter)\b/i.test(rawLower)) {
+      avgInterval = 7; // Boissons & biscuits : consommation rapide (environ 7 jours)
+    } else if (isNonFood) {
+      avgInterval = 25; // Entretien / hygiène : durée moyenne d'environ 25 jours
+    } else {
+      avgInterval = 10;
+    }
+  }
+
+  // --- POUR LES ARTICLES HORS RECETTES / DBARATI (eau, boissons, biscuits, entretien maison, bien-être) ---
+  // Application stricte du cycle d'achat pour refléter leur consommation réelle
+  if (isNonFood) {
+    if (diffDays < avgInterval * 0.75) return 'green';
+    if (diffDays >= avgInterval * 0.75 && diffDays < avgInterval * 1.3) return 'orange';
+    if (diffDays >= avgInterval * 1.3) return 'red'; // Consommé / épuisé
+    return 'green';
   }
 
   // --- ANALYSE CULINAIRE COMBINÉE (Dbarati) ---
@@ -115,10 +137,8 @@ export function getProductStatus(
   }
 
   // --- MODÈLE CALENDAIRE PUR (Fallback si pas de données Dbarati correspondantes) ---
-  if (diffDays < 7) return 'green';
-  if (!hasMultiplePurchases) return null;
-
-  if (diffDays >= avgInterval && diffDays < avgInterval * 1.5) return 'orange';
+  if (diffDays < avgInterval * 0.75) return 'green';
+  if (diffDays >= avgInterval * 0.75 && diffDays < avgInterval * 1.5) return 'orange';
   if (diffDays >= avgInterval * 1.5) return 'red';
 
   return 'green';

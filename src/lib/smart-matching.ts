@@ -57,12 +57,64 @@ export function isReceiptNoise(label: string): boolean {
 }
 
 /**
+ * Dictionnaire des marques phares qui désignent un produit générique spécifique
+ * (ex: "Denya", "Safia", "Marwa" sur un ticket représentent l'article générique "Eau minérale").
+ */
+export const BRAND_TO_GENERIC_PRODUCT: Record<string, { genericName: string; brand: string; category: string }> = {
+    // Eaux minérales plates
+    'denya': { genericName: 'Eau minérale', brand: 'Denya', category: 'Boissons' },
+    'safia': { genericName: 'Eau minérale', brand: 'Safia', category: 'Boissons' },
+    'marwa': { genericName: 'Eau minérale', brand: 'Marwa', category: 'Boissons' },
+    'fourat': { genericName: 'Eau minérale', brand: 'Fourat', category: 'Boissons' },
+    'sabrine': { genericName: 'Eau minérale', brand: 'Sabrine', category: 'Boissons' },
+    'melliti': { genericName: 'Eau minérale', brand: 'Melliti', category: 'Boissons' },
+    'jannet': { genericName: 'Eau minérale', brand: 'Jannet', category: 'Boissons' },
+    'cristaline': { genericName: 'Eau minérale', brand: 'Cristaline', category: 'Boissons' },
+    'hayet': { genericName: 'Eau minérale', brand: 'Hayet', category: 'Boissons' },
+    'bargou': { genericName: 'Eau minérale', brand: 'Bargou', category: 'Boissons' },
+
+    // Eaux gazeuses
+    'garci': { genericName: 'Eau gazeuse', brand: 'Garci', category: 'Boissons' },
+
+    // Sodas & Boissons gazeuses
+    'boga': { genericName: 'Boga', brand: 'Boga', category: 'Boissons' },
+    'coca': { genericName: 'Coca-Cola', brand: 'Coca-Cola', category: 'Boissons' },
+    'fanta': { genericName: 'Fanta', brand: 'Fanta', category: 'Boissons' },
+    'sprite': { genericName: 'Sprite', brand: 'Sprite', category: 'Boissons' },
+    'apla': { genericName: 'Apla', brand: 'Apla', category: 'Boissons' },
+    'viva': { genericName: 'Viva', brand: 'Viva', category: 'Boissons' },
+
+    // Condiments
+    'moutarde': { genericName: 'Moutarde', brand: 'Dijon', category: 'Épicerie Salée' },
+};
+
+/**
+ * Détecte si un libellé de ticket correspond à une marque phare qui doit être assimilée à son article générique
+ */
+export function resolveBrandToGenericProduct(rawLabel: string): { genericName: string; brand: string; category: string } | null {
+    const norm = normalize(rawLabel);
+    const words = norm.split(' ').filter(Boolean);
+    for (const word of words) {
+        if (BRAND_TO_GENERIC_PRODUCT[word]) {
+            return BRAND_TO_GENERIC_PRODUCT[word];
+        }
+    }
+    return null;
+}
+
+/**
  * Nettoie un libellé de ticket brut pour proposer un nom produit lisible :
  * - Supprime le grammage en début (ex: "330G PATE A TARTIN" -> "Pate A Tartin")
  * - Supprime les unités en fin de chaîne
+ * - Reconnaît les marques d'eau ou boissons isolées et propose l'article générique (ex: "Denya" -> "Eau minérale")
  * - Met en forme Title Case si tout est en majuscules
  */
 export function cleanReceiptLabel(rawLabel: string): string {
+    const brandMapping = resolveBrandToGenericProduct(rawLabel);
+    if (brandMapping) {
+        return brandMapping.genericName;
+    }
+
     let name = (rawLabel || '').trim();
 
     // Supprimer les patterns de grammage en début : ex "330G", "2L", "25CL"
@@ -319,6 +371,19 @@ export class SmartMatchingService {
         const exactMatch = allIngredients.find(i => normalize(i.name) === normRaw);
         if (exactMatch) return { ingredient: exactMatch, confidence: 1, isAlias: false };
 
+        // 2b. Reconnaissance automatique de marque phare (ex: "Denya", "Marwa", "Safia" -> "Eau minérale")
+        const brandMapping = resolveBrandToGenericProduct(rawName);
+        if (brandMapping) {
+            const genericNorm = normalize(brandMapping.genericName);
+            const foundGeneric = allIngredients.find(i => {
+                const normI = normalize(i.name);
+                return normI === genericNorm || normI.includes(genericNorm) || genericNorm.includes(normI);
+            });
+            if (foundGeneric) {
+                return { ingredient: foundGeneric, confidence: 0.95, isAlias: false };
+            }
+        }
+
         // 3. Recherche par containment et similarité de mots
         let bestContainmentMatch: Ingredient | undefined;
         let bestContainmentScore = 0;
@@ -400,6 +465,19 @@ export class SmartMatchingService {
         // 2. Égalité exacte après normalisation & lemmatisation (ex: "Tomates" == "Tomate")
         const exact = items.find(i => normalize(i.name) === normRaw);
         if (exact) return { item: exact, confidence: 1 };
+
+        // 2b. Reconnaissance automatique de marque phare (ex: "Denya", "Marwa", "Safia" -> "Eau minérale")
+        const brandMapping = resolveBrandToGenericProduct(rawLabel);
+        if (brandMapping) {
+            const genericNorm = normalize(brandMapping.genericName);
+            const foundGeneric = items.find(i => {
+                const normI = normalize(i.name);
+                return normI === genericNorm || normI.includes(genericNorm) || genericNorm.includes(normI);
+            });
+            if (foundGeneric) {
+                return { item: foundGeneric, confidence: 0.95 };
+            }
+        }
 
         // 3. Containment strict
         let bestContainment: T | undefined;

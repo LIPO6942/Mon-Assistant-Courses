@@ -290,7 +290,7 @@ export default function BasketSheet({
                       >
                         <span className="truncate">{item.name}</span>
                         {(() => {
-                          const status = getProductStatus(purchaseHistory[item.id], item.name, dbarati);
+                          const status = getProductStatus(purchaseHistory[item.id], item.name, dbarati, item.category);
                           if (!status) return null;
                           return (
                             <span
@@ -374,6 +374,11 @@ export default function BasketSheet({
                               {purchaseHistory[item.id][purchaseHistory[item.id].length - 1].remark && (
                                 <span className="text-[9px] text-muted-foreground/70 italic ml-1 truncate max-w-[60px]">
                                   ({purchaseHistory[item.id][purchaseHistory[item.id].length - 1].remark})
+                                </span>
+                              )}
+                              {purchaseHistory[item.id][purchaseHistory[item.id].length - 1].scannedFromReceipt && (
+                                <span className="inline-flex items-center gap-0.5 text-[8px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-1 py-0.2 rounded border border-emerald-200 dark:border-emerald-800 shrink-0">
+                                  🧾 {purchaseHistory[item.id][purchaseHistory[item.id].length - 1].receiptInfo || 'Ticket'}
                                 </span>
                               )}
                             </div>

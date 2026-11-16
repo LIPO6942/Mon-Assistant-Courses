@@ -227,13 +227,24 @@ export function getCommunityBrandsForProduct(
   categoryName: string = '',
   detectedDomain?: ProductDomain | null
 ): BrandDef[] {
+  // Pour la moutarde, seules les 3 marques officielles (Dijon, Bonna, Dorelle) sont autorisées
+  if (/\bmoutarde\b/i.test(ingredientName)) {
+    return [];
+  }
+
   const domain = detectedDomain || detectProductDomain(ingredientName, categoryName);
+  const isWellness = domain === 'WELLNESS_HYGIENE' || /\b(hygiene|beaute|soin|soins|cosmetique|bien[- ]?etre)\b/i.test(categoryName);
   const records = getCachedCommunityBrands();
   const candidateMap = new Map<string, { brandDef: BrandDef; popularity: number }>();
 
   records.forEach(rec => {
     // 1. Strict domain compatibility guard
     if (domain && rec.domain && rec.domain !== domain) {
+      return;
+    }
+
+    // Sécurité : Jamais de marque hygiène/bien-être sur l'alimentaire
+    if (!isWellness && rec.domain === 'WELLNESS_HYGIENE') {
       return;
     }
 

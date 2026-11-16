@@ -299,6 +299,17 @@ export const PREDEFINED_BRANDS: BrandDef[] = [
     domain: 'WATER',
     keywords: ['jannet', 'eau', 'eau minerale']
   },
+  {
+    name: 'Denya',
+    logoUrl: createBrandSvgLogo(
+      '#0277BD',
+      '#FFFFFF',
+      'Denya',
+      '<path d="M50 20 C43 30 38 38 38 46 A12 12 0 0 0 62 46 C62 38 57 30 50 20 Z" fill="#81D4FA"/>'
+    ),
+    domain: 'WATER',
+    keywords: ['denya', 'eau', 'eau minerale', 'eau de source', 'eau plate']
+  },
 
   // --- BOISSONS GAZEUSES / SODAS (STRICTEMENT SÉPARÉES DE L'EAU) ---
   {
@@ -679,6 +690,39 @@ export const PREDEFINED_BRANDS: BrandDef[] = [
     ),
     domain: 'SAUCE',
     keywords: ['le phare du cap bon', 'phare', 'harissa', 'sauce']
+  },
+  {
+    name: 'Dijon',
+    logoUrl: createBrandSvgLogo(
+      '#B8860B',
+      '#FFFFFF',
+      'Dijon',
+      '<circle cx="50" cy="35" r="11" fill="#FACC15"/><path d="M44 35 Q50 28 56 35 Q50 42 44 35" fill="#B8860B"/>'
+    ),
+    domain: 'SAUCE',
+    keywords: ['dijon', 'moutarde', 'moutarde de dijon', 'sauce']
+  },
+  {
+    name: 'Bonna',
+    logoUrl: createBrandSvgLogo(
+      '#C2410C',
+      '#FFFFFF',
+      'Bonna',
+      '<circle cx="50" cy="35" r="10" fill="#FDE047"/>'
+    ),
+    domain: 'SAUCE',
+    keywords: ['bonna', 'moutarde', 'sauce', 'condiment']
+  },
+  {
+    name: 'Dorelle',
+    logoUrl: createBrandSvgLogo(
+      '#D97706',
+      '#FFFFFF',
+      'Dorelle',
+      '<circle cx="50" cy="35" r="10" fill="#FEF08A"/>'
+    ),
+    domain: 'SAUCE',
+    keywords: ['dorelle', 'moutarde', 'sauce', 'mayonnaise']
   },
 
   // --- CONSERVES DE POISSON (THON, SARDINE) ---
@@ -1129,8 +1173,8 @@ export function detectProductDomain(
     return 'OIL';
   }
 
-  // 12. Tomatoes, harissa, tomato paste
-  if (/\b(tomate|harissa|sauce|concentre)\b/.test(norm)) {
+  // 12. Tomatoes, harissa, tomato paste, mustard & condiments
+  if (/\b(tomate|harissa|sauce|concentre|moutarde|mayonnaise|ketchup)\b/.test(norm)) {
     return 'SAUCE';
   }
 
@@ -1160,7 +1204,6 @@ export function getSortedBrandsForProduct(
   purchaseHistory: PurchaseHistory,
   userCustomBrands: string[] = []
 ): BrandDef[] {
-  const domain = detectProductDomain(ingredientName, categoryName);
   const normName = (ingredientName || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
   const normCat = (categoryName || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
 
@@ -1174,6 +1217,30 @@ export function getSortedBrandsForProduct(
       brandFrequency[b] = (brandFrequency[b] || 0) + 1;
     }
   });
+
+  // RÈGLE STRICTE MOUTARDE : UNIQUEMENT (Dijon, Bonna, Dorelle) et AUCUNE autre marque
+  const isMustard = /\bmoutarde\b/i.test(normName);
+  if (isMustard) {
+    const MUSTARD_ALLOWED = ['Dijon', 'Bonna', 'Dorelle'];
+    const mustardBrands: BrandDef[] = MUSTARD_ALLOWED.map(name => {
+      const predefined = PREDEFINED_BRANDS.find(b => b.name.toLowerCase() === name.toLowerCase());
+      return predefined || {
+        name,
+        logoUrl: createDynamicBrandSvgLogo(name, 'SAUCE'),
+        domain: 'SAUCE',
+        keywords: [name.toLowerCase(), 'moutarde']
+      };
+    });
+
+    return mustardBrands.sort((a, b) => {
+      const freqA = brandFrequency[a.name] || 0;
+      const freqB = brandFrequency[b.name] || 0;
+      if (freqB !== freqA) return freqB - freqA;
+      return MUSTARD_ALLOWED.indexOf(a.name) - MUSTARD_ALLOWED.indexOf(b.name);
+    });
+  }
+
+  const domain = detectProductDomain(ingredientName, categoryName);
 
   const candidateMap = new Map<string, BrandDef>();
 
@@ -1294,6 +1361,12 @@ export function getSortedBrandsForProduct(
     if (idxB !== -1) return 1;
     return a.name.localeCompare(b.name);
   });
+
+  // Sécurité absolue : Ne JAMAIS proposer de marque d'hygiène/bien-être ou de piles sur des produits alimentaires
+  const isWellness = domain === 'WELLNESS_HYGIENE' || /\b(hygiene|beaute|soin|soins|cosmetique|bien[- ]?etre)\b/i.test(normCat);
+  if (!isWellness) {
+    return sorted.filter(b => b.domain !== 'WELLNESS_HYGIENE' && b.domain !== 'BATTERIES');
+  }
 
   return sorted;
 }

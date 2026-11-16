@@ -236,6 +236,11 @@ export default function CategoryPriceEvolutionDialog({
                                       @{record.store}
                                     </span>
                                   )}
+                                  {record.scannedFromReceipt && (
+                                    <span className="text-[9px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-1 py-0.5 rounded border border-emerald-200/50 dark:border-emerald-800/50 shrink-0">
+                                      🧾 {record.receiptInfo || 'Ticket'}
+                                    </span>
+                                  )}
                                 </div>
                                 <div className="flex items-center gap-2 shrink-0">
                                   <span className="font-mono font-medium">{record.price?.toFixed(3)} DT</span>

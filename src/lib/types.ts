@@ -85,6 +85,9 @@ export interface PurchaseRecord {
   remark?: string; // remarque liée à cet achat
   brand?: string; // marque du produit acheté (optionnel)
   brandLogoUrl?: string; // logo SVG de la marque (optionnel)
+  receiptId?: string; // ID du ticket scanné
+  scannedFromReceipt?: boolean; // vrai si l'achat provient de la validation d'un ticket
+  receiptInfo?: string; // descriptif court du ticket (ex: "Ticket Carrefour")
 }
 
 export type PurchaseHistory = Record<string, PurchaseRecord[]>;

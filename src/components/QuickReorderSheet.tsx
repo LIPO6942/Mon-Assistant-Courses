@@ -141,6 +141,11 @@ export default function QuickReorderSheet({ purchaseHistory, pantry, onAddToBask
                                                                             ({latestRecord.remark})
                                                                         </span>
                                                                     )}
+                                                                    {latestRecord.scannedFromReceipt && (
+                                                                        <span className="inline-flex items-center gap-1 text-[9px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded-md mt-0.5 w-fit border border-emerald-200/50 dark:border-emerald-800/50">
+                                                                            🧾 {latestRecord.receiptInfo || 'Validé par ticket'}
+                                                                        </span>
+                                                                    )}
                                                                 </p>
                                                             </div>
                                                         ) : (
@@ -162,6 +167,11 @@ export default function QuickReorderSheet({ purchaseHistory, pantry, onAddToBask
                                                                                 {record.remark && (
                                                                                     <span className="text-[9px] text-muted-foreground/70 italic mt-0.5 block">
                                                                                         ({record.remark})
+                                                                                    </span>
+                                                                                )}
+                                                                                {record.scannedFromReceipt && (
+                                                                                    <span className="inline-flex items-center gap-1 text-[9px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded-md mt-0.5 w-fit border border-emerald-200/50 dark:border-emerald-800/50">
+                                                                                        🧾 {record.receiptInfo || 'Validé par ticket'}
                                                                                     </span>
                                                                                 )}
                                                                             </div>

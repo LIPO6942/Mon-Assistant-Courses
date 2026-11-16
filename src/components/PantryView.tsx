@@ -206,7 +206,7 @@ export default function PantryView({
                               <div className="flex items-center gap-1.5">
                                 <p className="font-semibold text-xs tracking-tight truncate text-foreground/90">{item.name}</p>
                                 {(() => {
-                                  const status = getProductStatus(purchaseHistory[item.id], item.name, dbarati);
+                                  const status = getProductStatus(purchaseHistory[item.id], item.name, dbarati, item.category);
                                   if (!status) return null;
                                   return (
                                     <span
