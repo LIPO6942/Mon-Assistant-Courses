@@ -125,8 +125,16 @@ export function ReceiptSyncDialog({
           // Deviner intelligemment la catégorie selon le produit et les catégories utilisateur
           const guessedCategory = guessCategoryForProduct(suggestedName, line.rawLabel || label, categories, line.category);
 
-
-
+          // Éviter les doublons dans newUnmatched si plusieurs déclinaisons/arômes d'un même produit figurent sur le ticket
+          const existingIdx = newUnmatched.findIndex(
+            u => u.suggestedName.toLowerCase().trim() === suggestedName.toLowerCase().trim()
+          );
+          if (existingIdx !== -1) {
+            if (newPrice > 0 && (!newUnmatched[existingIdx].line.unitPrice || newPrice > newUnmatched[existingIdx].line.unitPrice)) {
+              newUnmatched[existingIdx].line = { ...newUnmatched[existingIdx].line, unitPrice: newPrice };
+            }
+            continue;
+          }
 
           newUnmatched.push({
             line,
@@ -184,24 +192,36 @@ export function ReceiptSyncDialog({
   function handleConfirm() {
     if (!receipt) return;
 
-    const priceUpdates = matched
-      .filter(m => m.confirmed)
-      .map(m => ({
-        id: m.ingredient.id,
-        price: m.newPrice,
-        ingredientId: m.ingredient.id,
-        newPrice: m.newPrice,
-        line: m.line,
-      }));
+    // Dédoublonnage des mises à jour de prix par ingrédient ID
+    const priceMap = new Map<string, typeof matched[0]>();
+    for (const m of matched) {
+      if (!m.confirmed) continue;
+      priceMap.set(m.ingredient.id, m);
+    }
+    const priceUpdates = Array.from(priceMap.values()).map(m => ({
+      id: m.ingredient.id,
+      price: m.newPrice,
+      ingredientId: m.ingredient.id,
+      newPrice: m.newPrice,
+      line: m.line,
+    }));
 
-    const newIngredients: Omit<Ingredient, 'id'>[] = unmatched
-      .filter(u => u.include && u.suggestedName.trim().length > 0)
-      .map(u => ({
-        name: u.suggestedName.trim(),
+    // Dédoublonnage sécurisé des nouveaux ingrédients par nom
+    const seenNew = new Set<string>();
+    const newIngredients: Omit<Ingredient, 'id'>[] = [];
+    for (const u of unmatched) {
+      const trimmed = u.suggestedName.trim();
+      if (!u.include || trimmed.length === 0) continue;
+      const key = trimmed.toLowerCase();
+      if (seenNew.has(key)) continue;
+      seenNew.add(key);
+      newIngredients.push({
+        name: trimmed,
         category: u.selectedCategory || categories[0]?.name || 'Autre',
         price: u.line.unitPrice ?? 0,
         unit: u.line.unit || 'pièce',
-      }));
+      });
+    }
 
     onConfirm(priceUpdates, newIngredients, receipt);
     onOpenChange(false);

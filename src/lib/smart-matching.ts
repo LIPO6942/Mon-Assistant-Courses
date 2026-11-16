@@ -25,11 +25,157 @@ function getLevenshteinDistance(a: string, b: string): number {
  * Supprime grammages, unités et nombres isolés.
  */
 export function cleanProductName(name: string): string {
-    return (name || '')
+    let cleaned = (name || '')
+        .replace(/\bdan\s*[-_]\s*up\b/gi, 'Danup')
         .replace(/\b(\d+[\.,]?\d*)\s*(kg|gr|g|ml|lt|l|cl|pcs|piece|u|un|x|pack|promo)\b/gi, '')
         .replace(/\b\d+\b/g, '')
         .replace(/\s+/g, ' ')
         .trim();
+
+    const base = stripProductFlavors(cleaned);
+    if (base && base.length >= 3) {
+        cleaned = base;
+    }
+    return cleaned;
+}
+
+/**
+ * Dictionnaire et liste ordonnée des arômes, saveurs et parfums alimentaires
+ * (les expressions multi-mots en premier pour éviter les remplacements partiels).
+ */
+export const KNOWN_FLAVORS: string[] = [
+    // Multi-mots d'abord
+    'fruits rouges', 'fruit rouge', 'fruits des bois', 'fruit des bois',
+    'fruit de la passion',
+    'noix de coco',
+    'peche abricot',
+    'pomme verte',
+    'citron vert',
+    'vanille bourbon', 'vanille des iles',
+    'chocolat noir', 'chocolat au lait', 'chocolat blanc',
+    'caramel beurre sale',
+    'menthe fraiche', 'menthe forte',
+    'fleur d oranger',
+    'nature sucre',
+
+    // Fruits simples & abréviations de tickets
+    'fraise', 'fraises', 'frais', // "frais" sur tickets de yaourts/boissons lactées est l'abréviation de fraise
+    'framboise', 'framboises',
+    'cerise', 'cerises',
+    'mure', 'mures',
+    'myrtille', 'myrtilles',
+    'cassis',
+    'groseille', 'groseilles',
+    'banane', 'bananes',
+    'mangue', 'mangues', 'mang',
+    'ananas',
+    'passion',
+    'goyave',
+    'kiwi', 'kiwis',
+    'coco',
+    'litchi',
+    'peche', 'peches', 'pech',
+    'abricot', 'abricots',
+    'nectarine', 'nectarines',
+    'prune', 'prunes',
+    'mirabelle', 'mirabelles',
+    'pomme', 'pommes',
+    'poire', 'poires',
+    'coing',
+    'citron', 'citrons', 'citr', 'lime',
+    'orange', 'oranges',
+    'mandarine', 'mandarines',
+    'clementine', 'clementines',
+    'pamplemousse',
+    'agrumes',
+    'melon',
+    'pasteque',
+    'grenade',
+    'figue', 'figues',
+
+    // Gourmands simples
+    'vanille', 'vanilles', 'van',
+    'chocolat', 'chocolats', 'choco', 'choc', 'cacao',
+    'caramel', 'caramels',
+    'cappuccino', 'espresso', 'moka', 'mocha', 'latte', 'cafe',
+    'pistache', 'pistaches',
+    'noisette', 'noisettes',
+    'amande', 'amandes',
+    'praline', 'pralines',
+    'nougat',
+    'speculoos', 'speculos',
+    'menthe',
+    'cannelle',
+    'miel',
+
+    // Qualificatifs de déclinaison / arôme
+    'aromatise', 'aromatisee', 'aromatises', 'aromatisees',
+    'arome', 'aromes', 'parfum', 'parfums', 'gout', 'saveur', 'saveurs',
+    'nature', 'sucre', 'non sucre', 'sans sucre',
+];
+
+const FLAVOR_STOP_WORDS = new Set(['de', 'd', 'du', 'des', 'le', 'la', 'les', 'l', 'un', 'une', 'a', 'au', 'aux', 'en', 'et']);
+
+/**
+ * Extrait l'article de base en retirant les arômes/parfums/saveurs et la ponctuation associée
+ * (ex: "Danup vanille", "danup, frais", "Dan-up , mangue" -> "Danup", "Yaourt Fraise" -> "Yaourt")
+ * Si la chaîne ne contient QUE l'arôme (ex: "Fraises", "Pommes", "Chocolat"), elle est conservée intacte.
+ */
+export function stripProductFlavors(name: string): string {
+    if (!name) return '';
+
+    // 1. Harmonisation préalable des marques courantes à tirets
+    let working = name
+        .replace(/\bdan\s*[-_]\s*up\b/gi, 'Danup')
+        .replace(/\bcoca\s*[-_]\s*cola\b/gi, 'Coca-Cola');
+
+    // 2. Remplacer les séparateurs de ticket (virgules, tirets isolés, slashes) par des espaces
+    const withSpaces = working
+        .replace(/[,;:/\\()\[\]]/g, ' ')
+        .replace(/\s*-\s*/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+    // 3. Normalisation minimale pour tester les arômes
+    let norm = withSpaces
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+
+    // Retirer les mots d'introduction : "à la", "au", "parfum", "goût", "saveur", "arôme de"
+    norm = norm
+        .replace(/\b(a la|au|aux|gout|saveur|parfum|arome de|arome d|aromatise a la|aromatise au|aromatise aux|aromatise)\b/gi, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+    let candidate = norm;
+
+    for (const flavor of KNOWN_FLAVORS) {
+        const flavorRegex = new RegExp(`\\b${flavor}\\b`, 'gi');
+        if (flavorRegex.test(candidate)) {
+            let stripped = candidate.replace(flavorRegex, ' ').replace(/\s+/g, ' ').trim();
+            // Retirer les éventuels mots de liaison traînants (ex: "sirop de" -> "sirop", "yaourt a" -> "yaourt")
+            stripped = stripped.replace(/\b(de|d|du|des|a|au|aux|la|le)\b$/gi, '').trim();
+
+            const remainingTokens = stripped.split(' ').filter(w => w.length >= 2 && !FLAVOR_STOP_WORDS.has(w));
+            if (remainingTokens.length > 0 && stripped.length >= 3) {
+                candidate = stripped;
+            }
+        }
+    }
+
+    if (candidate !== norm && candidate.length >= 3) {
+        if (/\bdanup\b/i.test(candidate)) return 'Danup';
+        if (/\bcoca cola\b|\bcocacola\b/i.test(candidate)) return 'Coca-Cola';
+
+        return candidate
+            .split(' ')
+            .filter(Boolean)
+            .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+            .join(' ');
+    }
+
+    return working;
 }
 
 /**
@@ -117,6 +263,11 @@ export function cleanReceiptLabel(rawLabel: string): string {
 
     let name = (rawLabel || '').trim();
 
+    // Harmonisation préalable des marques à tirets courantes
+    name = name
+        .replace(/\bdan\s*[-_]\s*up\b/gi, 'Danup')
+        .replace(/\bcoca\s*[-_]\s*cola\b/gi, 'Coca-Cola');
+
     // Supprimer les patterns de grammage en début : ex "330G", "2L", "25CL"
     name = name.replace(/^\d+[\.,]?\d*\s*(kg|gr|g|ml|lt|l|cl|pcs|u|un|x)\s*/gi, '');
     // Supprimer les grammages en fin
@@ -124,6 +275,12 @@ export function cleanReceiptLabel(rawLabel: string): string {
     // Supprimer les codes numériques longs (ex: codes PLU "12345")
     name = name.replace(/\b\d{3,}\b/g, '');
     name = name.replace(/\s+/g, ' ').trim();
+
+    // Retrait des arômes/saveurs pour obtenir l'article générique (ex: "Danup Fraise" -> "Danup")
+    const baseName = stripProductFlavors(name);
+    if (baseName && baseName.length >= 3) {
+        name = baseName;
+    }
 
     // Mettre en Title Case si tout est en majuscules
     if (name === name.toUpperCase() && name.length > 2) {
@@ -394,6 +551,29 @@ export class SmartMatchingService {
             if (collapsedExact) return { ingredient: collapsedExact, confidence: 1, isAlias: false };
         }
 
+        // 2d. Rapprochement par article de base sans arôme/parfum
+        // (ex: "Danup vanille", "danup, frais", "Dan-up , mangue" -> "Danup", "Yaourt Fraise" -> "Yaourt")
+        const baseRaw = normalize(stripProductFlavors(rawName));
+        const baseRawNoSpace = baseRaw.replace(/\s+/g, '');
+
+        if (baseRawNoSpace.length >= 3) {
+            const baseMatch = allIngredients.find(i => {
+                const normI = normalize(i.name);
+                if (normI === baseRaw) return true;
+                const iNoSpace = normI.replace(/\s+/g, '');
+                if (iNoSpace === baseRawNoSpace) return true;
+
+                // Si l'ingrédient du garde-manger avait lui aussi une mention d'arôme (ex: "Danup Fraise" dans le garde-manger)
+                const baseI = normalize(stripProductFlavors(i.name));
+                if (baseI === baseRaw) return true;
+                const baseINoSpace = baseI.replace(/\s+/g, '');
+                return baseINoSpace.length >= 3 && baseINoSpace === baseRawNoSpace;
+            });
+            if (baseMatch) {
+                return { ingredient: baseMatch, confidence: 0.98, isAlias: false };
+            }
+        }
+
         // 3. Recherche par containment et similarité de mots
         let bestContainmentMatch: Ingredient | undefined;
         let bestContainmentScore = 0;
@@ -504,6 +684,27 @@ export class SmartMatchingService {
                 return itNoSpace === rawNoSpace;
             });
             if (collapsed) return { item: collapsed, confidence: 1 };
+        }
+
+        // 2d. Rapprochement par article de base sans arôme/parfum (ex: "Danup vanille" -> "Danup", "Yaourt Fraise" -> "Yaourt")
+        const baseRaw = normalize(stripProductFlavors(rawLabel));
+        const baseRawNoSpace = baseRaw.replace(/\s+/g, '');
+
+        if (baseRawNoSpace.length >= 3) {
+            const baseMatch = items.find(i => {
+                const normI = normalize(i.name);
+                if (normI === baseRaw) return true;
+                const iNoSpace = normI.replace(/\s+/g, '');
+                if (iNoSpace === baseRawNoSpace) return true;
+
+                const baseI = normalize(stripProductFlavors(i.name));
+                if (baseI === baseRaw) return true;
+                const baseINoSpace = baseI.replace(/\s+/g, '');
+                return baseINoSpace.length >= 3 && baseINoSpace === baseRawNoSpace;
+            });
+            if (baseMatch) {
+                return { item: baseMatch, confidence: 0.98 };
+            }
         }
 
         // 3. Containment strict

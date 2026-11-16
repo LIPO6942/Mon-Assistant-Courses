@@ -1,4 +1,5 @@
 import type { Ingredient } from './types';
+import { stripProductFlavors } from './smart-matching';
 
 /**
  * Nettoie une chaîne d'ingrédient : retire les émojis, accents, ponctuation,
@@ -144,6 +145,21 @@ function isSingleIngredientMatch(nameA: string, nameB: string): boolean {
     if (minLen / maxLen >= 0.6) return true;
   }
 
+  // 1c. Rapprochement par article de base sans arôme (ex: "Danup vanille" vs "Danup", "danup, frais" vs "Danup", "Dan-up mangue" vs "Danup")
+  const baseA = cleanIngredientName(stripProductFlavors(nameA));
+  const baseB = cleanIngredientName(stripProductFlavors(nameB));
+  if (baseA && baseB && (baseA !== cleanA || baseB !== cleanB)) {
+    if (baseA === baseB) return true;
+    const baseNoSpaceA = baseA.replace(/\s+/g, '');
+    const baseNoSpaceB = baseB.replace(/\s+/g, '');
+    if (baseNoSpaceA.length >= 3 && baseNoSpaceA === baseNoSpaceB) return true;
+    if (baseNoSpaceA.length >= 4 && baseNoSpaceB.length >= 4 && (baseNoSpaceA.includes(baseNoSpaceB) || baseNoSpaceB.includes(baseNoSpaceA))) {
+      const minLen = Math.min(baseNoSpaceA.length, baseNoSpaceB.length);
+      const maxLen = Math.max(baseNoSpaceA.length, baseNoSpaceB.length);
+      if (minLen / maxLen >= 0.6) return true;
+    }
+  }
+
   // 2. Clé canonique triée (ex: "concentré de tomate" vs "tomate concentré")
   const keyA = getCanonicalIngredientKey(nameA);
   const keyB = getCanonicalIngredientKey(nameB);
@@ -260,6 +276,13 @@ export function findMatchingPantryItem(
   if (cleanInputNoSpace.length >= 3) {
     const collapsedMatch = pantry.find(p => cleanIngredientName(p.name).replace(/\s+/g, '') === cleanInputNoSpace);
     if (collapsedMatch) return collapsedMatch;
+  }
+
+  // 1c. Recherche par article de base sans arôme (ex: "Danup vanille", "Dan-up mangue", "danup, frais" -> "Danup")
+  const baseInputNoSpace = cleanIngredientName(stripProductFlavors(ingredientName)).replace(/\s+/g, '');
+  if (baseInputNoSpace.length >= 3) {
+    const baseMatch = pantry.find(p => cleanIngredientName(stripProductFlavors(p.name)).replace(/\s+/g, '') === baseInputNoSpace);
+    if (baseMatch) return baseMatch;
   }
 
   // 2. Recherche par clé canonique

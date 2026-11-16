@@ -15,7 +15,7 @@ import { Camera, Loader2, UploadCloud, ReceiptText, Sparkles, AlertCircle } from
 import { compressImage, fileToDataUrl, normalizeUnit, computeStandardUnitPrice } from '@/lib/receipt-utils';
 import { extractReceiptFromImage } from '@/ai/flows/extract-receipt-flow';
 import { Receipt, ReceiptLine } from '@/lib/types';
-import { cleanProductName } from '@/lib/smart-matching';
+import { cleanProductName, cleanReceiptLabel } from '@/lib/smart-matching';
 
 interface UploadReceiptDialogProps {
   children?: ReactNode;
@@ -84,7 +84,8 @@ export function UploadReceiptDialog({
       // Construire les lignes nettoyées
       const lines: ReceiptLine[] = (res.lines || []).map((l, idx) => {
         const rawLabel = l.rawLabel || 'Article';
-        const normalized = l.normalizedLabel || cleanProductName(rawLabel);
+        const cleanedFromReceipt = cleanReceiptLabel(l.normalizedLabel || rawLabel);
+        const normalized = cleanedFromReceipt || l.normalizedLabel || cleanProductName(rawLabel);
         const normUnit = normalizeUnit(l.quantity, l.unit, rawLabel);
 
         const lineObj: ReceiptLine = {
@@ -105,10 +106,10 @@ export function UploadReceiptDialog({
         return lineObj;
       });
 
-      // Fusion des doublons évidents sur le ticket
+      // Fusion des doublons évidents sur le ticket (même produit de base ignorant arômes et tirets)
       const mergedMap: Record<string, ReceiptLine> = {};
       lines.forEach((l) => {
-        const key = (l.normalizedLabel || l.rawLabel).trim().toLowerCase();
+        const key = (cleanReceiptLabel(l.normalizedLabel || l.rawLabel) || l.normalizedLabel || l.rawLabel).trim().toLowerCase();
         if (!mergedMap[key]) {
           mergedMap[key] = { ...l };
         } else {
