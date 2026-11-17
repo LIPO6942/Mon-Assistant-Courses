@@ -329,10 +329,14 @@ export default function BasketSheet({
                               />
                             );
                           })()}
-                          {/* Mention ticket en petit à côté du nom produit pour gagner de l'espace */}
+                          {/* Mention ticket discrète en petits caractères pour minimiser l'encombrement */}
                           {latestPurchase?.scannedFromReceipt && (
-                            <span className="inline-flex items-center gap-0.5 text-[8.5px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-500/15 dark:bg-emerald-950/60 px-1.5 py-0.2 rounded border border-emerald-500/30 shrink-0">
-                              🧾 {latestPurchase.receiptInfo || 'Ticket'}
+                            <span
+                              className="inline-flex items-center gap-0.5 text-[7.5px] font-medium text-muted-foreground/75 bg-background/60 dark:bg-muted/30 px-1 py-0 rounded border border-border/20 shrink-0 leading-tight select-none"
+                              title={latestPurchase.receiptInfo || 'Ticket de caisse scanné'}
+                            >
+                              <span className="opacity-60 text-[7px]">🧾</span>
+                              <span>{latestPurchase.receiptInfo || 'Ticket'}</span>
                             </span>
                           )}
                         </label>
