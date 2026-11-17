@@ -287,184 +287,189 @@ export default function BasketSheet({
         <ScrollArea className="flex-grow my-4 px-2">
           {sortedBasket.length > 0 ? (
             <ul className="space-y-3">
-              {sortedBasket.map(item => (
-                <li key={item.id}
-                  className={cn("flex flex-col gap-2 bg-secondary/50 p-3 rounded-md transition-opacity select-none", item.purchased && 'opacity-70')}
-                  onPointerDown={() => handlePointerDown(item)}
-                  onPointerUp={handlePointerUpOrLeave}
-                  onPointerLeave={handlePointerUpOrLeave}
-                >
-                  <div className='flex justify-between items-start gap-4'>
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <Checkbox
-                        id={item.id}
-                        checked={!!item.purchased}
-                        onCheckedChange={() => onTogglePurchaseStatus(item.id, item.price, item.quantity)}
-                        className="h-5 w-5 rounded-md border-primary/30 shrink-0"
-                      />
-                      <label
-                        htmlFor={item.id}
-                        className={cn("text-sm font-semibold text-foreground cursor-pointer flex items-center gap-2 min-w-0", item.purchased && 'line-through text-muted-foreground')}
-                      >
-                        <span className="truncate">{item.name}</span>
-                        {(() => {
-                          const status = getProductStatus(purchaseHistory[item.id], item.name, dbarati, item.category);
-                          if (!status) return null;
+              {sortedBasket.map(item => {
+                const latestPurchase = purchaseHistory[item.id]?.[purchaseHistory[item.id].length - 1];
+
+                return (
+                  <li key={item.id}
+                    className={cn("flex flex-col gap-1.5 bg-secondary/50 p-2.5 sm:p-3 rounded-xl overflow-hidden transition-opacity select-none", item.purchased && 'opacity-70')}
+                    onPointerDown={() => handlePointerDown(item)}
+                    onPointerUp={handlePointerUpOrLeave}
+                    onPointerLeave={handlePointerUpOrLeave}
+                  >
+                    <div className='flex justify-between items-start gap-2 sm:gap-3'>
+                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                        <Checkbox
+                          id={item.id}
+                          checked={!!item.purchased}
+                          onCheckedChange={() => onTogglePurchaseStatus(item.id, item.price, item.quantity)}
+                          className="h-5 w-5 rounded-md border-primary/30 shrink-0"
+                        />
+                        <label
+                          htmlFor={item.id}
+                          className={cn("text-sm font-semibold text-foreground cursor-pointer flex items-center gap-1.5 min-w-0 flex-wrap", item.purchased && 'line-through text-muted-foreground')}
+                        >
+                          <span className="truncate">{item.name}</span>
+                          {(() => {
+                            const status = getProductStatus(purchaseHistory[item.id], item.name, dbarati, item.category);
+                            if (!status) return null;
+                            return (
+                              <span
+                                className={cn(
+                                  "h-2 w-2 rounded-full shrink-0",
+                                  status === 'green' && "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]",
+                                  status === 'orange' && "bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.6)]",
+                                  status === 'red' && "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"
+                                )}
+                                title={
+                                  status === 'green' ? "Nouvellement acheté" :
+                                    status === 'orange' ? "Fréquence d'achat habituelle atteinte" :
+                                      "En retard / Rupture probable"
+                                }
+                              />
+                            );
+                          })()}
+                          {/* Mention ticket en petit à côté du nom produit pour gagner de l'espace */}
+                          {latestPurchase?.scannedFromReceipt && (
+                            <span className="inline-flex items-center gap-0.5 text-[8.5px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-500/15 dark:bg-emerald-950/60 px-1.5 py-0.2 rounded border border-emerald-500/30 shrink-0">
+                              🧾 {latestPurchase.receiptInfo || 'Ticket'}
+                            </span>
+                          )}
+                        </label>
+                      </div>
+                      <span className={cn('font-bold text-sm sm:text-base text-primary whitespace-nowrap shrink-0 pt-0.5', item.purchased && 'line-through text-muted-foreground')}>
+                        {(item.price * item.quantity).toFixed(3)} DT
+                      </span>
+                    </div>
+
+                    <div className='flex justify-between items-center gap-2 mt-0.5'>
+                      <div className="flex items-center gap-1.5 min-w-0 flex-1 flex-wrap">
+                        <span className={cn('text-xs text-muted-foreground whitespace-nowrap', item.purchased && 'line-through')}>
+                          {item.price.toFixed(3)} DT / {item.unit}
+                        </span>
+                        {item.brand && (() => {
+                          const brandLogo = item.brandLogoUrl || getBrandLogoUrl(item.brand, item.name, item.category);
                           return (
-                            <span
-                              className={cn(
-                                "h-2 w-2 rounded-full shrink-0",
-                                status === 'green' && "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]",
-                                status === 'orange' && "bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.6)]",
-                                status === 'red' && "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"
+                            <span className={cn(
+                              "inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20 shrink-0",
+                              item.purchased && 'line-through opacity-70'
+                            )}>
+                              {brandLogo && (
+                                <img
+                                  src={brandLogo}
+                                  alt={item.brand}
+                                  className="w-3 h-3 rounded-full object-cover shrink-0 border border-black/10"
+                                  loading="lazy"
+                                />
                               )}
-                              title={
-                                status === 'green' ? "Nouvellement acheté" :
-                                  status === 'orange' ? "Fréquence d'achat habituelle atteinte" :
-                                    "En retard / Rupture probable"
-                              }
-                            />
+                              <span>{item.brand}</span>
+                            </span>
                           );
                         })()}
-                      </label>
-                    </div>
-                    <span className={cn('font-bold text-primary whitespace-nowrap shrink-0 pt-0.5', item.purchased && 'line-through text-muted-foreground')}>
-                      {(item.price * item.quantity).toFixed(3)} DT
-                    </span>
-                  </div>
-                  <div className='flex justify-between items-center gap-2 mt-1'>
-                    <div className="flex items-center gap-1.5 min-w-0 flex-1 flex-wrap">
-                      <span className={cn('text-xs text-muted-foreground whitespace-nowrap', item.purchased && 'line-through')}>
-                        {item.price.toFixed(3)} DT / {item.unit}
-                      </span>
-                      {item.brand && (() => {
-                        const brandLogo = item.brandLogoUrl || getBrandLogoUrl(item.brand, item.name, item.category);
-                        return (
-                          <span className={cn(
-                            "inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20 shrink-0",
-                            item.purchased && 'line-through opacity-70'
-                          )}>
-                            {brandLogo && (
-                              <img
-                                src={brandLogo}
-                                alt={item.brand}
-                                className="w-3 h-3 rounded-full object-cover shrink-0 border border-black/10"
-                                loading="lazy"
-                              />
-                            )}
-                            <span>{item.brand}</span>
+                        {item.remark && (
+                          <span className={cn("text-[9px] text-muted-foreground/80 italic truncate max-w-[80px]", item.purchased && 'line-through')}>
+                            ({item.remark})
                           </span>
-                        );
-                      })()}
-                      {item.remark && (
-                        <span className={cn("text-[9px] text-muted-foreground/80 italic truncate max-w-[80px]", item.purchased && 'line-through')}>
-                          ({item.remark})
-                        </span>
-                      )}
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openEditItemDialog(item);
-                        }}
-                        className="p-1 rounded-md text-muted-foreground/60 hover:text-primary hover:bg-background/80 transition-colors shrink-0"
-                        title="Modifier le prix ou la marque"
-                      >
-                        <Pencil className="h-2.5 w-2.5" />
-                      </button>
-                      {purchaseHistory[item.id]?.length > 0 && (
-                        <>
-                          <span className="text-muted-foreground/30">•</span>
-                          <div className="flex items-center gap-1.5 opacity-80 min-w-0">
-                            <History className="h-2.5 w-2.5 text-primary/70 shrink-0" />
-                            <div className="flex items-center gap-1 min-w-0">
-                              <span className="text-[9px] text-muted-foreground font-medium italic leading-none truncate">
-                                Acheté le {new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(new Date(purchaseHistory[item.id][purchaseHistory[item.id].length - 1].date))}
+                        )}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openEditItemDialog(item);
+                          }}
+                          className="p-1 rounded-md text-muted-foreground/60 hover:text-primary hover:bg-background/80 transition-colors shrink-0"
+                          title="Modifier le prix ou la marque"
+                        >
+                          <Pencil className="h-2.5 w-2.5" />
+                        </button>
+                        {latestPurchase && (
+                          <>
+                            <span className="text-muted-foreground/30">•</span>
+                            <div className="inline-flex items-center gap-1 opacity-85 shrink-0">
+                              <History className="h-2.5 w-2.5 text-primary/70 shrink-0" />
+                              <span className="text-[9px] text-muted-foreground font-medium italic leading-none whitespace-nowrap">
+                                Acheté le {new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(new Date(latestPurchase.date))}
                               </span>
-                              {purchaseHistory[item.id][purchaseHistory[item.id].length - 1].store && (
-                                <div className="flex items-center gap-0.5 shrink-0 bg-background/50 px-1 rounded-sm border border-border/10">
-                                  <StoreIcon storeName={purchaseHistory[item.id][purchaseHistory[item.id].length - 1].store!} size="xs" />
-                                  <span className="text-[8px] text-primary/70 font-bold uppercase truncate max-w-[40px]">
-                                    {purchaseHistory[item.id][purchaseHistory[item.id].length - 1].store}
+                              {latestPurchase.store && (
+                                <div className="inline-flex items-center gap-0.5 shrink-0 bg-background/50 px-1 py-0.2 rounded border border-border/10">
+                                  <StoreIcon storeName={latestPurchase.store} size="xs" />
+                                  <span className="text-[8px] text-primary/80 font-bold uppercase truncate max-w-[48px]">
+                                    {latestPurchase.store}
                                   </span>
                                 </div>
                               )}
-                              {purchaseHistory[item.id][purchaseHistory[item.id].length - 1].remark && (
-                                <span className="text-[9px] text-muted-foreground/70 italic ml-1 truncate max-w-[60px]">
-                                  ({purchaseHistory[item.id][purchaseHistory[item.id].length - 1].remark})
-                                </span>
-                              )}
-                              {purchaseHistory[item.id][purchaseHistory[item.id].length - 1].scannedFromReceipt && (
-                                <span className="inline-flex items-center gap-0.5 text-[8px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-1 py-0.2 rounded border border-emerald-200 dark:border-emerald-800 shrink-0">
-                                  🧾 {purchaseHistory[item.id][purchaseHistory[item.id].length - 1].receiptInfo || 'Ticket'}
+                              {latestPurchase.remark && (
+                                <span className="text-[9px] text-muted-foreground/70 italic truncate max-w-[50px]">
+                                  ({latestPurchase.remark})
                                 </span>
                               )}
                             </div>
-                          </div>
-                        </>
-                      )}
-                      {(() => {
-                        try {
-                          if (!item || !item.name || typeof item.name !== 'string') return null;
-                          const matchedDbarati = findMatchingDbaratiItem(item.name, dbarati);
-                          if (!matchedDbarati || !matchedDbarati.dishName || typeof matchedDbarati.dishName !== 'string') return null;
+                          </>
+                        )}
+                        {(() => {
+                          try {
+                            if (!item || !item.name || typeof item.name !== 'string') return null;
+                            const matchedDbarati = findMatchingDbaratiItem(item.name, dbarati);
+                            if (!matchedDbarati || !matchedDbarati.dishName || typeof matchedDbarati.dishName !== 'string') return null;
 
-                          const dishName = String(matchedDbarati.dishName || '').trim();
-                          const itemName = String(item.name || '').trim();
-                          const isSameName = dishName.toLowerCase() === itemName.toLowerCase();
-                          const labelText = isSameName
-                            ? (matchedDbarati.relativeDate ? `Prép. ${matchedDbarati.relativeDate}` : 'Non préparé')
-                            : `${dishName} : ${matchedDbarati.relativeDate ? `Prép. ${matchedDbarati.relativeDate}` : 'non préparé'}`;
+                            const dishName = String(matchedDbarati.dishName || '').trim();
+                            const itemName = String(item.name || '').trim();
+                            const isSameName = dishName.toLowerCase() === itemName.toLowerCase();
+                            const labelText = isSameName
+                              ? (matchedDbarati.relativeDate ? `Prép. ${matchedDbarati.relativeDate}` : 'Non préparé')
+                              : `${dishName} : ${matchedDbarati.relativeDate ? `Prép. ${matchedDbarati.relativeDate}` : 'non préparé'}`;
 
-                          return (
-                            <>
-                              <span className="text-muted-foreground/30">•</span>
-                              <div
-                                className={cn(
-                                  "inline-flex items-center gap-1 text-[9px] font-medium leading-none px-1.5 py-0.5 rounded-full border shrink-0",
-                                  item.purchased
-                                    ? "bg-muted/40 text-muted-foreground border-border/40 line-through opacity-70"
-                                    : "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20"
-                                )}
-                              >
-                                <span className="shrink-0 text-[10px]">🍳</span>
-                                <span>{labelText}</span>
-                              </div>
-                            </>
-                          );
-                        } catch (err) {
-                          console.error("Error displaying Dbarati match:", err);
-                          return null;
-                        }
-                      })()}
-                      {/* Conseil Prix du Marché : magasin recommandé (30 derniers jours) */}
-                      {(() => {
-                        try {
-                          if (!item || !item.name || typeof item.name !== 'string') return null;
-                          const advice = getStorePriceRecommendation(item.name, item.brand, item.unit, communityPurchases);
-                          if (!advice) return null;
+                            return (
+                              <>
+                                <span className="text-muted-foreground/30">•</span>
+                                <div
+                                  className={cn(
+                                    "inline-flex items-center gap-1 text-[9px] font-medium leading-none px-1.5 py-0.5 rounded-full border shrink-0",
+                                    item.purchased
+                                      ? "bg-muted/40 text-muted-foreground border-border/40 line-through opacity-70"
+                                      : "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20"
+                                  )}
+                                >
+                                  <span className="shrink-0 text-[10px]">🍳</span>
+                                  <span>{labelText}</span>
+                                </div>
+                              </>
+                            );
+                          } catch (err) {
+                            console.error("Error displaying Dbarati match:", err);
+                            return null;
+                          }
+                        })()}
+                        {/* Conseil Prix du Marché : magasin recommandé (30 derniers jours) */}
+                        {(() => {
+                          try {
+                            if (!item || !item.name || typeof item.name !== 'string') return null;
+                            const advice = getStorePriceRecommendation(item.name, item.brand, item.unit, communityPurchases);
+                            if (!advice) return null;
 
-                          return (
-                            <>
-                              <span className="text-muted-foreground/30">•</span>
-                              <div
-                                className={cn(
-                                  "inline-flex items-center gap-1 text-[8.5px] sm:text-[9px] font-medium leading-none px-1.5 py-0.5 rounded-full border shrink-0 transition-colors",
-                                  item.purchased && "line-through opacity-60",
-                                  advice.otherStore && advice.savings && advice.savings > 0
-                                    ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/25"
-                                    : "bg-muted/40 text-muted-foreground border-border/40"
+                            const hasSavings = advice.otherStore && advice.savings && advice.savings > 0;
+
+                            return (
+                              <>
+                                <span className="text-muted-foreground/30">•</span>
+                                <div
+                                  className={cn(
+                                    "inline-flex items-center gap-1 text-[8.5px] sm:text-[9px] font-medium leading-none px-1.5 py-0.5 rounded-full border shrink-0 transition-colors",
+                                    item.purchased && "line-through opacity-60",
+                                    hasSavings
+                                      ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/25"
+                                      : "bg-muted/40 text-muted-foreground border-border/40"
                                 )}
                                 title={
-                                  advice.otherStore && advice.savings && advice.savings > 0
-                                    ? `Moins cher chez ${advice.bestStore} (${advice.bestPrice.toFixed(3)} DT) que chez ${advice.otherStore} (${advice.otherPrice?.toFixed(3)} DT)`
-                                    : `Dernier prix observé chez ${advice.bestStore}`
+                                  hasSavings
+                                    ? `Moins cher chez ${advice.bestStore} (${advice.bestPrice.toFixed(3)} DT) que chez ${advice.otherStore} (${advice.otherPrice?.toFixed(3)} DT) — économisez ${advice.savings?.toFixed(3)} DT`
+                                    : `Prix observé : ${advice.bestPrice.toFixed(3)} DT chez ${advice.bestStore}`
                                 }
                               >
                                 <StoreIcon storeName={advice.bestStore} size="xs" />
-                                {advice.otherStore && advice.savings && advice.savings > 0 ? (
+                                {hasSavings ? (
                                   <span>
-                                    Préférable chez <strong className="font-bold">{advice.bestStore}</strong> ({advice.bestPrice.toFixed(3)} DT vs {advice.otherStore} {advice.otherPrice?.toFixed(3)} DT)
+                                    Préférable chez <strong className="font-bold">{advice.bestStore}</strong> ({advice.bestPrice.toFixed(3)} DT)
                                   </span>
                                 ) : (
                                   <span>
@@ -479,14 +484,15 @@ export default function BasketSheet({
                         }
                       })()}
                     </div>
-                    <div className='flex items-center gap-2 shrink-0'>
+                    <div className='flex items-center gap-1 sm:gap-1.5 shrink-0 ml-auto'>
                       <Button variant="ghost" size="icon" className='h-7 w-7 rounded-full' onClick={() => updateBasketQuantity(item.id, item.quantity - 1)} disabled={!!item.purchased}><Minus className='h-4 w-4' /></Button>
                       <span className='font-bold w-4 text-center text-sm'>{item.quantity}</span>
                       <Button variant="ghost" size="icon" className='h-7 w-7 rounded-full' onClick={() => updateBasketQuantity(item.id, item.quantity + 1)} disabled={!!item.purchased}><Plus className='h-4 w-4' /></Button>
                     </div>
                   </div>
                 </li>
-              ))}
+              );
+            })}
             </ul>
           ) : <p className="text-sm text-muted-foreground text-center mt-8">Votre panier est vide.</p>}
         </ScrollArea>
