@@ -128,15 +128,39 @@ flowchart TD
 
 ---
 
-## 4. Fichiers Modifiés & Références
+## 4. Comparateur Inter-Magasins & Recommandation dans « Mon Panier »
+
+### 1. Comparatif de prix inter-magasins (« Prix du Marché »)
+Lorsque deux utilisateurs (ou plus) achètent un même produit dans des enseignes différentes (sur la fenêtre des 30 derniers jours) :
+- Les achats par magasin sont conservés distinctement dans le fil.
+- Pour chaque produit (même ingrédient normalisé, marque et unité), l'algorithme identifie le magasin le moins cher et les enseignes concurrentes.
+- Un badge comparatif est généré dynamiquement sur chaque carte :
+  - **Pour l'enseigne la moins chère :** 🏆 `Carrefour propose un meilleur prix que Monoprix (-0.100 DT)`
+  - **Pour une enseigne plus chère :** 💡 `Moins cher chez Carrefour (1.350 DT, soit -0.100 DT)`
+- **Correction visuelle :** La marque du produit est affichée de manière unique et soignée dans le header de la carte (avec son logo SVG), sans redondance dans le corps de la carte.
+
+### 2. Recommandation discrète dans « Mon Panier »
+Lorsqu'un utilisateur ajoute un article dans son panier :
+- L'application écoute le flux communautaire en direct (`listenCommunityPurchases`) sur la même période des **30 derniers jours**.
+- Le moteur `getStorePriceRecommendation` calcule l'enseigne la plus économique :
+  - **Si comparaison disponible :** Affiche sous le produit : `🏷️ Préférable chez Carrefour (1.350 DT vs Monoprix 1.450 DT)`
+  - **Si un seul magasin recensé :** Affiche sous le produit : `🏷️ Vu chez Carrefour (1.350 DT)`
+  - **Si aucune donnée récente :** Aucun affichage superflu, préservant l'espace écran sur mobile.
+
+---
+
+## 5. Fichiers Modifiés & Références
 
 | Fichier | Rôle |
 |---|---|
 | `src/lib/types.ts` | Enrichissement de `ProductAlias`, `ReceiptLine` et `Receipt` avec métadonnées de réconciliation |
 | `src/lib/smart-matching.ts` | Enrichissement de `saveAlias`, intégration des alias appris en étape 1 de `findMatch` et `findMatchInBasket` |
+| `src/lib/price-utils.ts` | Moteur de recommandation inter-magasins `getStorePriceRecommendation` sur 30 jours |
 | `src/components/KitchenAssistantPage.tsx` | Idempotence dans `handleSyncReceiptWithPantry`, marquage du ticket dans `handleReconcileReceiptWithBasket`, apprentissage continu |
 | `src/components/ReceiptsView.tsx` | Transmission de `purchaseHistory`, affichage du badge `✓ Panier synchronisé` sur les tickets |
 | `src/components/ReceiptSyncDialog.tsx` | Détection `alreadyValidatedFromBasket`, bannière d'information anti-doublon et badges visuels |
+| `src/components/MarketPricesView.tsx` | Suppression du doublon de marque, comparateur dynamique `Magasin X propose un meilleur prix que Magasin Y` |
+| `src/components/BasketSheet.tsx` | Abonnement 30 jours `listenCommunityPurchases` et affichage en petit format du magasin recommandé |
 
 ---
 *Documenté pour le projet Mon-Assistant-Courses.*

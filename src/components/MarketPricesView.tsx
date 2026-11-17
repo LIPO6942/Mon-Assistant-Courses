@@ -234,11 +234,12 @@ export default function MarketPricesView() {
                 return new Date(b.date).getTime() - new Date(a.date).getTime();
             });
 
-        // Group by normalized name AND brand (preserve distinct brand prices)
+        // Group by normalized name AND brand AND store (preserve distinct brand and store prices)
         const map = new Map<string, typeof filtered[0]>();
         filtered.forEach(p => {
             const brandKey = p.brand ? `_${p.brand.toLowerCase().trim()}` : '';
-            const key = (p.normalizedName || p.ingredientName) + brandKey;
+            const storeKey = p.store ? `_${p.store.toLowerCase().trim()}` : '';
+            const key = (p.normalizedName || p.ingredientName) + brandKey + storeKey;
             const existing = map.get(key);
             if (!existing || new Date(p.date) > new Date(existing.date)) {
                 map.set(key, p);
@@ -248,6 +249,76 @@ export default function MarketPricesView() {
         console.log('[MarketView] Final displayed items count:', result.length);
         return result;
     }, [purchases, searchQuery, selectedStore, sortBy, viewMode]);
+
+    // Calcul des comparaisons inter-magasins pour le même article (30 derniers jours)
+    const storeComparisonsMap = useMemo(() => {
+        interface StoreComp {
+            bestStore: string;
+            bestPrice: number;
+            competitorStore?: string;
+            competitorPrice?: number;
+            priceDiff?: number;
+            isBestPrice: boolean;
+        }
+
+        const comparisons = new Map<string, StoreComp>();
+        const productStoresMap = new Map<string, Map<string, { store: string; price: number; date: string }>>();
+
+        purchases.forEach(p => {
+            if (!p.store || p.store === 'Sans magasin' || !p.price || p.price <= 0) return;
+            const normName = (p.normalizedName || p.ingredientName || '').toLowerCase().trim();
+            const brandKey = p.brand ? `_${p.brand.toLowerCase().trim()}` : '';
+            const groupKey = `${normName}${brandKey}|${p.unit || ''}`;
+
+            if (!productStoresMap.has(groupKey)) {
+                productStoresMap.set(groupKey, new Map());
+            }
+
+            const storeMap = productStoresMap.get(groupKey)!;
+            const cleanStore = p.store.trim();
+            const existing = storeMap.get(cleanStore.toLowerCase());
+            if (!existing || new Date(p.date) > new Date(existing.date)) {
+                storeMap.set(cleanStore.toLowerCase(), { store: cleanStore, price: p.price, date: p.date });
+            }
+        });
+
+        productStoresMap.forEach((storeMap, groupKey) => {
+            const storeList = Array.from(storeMap.values()).sort((a, b) => a.price - b.price);
+            if (storeList.length >= 2) {
+                const cheapest = storeList[0];
+                const second = storeList[1];
+                const diff = second.price - cheapest.price;
+
+                if (diff > 0.001) {
+                    // Pour le magasin le moins cher :
+                    comparisons.set(`${groupKey}_${cheapest.store.toLowerCase()}`, {
+                        bestStore: cheapest.store,
+                        bestPrice: cheapest.price,
+                        competitorStore: second.store,
+                        competitorPrice: second.price,
+                        priceDiff: diff,
+                        isBestPrice: true,
+                    });
+
+                    // Pour les autres magasins plus chers :
+                    for (let i = 1; i < storeList.length; i++) {
+                        const higherStore = storeList[i];
+                        const higherDiff = higherStore.price - cheapest.price;
+                        comparisons.set(`${groupKey}_${higherStore.store.toLowerCase()}`, {
+                            bestStore: cheapest.store,
+                            bestPrice: cheapest.price,
+                            competitorStore: higherStore.store,
+                            competitorPrice: higherStore.price,
+                            priceDiff: higherDiff,
+                            isBestPrice: false,
+                        });
+                    }
+                }
+            }
+        });
+
+        return comparisons;
+    }, [purchases]);
 
     const stores = useMemo(() => {
         const s = new Set<string>();
@@ -429,6 +500,11 @@ export default function MarketPricesView() {
                                     const isOwner = user && purchase.userId === user.uid;
                                     const brandLogo = purchase.brandLogoUrl || (purchase.brand ? getBrandLogoUrl(purchase.brand, purchase.ingredientName, purchase.category) : undefined);
 
+                                    const normName = (purchase.normalizedName || purchase.ingredientName || '').toLowerCase().trim();
+                                    const brandKey = purchase.brand ? `_${purchase.brand.toLowerCase().trim()}` : '';
+                                    const groupKey = `${normName}${brandKey}|${purchase.unit || ''}`;
+                                    const comparison = purchase.store ? storeComparisonsMap.get(`${groupKey}_${purchase.store.toLowerCase().trim()}`) : undefined;
+
                                     return (
                                         <Card
                                             key={purchase.id}
@@ -510,26 +586,33 @@ export default function MarketPricesView() {
                                                         ) : (
                                                             <div className="text-[10px] text-muted-foreground/60 italic font-medium">Magasin non précisé</div>
                                                         )}
-                                                        {purchase.brand && (
-                                                            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-primary/5 rounded-xl border border-primary/15 text-[10px] sm:text-xs font-semibold text-foreground/80">
-                                                                {brandLogo && (
-                                                                    <img
-                                                                        src={brandLogo}
-                                                                        alt={purchase.brand}
-                                                                        className="w-3.5 h-3.5 rounded-full object-cover shrink-0 border border-black/10"
-                                                                        loading="lazy"
-                                                                    />
-                                                                )}
-                                                                <span className="text-muted-foreground text-[9px] uppercase font-bold">Marque :</span>
-                                                                <span className="font-bold text-primary">{purchase.brand}</span>
-                                                            </div>
-                                                        )}
                                                     </div>
                                                     <div className="flex flex-col items-end shrink-0">
                                                         <span className="text-[8px] font-black text-muted-foreground/40 uppercase tracking-widest leading-none">Quantité</span>
                                                         <span className="text-sm sm:text-lg font-bold leading-tight">× {purchase.quantity}</span>
                                                     </div>
                                                 </div>
+
+                                                {/* Comparatif inter-magasins pour ce produit */}
+                                                {comparison && comparison.competitorStore && (
+                                                    <div className="mt-2.5 pt-2.5 border-t border-border/10">
+                                                        {comparison.isBestPrice ? (
+                                                            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-800 dark:text-emerald-300 text-[10px] sm:text-xs font-semibold">
+                                                                <span className="text-xs shrink-0">🏆</span>
+                                                                <span className="leading-tight">
+                                                                    <strong className="font-bold">{purchase.store}</strong> propose un meilleur prix que <strong className="font-bold">{comparison.competitorStore}</strong> (-{comparison.priceDiff?.toFixed(3)} DT)
+                                                                </span>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-800 dark:text-amber-300 text-[10px] sm:text-xs font-semibold">
+                                                                <span className="text-xs shrink-0">💡</span>
+                                                                <span className="leading-tight">
+                                                                    Moins cher chez <strong className="font-bold">{comparison.bestStore}</strong> ({comparison.bestPrice.toFixed(3)} DT, soit -{comparison.priceDiff?.toFixed(3)} DT)
+                                                                </span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
                                             </CardContent>
                                         </Card>
                                     );

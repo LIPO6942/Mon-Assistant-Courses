@@ -2,11 +2,11 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { sendBasketShare } from '@/lib/firestore-sync';
+import { sendBasketShare, listenCommunityPurchases } from '@/lib/firestore-sync';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
-import type { BasketItem, PurchaseHistory, DbaratiItem } from '@/lib/types';
+import type { BasketItem, PurchaseHistory, DbaratiItem, CommunityPurchase } from '@/lib/types';
 import { Minus, Plus, Trash2, Share2, History, Store, CheckCircle2, ListChecks, Pencil, Camera } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { STORES } from '@/lib/stores';
@@ -15,6 +15,7 @@ import { Checkbox } from './ui/checkbox';
 import { cn, getProductStatus, findMatchingDbaratiItem } from '@/lib/utils';
 import { getSortedBrandsForProduct, getCustomBrands, saveCustomBrand, getBrandLogoUrl, BrandDef } from '@/lib/brand-catalog';
 import { listenCommunityBrands } from '@/lib/community-brands';
+import { getStorePriceRecommendation } from '@/lib/price-utils';
 import {
   Dialog,
   DialogContent,
@@ -73,6 +74,23 @@ export default function BasketSheet({
   const [customBrandsRevision, setCustomBrandsRevision] = useState(0);
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { user } = useAuth();
+  const [communityPurchases, setCommunityPurchases] = useState<CommunityPurchase[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    try {
+      const unsubscribe = listenCommunityPurchases((data) => {
+        if (!isMounted) return;
+        setCommunityPurchases(data as CommunityPurchase[]);
+      });
+      return () => {
+        isMounted = false;
+        unsubscribe();
+      };
+    } catch (e) {
+      console.error('Error listening to community purchases in BasketSheet:', e);
+    }
+  }, []);
 
   useEffect(() => {
     const saved = localStorage.getItem('custom_stores');
@@ -416,6 +434,47 @@ export default function BasketSheet({
                           );
                         } catch (err) {
                           console.error("Error displaying Dbarati match:", err);
+                          return null;
+                        }
+                      })()}
+                      {/* Conseil Prix du Marché : magasin recommandé (30 derniers jours) */}
+                      {(() => {
+                        try {
+                          if (!item || !item.name || typeof item.name !== 'string') return null;
+                          const advice = getStorePriceRecommendation(item.name, item.brand, item.unit, communityPurchases);
+                          if (!advice) return null;
+
+                          return (
+                            <>
+                              <span className="text-muted-foreground/30">•</span>
+                              <div
+                                className={cn(
+                                  "inline-flex items-center gap-1 text-[8.5px] sm:text-[9px] font-medium leading-none px-1.5 py-0.5 rounded-full border shrink-0 transition-colors",
+                                  item.purchased && "line-through opacity-60",
+                                  advice.otherStore && advice.savings && advice.savings > 0
+                                    ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/25"
+                                    : "bg-muted/40 text-muted-foreground border-border/40"
+                                )}
+                                title={
+                                  advice.otherStore && advice.savings && advice.savings > 0
+                                    ? `Moins cher chez ${advice.bestStore} (${advice.bestPrice.toFixed(3)} DT) que chez ${advice.otherStore} (${advice.otherPrice?.toFixed(3)} DT)`
+                                    : `Dernier prix observé chez ${advice.bestStore}`
+                                }
+                              >
+                                <StoreIcon storeName={advice.bestStore} size="xs" />
+                                {advice.otherStore && advice.savings && advice.savings > 0 ? (
+                                  <span>
+                                    Préférable chez <strong className="font-bold">{advice.bestStore}</strong> ({advice.bestPrice.toFixed(3)} DT vs {advice.otherStore} {advice.otherPrice?.toFixed(3)} DT)
+                                  </span>
+                                ) : (
+                                  <span>
+                                    Vu chez <strong className="font-bold">{advice.bestStore}</strong> ({advice.bestPrice.toFixed(3)} DT)
+                                  </span>
+                                )}
+                              </div>
+                            </>
+                          );
+                        } catch (err) {
                           return null;
                         }
                       })()}

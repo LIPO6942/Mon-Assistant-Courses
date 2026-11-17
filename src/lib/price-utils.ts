@@ -283,3 +283,92 @@ export function getRecipeAvailabilityPercentage(
 
   return Math.round((available / ingredients.length) * 100);
 }
+
+export interface StorePriceAdvice {
+  bestStore: string;
+  bestPrice: number;
+  otherStore?: string;
+  otherPrice?: number;
+  savings?: number;
+}
+
+/**
+ * Recommande le magasin le plus avantageux pour un ingrédient
+ * d'après les relevés communautaires récents (fenêtre des 30 derniers jours, identique à Prix du marché)
+ */
+export function getStorePriceRecommendation(
+  ingredientName: string,
+  brand?: string,
+  unit?: string,
+  purchases?: CommunityPurchase[]
+): StorePriceAdvice | null {
+  if (!ingredientName || !purchases || purchases.length === 0) return null;
+
+  const searchName = cleanIngredientName(ingredientName).toLowerCase().trim();
+  const searchBrand = brand ? brand.toLowerCase().trim() : '';
+
+  // Filtrer les achats des 30 derniers jours
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const cutoffTime = thirtyDaysAgo.getTime();
+
+  // 1. Filtrer les achats pertinents ayant un magasin renseigné
+  const candidates = purchases.filter(p => {
+    if (!p.store || p.store === 'Sans magasin' || !p.price || p.price <= 0) return false;
+    if (new Date(p.date).getTime() < cutoffTime) return false;
+
+    const pName = (p.normalizedName || p.ingredientName || '').toLowerCase().trim();
+    const pClean = cleanIngredientName(pName);
+
+    const matchesName =
+      pName === searchName ||
+      pClean === searchName ||
+      isIngredientMatch(ingredientName, p.ingredientName);
+
+    if (!matchesName) return false;
+
+    // Si une marque est spécifiée dans le panier, vérifier si l'achat communautaire a la même marque
+    if (searchBrand && p.brand) {
+      return p.brand.toLowerCase().trim() === searchBrand;
+    }
+
+    return true;
+  });
+
+  if (candidates.length === 0) return null;
+
+  // 2. Regrouper par magasin et retenir le prix le plus récent
+  const storeMap = new Map<string, { store: string; price: number; date: string }>();
+
+  candidates.forEach(p => {
+    const storeKey = p.store!.trim();
+    const existing = storeMap.get(storeKey);
+    if (!existing || new Date(p.date) > new Date(existing.date)) {
+      storeMap.set(storeKey, { store: storeKey, price: p.price, date: p.date });
+    }
+  });
+
+  const storesList = Array.from(storeMap.values()).sort((a, b) => a.price - b.price);
+  if (storesList.length === 0) return null;
+
+  const best = storesList[0];
+
+  if (storesList.length >= 2) {
+    const competitor = storesList[1];
+    const savings = competitor.price - best.price;
+    if (savings > 0.001) {
+      return {
+        bestStore: best.store,
+        bestPrice: best.price,
+        otherStore: competitor.store,
+        otherPrice: competitor.price,
+        savings,
+      };
+    }
+  }
+
+  return {
+    bestStore: best.store,
+    bestPrice: best.price,
+  };
+}
