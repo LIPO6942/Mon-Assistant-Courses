@@ -56,12 +56,12 @@ export default function MarketPricesView() {
         try {
             const unsubscribe = listenCommunityPurchases((data) => {
                 if (!isMounted) return;
-                
+
                 const typedData = (data as CommunityPurchase[]).filter(
                     p => !isExcludedFromMarketPrices(p.ingredientName, p.category)
                 );
                 const storeNameMap = new Map<string, string>();
-                
+
                 // Normaliser les noms de magasins (regrouper les mêmes enseignes avec des casses différentes)
                 typedData.forEach(p => {
                     if (p.store) {
@@ -79,7 +79,7 @@ export default function MarketPricesView() {
                         }
                     }
                 });
-                
+
                 const normalizedData = typedData.map(p => {
                     if (p.store) {
                         const cleanStoreName = p.store.trim().replace(/\s+/g, ' ');
@@ -224,8 +224,8 @@ export default function MarketPricesView() {
                 const storeToSearch = (p.store || '').toLowerCase();
                 const brandToSearch = (p.brand || '').toLowerCase();
                 const matchesSearch = nameToSearch.includes(searchLower) ||
-                                      storeToSearch.includes(searchLower) ||
-                                      brandToSearch.includes(searchLower);
+                    storeToSearch.includes(searchLower) ||
+                    brandToSearch.includes(searchLower);
                 const matchesStore = selectedStore === 'all' || p.store === selectedStore;
                 return matchesSearch && matchesStore;
             })

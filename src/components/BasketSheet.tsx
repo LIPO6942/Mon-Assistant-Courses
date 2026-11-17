@@ -163,7 +163,7 @@ export default function BasketSheet({
   });
 
   const purchasedItemCount = basket.filter(item => item.purchased).length;
-  const purchasedTotal = basket.reduce((total, item) => 
+  const purchasedTotal = basket.reduce((total, item) =>
     item.purchased ? total + item.price * item.quantity : total, 0
   );
 
@@ -734,7 +734,7 @@ export default function BasketSheet({
                 }}
               />
             </div>
-            
+
             {/* 3. Remarque */}
             <div>
               <label className="text-xs font-bold text-muted-foreground ml-1">Remarque (optionnelle)</label>
@@ -751,9 +751,9 @@ export default function BasketSheet({
               />
               <div className="flex flex-wrap gap-1.5 mt-2">
                 {["Demi pot", "En Promotion", "Bio", "Grand format"].map(tag => (
-                  <Badge 
+                  <Badge
                     key={tag}
-                    variant="secondary" 
+                    variant="secondary"
                     className="cursor-pointer hover:bg-secondary/80 text-[9px] px-1.5 py-0 font-normal"
                     onClick={() => setNewRemarkStr(prev => prev ? `${prev}, ${tag}` : tag)}
                   >
