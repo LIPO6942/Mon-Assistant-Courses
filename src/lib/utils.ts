@@ -17,131 +17,152 @@ export function getProductStatus(
   dbaratiItems?: DbaratiItem[],
   categoryName?: string
 ): 'green' | 'orange' | 'red' | null {
-  if (!history || history.length === 0) return null;
+  try {
+    if (!history || !Array.isArray(history) || history.length === 0) return null;
 
-  const sortedHistory = [...history].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  const lastPurchase = new Date(sortedHistory[sortedHistory.length - 1].date);
-  const now = new Date();
-  const diffDays = Math.max(0, (now.getTime() - lastPurchase.getTime()) / (1000 * 60 * 60 * 24));
+    const validHistory = history.filter(r => r && r.date);
+    if (validHistory.length === 0) return null;
 
-  const isNonFood = isNonFoodItem(ingredientName, categoryName);
+    const sortedHistory = [...validHistory].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    const lastRecord = sortedHistory[sortedHistory.length - 1];
+    if (!lastRecord || !lastRecord.date) return null;
 
-  // Calcul de l'intervalle moyen d'achat
-  let avgInterval = 7;
-  const hasMultiplePurchases = sortedHistory.length >= 2;
-  if (hasMultiplePurchases) {
-    let totalDays = 0;
-    for (let i = 1; i < sortedHistory.length; i++) {
-      const prev = new Date(sortedHistory[i - 1].date);
-      const curr = new Date(sortedHistory[i].date);
-      totalDays += (curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24);
-    }
-    avgInterval = totalDays / (sortedHistory.length - 1);
-    if (avgInterval <= 0) avgInterval = 7;
-  } else {
-    // Si achat unique : cycle d'achat estimé réaliste selon la nature du produit
-    const rawLower = (ingredientName || '').toLowerCase();
-    if (/\b(eau|boisson|soda|jus|biscuit|cake|snack|gouter)\b/i.test(rawLower)) {
-      avgInterval = 7; // Boissons & biscuits : consommation rapide (environ 7 jours)
-    } else if (isNonFood) {
-      avgInterval = 25; // Entretien / hygiène : durée moyenne d'environ 25 jours
+    const lastPurchase = new Date(lastRecord.date);
+    if (isNaN(lastPurchase.getTime())) return null;
+
+    const now = new Date();
+    const diffDays = Math.max(0, (now.getTime() - lastPurchase.getTime()) / (1000 * 60 * 60 * 24));
+
+    const isNonFood = isNonFoodItem(ingredientName, categoryName);
+
+    // Calcul de l'intervalle moyen d'achat
+    let avgInterval = 7;
+    const hasMultiplePurchases = sortedHistory.length >= 2;
+    if (hasMultiplePurchases) {
+      let totalDays = 0;
+      let intervalsCount = 0;
+      for (let i = 1; i < sortedHistory.length; i++) {
+        const prev = new Date(sortedHistory[i - 1].date);
+        const curr = new Date(sortedHistory[i].date);
+        if (!isNaN(prev.getTime()) && !isNaN(curr.getTime())) {
+          totalDays += (curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24);
+          intervalsCount++;
+        }
+      }
+      if (intervalsCount > 0) {
+        avgInterval = totalDays / intervalsCount;
+      }
+      if (avgInterval <= 0) avgInterval = 7;
     } else {
-      avgInterval = 10;
+      // Si achat unique : cycle d'achat estimé réaliste selon la nature du produit
+      const rawLower = (ingredientName || '').toLowerCase();
+      if (/\b(eau|boisson|soda|jus|biscuit|cake|snack|gouter)\b/i.test(rawLower)) {
+        avgInterval = 7; // Boissons & biscuits : consommation rapide (environ 7 jours)
+      } else if (isNonFood) {
+        avgInterval = 25; // Entretien / hygiène : durée moyenne d'environ 25 jours
+      } else {
+        avgInterval = 10;
+      }
     }
-  }
 
-  // --- POUR LES ARTICLES HORS RECETTES / DBARATI (eau, boissons, biscuits, entretien maison, bien-être) ---
-  // Application stricte du cycle d'achat pour refléter leur consommation réelle
-  if (isNonFood) {
-    if (diffDays < avgInterval * 0.75) return 'green';
-    if (diffDays >= avgInterval * 0.75 && diffDays < avgInterval * 1.3) return 'orange';
-    if (diffDays >= avgInterval * 1.3) return 'red'; // Consommé / épuisé
-    return 'green';
-  }
+    // --- POUR LES ARTICLES HORS RECETTES / DBARATI (eau, boissons, biscuits, entretien maison, bien-être) ---
+    // Application stricte du cycle d'achat pour refléter leur consommation réelle
+    if (isNonFood) {
+      if (diffDays < avgInterval * 0.75) return 'green';
+      if (diffDays >= avgInterval * 0.75 && diffDays < avgInterval * 1.3) return 'orange';
+      if (diffDays >= avgInterval * 1.3) return 'red'; // Consommé / épuisé
+      return 'green';
+    }
 
-  // --- ANALYSE CULINAIRE COMBINÉE (Dbarati) ---
-  if (ingredientName && dbaratiItems && dbaratiItems.length > 0) {
-    const ingredientTokens = extractSignificantTokens(ingredientName);
+    // --- ANALYSE CULINAIRE COMBINÉE (Dbarati) ---
+    if (ingredientName && dbaratiItems && Array.isArray(dbaratiItems) && dbaratiItems.length > 0) {
+      const ingredientTokens = extractSignificantTokens(ingredientName);
 
-    if (ingredientTokens.length > 0) {
-      // Trouver tous les plats Dbarati qui utilisent cet ingrédient
-      const matchingDishes = dbaratiItems.filter(dish => {
-        if (!dish.text) return false;
-        const dishTokens = extractSignificantTokens(dish.text);
-        if (dishTokens.length === 0) return false;
+      if (ingredientTokens.length > 0) {
+        // Trouver tous les plats Dbarati qui utilisent cet ingrédient
+        const matchingDishes = dbaratiItems.filter(dish => {
+          if (!dish || typeof dish.text !== 'string' || !dish.text.trim()) return false;
+          const dishTokens = extractSignificantTokens(dish.text);
+          if (dishTokens.length === 0) return false;
 
-        return ingredientTokens.some(ingTok => {
-          if (ingTok.length < 3) return false;
-          return dishTokens.some(dt => dt.includes(ingTok) || ingTok.includes(dt));
-        });
-      });
-
-      if (matchingDishes.length > 0) {
-        // Collecter toutes les dates de préparation de ces plats
-        const allPrepDates: Date[] = [];
-        matchingDishes.forEach(dish => {
-          const dates = dish.prepHistory && dish.prepHistory.length > 0
-            ? dish.prepHistory
-            : (dish.lastPreparedAt ? [dish.lastPreparedAt] : []);
-
-          dates.forEach(d => {
-            const parsed = new Date(d);
-            if (!isNaN(parsed.getTime())) {
-              allPrepDates.push(parsed);
-            }
+          return ingredientTokens.some(ingTok => {
+            if (ingTok.length < 3) return false;
+            return dishTokens.some(dt => dt.includes(ingTok) || ingTok.includes(dt));
           });
         });
 
-        // 1. Nombre de préparations depuis le dernier achat
-        const prepsSincePurchase = allPrepDates.filter(d => d.getTime() >= lastPurchase.getTime()).length;
+        if (matchingDishes.length > 0) {
+          // Collecter toutes les dates de préparation de ces plats
+          const allPrepDates: Date[] = [];
+          matchingDishes.forEach(dish => {
+            const dates = Array.isArray(dish.prepHistory) && dish.prepHistory.length > 0
+              ? dish.prepHistory
+              : (dish.lastPreparedAt ? [dish.lastPreparedAt] : []);
 
-        // 2. Déterminer le ratio attendu de préparations par achat
-        let expectedPrepsPerPurchase = 3; // Réserve standard moyenne (ex: paquet ou portionnage frigo/congélo)
-        if (sortedHistory.length >= 1 && allPrepDates.length > 0) {
-          const observedRatio = allPrepDates.length / sortedHistory.length;
-          if (observedRatio >= 1) {
-            expectedPrepsPerPurchase = Math.max(1, Math.round(observedRatio));
+            dates.forEach(d => {
+              if (d) {
+                const parsed = new Date(d);
+                if (!isNaN(parsed.getTime())) {
+                  allPrepDates.push(parsed);
+                }
+              }
+            });
+          });
+
+          // 1. Nombre de préparations depuis le dernier achat
+          const prepsSincePurchase = allPrepDates.filter(d => d.getTime() >= lastPurchase.getTime()).length;
+
+          // 2. Déterminer le ratio attendu de préparations par achat
+          let expectedPrepsPerPurchase = 3; // Réserve standard moyenne (ex: paquet ou portionnage frigo/congélo)
+          if (sortedHistory.length >= 1 && allPrepDates.length > 0) {
+            const observedRatio = allPrepDates.length / sortedHistory.length;
+            if (observedRatio >= 1) {
+              expectedPrepsPerPurchase = Math.max(1, Math.round(observedRatio));
+            }
           }
+
+          // --- ARBITRAGE INTELLIGENT (CALENDRIER vs PRÉPARATION RÉELLE) ---
+
+          // Cas 1 : Toutes les préparations attendues ont été cuisinées
+          // -> Le stock a été consommé, même si l'achat est récent !
+          if (prepsSincePurchase >= expectedPrepsPerPurchase) {
+            return 'red';
+          }
+
+          // Cas 2 : Presque toutes les préparations ont été cuisinées (dernière portion restante)
+          if (prepsSincePurchase >= Math.max(1, expectedPrepsPerPurchase - 1) && prepsSincePurchase > 0) {
+            return 'orange';
+          }
+
+          // Cas 3 : La préparation réelle protège les produits stockés/congelés
+          // Si le calendrier est avancé (diffDays >= avgInterval), mais que l'utilisateur
+          // n'a PAS cuisiné ou très peu cuisiné ce produit (il dort au congélateur ou au placard) :
+          if (diffDays >= avgInterval * 1.5) {
+            // L'ingrédient est stocké sans avoir été épuisé en cuisine
+            // On le maintient en ORANGE (rappel intelligent) mais PAS en rupture RED !
+            return 'orange';
+          }
+
+          if (diffDays >= avgInterval) {
+            return 'orange';
+          }
+
+          // S'il reste des préparations disponibles et que le calendrier est normal
+          return 'green';
         }
-
-        // --- ARBITRAGE INTELLIGENT (CALENDRIER vs PRÉPARATION RÉELLE) ---
-
-        // Cas 1 : Toutes les préparations attendues ont été cuisinées
-        // -> Le stock a été consommé, même si l'achat est récent !
-        if (prepsSincePurchase >= expectedPrepsPerPurchase) {
-          return 'red';
-        }
-
-        // Cas 2 : Presque toutes les préparations ont été cuisinées (dernière portion restante)
-        if (prepsSincePurchase >= Math.max(1, expectedPrepsPerPurchase - 1) && prepsSincePurchase > 0) {
-          return 'orange';
-        }
-
-        // Cas 3 : La préparation réelle protège les produits stockés/congelés
-        // Si le calendrier est avancé (diffDays >= avgInterval), mais que l'utilisateur
-        // n'a PAS cuisiné ou très peu cuisiné ce produit (il dort au congélateur ou au placard) :
-        if (diffDays >= avgInterval * 1.5) {
-          // L'ingrédient est stocké sans avoir été épuisé en cuisine
-          // On le maintient en ORANGE (rappel intelligent) mais PAS en rupture RED !
-          return 'orange';
-        }
-
-        if (diffDays >= avgInterval) {
-          return 'orange';
-        }
-
-        // S'il reste des préparations disponibles et que le calendrier est normal
-        return 'green';
       }
     }
+
+    // --- MODÈLE CALENDAIRE PUR (Fallback si pas de données Dbarati correspondantes) ---
+    if (diffDays < avgInterval * 0.75) return 'green';
+    if (diffDays >= avgInterval * 0.75 && diffDays < avgInterval * 1.5) return 'orange';
+    if (diffDays >= avgInterval * 1.5) return 'red';
+
+    return 'green';
+  } catch (err) {
+    console.error("Error in getProductStatus:", err);
+    return null;
   }
-
-  // --- MODÈLE CALENDAIRE PUR (Fallback si pas de données Dbarati correspondantes) ---
-  if (diffDays < avgInterval * 0.75) return 'green';
-  if (diffDays >= avgInterval * 0.75 && diffDays < avgInterval * 1.5) return 'orange';
-  if (diffDays >= avgInterval * 1.5) return 'red';
-
-  return 'green';
 }
 
 export function isInAppBrowser(): boolean {

@@ -143,34 +143,50 @@ export function getRecipePantryAvailability(
   totalCount: number;
   percentage: number;
 } {
-  if (!recipeIngredients || recipeIngredients.length === 0) {
-    return { availableCount: 0, totalCount: 0, percentage: 100 };
-  }
-  if (!pantry || pantry.length === 0) {
-    return { availableCount: 0, totalCount: recipeIngredients.length, percentage: 0 };
-  }
-
-  let matched = 0;
-  for (const ing of recipeIngredients) {
-    const pantryItem = findMatchingPantryItem(ing.name, pantry);
-    if (pantryItem) {
-      if (purchaseHistory && dbarati) {
-        const history = purchaseHistory[pantryItem.id] || purchaseHistory[pantryItem.name] || purchaseHistory[pantryItem.name.toLowerCase()];
-        const status = getProductStatus(history, pantryItem.name, dbarati);
-        // Si le produit est épuisé ou consommé dans Dbarati (statut rouge), il n'est plus disponible
-        if (status === 'red') {
-          continue;
-        }
-      }
-      matched++;
+  try {
+    if (!recipeIngredients || !Array.isArray(recipeIngredients) || recipeIngredients.length === 0) {
+      return { availableCount: 0, totalCount: 0, percentage: 100 };
     }
-  }
+    const safePantry = Array.isArray(pantry) ? pantry : [];
+    if (safePantry.length === 0) {
+      return { availableCount: 0, totalCount: recipeIngredients.length, percentage: 0 };
+    }
 
-  return {
-    availableCount: matched,
-    totalCount: recipeIngredients.length,
-    percentage: Math.round((matched / recipeIngredients.length) * 100),
-  };
+    const safeDbarati = Array.isArray(dbarati) ? dbarati : [];
+    const hasPurchaseHistory = purchaseHistory && typeof purchaseHistory === 'object';
+
+    let matched = 0;
+    for (const ing of recipeIngredients) {
+      if (!ing || typeof ing.name !== 'string' || !ing.name.trim()) continue;
+
+      const pantryItem = findMatchingPantryItem(ing.name, safePantry);
+      if (pantryItem && typeof pantryItem.name === 'string') {
+        if (hasPurchaseHistory && safeDbarati.length > 0) {
+          const history = (pantryItem.id ? purchaseHistory[pantryItem.id] : undefined) ||
+                          purchaseHistory[pantryItem.name] ||
+                          (pantryItem.name ? purchaseHistory[pantryItem.name.toLowerCase()] : undefined);
+          const status = getProductStatus(history, pantryItem.name, safeDbarati);
+          // Si le produit est épuisé ou consommé dans Dbarati (statut rouge), il n'est plus disponible
+          if (status === 'red') {
+            continue;
+          }
+        }
+        matched++;
+      }
+    }
+
+    const totalCount = recipeIngredients.length;
+    const percentage = totalCount > 0 ? Math.round((matched / totalCount) * 100) : 100;
+
+    return {
+      availableCount: matched,
+      totalCount,
+      percentage,
+    };
+  } catch (err) {
+    console.error("Error in getRecipePantryAvailability:", err);
+    return { availableCount: 0, totalCount: Array.isArray(recipeIngredients) ? recipeIngredients.length : 0, percentage: 0 };
+  }
 }
 
 export function containsRhum(recipe: Recipe): boolean {
@@ -642,13 +658,24 @@ export default function RecipesView({
       return;
     }
     if (sortByAvailability) {
-      // Tri du plus présent au moins présent selon les ingrédients du garde-manger (prenant en compte Dbarati) !
-      const sorted = [...filteredDiscoverableRecipes].sort((a, b) => {
-        const pA = getRecipePantryAvailability(a.ingredients, pantry, purchaseHistory, dbarati).percentage;
-        const pB = getRecipePantryAvailability(b.ingredients, pantry, purchaseHistory, dbarati).percentage;
-        return pB - pA;
+      // Pré-calculer la disponibilité de chaque recette une seule fois pour des performances optimales sans latence
+      const scored = filteredDiscoverableRecipes.map(recipe => ({
+        recipe,
+        availability: getRecipePantryAvailability(recipe.ingredients, pantry, purchaseHistory, dbarati)
+      }));
+
+      // Tri : priorité au % disponible le plus élevé, puis au nombre d'ingrédients, avec randomisation équitable entre recettes à score égal
+      scored.sort((a, b) => {
+        if (b.availability.percentage !== a.availability.percentage) {
+          return b.availability.percentage - a.availability.percentage;
+        }
+        if (b.availability.availableCount !== a.availability.availableCount) {
+          return b.availability.availableCount - a.availability.availableCount;
+        }
+        return 0.5 - Math.random();
       });
-      setSuggestedRecipes(sorted.slice(0, 4));
+
+      setSuggestedRecipes(scored.slice(0, 4).map(s => s.recipe));
     } else {
       // Aléatoire standard : en mode 'all', proposer un duo équilibré (1 plat + 1 dessert) si disponibles
       if (dishCourseFilter === 'all') {
@@ -679,12 +706,22 @@ export default function RecipesView({
         return;
       }
       if (sortByAvailability) {
-        const sorted = [...filteredDiscoverableRecipes].sort((a, b) => {
-          const pA = getRecipePantryAvailability(a.ingredients, pantry, purchaseHistory, dbarati).percentage;
-          const pB = getRecipePantryAvailability(b.ingredients, pantry, purchaseHistory, dbarati).percentage;
-          return pB - pA;
+        const scored = filteredDiscoverableRecipes.map(recipe => ({
+          recipe,
+          availability: getRecipePantryAvailability(recipe.ingredients, pantry, purchaseHistory, dbarati)
+        }));
+
+        scored.sort((a, b) => {
+          if (b.availability.percentage !== a.availability.percentage) {
+            return b.availability.percentage - a.availability.percentage;
+          }
+          if (b.availability.availableCount !== a.availability.availableCount) {
+            return b.availability.availableCount - a.availability.availableCount;
+          }
+          return 0.5 - Math.random();
         });
-        setSuggestedRecipes(sorted.slice(0, 4));
+
+        setSuggestedRecipes(scored.slice(0, 4).map(s => s.recipe));
       } else {
         if (dishCourseFilter === 'all') {
           const savories = filteredDiscoverableRecipes.filter(r => !isDessertRecipe(r));

@@ -98,9 +98,13 @@ export default function RecipeContent({
                                     let statusColor = 'bg-zinc-300 dark:bg-zinc-700';
                                     let statusTitle = "Non disponible au garde-manger";
 
-                                    if (pantryItem) {
-                                        const history = purchaseHistory[pantryItem.id] || purchaseHistory[pantryItem.name] || purchaseHistory[pantryItem.name.toLowerCase()];
-                                        const status = getProductStatus(history, pantryItem.name, dbarati);
+                                    if (pantryItem && pantryItem.name) {
+                                        const history = purchaseHistory && typeof purchaseHistory === 'object' ? (
+                                            (pantryItem.id ? purchaseHistory[pantryItem.id] : undefined) ||
+                                            purchaseHistory[pantryItem.name] ||
+                                            (pantryItem.name ? purchaseHistory[pantryItem.name.toLowerCase()] : undefined)
+                                        ) : undefined;
+                                        const status = getProductStatus(history, pantryItem.name, Array.isArray(dbarati) ? dbarati : []);
                                         if (status === 'green') {
                                             statusColor = 'bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.6)]';
                                             statusTitle = "En stock & frais (garde-manger)";

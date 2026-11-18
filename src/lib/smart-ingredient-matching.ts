@@ -264,43 +264,49 @@ export function findMatchingPantryItem(
   ingredientName: string,
   pantry: Ingredient[]
 ): Ingredient | undefined {
-  if (!ingredientName || !pantry || pantry.length === 0) return undefined;
+  if (!ingredientName || typeof ingredientName !== 'string' || !pantry || !Array.isArray(pantry) || pantry.length === 0) {
+    return undefined;
+  }
+
+  // Filtrer uniquement les articles valides avec un nom défini non vide
+  const validPantry = pantry.filter(p => p && typeof p.name === 'string' && p.name.trim().length > 0);
+  if (validPantry.length === 0) return undefined;
 
   // 1. Recherche exacte
   const lower = ingredientName.toLowerCase().trim();
-  const exact = pantry.find(p => p.name.toLowerCase().trim() === lower);
+  const exact = validPantry.find(p => p.name.toLowerCase().trim() === lower);
   if (exact) return exact;
 
   // 1b. Recherche par rapprochement sans séparateurs (ex: "Dan-up" -> "Danup")
   const cleanInputNoSpace = cleanIngredientName(ingredientName).replace(/\s+/g, '');
   if (cleanInputNoSpace.length >= 3) {
-    const collapsedMatch = pantry.find(p => cleanIngredientName(p.name).replace(/\s+/g, '') === cleanInputNoSpace);
+    const collapsedMatch = validPantry.find(p => cleanIngredientName(p.name).replace(/\s+/g, '') === cleanInputNoSpace);
     if (collapsedMatch) return collapsedMatch;
   }
 
   // 1c. Recherche par article de base sans arôme (ex: "Danup vanille", "Dan-up mangue", "danup, frais" -> "Danup")
   const baseInputNoSpace = cleanIngredientName(stripProductFlavors(ingredientName)).replace(/\s+/g, '');
   if (baseInputNoSpace.length >= 3) {
-    const baseMatch = pantry.find(p => cleanIngredientName(stripProductFlavors(p.name)).replace(/\s+/g, '') === baseInputNoSpace);
+    const baseMatch = validPantry.find(p => cleanIngredientName(stripProductFlavors(p.name)).replace(/\s+/g, '') === baseInputNoSpace);
     if (baseMatch) return baseMatch;
   }
 
   // 2. Recherche par clé canonique
   const key = getCanonicalIngredientKey(ingredientName);
   if (key) {
-    const canonicalMatch = pantry.find(p => getCanonicalIngredientKey(p.name) === key);
+    const canonicalMatch = validPantry.find(p => getCanonicalIngredientKey(p.name) === key);
     if (canonicalMatch) return canonicalMatch;
   }
 
   // 3. Recherche par correspondance intelligente directe
-  const match = pantry.find(p => isIngredientMatch(p.name, ingredientName));
+  const match = validPantry.find(p => isIngredientMatch(p.name, ingredientName));
   if (match) return match;
 
   // 4. Si la ligne est combinée avec "et" (ex: "Oignon haché et gousses d'ail pilées")
   if (/\bet\b/i.test(ingredientName)) {
     const subParts = ingredientName.split(/\bet\b/i).map(s => s.trim()).filter(Boolean);
     for (const subPart of subParts) {
-      const subMatch = pantry.find(p => isIngredientMatch(p.name, subPart));
+      const subMatch = validPantry.find(p => isIngredientMatch(p.name, subPart));
       if (subMatch) return subMatch;
     }
   }

@@ -1727,9 +1727,9 @@ export default function KitchenAssistantPage() {
               openUserRecipeForm={openUserRecipeForm}
               onViewUserRecipe={setViewingUserRecipe}
               basket={basket}
-              purchaseHistory={purchaseHistory}
-              dbarati={dbarati}
-              pantry={pantry}
+              purchaseHistory={purchaseHistory || {}}
+              dbarati={Array.isArray(dbarati) ? dbarati : []}
+              pantry={Array.isArray(pantry) ? pantry : []}
               onAddDbaratiItem={(
                 text: string,
                 type: 'plat' | 'entree' | 'dessert' = 'plat',
