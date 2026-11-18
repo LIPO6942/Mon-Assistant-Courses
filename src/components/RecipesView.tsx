@@ -163,8 +163,8 @@ export function getRecipePantryAvailability(
       if (pantryItem && typeof pantryItem.name === 'string') {
         if (hasPurchaseHistory && safeDbarati.length > 0) {
           const history = (pantryItem.id ? purchaseHistory[pantryItem.id] : undefined) ||
-                          purchaseHistory[pantryItem.name] ||
-                          (pantryItem.name ? purchaseHistory[pantryItem.name.toLowerCase()] : undefined);
+            purchaseHistory[pantryItem.name] ||
+            (pantryItem.name ? purchaseHistory[pantryItem.name.toLowerCase()] : undefined);
           const status = getProductStatus(history, pantryItem.name, safeDbarati);
           // Si le produit est épuisé ou consommé dans Dbarati (statut rouge), il n'est plus disponible
           if (status === 'red') {
