@@ -262,6 +262,7 @@ export interface IndexedPantryItem {
   cleanNoSpace: string;
   baseNoSpace: string;
   canonicalKey: string;
+  tokens: string[];
 }
 
 export interface IndexedPantry {
@@ -270,6 +271,7 @@ export interface IndexedPantry {
   collapsedMap: Map<string, Ingredient>;
   baseMap: Map<string, Ingredient>;
   canonicalMap: Map<string, Ingredient>;
+  tokenMap: Map<string, IndexedPantryItem[]>;
 }
 
 /**
@@ -286,6 +288,7 @@ export function indexPantry(pantry: Ingredient[] = []): IndexedPantry {
   const collapsedMap = new Map<string, Ingredient>();
   const baseMap = new Map<string, Ingredient>();
   const canonicalMap = new Map<string, Ingredient>();
+  const tokenMap = new Map<string, IndexedPantryItem[]>();
 
   for (const raw of safePantry) {
     const rawName = raw.name.trim();
@@ -295,14 +298,17 @@ export function indexPantry(pantry: Ingredient[] = []): IndexedPantry {
     const base = cleanIngredientName(stripProductFlavors(rawName));
     const baseNoSpace = base.replace(/\s+/g, '');
     const canonicalKey = getCanonicalIngredientKey(rawName);
+    const tokens = getIngredientTokens(rawName);
 
-    items.push({
+    const item: IndexedPantryItem = {
       raw,
       lower,
       cleanNoSpace,
       baseNoSpace,
       canonicalKey,
-    });
+      tokens,
+    };
+    items.push(item);
 
     if (!exactMap.has(lower)) exactMap.set(lower, raw);
     if (cleanNoSpace.length >= 3 && !collapsedMap.has(cleanNoSpace)) {
@@ -314,6 +320,16 @@ export function indexPantry(pantry: Ingredient[] = []): IndexedPantry {
     if (canonicalKey && !canonicalMap.has(canonicalKey)) {
       canonicalMap.set(canonicalKey, raw);
     }
+
+    // Index inversé par token significatif pour des vérifications ciblées O(1)
+    for (const token of tokens) {
+      const existing = tokenMap.get(token);
+      if (existing) {
+        existing.push(item);
+      } else {
+        tokenMap.set(token, [item]);
+      }
+    }
   }
 
   return {
@@ -322,6 +338,7 @@ export function indexPantry(pantry: Ingredient[] = []): IndexedPantry {
     collapsedMap,
     baseMap,
     canonicalMap,
+    tokenMap,
   };
 }
 
@@ -356,14 +373,36 @@ function matchSingleIngredientAgainstIndexed(
     if (canonMatch) return canonMatch;
   }
 
-  // 3. Correspondance intelligente directe
-  for (const p of indexed.items) {
-    if (isIngredientMatch(p.raw.name, trimmed)) {
-      return p.raw;
+  // 3. Rapprochement par index inversé de tokens :
+  // Au lieu de tester aveuglément l'intégralité du garde-manger en O(N) avec des regex lourdes,
+  // on ne teste que les produits candidats qui partagent au moins 1 mot-clé significatif !
+  const inputTokens = getIngredientTokens(trimmed);
+  if (inputTokens.length > 0 && indexed.tokenMap && indexed.tokenMap.size > 0) {
+    const candidates = new Set<IndexedPantryItem>();
+    for (const tok of inputTokens) {
+      const matchingItems = indexed.tokenMap.get(tok);
+      if (matchingItems) {
+        for (const it of matchingItems) {
+          candidates.add(it);
+        }
+      }
+    }
+
+    for (const cand of candidates) {
+      if (isIngredientMatch(cand.raw.name, trimmed)) {
+        return cand.raw;
+      }
+    }
+  } else if (indexed.items.length > 0 && indexed.items.length <= 15) {
+    // Petit repli de sécurité si tokens non extraits et garde-manger très court
+    for (const p of indexed.items) {
+      if (isIngredientMatch(p.raw.name, trimmed)) {
+        return p.raw;
+      }
     }
   }
 
-  // 4. Ligne combinée avec "et"
+  // 4. Ligne combinée avec "et" (ex: "sel et poivre")
   if (/\bet\b/i.test(trimmed)) {
     const subParts = trimmed.split(/\bet\b/i).map(s => s.trim()).filter(Boolean);
     for (const subPart of subParts) {

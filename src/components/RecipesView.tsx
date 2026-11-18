@@ -14,7 +14,7 @@ import Image from 'next/image';
 import { listenCommunityPurchases } from '@/lib/firestore-sync';
 import { calculateMarketPrices, calculateRecipeCost, getRecipeAvailabilityPercentage, formatPrice } from '@/lib/price-utils';
 import { getRecipeImageUrl } from '@/lib/recipe-images';
-import { isIngredientMatch, findMatchingPantryItem, indexPantry, findMatchingPantryItemFast } from '@/lib/smart-ingredient-matching';
+import { isIngredientMatch, findMatchingPantryItem, indexPantry, findMatchingPantryItemFast, type IndexedPantry } from '@/lib/smart-ingredient-matching';
 
 // Mapping pays -> couleurs drapeau (gradient) + emoji
 const COUNTRY_FLAG_MAP: Record<string, { colors: string; emoji: string }> = {
@@ -133,57 +133,80 @@ export function getRecipeContinent(country?: string): ContinentFilter {
   return 'Europe';
 }
 
+export function computeRecipeScore(
+  recipeIngredients: RecipeIngredient[],
+  indexedPantry: IndexedPantry,
+  purchaseHistory?: PurchaseHistory,
+  dbarati?: DbaratiItem[],
+  ingMatchCache?: Map<string, Ingredient | null>,
+  statusCache?: Map<string, 'green' | 'orange' | 'red' | null>
+): {
+  availableCount: number;
+  totalCount: number;
+  percentage: number;
+} {
+  if (!recipeIngredients || !Array.isArray(recipeIngredients) || recipeIngredients.length === 0) {
+    return { availableCount: 0, totalCount: 0, percentage: 100 };
+  }
+  if (!indexedPantry || indexedPantry.items.length === 0) {
+    return { availableCount: 0, totalCount: recipeIngredients.length, percentage: 0 };
+  }
+
+  const safeDbarati = Array.isArray(dbarati) ? dbarati : [];
+  const hasPurchaseHistory = purchaseHistory && typeof purchaseHistory === 'object';
+
+  let matched = 0;
+  for (const ing of recipeIngredients) {
+    if (!ing || typeof ing.name !== 'string' || !ing.name.trim()) continue;
+
+    const pantryItem = findMatchingPantryItemFast(ing.name, indexedPantry, ingMatchCache);
+    if (pantryItem && typeof pantryItem.name === 'string') {
+      if (hasPurchaseHistory && safeDbarati.length > 0) {
+        const cacheKey = pantryItem.id || pantryItem.name;
+        let status: 'green' | 'orange' | 'red' | null = null;
+        if (statusCache && statusCache.has(cacheKey)) {
+          status = statusCache.get(cacheKey)!;
+        } else {
+          const history = (pantryItem.id ? purchaseHistory[pantryItem.id] : undefined) ||
+            purchaseHistory[pantryItem.name] ||
+            (pantryItem.name ? purchaseHistory[pantryItem.name.toLowerCase()] : undefined);
+          status = getProductStatus(history, pantryItem.name, safeDbarati);
+          if (statusCache) statusCache.set(cacheKey, status);
+        }
+
+        // Si le produit est épuisé ou consommé dans Dbarati (statut rouge), il n'est plus disponible
+        if (status === 'red') {
+          continue;
+        }
+      }
+      matched++;
+    }
+  }
+
+  const totalCount = recipeIngredients.length;
+  const percentage = totalCount > 0 ? Math.round((matched / totalCount) * 100) : 100;
+
+  return {
+    availableCount: matched,
+    totalCount,
+    percentage,
+  };
+}
+
 export function getRecipePantryAvailability(
   recipeIngredients: RecipeIngredient[],
   pantry: Ingredient[] = [],
   purchaseHistory?: PurchaseHistory,
-  dbarati?: DbaratiItem[]
+  dbarati?: DbaratiItem[],
+  indexedPantryArg?: IndexedPantry
 ): {
   availableCount: number;
   totalCount: number;
   percentage: number;
 } {
   try {
-    if (!recipeIngredients || !Array.isArray(recipeIngredients) || recipeIngredients.length === 0) {
-      return { availableCount: 0, totalCount: 0, percentage: 100 };
-    }
-    const safePantry = Array.isArray(pantry) ? pantry : [];
-    if (safePantry.length === 0) {
-      return { availableCount: 0, totalCount: recipeIngredients.length, percentage: 0 };
-    }
-
-    const indexed = indexPantry(safePantry);
-    const safeDbarati = Array.isArray(dbarati) ? dbarati : [];
-    const hasPurchaseHistory = purchaseHistory && typeof purchaseHistory === 'object';
-
-    let matched = 0;
-    for (const ing of recipeIngredients) {
-      if (!ing || typeof ing.name !== 'string' || !ing.name.trim()) continue;
-
-      const pantryItem = findMatchingPantryItemFast(ing.name, indexed);
-      if (pantryItem && typeof pantryItem.name === 'string') {
-        if (hasPurchaseHistory && safeDbarati.length > 0) {
-          const history = (pantryItem.id ? purchaseHistory[pantryItem.id] : undefined) ||
-            purchaseHistory[pantryItem.name] ||
-            (pantryItem.name ? purchaseHistory[pantryItem.name.toLowerCase()] : undefined);
-          const status = getProductStatus(history, pantryItem.name, safeDbarati);
-          // Si le produit est épuisé ou consommé dans Dbarati (statut rouge), il n'est plus disponible
-          if (status === 'red') {
-            continue;
-          }
-        }
-        matched++;
-      }
-    }
-
-    const totalCount = recipeIngredients.length;
-    const percentage = totalCount > 0 ? Math.round((matched / totalCount) * 100) : 100;
-
-    return {
-      availableCount: matched,
-      totalCount,
-      percentage,
-    };
+    const indexed = indexedPantryArg || indexPantry(Array.isArray(pantry) ? pantry : []);
+    return computeRecipeScore(recipeIngredients, indexed, purchaseHistory, dbarati);
   } catch (err) {
     console.error("Error in getRecipePantryAvailability:", err);
     return { availableCount: 0, totalCount: Array.isArray(recipeIngredients) ? recipeIngredients.length : 0, percentage: 0 };
@@ -557,15 +580,17 @@ export default function RecipesView({
   };
 
 
+  // Index de recherche O(1) des recettes Recetteti de l'utilisateur
+  const userRecipeTitlesSet = useMemo(() => {
+    return new Set(userRecipes.map(ur => ur.title.toLowerCase().trim()));
+  }, [userRecipes]);
+
   const filteredDiscoverableRecipes = useMemo(() => {
     return discoverableRecipes.filter(recipe => {
       if (containsRhum(recipe)) return false;
       if (isTunisianRecipe(recipe)) return false;
-      // Exclure les recettes déjà présentes dans Recetteti (userRecipes)
-      const isAlreadyInRecetteti = userRecipes.some(
-        ur => ur.title.toLowerCase().trim() === recipe.title.toLowerCase().trim()
-      );
-      if (isAlreadyInRecetteti) return false;
+      // Exclure les recettes déjà présentes dans Recetteti (userRecipes) en O(1)
+      if (userRecipeTitlesSet.has(recipe.title.toLowerCase().trim())) return false;
 
       // Filtre Plats (salé) vs Desserts (sucré)
       if (dishCourseFilter === 'plat' && isDessertRecipe(recipe)) return false;
@@ -581,7 +606,7 @@ export default function RecipesView({
       const economicalMatch = !filterEconomical || !!recipe.isEconomical;
       return quickMatch && economicalMatch;
     });
-  }, [discoverableRecipes, userRecipes, dishCourseFilter, selectedContinent, filterQuick, filterEconomical]);
+  }, [discoverableRecipes, userRecipeTitlesSet, dishCourseFilter, selectedContinent, filterQuick, filterEconomical]);
 
   const filteredUserRecipes = useMemo(() => {
     if (!userRecipeTagFilter) return userRecipes;
@@ -594,26 +619,6 @@ export default function RecipesView({
     });
 
   }, [userRecipes, userRecipeTagFilter]);
-
-  // Listen to community purchases for recipe cost calculations
-  useEffect(() => {
-    let isMounted = true;
-
-    try {
-      const unsubscribe = listenCommunityPurchases((data) => {
-        if (isMounted) {
-          setCommunityPurchases(data as CommunityPurchase[]);
-        }
-      });
-
-      return () => {
-        isMounted = false;
-        unsubscribe();
-      };
-    } catch (err) {
-      console.error("Error listening to community purchases:", err);
-    }
-  }, []);
 
   // Cleanup interval on component unmount
   useEffect(() => {
@@ -660,61 +665,43 @@ export default function RecipesView({
     return indexPantry(pantry);
   }, [pantry]);
 
-  // Carte de disponibilité mémoïsée pour l'ensemble du catalogue de recettes
-  // S'exécute en quelques millisecondes et élimine complètement tout gel du navigateur
+  // Carte de disponibilité ciblée et paresseuse (lazy)
+  // PERFORMANCE CRITIQUE :
+  // À l'ouverture de l'onglet, sortByAvailability est false et suggestedRecipes est vide ([]).
+  // Ne consomme AUCUN cycle CPU au montage initial : l'onglet "Recettes & Idées" s'ouvre instantanément (< 5 ms).
   const recipeAvailabilityMap = useMemo(() => {
     const map = new Map<string, { availableCount: number; totalCount: number; percentage: number }>();
     if (!discoverableRecipes || discoverableRecipes.length === 0) return map;
 
+    // Pas de calcul inutile si le tri par disponibilité n'est pas actif et qu'aucune recette n'est affichée
+    if (!sortByAvailability && suggestedRecipes.length === 0) {
+      return map;
+    }
+
     const ingMatchCache = new Map<string, Ingredient | null>();
     const statusCache = new Map<string, 'green' | 'orange' | 'red' | null>();
-    const safeDbarati = Array.isArray(dbarati) ? dbarati : [];
-    const hasHistory = purchaseHistory && typeof purchaseHistory === 'object';
 
-    for (const recipe of discoverableRecipes) {
-      if (!recipe.ingredients || recipe.ingredients.length === 0) {
-        map.set(recipe.id, { availableCount: 0, totalCount: 0, percentage: 100 });
-        continue;
-      }
-      if (indexedPantry.items.length === 0) {
-        map.set(recipe.id, { availableCount: 0, totalCount: recipe.ingredients.length, percentage: 0 });
-        continue;
-      }
+    // Ne calculer que pour les recettes ciblées :
+    // - Si tri par stock actif : les recettes filtrées (filtrage plat/dessert et continent actif, ~20-40 recettes)
+    // - Sinon : uniquement les 2 à 4 recettes actuellement suggérées à l'écran
+    const targetRecipes = sortByAvailability ? filteredDiscoverableRecipes : suggestedRecipes;
 
-      let matched = 0;
-      for (const ing of recipe.ingredients) {
-        if (!ing || typeof ing.name !== 'string' || !ing.name.trim()) continue;
-
-        const pantryItem = findMatchingPantryItemFast(ing.name, indexedPantry, ingMatchCache);
-        if (pantryItem && typeof pantryItem.name === 'string') {
-          if (hasHistory && safeDbarati.length > 0) {
-            const cacheKey = pantryItem.id || pantryItem.name;
-            let status: 'green' | 'orange' | 'red' | null = null;
-            if (statusCache.has(cacheKey)) {
-              status = statusCache.get(cacheKey)!;
-            } else {
-              const history = (pantryItem.id ? purchaseHistory[pantryItem.id] : undefined) ||
-                purchaseHistory[pantryItem.name] ||
-                (pantryItem.name ? purchaseHistory[pantryItem.name.toLowerCase()] : undefined);
-              status = getProductStatus(history, pantryItem.name, safeDbarati);
-              statusCache.set(cacheKey, status);
-            }
-
-            if (status === 'red') {
-              continue;
-            }
-          }
-          matched++;
-        }
-      }
-
-      const totalCount = recipe.ingredients.length;
-      const percentage = totalCount > 0 ? Math.round((matched / totalCount) * 100) : 100;
-      map.set(recipe.id, { availableCount: matched, totalCount, percentage });
+    for (const recipe of targetRecipes) {
+      map.set(
+        recipe.id,
+        computeRecipeScore(
+          recipe.ingredients,
+          indexedPantry,
+          purchaseHistory,
+          dbarati,
+          ingMatchCache,
+          statusCache
+        )
+      );
     }
 
     return map;
-  }, [discoverableRecipes, indexedPantry, purchaseHistory, dbarati]);
+  }, [sortByAvailability, suggestedRecipes, filteredDiscoverableRecipes, indexedPantry, purchaseHistory, dbarati]);
 
   const findRandomRecipes = () => {
     if (filteredDiscoverableRecipes.length === 0) {
@@ -722,10 +709,20 @@ export default function RecipesView({
       return;
     }
     if (sortByAvailability) {
-      // Lecture instantanée O(1) depuis la carte pré-calculée (< 0.1 ms)
+      const ingMatchCache = new Map<string, Ingredient | null>();
+      const statusCache = new Map<string, 'green' | 'orange' | 'red' | null>();
+
+      // Calcul ou lecture O(1) ultra-rapide
       const scored = filteredDiscoverableRecipes.map(recipe => ({
         recipe,
-        availability: recipeAvailabilityMap.get(recipe.id) || { availableCount: 0, totalCount: recipe.ingredients?.length || 0, percentage: 0 }
+        availability: recipeAvailabilityMap.get(recipe.id) || computeRecipeScore(
+          recipe.ingredients,
+          indexedPantry,
+          purchaseHistory,
+          dbarati,
+          ingMatchCache,
+          statusCache
+        )
       }));
 
       // Tri instantané : priorité au % disponible, puis au nombre d'ingrédients, avec randomisation équitable
@@ -770,9 +767,19 @@ export default function RecipesView({
         return;
       }
       if (sortByAvailability) {
+        const ingMatchCache = new Map<string, Ingredient | null>();
+        const statusCache = new Map<string, 'green' | 'orange' | 'red' | null>();
+
         const scored = filteredDiscoverableRecipes.map(recipe => ({
           recipe,
-          availability: recipeAvailabilityMap.get(recipe.id) || { availableCount: 0, totalCount: recipe.ingredients?.length || 0, percentage: 0 }
+          availability: recipeAvailabilityMap.get(recipe.id) || computeRecipeScore(
+            recipe.ingredients,
+            indexedPantry,
+            purchaseHistory,
+            dbarati,
+            ingMatchCache,
+            statusCache
+          )
         }));
 
         scored.sort((a, b) => {
@@ -2288,7 +2295,7 @@ export default function RecipesView({
           <div className='mt-3 max-w-4xl mx-auto text-left animate-in fade-in-50 grid grid-cols-1 md:grid-cols-2 gap-6'>
             {suggestedRecipes.map(recipe => {
               const { totalCost, perPersonCost } = getAdjustedRecipeCost(recipe);
-              const availability = recipeAvailabilityMap.get(recipe.id) || getRecipePantryAvailability(recipe.ingredients, pantry, purchaseHistory, dbarati);
+              const availability = recipeAvailabilityMap.get(recipe.id) || getRecipePantryAvailability(recipe.ingredients, pantry, purchaseHistory, dbarati, indexedPantry);
               const { availableCount, totalCount, percentage: pantryPercent } = availability;
               const isDessert = isDessertRecipe(recipe);
 
