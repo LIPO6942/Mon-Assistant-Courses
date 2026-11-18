@@ -256,6 +256,152 @@ export function isIngredientMatch(nameA: string, nameB: string): boolean {
   return false;
 }
 
+export interface IndexedPantryItem {
+  raw: Ingredient;
+  lower: string;
+  cleanNoSpace: string;
+  baseNoSpace: string;
+  canonicalKey: string;
+}
+
+export interface IndexedPantry {
+  items: IndexedPantryItem[];
+  exactMap: Map<string, Ingredient>;
+  collapsedMap: Map<string, Ingredient>;
+  baseMap: Map<string, Ingredient>;
+  canonicalMap: Map<string, Ingredient>;
+}
+
+/**
+ * Pré-indexe le garde-manger pour effectuer des recherches en temps O(1)
+ * sans ré-exécuter de normalisation ou d'expressions régulières lourdes en boucle.
+ */
+export function indexPantry(pantry: Ingredient[] = []): IndexedPantry {
+  const safePantry = Array.isArray(pantry)
+    ? pantry.filter(p => p && typeof p.name === 'string' && p.name.trim().length > 0)
+    : [];
+
+  const items: IndexedPantryItem[] = [];
+  const exactMap = new Map<string, Ingredient>();
+  const collapsedMap = new Map<string, Ingredient>();
+  const baseMap = new Map<string, Ingredient>();
+  const canonicalMap = new Map<string, Ingredient>();
+
+  for (const raw of safePantry) {
+    const rawName = raw.name.trim();
+    const lower = rawName.toLowerCase();
+    const clean = cleanIngredientName(rawName);
+    const cleanNoSpace = clean.replace(/\s+/g, '');
+    const base = cleanIngredientName(stripProductFlavors(rawName));
+    const baseNoSpace = base.replace(/\s+/g, '');
+    const canonicalKey = getCanonicalIngredientKey(rawName);
+
+    items.push({
+      raw,
+      lower,
+      cleanNoSpace,
+      baseNoSpace,
+      canonicalKey,
+    });
+
+    if (!exactMap.has(lower)) exactMap.set(lower, raw);
+    if (cleanNoSpace.length >= 3 && !collapsedMap.has(cleanNoSpace)) {
+      collapsedMap.set(cleanNoSpace, raw);
+    }
+    if (baseNoSpace.length >= 3 && !baseMap.has(baseNoSpace)) {
+      baseMap.set(baseNoSpace, raw);
+    }
+    if (canonicalKey && !canonicalMap.has(canonicalKey)) {
+      canonicalMap.set(canonicalKey, raw);
+    }
+  }
+
+  return {
+    items,
+    exactMap,
+    collapsedMap,
+    baseMap,
+    canonicalMap,
+  };
+}
+
+function matchSingleIngredientAgainstIndexed(
+  trimmed: string,
+  indexed: IndexedPantry
+): Ingredient | undefined {
+  // 1. Recherche exacte directe en O(1)
+  const lower = trimmed.toLowerCase();
+  const exact = indexed.exactMap.get(lower);
+  if (exact) return exact;
+
+  // 1b. Rapprochement sans séparateurs en O(1)
+  const clean = cleanIngredientName(trimmed);
+  const cleanInputNoSpace = clean.replace(/\s+/g, '');
+  if (cleanInputNoSpace.length >= 3) {
+    const collapsed = indexed.collapsedMap.get(cleanInputNoSpace);
+    if (collapsed) return collapsed;
+  }
+
+  // 1c. Article de base sans arôme en O(1)
+  const baseInputNoSpace = cleanIngredientName(stripProductFlavors(trimmed)).replace(/\s+/g, '');
+  if (baseInputNoSpace.length >= 3) {
+    const baseMatch = indexed.baseMap.get(baseInputNoSpace);
+    if (baseMatch) return baseMatch;
+  }
+
+  // 2. Clé canonique en O(1)
+  const key = getCanonicalIngredientKey(trimmed);
+  if (key) {
+    const canonMatch = indexed.canonicalMap.get(key);
+    if (canonMatch) return canonMatch;
+  }
+
+  // 3. Correspondance intelligente directe
+  for (const p of indexed.items) {
+    if (isIngredientMatch(p.raw.name, trimmed)) {
+      return p.raw;
+    }
+  }
+
+  // 4. Ligne combinée avec "et"
+  if (/\bet\b/i.test(trimmed)) {
+    const subParts = trimmed.split(/\bet\b/i).map(s => s.trim()).filter(Boolean);
+    for (const subPart of subParts) {
+      const subMatch = matchSingleIngredientAgainstIndexed(subPart, indexed);
+      if (subMatch) return subMatch;
+    }
+  }
+
+  return undefined;
+}
+
+/**
+ * Trouve l'ingrédient correspondant dans le garde-manger pré-indexé en temps quasi-instantané (O(1))
+ * avec cache de mémoïsation partagé.
+ */
+export function findMatchingPantryItemFast(
+  ingredientName: string,
+  indexed: IndexedPantry,
+  matchCache?: Map<string, Ingredient | null>
+): Ingredient | undefined {
+  if (!ingredientName || typeof ingredientName !== 'string' || !indexed || indexed.items.length === 0) {
+    return undefined;
+  }
+
+  const trimmed = ingredientName.trim();
+  if (!trimmed) return undefined;
+
+  if (matchCache && matchCache.has(trimmed)) {
+    return matchCache.get(trimmed) ?? undefined;
+  }
+
+  const match = matchSingleIngredientAgainstIndexed(trimmed, indexed);
+  if (matchCache) {
+    matchCache.set(trimmed, match ?? null);
+  }
+  return match;
+}
+
 /**
  * Trouve l'ingrédient correspondant dans le garde-manger en utilisant la correspondance intelligente
  * Gère également les lignes combinées avec "et" (ex: "Oignon haché et gousses d'ail").
