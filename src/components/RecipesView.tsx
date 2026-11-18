@@ -201,7 +201,8 @@ export function isDessertRecipe(recipe: Recipe): boolean {
 
   const dessertIds = new Set([
     'r128', 'r131', 'r134', 'r139', 'r141', 'r142', 'r161', 'r162', 'r165',
-    'r184', 'r187', 'r189', 'r190', 'r191', 'r192', 'r193', 'r194', 'r195', 'r196', 'r197', 'r198'
+    'r184', 'r187', 'r189', 'r190', 'r191', 'r192', 'r193', 'r194', 'r195', 'r196', 'r197', 'r198',
+    'r235', 'r239', 'r240', 'r245', 'r249', 'r251'
   ]);
   if (recipe.id && dessertIds.has(recipe.id)) return true;
 
@@ -213,7 +214,8 @@ export function isDessertRecipe(recipe: Recipe): boolean {
     'cannoli', 'pastel de nata', 'brownie', 'pavlova', 'flan coco',
     'blanc-manger', 'mousse au chocolat', 'tarte tatin', 'creme brulee',
     'churros', 'cheesecake', 'dorayaki', 'crumble', 'fondant au chocolat',
-    'mahalabia', 'tres leches', 'mango sticky rice'
+    'mahalabia', 'tres leches', 'mango sticky rice', 'strudel', 'key lime',
+    'kunafa', 'lamington'
   ];
   return dessertKeywords.some(kw => title.includes(kw) || desc.includes(kw));
 }
