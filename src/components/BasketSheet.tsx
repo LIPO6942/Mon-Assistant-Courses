@@ -62,6 +62,7 @@ export default function BasketSheet({
   onScanReceipt,
 }: BasketSheetProps) {
   const [isStoreDialogOpen, setIsStoreDialogOpen] = useState(false);
+  const [editingQuantityId, setEditingQuantityId] = useState<string | null>(null);
   const [selectedStore, setSelectedStore] = useState<string>('');
   const [customStores, setCustomStores] = useState<string[]>([]);
   const [isAddingStore, setIsAddingStore] = useState(false);
@@ -490,7 +491,36 @@ export default function BasketSheet({
                     </div>
                     <div className='flex items-center gap-1 sm:gap-1.5 shrink-0 ml-auto'>
                       <Button variant="ghost" size="icon" className='h-7 w-7 rounded-full' onClick={() => updateBasketQuantity(item.id, item.quantity - 1)} disabled={!!item.purchased}><Minus className='h-4 w-4' /></Button>
-                      <span className='font-bold w-4 text-center text-sm'>{item.quantity}</span>
+                      {editingQuantityId === item.id ? (
+                        <input
+                          type="number"
+                          step="0.1"
+                          min="0.1"
+                          autoFocus
+                          className="w-12 h-7 text-center text-sm font-bold border rounded-md bg-background [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          defaultValue={item.quantity}
+                          onBlur={(e) => {
+                            const val = parseFloat(e.target.value);
+                            if (!isNaN(val) && val > 0) {
+                              updateBasketQuantity(item.id, Math.round(val * 100) / 100);
+                            }
+                            setEditingQuantityId(null);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              (e.target as HTMLInputElement).blur();
+                            }
+                          }}
+                        />
+                      ) : (
+                        <span
+                          className="font-bold min-w-[1.25rem] text-center text-sm cursor-pointer hover:bg-secondary rounded px-1 py-0.5 transition-colors"
+                          title="Cliquer pour modifier la quantité"
+                          onClick={(e) => { e.stopPropagation(); if (!item.purchased) setEditingQuantityId(item.id); }}
+                        >
+                          {Number.isInteger(item.quantity) ? item.quantity : item.quantity.toFixed(1)}
+                        </span>
+                      )}
                       <Button variant="ghost" size="icon" className='h-7 w-7 rounded-full' onClick={() => updateBasketQuantity(item.id, item.quantity + 1)} disabled={!!item.purchased}><Plus className='h-4 w-4' /></Button>
                     </div>
                   </div>
