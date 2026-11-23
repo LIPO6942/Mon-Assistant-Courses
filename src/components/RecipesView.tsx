@@ -6,6 +6,7 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { PlusCircle, Shuffle, Dices, Clock, Coins, Utensils, BookUser, Search, Tag, Sparkles, TrendingDown, ClipboardList, Check, Trash2, Plus, Minus, Users, ChevronUp, ChevronDown, Loader2, X, Calendar, AlertCircle, Cake, PackageCheck, CheckCircle2, Globe } from 'lucide-react';
 import type { Recipe, UserRecipe, BasketItem, PurchaseHistory, CommunityPurchase, DbaratiItem, Ingredient, RecipeIngredient } from '@/lib/types';
 import { streetFoodOptions } from '@/lib/data';
@@ -346,47 +347,58 @@ export default function RecipesView({
   const [dbaratiSelectedItem, setDbaratiSelectedItem] = useState<string | null>(null);
   const [dbaratiSelectedEmoji, setDbaratiSelectedEmoji] = useState<string>('🍳');
 
-  // Navigation alphabétique tactile & accordéon contrôlé pour Dbarati (plié par défaut)
+  // Navigation alphabétique tactile & recherche pour Dbarati (plié par défaut)
   const [dbaratiAccordionValue, setDbaratiAccordionValue] = useState<string>('');
   const [dbaratiLetterFilter, setDbaratiLetterFilter] = useState<string | null>(null);
-  const [isDialOpen, setIsDialOpen] = useState(false);
-  const [hoveredDialLetter, setHoveredDialLetter] = useState<string | null>(null);
+  const [dbaratiSearchQuery, setDbaratiSearchQuery] = useState('');
 
+  // Extraction robuste de la première lettre : élimine tous les émojis, symboles, guillemets, tirets et accents
   const getFirstLetter = (str: string): string => {
-    const cleaned = (str || '').trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    if (!cleaned) return '';
-    const char = cleaned.charAt(0).toUpperCase();
+    if (!str) return '';
+    const stripped = str
+      .replace(/^[\p{Emoji_Presentation}\p{Extended_Pictographic}\s'"\-–—«»()\[\]{}.,:;!?*#+/@&~_]+/gu, '')
+      .trim()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+    if (!stripped) return '#';
+    const char = stripped.charAt(0).toUpperCase();
     return (char >= 'A' && char <= 'Z') ? char : '#';
   };
 
   const dbaratiLetters = useMemo(() => {
-    const set = new Set<string>();
+    const map = new Map<string, number>();
     dbarati.forEach(item => {
       const letter = getFirstLetter(item.text);
-      if (letter) set.add(letter);
+      if (letter) {
+        map.set(letter, (map.get(letter) || 0) + 1);
+      }
     });
-    return Array.from(set).sort((a, b) => {
-      if (a === '#') return 1;
-      if (b === '#') return -1;
-      return a.localeCompare(b);
-    });
+    return Array.from(map.entries())
+      .map(([letter, count]) => ({ letter, count }))
+      .sort((a, b) => {
+        if (a.letter === '#') return 1;
+        if (b.letter === '#') return -1;
+        return a.letter.localeCompare(b.letter);
+      });
   }, [dbarati]);
 
   const filteredDbaratiCount = useMemo(() => {
-    if (!dbaratiLetterFilter) return dbarati.length;
-    return dbarati.filter(item => getFirstLetter(item.text) === dbaratiLetterFilter).length;
-  }, [dbarati, dbaratiLetterFilter]);
+    return dbarati.filter(item => {
+      const matchLetter = !dbaratiLetterFilter || getFirstLetter(item.text) === dbaratiLetterFilter;
+      const matchSearch = !dbaratiSearchQuery.trim() || normalizeString(item.text).includes(normalizeString(dbaratiSearchQuery));
+      return matchLetter && matchSearch;
+    }).length;
+  }, [dbarati, dbaratiLetterFilter, dbaratiSearchQuery]);
 
   const handleSelectDbaratiLetter = (letter: string | null) => {
     setDbaratiLetterFilter(letter);
     setDbaratiAccordionValue('dbarati');
-    setIsDialOpen(false);
-    setHoveredDialLetter(null);
 
     if (letter) {
-      const hasEntrees = dbarati.some(i => i.type === 'entree' && getFirstLetter(i.text) === letter);
-      const hasPlats = dbarati.some(i => (i.type === 'plat' || !i.type) && getFirstLetter(i.text) === letter);
-      const hasDesserts = dbarati.some(i => i.type === 'dessert' && getFirstLetter(i.text) === letter);
+      const matchItem = (i: DbaratiItem) => getFirstLetter(i.text) === letter && (!dbaratiSearchQuery.trim() || normalizeString(i.text).includes(normalizeString(dbaratiSearchQuery)));
+      const hasEntrees = dbarati.some(i => i.type === 'entree' && matchItem(i));
+      const hasPlats = dbarati.some(i => (i.type === 'plat' || !i.type) && matchItem(i));
+      const hasDesserts = dbarati.some(i => i.type === 'dessert' && matchItem(i));
 
       if (hasEntrees) setIsEntreesExpanded(true);
       if (hasPlats) setIsPlatsExpanded(true);
@@ -396,13 +408,18 @@ export default function RecipesView({
     if (typeof navigator !== 'undefined' && navigator.vibrate) {
       try { navigator.vibrate(10); } catch { }
     }
+  };
 
-    setTimeout(() => {
-      const el = document.getElementById('dbarati-accordion-section');
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }, 100);
+  const handleSearchDbaratiChange = (val: string) => {
+    setDbaratiSearchQuery(val);
+    if (val.trim()) {
+      setDbaratiAccordionValue('dbarati');
+      const term = normalizeString(val);
+      const matchItem = (i: DbaratiItem) => normalizeString(i.text).includes(term) && (!dbaratiLetterFilter || getFirstLetter(i.text) === dbaratiLetterFilter);
+      if (dbarati.some(i => i.type === 'entree' && matchItem(i))) setIsEntreesExpanded(true);
+      if (dbarati.some(i => (i.type === 'plat' || !i.type) && matchItem(i))) setIsPlatsExpanded(true);
+      if (dbarati.some(i => i.type === 'dessert' && matchItem(i))) setIsDessertsExpanded(true);
+    }
   };
 
   // Entrees state
@@ -1012,21 +1029,53 @@ export default function RecipesView({
         onValueChange={setDbaratiAccordionValue}
       >
         <AccordionItem value="dbarati" id="dbarati-accordion-section">
-          <AccordionTrigger>
-            <div className="flex justify-center items-center gap-3 py-2 text-primary">
-              <ClipboardList className="h-8 w-8 text-primary" />
-              <h2 className='text-3xl font-bold'>Dbarati</h2>
-              {dbaratiLetterFilter && (
-                <Badge variant="secondary" className="text-xs bg-primary/15 text-primary border-primary/30 font-bold ml-1 flex items-center gap-1">
-                  <span>🔤</span>
-                  <span>{dbaratiLetterFilter}</span>
+          <AccordionTrigger className="hover:no-underline">
+            <div className="flex flex-wrap items-center justify-between w-full pr-3 py-1">
+              <div className="flex items-center gap-3 text-primary">
+                <ClipboardList className="h-7 w-7 text-primary shrink-0" />
+                <h2 className='text-2xl sm:text-3xl font-bold'>Dbarati</h2>
+                <Badge variant="outline" className="text-xs font-semibold bg-primary/10 text-primary border-primary/20">
+                  {dbarati.length}
                 </Badge>
+              </div>
+
+              {/* Badges de filtrage actif visibles même plié avec bouton réinitialiser en 1 clic */}
+              {(dbaratiLetterFilter || dbaratiSearchQuery) && (
+                <div
+                  className="flex items-center gap-1.5"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
+                >
+                  {dbaratiLetterFilter && (
+                    <Badge
+                      variant="secondary"
+                      className="text-xs bg-primary text-white font-black px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-sm cursor-pointer hover:bg-primary/90"
+                      onClick={() => handleSelectDbaratiLetter(null)}
+                      title="Cliquer pour retirer le filtre de lettre"
+                    >
+                      <span>🔤 {dbaratiLetterFilter}</span>
+                      <X className="h-3 w-3 ml-0.5" />
+                    </Badge>
+                  )}
+                  {dbaratiSearchQuery && (
+                    <Badge
+                      variant="secondary"
+                      className="text-xs bg-primary text-white font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm cursor-pointer hover:bg-primary/90 max-w-[140px] truncate"
+                      onClick={() => setDbaratiSearchQuery('')}
+                      title="Cliquer pour effacer la recherche"
+                    >
+                      <span className="truncate">🔍 « {dbaratiSearchQuery} »</span>
+                      <X className="h-3 w-3 ml-0.5 shrink-0" />
+                    </Badge>
+                  )}
+                </div>
               )}
             </div>
           </AccordionTrigger>
           <AccordionContent>
             <div className='py-4 px-1.5 sm:px-5 rounded-2xl bg-gradient-to-br from-indigo-50/50 via-white to-rose-50/50 dark:from-indigo-950/20 dark:via-background dark:to-rose-950/20 border border-border/40 shadow-xl backdrop-blur-sm'>
-              <div className='flex flex-col items-center mb-4'>
+              <div className='flex flex-col items-center mb-3'>
                 <p className='text-muted-foreground text-center max-w-2xl text-xs sm:text-sm leading-relaxed'>
                   <span className="font-semibold text-primary">Dbarati</span> : Vos idées de repas et vos habitudes culinaires.
                 </p>
@@ -1037,13 +1086,94 @@ export default function RecipesView({
                 </div>
               </div>
 
-              {/* Bannière filtre actif par lettre avec bouton pour tout réafficher */}
-              {dbaratiLetterFilter && (
+              {/* --- BARRE DE RECHERCHE & RUBAN ALPHABÉTIQUE A-Z TACTILE --- */}
+              <div className="max-w-4xl mx-auto mb-4 space-y-2.5">
+                {/* Barre de recherche instantanée avec bouton d'effacement */}
+                <div className="relative max-w-md mx-auto w-full">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                  <Input
+                    type="search"
+                    placeholder="Rechercher une recette (ex: Couscous, Ojja...)"
+                    className="pl-10 pr-9 rounded-full h-10 text-xs sm:text-sm bg-background/85 backdrop-blur-sm border-border/60 shadow-xs focus-visible:ring-primary/30"
+                    value={dbaratiSearchQuery}
+                    onChange={(e) => handleSearchDbaratiChange(e.target.value)}
+                  />
+                  {dbaratiSearchQuery.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setDbaratiSearchQuery('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                      title="Effacer la recherche"
+                      aria-label="Effacer la recherche"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Ruban tactile défilant des lettres A-Z avec effet de relief 3D */}
+                {dbaratiLetters.length > 0 && (
+                  <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-2 px-1 scroll-smooth snap-x">
+                    {/* Bouton Tous les plats */}
+                    <button
+                      type="button"
+                      onClick={() => handleSelectDbaratiLetter(null)}
+                      className={cn(
+                        "h-9 px-3.5 rounded-xl text-xs font-bold shrink-0 transition-all duration-200 snap-start flex items-center gap-1.5 border shadow-2xs cursor-pointer",
+                        dbaratiLetterFilter === null
+                          ? "bg-primary text-primary-foreground border-primary shadow-md scale-105 font-black ring-2 ring-primary/25"
+                          : "bg-background/90 hover:bg-muted text-foreground border-border/60 hover:border-primary/40 active:scale-95"
+                      )}
+                    >
+                      <span>★ Tous</span>
+                      <span className="text-[10px] opacity-80 font-normal">({dbarati.length})</span>
+                    </button>
+
+                    {/* Lettres A-Z disponibles dans Dbarati avec relief 3D */}
+                    {dbaratiLetters.map(({ letter, count }) => {
+                      const isSelected = dbaratiLetterFilter === letter;
+                      return (
+                        <button
+                          key={letter}
+                          type="button"
+                          onClick={() => handleSelectDbaratiLetter(isSelected ? null : letter)}
+                          className={cn(
+                            "h-9 min-w-9 px-2 rounded-xl text-xs font-black shrink-0 transition-all duration-200 snap-center flex items-center justify-center gap-0.5 border cursor-pointer",
+                            isSelected
+                              ? "bg-gradient-to-tr from-primary to-indigo-600 text-white border-primary shadow-lg ring-2 ring-primary/30 scale-110 -translate-y-0.5 z-10"
+                              : "bg-background/90 text-foreground border-border/60 hover:bg-primary/5 hover:border-primary/40 hover:-translate-y-0.5 active:scale-95 shadow-2xs"
+                          )}
+                          title={`Afficher les recettes commençant par ${letter} (${count})`}
+                        >
+                          <span className="uppercase">{letter}</span>
+                          <span className={cn(
+                            "text-[9px] font-semibold ml-0.5",
+                            isSelected ? "opacity-90" : "text-muted-foreground"
+                          )}>
+                            {count}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Bannière filtre actif ou résultat de recherche */}
+              {(dbaratiLetterFilter || dbaratiSearchQuery) && (
                 <div className="flex items-center justify-between max-w-4xl mx-auto mb-4 px-3.5 py-2 rounded-xl bg-primary/10 border border-primary/25 text-primary animate-in fade-in slide-in-from-top-1 duration-200">
                   <div className="flex items-center gap-2 text-xs font-bold">
-                    <span className="text-base">🔤</span>
+                    <span className="text-base">{dbaratiLetterFilter ? '🔤' : '🔍'}</span>
                     <span>
-                      Plats commençant par <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-primary text-primary-foreground font-black text-sm ml-0.5 shadow-xs">{dbaratiLetterFilter}</span>
+                      {dbaratiLetterFilter && (
+                        <>
+                          Lettre <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-primary text-primary-foreground font-black text-sm ml-0.5 shadow-xs">{dbaratiLetterFilter}</span>
+                        </>
+                      )}
+                      {dbaratiLetterFilter && dbaratiSearchQuery && <span> + </span>}
+                      {dbaratiSearchQuery && (
+                        <span>« {dbaratiSearchQuery} »</span>
+                      )}
                     </span>
                     <span className="text-[11px] opacity-75 font-medium ml-1">
                       ({filteredDbaratiCount} résultat{filteredDbaratiCount > 1 ? 's' : ''})
@@ -1053,11 +1183,42 @@ export default function RecipesView({
                     type="button"
                     size="sm"
                     variant="ghost"
-                    onClick={() => handleSelectDbaratiLetter(null)}
+                    onClick={() => {
+                      setDbaratiLetterFilter(null);
+                      setDbaratiSearchQuery('');
+                    }}
                     className="h-7 px-2.5 rounded-lg text-xs font-semibold hover:bg-primary/20 text-primary gap-1"
                   >
                     <X className="h-3.5 w-3.5" />
-                    <span>Afficher tout</span>
+                    <span>Réinitialiser</span>
+                  </Button>
+                </div>
+              )}
+
+              {/* État vide si aucune recette ne correspond */}
+              {filteredDbaratiCount === 0 && (dbaratiLetterFilter || dbaratiSearchQuery.trim()) && (
+                <div className="max-w-md mx-auto my-6 p-6 rounded-2xl bg-card/60 dark:bg-zinc-900/40 border border-dashed border-border/80 text-center flex flex-col items-center justify-center animate-in fade-in duration-200">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center text-xl mb-2.5">
+                    🔍
+                  </div>
+                  <p className="text-sm font-bold text-foreground mb-1">
+                    Aucune recette trouvée {dbaratiLetterFilter ? `pour la lettre « ${dbaratiLetterFilter} »` : ''} {dbaratiSearchQuery ? `avec « ${dbaratiSearchQuery} »` : ''}
+                  </p>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Essayez une autre lettre ou réinitialisez le filtre pour voir toutes vos idées.
+                  </p>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setDbaratiLetterFilter(null);
+                      setDbaratiSearchQuery('');
+                    }}
+                    className="rounded-full text-xs font-semibold gap-1.5"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                    Réinitialiser le filtre
                   </Button>
                 </div>
               )}
@@ -1347,7 +1508,7 @@ export default function RecipesView({
                         {[...dbarati]
                           .filter(i => i.type === 'entree')
                           .filter(i => activeEntreeFilter === 'Toutes' || i.tag === activeEntreeFilter)
-                          .filter(i => !dbaratiLetterFilter || getFirstLetter(i.text) === dbaratiLetterFilter)
+                          .filter(i => (!dbaratiLetterFilter || getFirstLetter(i.text) === dbaratiLetterFilter) && (!dbaratiSearchQuery.trim() || normalizeString(i.text).includes(normalizeString(dbaratiSearchQuery))))
                           .sort((a, b) => Number(a.done) - Number(b.done))
                           .map((item) => {
                             const normalizedItemText = normalizeString(item.text);
@@ -1736,7 +1897,7 @@ export default function RecipesView({
                         {[...dbarati]
                           .filter(i => i.type === 'plat' || !i.type)
                           .filter(i => activePlatFilter === 'Tous' || i.platTag === activePlatFilter)
-                          .filter(i => !dbaratiLetterFilter || getFirstLetter(i.text) === dbaratiLetterFilter)
+                          .filter(i => (!dbaratiLetterFilter || getFirstLetter(i.text) === dbaratiLetterFilter) && (!dbaratiSearchQuery.trim() || normalizeString(i.text).includes(normalizeString(dbaratiSearchQuery))))
                           .sort((a, b) => Number(a.done) - Number(b.done))
                           .map((item, index) => {
                             const normalizedItemText = normalizeString(item.text);
@@ -2034,7 +2195,7 @@ export default function RecipesView({
                         {[...dbarati]
                           .filter(i => i.type === 'dessert')
                           .filter(i => activeDessertFilter === 'Tous' || i.dessertTag === activeDessertFilter)
-                          .filter(i => !dbaratiLetterFilter || getFirstLetter(i.text) === dbaratiLetterFilter)
+                          .filter(i => (!dbaratiLetterFilter || getFirstLetter(i.text) === dbaratiLetterFilter) && (!dbaratiSearchQuery.trim() || normalizeString(i.text).includes(normalizeString(dbaratiSearchQuery))))
                           .sort((a, b) => Number(a.done) - Number(b.done))
                           .map((item) => {
                             const normalizedItemText = normalizeString(item.text);
@@ -2840,159 +3001,6 @@ export default function RecipesView({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* --- BOUTON FLOTTANT & MOLETTE TACTILE « ÉVENTAIL RADIAL A-Z » --- */}
-      {dbarati && dbarati.length > 0 && dbaratiLetters.length > 0 && (
-        <>
-          {/* Arrière-plan interactif quand l'éventail est ouvert */}
-          {isDialOpen && (
-            <div
-              className="fixed inset-0 z-40 bg-black/25 backdrop-blur-[1.5px] animate-in fade-in duration-200"
-              onClick={() => {
-                setIsDialOpen(false);
-                setHoveredDialLetter(null);
-              }}
-            />
-          )}
-
-          <div className="fixed bottom-5 right-5 sm:bottom-7 sm:right-7 z-50 select-none">
-            {/* Éventail des lettres radiales */}
-            {isDialOpen && (
-              <div
-                className="absolute bottom-16 right-0 w-64 sm:w-72 max-w-[calc(100vw-36px)] rounded-3xl rounded-br-sm bg-card/95 dark:bg-zinc-900/95 backdrop-blur-xl border border-primary/25 shadow-2xl p-3.5 animate-in zoom-in-90 origin-bottom-right duration-200 pointer-events-auto"
-                onTouchMove={(e) => {
-                  const touch = e.touches[0];
-                  if (!touch) return;
-                  const targetEl = document.elementFromPoint(touch.clientX, touch.clientY);
-                  const letterEl = targetEl?.closest('[data-dial-letter]');
-                  const letter = letterEl?.getAttribute('data-dial-letter');
-                  if (letter && letter !== hoveredDialLetter) {
-                    setHoveredDialLetter(letter);
-                    if (typeof navigator !== 'undefined' && navigator.vibrate) {
-                      try { navigator.vibrate(8); } catch { }
-                    }
-                  }
-                }}
-                onTouchEnd={() => {
-                  if (hoveredDialLetter) {
-                    handleSelectDbaratiLetter(hoveredDialLetter === 'ALL' ? null : hoveredDialLetter);
-                  }
-                }}
-              >
-                {/* Bulle d'aperçu géante en relief 3D */}
-                {hoveredDialLetter && (
-                  <div className="absolute -top-16 left-1/2 -translate-x-1/2 pointer-events-none animate-in zoom-in-75 duration-150 z-50">
-                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-primary to-indigo-600 text-white font-black text-2xl flex items-center justify-center shadow-2xl ring-4 ring-white/30 border border-white/20 transform -rotate-3">
-                      {hoveredDialLetter === 'ALL' ? 'Tous' : hoveredDialLetter}
-                    </div>
-                  </div>
-                )}
-
-                {/* En-tête de la palette avec compteur de lettres et fermeture */}
-                <div className="flex items-center justify-between pb-2 mb-2.5 border-b border-border/50">
-                  <span className="text-[11px] font-bold text-muted-foreground flex items-center gap-1.5">
-                    <span>🔤</span>
-                    <span>Index Dbarati ({dbaratiLetters.length} lettre{dbaratiLetters.length > 1 ? 's' : ''})</span>
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsDialOpen(false);
-                      setHoveredDialLetter(null);
-                    }}
-                    className="h-5 w-5 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </div>
-
-                {/* Grille tactile des lettres sous le pouce */}
-                <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 max-h-[60vh] overflow-y-auto no-scrollbar p-0.5">
-                  {/* Bouton Tous les plats */}
-                  <button
-                    type="button"
-                    data-dial-letter="ALL"
-                    onClick={() => handleSelectDbaratiLetter(null)}
-                    onMouseEnter={() => setHoveredDialLetter('ALL')}
-                    onMouseLeave={() => setHoveredDialLetter(null)}
-                    className={cn(
-                      "col-span-2 h-10 rounded-full font-bold text-xs flex items-center justify-center transition-all duration-150 shadow-sm border",
-                      hoveredDialLetter === 'ALL'
-                        ? "scale-105 bg-primary text-primary-foreground shadow-xl ring-4 ring-primary/30 z-20"
-                        : dbaratiLetterFilter === null
-                          ? "bg-primary text-primary-foreground border-primary font-black shadow-md"
-                          : "bg-muted/70 text-foreground border-border/60 hover:bg-muted"
-                    )}
-                  >
-                    ★ Tous les plats
-                  </button>
-
-                  {/* Boutons des lettres de Dbarati */}
-                  {dbaratiLetters.map((letter) => {
-                    const isHovered = hoveredDialLetter === letter;
-                    const isSelected = dbaratiLetterFilter === letter;
-
-                    return (
-                      <button
-                        key={letter}
-                        type="button"
-                        data-dial-letter={letter}
-                        onClick={() => handleSelectDbaratiLetter(letter)}
-                        onMouseEnter={() => setHoveredDialLetter(letter)}
-                        onMouseLeave={() => setHoveredDialLetter(null)}
-                        className={cn(
-                          "h-10 rounded-full font-black text-sm flex items-center justify-center transition-all duration-150 shadow-sm border",
-                          isHovered
-                            ? "scale-125 bg-gradient-to-tr from-primary to-indigo-600 text-white shadow-2xl ring-4 ring-primary/40 z-30"
-                            : isSelected
-                              ? "bg-primary text-primary-foreground border-primary ring-2 ring-primary/30 font-black shadow-md"
-                              : "bg-background/80 text-foreground border-border/60 hover:border-primary/40 hover:bg-muted"
-                        )}
-                        title={`Plats commençant par ${letter}`}
-                      >
-                        {letter}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Bouton Déclencheur Principal (FAB) */}
-            <button
-              type="button"
-              onClick={() => {
-                setIsDialOpen(!isDialOpen);
-                setHoveredDialLetter(null);
-              }}
-              className={cn(
-                "h-12 w-12 sm:h-13 sm:w-13 rounded-full flex items-center justify-center shadow-2xl transition-all duration-300 border-2",
-                isDialOpen
-                  ? "bg-muted text-foreground border-border rotate-90 scale-95"
-                  : dbaratiLetterFilter
-                    ? "bg-gradient-to-tr from-primary to-indigo-600 text-white border-white/30 ring-4 ring-primary/25 hover:scale-105 active:scale-95 shadow-primary/30"
-                    : "bg-gradient-to-tr from-primary to-indigo-600 text-white border-white/20 hover:scale-105 active:scale-95 shadow-primary/20"
-              )}
-              title={isDialOpen ? "Fermer l'index alphabétique" : "Rechercher par lettre dans Dbarati"}
-              aria-label="Index alphabétique Dbarati"
-            >
-              {isDialOpen ? (
-                <X className="h-5 w-5" />
-              ) : dbaratiLetterFilter ? (
-                <div className="flex flex-col items-center justify-center leading-none">
-                  <span className="text-xs uppercase font-black">{dbaratiLetterFilter}</span>
-                  <span className="text-[8px] opacity-80 mt-0.5 font-bold">✕</span>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center leading-none">
-                  <span className="text-xs font-black tracking-tighter">A-Z</span>
-                  <span className="text-[8px] font-bold opacity-80 mt-0.5">{dbaratiLetters.length}</span>
-                </div>
-              )}
-            </button>
-          </div>
-        </>
-      )}
     </div>
   );
 }
