@@ -79,19 +79,49 @@ function normalizeWordToken(word: string): string {
 }
 
 /**
- * Ingrédients composés connus où un mot-clé unique ne doit PAS suffire
- * afin d'éviter les faux positifs (ex: "pomme" ne doit pas valider "pomme de terre").
+ * Ingrédients composés et qualificatifs culinaires qui créent un produit fondamentalement distinct
+ * et qui ne doivent JAMAIS être confondus avec l'article de base (faux amis culinaires).
+ * Ex: "Lait de coco", "Lait d'amande", "Lait de soja" ne sont PAS du lait de vache.
+ * Ex: "Pomme de terre" n'est PAS une pomme.
+ * Ex: "Crème de coco" / "Crème de marrons" n'est PAS de la crème fraîche.
+ * Ex: "Sauce soja" / "Sauce huître" n'est PAS de la sauce tomate.
+ * Ex: "Pâte de curry" / "Pâte d'arachide" n'est PAS des pâtes ou de la pâte brisée.
  */
-const COMPOUND_EXCLUSIONS: Record<string, string[]> = {
+export const DISTINCT_QUALIFIERS: Record<string, string[]> = {
+  'lait': ['coco', 'amande', 'avoine', 'soja', 'riz', 'noisette', 'chanvre', 'concentre', 'ribot', 'caille', 'poudre'],
   'pomme': ['terre'],
-  'lait': ['coco', 'amande', 'avoine', 'soja', 'riz'],
-  'creme': ['coco', 'marron', 'marrons'],
-  'sauce': ['soja', 'huitre', 'poisson', 'barbecue', 'worcestershire', 'nuoc'],
-  'pate': ['arachide', 'pistache', 'curry', 'tartiner'],
-  'sucre': ['vanille', 'glace', 'roux'],
-  'vinaigre': ['balsamique', 'riz', 'cidre'],
-  'farine': ['pois', 'chiche', 'mais'],
+  'creme': ['coco', 'marron', 'marrons', 'tartre', 'anglaise'],
+  'sauce': ['soja', 'huitre', 'poisson', 'barbecue', 'worcestershire', 'nuoc', 'nam'],
+  'pate': ['curry', 'arachide', 'pistache', 'tartiner'],
+  'vinaigre': ['balsamique', 'cidre', 'riz'],
+  'farine': ['pois', 'chiche', 'mais', 'seigle', 'sarrasin', 'chataigne', 'riz', 'coco'],
+  'huile': ['coco', 'sesame', 'lin', 'ricin'],
+  'sucre': ['glace', 'roux'],
+  'eau': ['fleur', 'rose'],
 };
+
+/**
+ * Détecte si deux listes de tokens présentent un conflit sur un qualificatif distinct
+ * (ex: l'un a 'lait' + 'coco' et l'autre a 'lait' SANS 'coco').
+ */
+export function hasDistinctConflict(tokensA: string[], tokensB: string[]): boolean {
+  if (!tokensA || !tokensB || tokensA.length === 0 || tokensB.length === 0) return false;
+  const setA = new Set(tokensA);
+  const setB = new Set(tokensB);
+
+  for (const [root, qualifiers] of Object.entries(DISTINCT_QUALIFIERS)) {
+    if (setA.has(root) && setB.has(root)) {
+      for (const q of qualifiers) {
+        const inA = setA.has(q);
+        const inB = setB.has(q);
+        if (inA !== inB) {
+          return true; // Conflit absolu : l'un est un produit distinct de l'autre !
+        }
+      }
+    }
+  }
+  return false;
+}
 
 /**
  * Extrait les tokens significatifs et normalisés d'un ingrédient
@@ -139,13 +169,25 @@ function isSingleIngredientMatch(nameA: string, nameB: string): boolean {
   const noSpaceA = cleanA.replace(/\s+/g, '');
   const noSpaceB = cleanB.replace(/\s+/g, '');
   if (noSpaceA.length >= 3 && noSpaceA === noSpaceB) return true;
+
+  // Extraction préalable des tokens significatifs
+  const tokensA = getIngredientTokens(nameA);
+  const tokensB = getIngredientTokens(nameB);
+
+  // VERROU DE SÉCURITÉ CULINAIRE : Rejeter immédiatement les faux amis et produits composés distincts !
+  // (ex: "lait de coco" vs "lait", "pomme de terre" vs "pomme", "sauce soja" vs "sauce")
+  if (hasDistinctConflict(tokensA, tokensB)) {
+    return false;
+  }
+
+  // 1c. Rapprochement par inclusion sans espace si ratio suffisant
   if (noSpaceA.length >= 4 && noSpaceB.length >= 4 && (noSpaceA.includes(noSpaceB) || noSpaceB.includes(noSpaceA))) {
     const minLen = Math.min(noSpaceA.length, noSpaceB.length);
     const maxLen = Math.max(noSpaceA.length, noSpaceB.length);
     if (minLen / maxLen >= 0.6) return true;
   }
 
-  // 1c. Rapprochement par article de base sans arôme (ex: "Danup vanille" vs "Danup", "danup, frais" vs "Danup", "Dan-up mangue" vs "Danup")
+  // 1d. Rapprochement par article de base sans arôme (ex: "Danup vanille" vs "Danup", "danup, frais" vs "Danup")
   const baseA = cleanIngredientName(stripProductFlavors(nameA));
   const baseB = cleanIngredientName(stripProductFlavors(nameB));
   if (baseA && baseB && (baseA !== cleanA || baseB !== cleanB)) {
@@ -166,9 +208,6 @@ function isSingleIngredientMatch(nameA: string, nameB: string): boolean {
   if (keyA && keyB && keyA === keyB) return true;
 
   // 3. Comparaison par tokens
-  const tokensA = getIngredientTokens(nameA);
-  const tokensB = getIngredientTokens(nameB);
-
   if (tokensA.length === 0 || tokensB.length === 0) return false;
 
   const setA = new Set(tokensA);
@@ -189,24 +228,14 @@ function isSingleIngredientMatch(nameA: string, nameB: string): boolean {
   // 4. Reconnaissance intelligente par ingrédient pivot (ex: "poulet" dans "cuisses de poulet")
   if (minLen === 1) {
     const singleToken = tokensA.length === 1 ? tokensA[0] : tokensB[0];
-    const multiTokens = tokensA.length === 1 ? tokensB : tokensA;
     const multiSet = tokensA.length === 1 ? setB : setA;
 
     if (multiSet.has(singleToken)) {
-      // Vérifier les exclusions composées (ex: pomme vs pomme de terre, lait vs lait de coco)
-      const exclusions = COMPOUND_EXCLUSIONS[singleToken];
-      if (exclusions && exclusions.length > 0) {
-        const hasExcludedToken = exclusions.some(ex => multiTokens.includes(ex));
-        if (!hasExcludedToken) {
-          return true;
-        }
-      } else {
-        return true;
-      }
+      return true;
     }
   }
 
-  // 5. Calcul du score de Jaccard sur les tokens (seuil abaissé à 60% avec les stop-words nettoyés)
+  // 5. Calcul du score de Jaccard sur les tokens (seuil à 60% avec les stop-words nettoyés)
   let overlapCount = 0;
   for (const t of tokensA) {
     if (setB.has(t)) overlapCount++;
@@ -314,7 +343,11 @@ export function indexPantry(pantry: Ingredient[] = []): IndexedPantry {
     if (cleanNoSpace.length >= 3 && !collapsedMap.has(cleanNoSpace)) {
       collapsedMap.set(cleanNoSpace, raw);
     }
-    if (baseNoSpace.length >= 3 && !baseMap.has(baseNoSpace)) {
+    // N'indexer dans baseMap que si l'ingrédient ne comporte pas de qualificatif distinct (ex: pas de faux amis comme lait de coco)
+    const isDistinctItem = Object.entries(DISTINCT_QUALIFIERS).some(([root, qualifiers]) =>
+      tokens.includes(root) && qualifiers.some(q => tokens.includes(q))
+    );
+    if (!isDistinctItem && baseNoSpace.length >= 3 && !baseMap.has(baseNoSpace)) {
       baseMap.set(baseNoSpace, raw);
     }
     if (canonicalKey && !canonicalMap.has(canonicalKey)) {
@@ -359,11 +392,20 @@ function matchSingleIngredientAgainstIndexed(
     if (collapsed) return collapsed;
   }
 
-  // 1c. Article de base sans arôme en O(1)
-  const baseInputNoSpace = cleanIngredientName(stripProductFlavors(trimmed)).replace(/\s+/g, '');
-  if (baseInputNoSpace.length >= 3) {
-    const baseMatch = indexed.baseMap.get(baseInputNoSpace);
-    if (baseMatch) return baseMatch;
+  // 1c. Article de base sans arôme en O(1) (uniquement pour les articles aromatisés sans qualificatif distinct)
+  const isInputDistinct = Object.entries(DISTINCT_QUALIFIERS).some(([root, qualifiers]) => {
+    const tok = getIngredientTokens(trimmed);
+    return tok.includes(root) && qualifiers.some(q => tok.includes(q));
+  });
+
+  if (!isInputDistinct) {
+    const baseInputNoSpace = cleanIngredientName(stripProductFlavors(trimmed)).replace(/\s+/g, '');
+    if (baseInputNoSpace.length >= 3) {
+      const baseMatch = indexed.baseMap.get(baseInputNoSpace);
+      if (baseMatch && isIngredientMatch(baseMatch.name, trimmed)) {
+        return baseMatch;
+      }
+    }
   }
 
   // 2. Clé canonique en O(1)
