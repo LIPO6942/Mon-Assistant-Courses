@@ -1745,6 +1745,9 @@ export default function KitchenAssistantPage() {
               onUpdateDbaratiItemDessertTag={(id: string, dessertTag: 'Gâteau' | 'Crème' | 'Fruits' | 'Pâtisserie' | 'Autres') => {
                 setDbarati(prev => prev.map(item => item.id === id ? { ...item, dessertTag } : item));
               }}
+              onUpdateDbaratiItemTag={(id: string, tag: 'Soupe' | 'Salade' | 'Sauce') => {
+                setDbarati(prev => prev.map(item => item.id === id ? { ...item, tag } : item));
+              }}
               onSetDbaratiItemDone={(id: string, done: boolean) => {
                 setDbarati(prev => prev.map(item => item.id === id ? { ...item, done } : item));
               }}

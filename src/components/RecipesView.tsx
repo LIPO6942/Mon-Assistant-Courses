@@ -272,6 +272,7 @@ interface RecipesViewProps {
   onMoveDbaratiItem: (id: string, direction: 'up' | 'down') => void;
   onUpdateDbaratiItemPlatTag: (id: string, platTag: 'Pates' | 'Sauces' | 'Sandwich' | 'Autres') => void;
   onUpdateDbaratiItemDessertTag?: (id: string, dessertTag: 'Gâteau' | 'Crème' | 'Fruits' | 'Pâtisserie' | 'Autres') => void;
+  onUpdateDbaratiItemTag?: (id: string, tag: 'Soupe' | 'Salade' | 'Sauce') => void;
   onRemovePrepDate?: (id: string, dateIsoToRemove: string) => void;
   onAddToRecetteti?: (recipe: Recipe) => void;
 }
@@ -298,6 +299,7 @@ export default function RecipesView({
   onMoveDbaratiItem,
   onUpdateDbaratiItemPlatTag,
   onUpdateDbaratiItemDessertTag,
+  onUpdateDbaratiItemTag,
 }: RecipesViewProps) {
   const [suggestedRecipes, setSuggestedRecipes] = useState<Recipe[]>([]);
   const [dishCourseFilter, setDishCourseFilter] = useState<DishCourseFilter>('plat');
@@ -1341,56 +1343,200 @@ export default function RecipesView({
 
                     {/* Entrees List */}
                     {dbarati.filter(i => i.type === 'entree').length > 0 ? (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-w-4xl mx-auto scale-95 origin-top">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-4xl mx-auto">
                         {[...dbarati]
                           .filter(i => i.type === 'entree')
                           .filter(i => activeEntreeFilter === 'Toutes' || i.tag === activeEntreeFilter)
                           .filter(i => !dbaratiLetterFilter || getFirstLetter(i.text) === dbaratiLetterFilter)
                           .sort((a, b) => Number(a.done) - Number(b.done))
-                          .map((item) => (
-                            <div
-                              key={item.id}
-                              className={cn(
-                                "relative p-2 rounded-lg border transition-all duration-300 group flex items-center justify-between",
-                                item.done
-                                  ? "bg-muted/40 border-border/40 opacity-70"
-                                  : "bg-white dark:bg-card border-border/60 hover:border-primary/40 hover:shadow-sm"
-                              )}
-                            >
-                              <div className="flex items-center gap-2 flex-1 min-w-0">
-                                <Checkbox
-                                  id={`dbarati-${item.id}`}
-                                  checked={item.done}
-                                  onCheckedChange={() => onToggleDbaratiItem(item.id)}
-                                  className="h-4 w-4 rounded border-primary/20 data-[state=checked]:bg-primary shrink-0"
-                                />
-                                <label
-                                  htmlFor={`dbarati-${item.id}`}
-                                  className={cn(
-                                    "text-xs font-semibold cursor-pointer truncate flex-1",
-                                    item.done ? "line-through text-muted-foreground" : "text-foreground"
-                                  )}
-                                >
-                                  {item.text}
-                                </label>
-                                {item.tag && (
-                                  <Badge variant="secondary" className="text-[8px] px-1 py-0 h-3 font-medium opacity-70 shrink-0">
-                                    {item.tag}
-                                  </Badge>
+                          .map((item) => {
+                            const normalizedItemText = normalizeString(item.text);
+                            const matchedRecipe = userRecipes.find(r => normalizeString(r.title) === normalizedItemText);
+                            const isLongPressed = longPressItemId === item.id;
+
+                            return (
+                              <div
+                                key={item.id}
+                                className={cn(
+                                  "relative p-3 rounded-xl border transition-all duration-300 group flex flex-col",
+                                  item.done
+                                    ? "bg-muted/40 border-border/40 opacity-90 scale-[0.98]"
+                                    : "bg-white dark:bg-card border-border/60 hover:border-primary/40 hover:shadow-lg"
                                 )}
+                                onMouseDown={() => {
+                                  longPressTimer.current = setTimeout(() => {
+                                    setLongPressItemId(item.id);
+                                  }, 500);
+                                }}
+                                onMouseUp={() => {
+                                  if (longPressTimer.current) clearTimeout(longPressTimer.current);
+                                }}
+                                onMouseLeave={() => {
+                                  if (longPressTimer.current) clearTimeout(longPressTimer.current);
+                                }}
+                                onTouchStart={() => {
+                                  longPressTimer.current = setTimeout(() => {
+                                    setLongPressItemId(item.id);
+                                  }, 500);
+                                }}
+                                onTouchEnd={() => {
+                                  if (longPressTimer.current) clearTimeout(longPressTimer.current);
+                                }}
+                              >
+                                {/* Long-press native tag picker overlay */}
+                                {isLongPressed && (
+                                  <div className="absolute inset-0 z-10 bg-background/95 rounded-xl flex items-center justify-between px-4 animate-in fade-in duration-150 border-2 border-primary/20 shadow-sm">
+                                    <div className="flex items-center gap-2 flex-1">
+                                      <Tag className="h-3.5 w-3.5 text-primary" />
+                                      <select
+                                        className="w-full bg-transparent text-sm font-bold text-primary outline-none focus:ring-0 cursor-pointer appearance-none"
+                                        value={item.tag || 'Salade'}
+                                        onChange={(e) => {
+                                          if (e.target.value && onUpdateDbaratiItemTag) {
+                                            onUpdateDbaratiItemTag(item.id, e.target.value as any);
+                                            setLongPressItemId(null);
+                                          }
+                                        }}
+                                        onBlur={() => setLongPressItemId(null)}
+                                        autoFocus
+                                      >
+                                        <option value="" disabled hidden>Choisir un tag...</option>
+                                        <option value="Soupe">Soupe</option>
+                                        <option value="Salade">Salade</option>
+                                        <option value="Sauce">Sauce</option>
+                                      </select>
+                                    </div>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8 rounded-full text-muted-foreground hover:bg-muted"
+                                      onClick={() => setLongPressItemId(null)}
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                )}
+
+                                <div className="flex items-start gap-2.5">
+                                  <div className="flex flex-col items-center justify-start gap-2 mt-0.5">
+                                    <Checkbox
+                                      id={`dbarati-${item.id}`}
+                                      checked={item.done}
+                                      onCheckedChange={() => handleItemCheckClick(item)}
+                                      className="h-5 w-5 rounded-md border-2 border-primary/10 data-[state=checked]:bg-primary data-[state=checked]:border-primary shrink-0"
+                                    />
+                                    {/* Bouton +1 : visible dès que l'entrée a au moins 1 préparation enregistrée, ou est actuellement cochée */}
+                                    {(item.done || (item.prepCount || 0) > 0) && (
+                                      <button
+                                        title="Marquer une nouvelle préparation"
+                                        onClick={(e) => { e.stopPropagation(); handleOpenPrepModal(item); }}
+                                        className="inline-flex items-center justify-center bg-primary/15 hover:bg-primary/30 text-primary border border-primary/30 rounded-full h-5 px-1.5 min-w-[24px] text-[9px] font-black leading-none transition-colors shadow-sm"
+                                      >
+                                        +1
+                                      </button>
+                                    )}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-start gap-1.5 flex-nowrap mt-[2px]">
+                                      <label
+                                        htmlFor={`dbarati-${item.id}`}
+                                        className={cn(
+                                          "flex-1 min-w-0 text-sm font-bold cursor-pointer transition-all leading-tight break-words",
+                                          (() => {
+                                            if (!item.done || !item.lastPreparedAt) return "text-foreground";
+                                            const daysSince = (Date.now() - new Date(item.lastPreparedAt).getTime()) / (1000 * 60 * 60 * 24);
+                                            if (daysSince <= 7) return "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 px-1.5 py-0.5 rounded";
+                                            if (daysSince <= 15) return "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 px-1.5 py-0.5 rounded";
+                                            if (daysSince <= 30) return "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 px-1.5 py-0.5 rounded";
+                                            return "text-muted-foreground";
+                                          })()
+                                        )}
+                                      >
+                                        {item.text}
+                                      </label>
+                                      {item.tag && (
+                                        <Badge variant="secondary" className="text-[7.5px] px-1 py-0 h-[11px] leading-none flex items-center font-bold opacity-60 shrink-0">
+                                          {item.tag}
+                                        </Badge>
+                                      )}
+                                      {matchedRecipe && (
+                                        <button
+                                          title="Voir la recette"
+                                          className="inline-flex items-center justify-center shrink-0 w-6 h-6 rounded-full bg-primary/10 text-[12px] hover:bg-primary/20 transition-colors mt-0.5"
+                                          onClick={(e) => { e.stopPropagation(); onViewUserRecipe(matchedRecipe); }}
+                                        >
+                                          📖
+                                        </button>
+                                      )}
+                                    </div>
+
+                                    <div className="flex items-center gap-1.5 mt-1 flex-nowrap whitespace-nowrap">
+                                      {(item.prepCount || 0) > 0 && (
+                                        <span className="bg-primary/5 text-primary px-1.5 py-0 rounded-full text-[9px] font-bold shrink-0">
+                                          {item.prepCount}x
+                                        </span>
+                                      )}
+                                      {item.lastPreparedAt && (
+                                        <span className="text-[10px] text-muted-foreground italic truncate">
+                                          {formatDbaratiDate(item.lastPreparedAt)}
+                                          <span className="opacity-70 ml-1">
+                                            (il y a {Math.floor((Date.now() - new Date(item.lastPreparedAt).getTime()) / (1000 * 60 * 60 * 24))} j)
+                                          </span>
+                                        </span>
+                                      )}
+
+                                      {/* Bouton historique : visible seulement si ≥2 préparations */}
+                                      {(item.prepHistory?.length || 0) >= 2 && (
+                                        <button
+                                          title="Voir l'historique"
+                                          onClick={(e) => { e.stopPropagation(); setOpenHistoryId(openHistoryId === item.id ? null : item.id); }}
+                                          className="inline-flex items-center justify-center text-muted-foreground hover:text-primary text-[11px] rounded-full px-1 py-0.5 transition-colors shrink-0"
+                                        >
+                                          📅
+                                        </button>
+                                      )}
+                                    </div>
+
+                                    {/* Mini-historique inline */}
+                                    {openHistoryId === item.id && item.prepHistory && item.prepHistory.length > 0 && (
+                                      <div className="mt-1.5 text-[9px] text-muted-foreground bg-muted/30 rounded-lg px-2 py-1.5 space-y-0.5 animate-in fade-in slide-in-from-top-1 duration-200">
+                                        {[...item.prepHistory].reverse().map((date, i) => (
+                                          <div key={i} className="flex items-center justify-between gap-1 group/hist py-0.5">
+                                            <div className="flex items-center gap-1 min-w-0">
+                                              <span className="w-1 h-1 rounded-full bg-primary/40 shrink-0" />
+                                              <span className="italic truncate">{formatDbaratiDate(date, { withYear: true })}</span>
+                                            </div>
+                                            {onRemovePrepDate && (
+                                              <button
+                                                type="button"
+                                                title="Retirer cette date"
+                                                onClick={(e) => { e.stopPropagation(); onRemovePrepDate(item.id, date); }}
+                                                className="opacity-0 group-hover/hist:opacity-100 transition-opacity text-muted-foreground hover:text-destructive p-0.5"
+                                              >
+                                                <X className="h-2.5 w-2.5" />
+                                              </button>
+                                            )}
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  <div className="flex items-center gap-1 shrink-0 ml-1">
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-7 w-7 rounded-lg text-muted-foreground/60 hover:text-destructive hover:bg-destructive/10"
+                                      onClick={() => onDeleteDbaratiItem(item.id)}
+                                      title="Supprimer cette entrée"
+                                    >
+                                      <Trash2 className="h-3.5 w-3.5" />
+                                    </Button>
+                                  </div>
+                                </div>
                               </div>
-                              <div className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-2">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-6 w-6 rounded text-muted-foreground hover:text-destructive"
-                                  onClick={() => onDeleteDbaratiItem(item.id)}
-                                >
-                                  <Trash2 className="h-3 w-3" />
-                                </Button>
-                              </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                       </div>
                     ) : (
                       <div className="text-center py-4 rounded-xl border border-dashed border-border/40 bg-muted/5 scale-95">
