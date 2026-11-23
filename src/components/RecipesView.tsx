@@ -1056,16 +1056,18 @@ export default function RecipesView({
                 </div>
               </div>
 
-              {/* Bannière filtre actif par lettre */}
+              {/* Bannière filtre actif par lettre ultra-compacte sur une seule ligne */}
               {dbaratiLetterFilter && (
-                <div className="flex items-center justify-between max-w-4xl mx-auto mb-4 px-3.5 py-2 rounded-xl bg-primary/10 border border-primary/25 text-primary animate-in fade-in slide-in-from-top-1 duration-200">
-                  <div className="flex items-center gap-2 text-xs font-bold">
-                    <span className="text-base">🔤</span>
-                    <span>
-                      Plats commençant par <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-primary text-primary-foreground font-black text-sm ml-0.5 shadow-xs">{dbaratiLetterFilter}</span>
+                <div className="flex items-center justify-between gap-1.5 max-w-4xl mx-auto mb-3 px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-xl bg-primary/10 border border-primary/25 text-primary animate-in fade-in duration-150">
+                  <div className="flex items-center gap-1.5 text-xs font-bold min-w-0">
+                    <span className="inline-flex items-center justify-center w-5 h-5 rounded-md bg-primary text-primary-foreground font-black text-xs shrink-0 shadow-xs">
+                      {dbaratiLetterFilter}
                     </span>
-                    <span className="text-[11px] opacity-75 font-medium ml-1">
-                      ({filteredDbaratiCount} résultat{filteredDbaratiCount > 1 ? 's' : ''})
+                    <span className="text-xs truncate">
+                      Plats en « {dbaratiLetterFilter} »
+                    </span>
+                    <span className="text-[11px] opacity-75 font-medium shrink-0">
+                      ({filteredDbaratiCount})
                     </span>
                   </div>
                   <Button
@@ -1073,9 +1075,9 @@ export default function RecipesView({
                     size="sm"
                     variant="ghost"
                     onClick={() => handleSelectDbaratiLetter(null)}
-                    className="h-7 px-2.5 rounded-lg text-xs font-semibold hover:bg-primary/20 text-primary gap-1 cursor-pointer"
+                    className="h-6 px-2 rounded-lg text-[11px] sm:text-xs font-semibold hover:bg-primary/20 text-primary gap-1 shrink-0 cursor-pointer"
                   >
-                    <X className="h-3.5 w-3.5" />
+                    <X className="h-3 w-3" />
                     <span>Afficher tout</span>
                   </Button>
                 </div>
