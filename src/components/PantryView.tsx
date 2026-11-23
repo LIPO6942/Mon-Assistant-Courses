@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Plus, PlusCircle, Pencil, Trash2, Search, BrainCircuit, History, ChevronUp, ChevronDown, AlarmClock, X, Sparkles, Dices } from 'lucide-react';
+import { Plus, PlusCircle, Pencil, Trash2, Search, BrainCircuit, History, ChevronUp, ChevronDown, AlarmClock, X, Sparkles } from 'lucide-react';
 import type { Receipt, Ingredient, CategoryDef, PurchaseHistory, DbaratiItem } from '@/lib/types';
 import BudgetManager from './BudgetManager';
 import { cn, getProductStatus, isNonFoodItem } from '@/lib/utils';
@@ -16,49 +16,8 @@ import { getPantryCategoryTheme, getPantryCategoryThemesMap } from '@/lib/pantry
 
 type CreativeFilter =
   | { type: 'all' }
-  | { type: 'status'; value: 'red' | 'orange' | 'green' | 'chandyek' }
-  | { type: 'category'; value: string }
-  | { type: 'letter'; value: string }
-  | { type: 'ingredient'; value: string };
-
-const getFirstLetter = (str: string): string => {
-  if (!str) return '';
-  const stripped = str
-    .replace(/^[\p{Emoji_Presentation}\p{Extended_Pictographic}\s'"\-–—«»()\[\]{}.,:;!?*#+/@&~_]+/gu, '')
-    .trim()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-  if (!stripped) return '#';
-  const char = stripped.charAt(0).toUpperCase();
-  return (char >= 'A' && char <= 'Z') ? char : '#';
-};
-
-const getIngredientEmoji = (name: string): string => {
-  const n = name.toLowerCase();
-  if (n.includes('avocat')) return '🥑';
-  if (n.includes('tomate')) return '🍅';
-  if (n.includes('oignon')) return '🧅';
-  if (n.includes('ail')) return '🧄';
-  if (n.includes('pomme de terre') || n.includes('patate')) return '🥔';
-  if (n.includes('oeuf') || n.includes('œuf')) return '🥚';
-  if (n.includes('poulet')) return '🍗';
-  if (n.includes('viande') || n.includes('boeuf') || n.includes('agneau')) return '🥩';
-  if (n.includes('poisson') || n.includes('thon') || n.includes('sardine')) return '🐟';
-  if (n.includes('lait')) return '🥛';
-  if (n.includes('fromage') || n.includes('mozzarella') || n.includes('parmesan') || n.includes('ricotta')) return '🧀';
-  if (n.includes('pate') || n.includes('pâte') || n.includes('spaghetti') || n.includes('macaroni') || n.includes('couscous')) return '🍝';
-  if (n.includes('riz')) return '🍚';
-  if (n.includes('pain') || n.includes('baguette')) return '🥖';
-  if (n.includes('huile')) return '🫒';
-  if (n.includes('carotte')) return '🥕';
-  if (n.includes('poivron') || n.includes('piment')) return '🌶️';
-  if (n.includes('citron')) return '🍋';
-  if (n.includes('beurre')) return '🧈';
-  if (n.includes('farine') || n.includes('semoule')) return '🌾';
-  if (n.includes('sel') || n.includes('sucre')) return '🧂';
-  if (n.includes('harissa')) return '🌶️';
-  return '🍽️';
-};
+  | { type: 'status'; value: 'red' | 'orange' | 'green' }
+  | { type: 'category'; value: string };
 
 interface PantryViewProps {
   dbarati?: DbaratiItem[];
@@ -128,76 +87,22 @@ export default function PantryView({
   userId,
 }: PantryViewProps) {
   const [creativeFilter, setCreativeFilter] = useState<CreativeFilter>({ type: 'all' });
-  const [showLetterDrawer, setShowLetterDrawer] = useState(false);
 
   // Évaluation des statuts pour chaque produit
   const statusCounts = useMemo(() => {
     let red = 0;
     let orange = 0;
     let green = 0;
-    let chandyek = 0;
 
     pantry.forEach(item => {
-      const isChandyek = chandyekIngredientsList.some(name => name.toLowerCase() === item.name.toLowerCase());
-      if (isChandyek) chandyek++;
-
       const status = getProductStatus(purchaseHistory[item.id], item.name, dbarati, item.category);
       if (status === 'red') red++;
       else if (status === 'orange') orange++;
       else if (status === 'green') green++;
     });
 
-    return { red, orange, green, chandyek };
-  }, [pantry, purchaseHistory, dbarati, chandyekIngredientsList]);
-
-  // Extraction des lettres A-Z disponibles dans le garde-manger
-  const pantryLetters = useMemo(() => {
-    const map = new Map<string, number>();
-    pantry.forEach(item => {
-      const letter = getFirstLetter(item.name);
-      if (letter) {
-        map.set(letter, (map.get(letter) || 0) + 1);
-      }
-    });
-    return Array.from(map.entries())
-      .map(([letter, count]) => ({ letter, count }))
-      .sort((a, b) => {
-        if (a.letter === '#') return 1;
-        if (b.letter === '#') return -1;
-        return a.letter.localeCompare(b.letter);
-      });
-  }, [pantry]);
-
-  // Pépites et ingrédients phares présents dans le placard
-  const stapleIngredients = useMemo(() => {
-    const priorityKeywords = [
-      'avocat', 'tomate', 'oignon', 'ail', 'oeuf', 'œuf', 'lait', 'fromage',
-      'poulet', 'thon', 'pates', 'pâte', 'huile', 'piment', 'pomme de terre', 'riz', 'pain'
-    ];
-    const found: Ingredient[] = [];
-    const usedNames = new Set<string>();
-
-    for (const kw of priorityKeywords) {
-      const match = pantry.find(item => item.name.toLowerCase().includes(kw) && !usedNames.has(item.name.toLowerCase()));
-      if (match) {
-        found.push(match);
-        usedNames.add(match.name.toLowerCase());
-      }
-      if (found.length >= 8) break;
-    }
-
-    if (found.length < 6) {
-      for (const item of pantry) {
-        if (!usedNames.has(item.name.toLowerCase())) {
-          found.push(item);
-          usedNames.add(item.name.toLowerCase());
-        }
-        if (found.length >= 8) break;
-      }
-    }
-
-    return found;
-  }, [pantry]);
+    return { red, orange, green };
+  }, [pantry, purchaseHistory, dbarati]);
 
   const categoryCounts = useMemo(() => {
     const map = new Map<string, number>();
@@ -214,18 +119,7 @@ export default function PantryView({
   }, [categories]);
 
   // Actions de filtrage créatif sans aucune saisie
-  const handleRandomPick = () => {
-    if (pantry.length === 0) return;
-    const randomIndex = Math.floor(Math.random() * pantry.length);
-    const randomItem = pantry[randomIndex];
-    setCreativeFilter({ type: 'ingredient', value: randomItem.name });
-    setSearchQuery('');
-    if (typeof navigator !== 'undefined' && navigator.vibrate) {
-      try { navigator.vibrate([15, 30, 15]); } catch { }
-    }
-  };
-
-  const handleStatusFilter = (status: 'red' | 'orange' | 'green' | 'chandyek') => {
+  const handleStatusFilter = (status: 'red' | 'orange' | 'green') => {
     if (creativeFilter.type === 'status' && creativeFilter.value === status) {
       setCreativeFilter({ type: 'all' });
     } else {
@@ -249,30 +143,6 @@ export default function PantryView({
     }
   };
 
-  const handleLetterFilter = (letter: string) => {
-    if (creativeFilter.type === 'letter' && creativeFilter.value === letter) {
-      setCreativeFilter({ type: 'all' });
-    } else {
-      setCreativeFilter({ type: 'letter', value: letter });
-      setSearchQuery('');
-    }
-    if (typeof navigator !== 'undefined' && navigator.vibrate) {
-      try { navigator.vibrate(10); } catch { }
-    }
-  };
-
-  const handleStapleFilter = (ingredientName: string) => {
-    if (creativeFilter.type === 'ingredient' && creativeFilter.value.toLowerCase() === ingredientName.toLowerCase()) {
-      setCreativeFilter({ type: 'all' });
-    } else {
-      setCreativeFilter({ type: 'ingredient', value: ingredientName });
-      setSearchQuery('');
-    }
-    if (typeof navigator !== 'undefined' && navigator.vibrate) {
-      try { navigator.vibrate(10); } catch { }
-    }
-  };
-
   const handleClearAllFilters = () => {
     setCreativeFilter({ type: 'all' });
     setSearchQuery('');
@@ -289,11 +159,8 @@ export default function PantryView({
       if (creativeFilter.value === 'red') return '🔴 À racheter d’urgence';
       if (creativeFilter.value === 'orange') return '🟠 Stock à surveiller';
       if (creativeFilter.value === 'green') return '🟢 En stock';
-      if (creativeFilter.value === 'chandyek') return '🧠 Sélection Ch3andek';
     }
     if (creativeFilter.type === 'category') return `Rayon « ${creativeFilter.value} »`;
-    if (creativeFilter.type === 'letter') return `Lettre « ${creativeFilter.value} »`;
-    if (creativeFilter.type === 'ingredient') return `Produit « ${creativeFilter.value} »`;
     return '';
   }, [creativeFilter, searchQuery]);
 
@@ -307,21 +174,12 @@ export default function PantryView({
     }
 
     if (creativeFilter.type === 'status') {
-      if (creativeFilter.value === 'chandyek') {
-        items = items.filter(i => chandyekIngredientsList.some(name => name.toLowerCase() === i.name.toLowerCase()));
-      } else {
-        items = items.filter(i => {
-          const s = getProductStatus(purchaseHistory[i.id], i.name, dbarati, i.category);
-          return s === creativeFilter.value;
-        });
-      }
+      items = items.filter(i => {
+        const s = getProductStatus(purchaseHistory[i.id], i.name, dbarati, i.category);
+        return s === creativeFilter.value;
+      });
     } else if (creativeFilter.type === 'category') {
       items = items.filter(i => (i.category || 'Autre') === creativeFilter.value);
-    } else if (creativeFilter.type === 'letter') {
-      items = items.filter(i => getFirstLetter(i.name) === creativeFilter.value);
-    } else if (creativeFilter.type === 'ingredient') {
-      const target = creativeFilter.value.toLowerCase();
-      items = items.filter(i => i.name.toLowerCase().includes(target));
     }
 
     const acc = categories.reduce((obj, cat) => ({ ...obj, [cat.name]: [] }), {} as Record<string, Ingredient[]>);
@@ -332,7 +190,7 @@ export default function PantryView({
       acc[catName].push(item);
     });
     return acc;
-  }, [pantry, searchQuery, creativeFilter, categories, purchaseHistory, dbarati, chandyekIngredientsList]);
+  }, [pantry, searchQuery, creativeFilter, categories, purchaseHistory, dbarati]);
 
   const totalMatchingIngredients = useMemo(() => {
     return Object.values(activeGroupedIngredients).reduce((sum, items) => sum + items.length, 0);
@@ -480,51 +338,6 @@ export default function PantryView({
             </button>
           )}
 
-          {/* Bouton Ch3andek */}
-          {statusCounts.chandyek > 0 && (
-            <button
-              type="button"
-              onClick={() => handleStatusFilter('chandyek')}
-              className={cn(
-                "h-8 px-3 rounded-full text-xs font-bold shrink-0 transition-all duration-200 snap-start flex items-center gap-1.5 border shadow-2xs cursor-pointer",
-                creativeFilter.type === 'status' && creativeFilter.value === 'chandyek'
-                  ? "bg-indigo-600 text-white border-indigo-600 shadow-xs ring-2 ring-indigo-400/30 scale-105"
-                  : "bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300 dark:hover:bg-indigo-950/60 border-indigo-200 dark:border-indigo-800/40 active:scale-95"
-              )}
-              title="Ingrédients cochés pour trouver des recettes"
-            >
-              <BrainCircuit className="h-3 w-3 shrink-0" />
-              <span>Ch3andek</span>
-              <span className="text-[10px] opacity-85 font-semibold">({statusCounts.chandyek})</span>
-            </button>
-          )}
-
-          {/* Bouton Tirage Aléatoire Surprise */}
-          <button
-            type="button"
-            onClick={handleRandomPick}
-            className="h-8 px-3 rounded-full text-xs font-bold shrink-0 transition-all duration-200 snap-start flex items-center gap-1.5 border border-purple-200 dark:border-purple-800/50 bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-amber-500/10 hover:from-purple-500/20 hover:to-amber-500/20 text-purple-700 dark:text-purple-300 shadow-2xs active:scale-95 cursor-pointer"
-            title="Tirer au sort un ingrédient surprise du placard"
-          >
-            <Dices className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400 shrink-0" />
-            <span>Surprise !</span>
-          </button>
-
-          {/* Bouton Toggle pour Lettres A-Z & Essentiels */}
-          <button
-            type="button"
-            onClick={() => setShowLetterDrawer(!showLetterDrawer)}
-            className={cn(
-              "h-8 px-3 rounded-full text-xs font-bold shrink-0 transition-all duration-200 snap-start flex items-center gap-1.5 border shadow-2xs cursor-pointer",
-              showLetterDrawer || creativeFilter.type === 'letter' || creativeFilter.type === 'ingredient'
-                ? "bg-primary/15 text-primary border-primary/30"
-                : "bg-background/90 hover:bg-muted text-muted-foreground border-border/60 hover:text-foreground active:scale-95"
-            )}
-            title="Explorer par lettres A-Z ou ingrédients phares"
-          >
-            <span>🔤 Index A-Z</span>
-            <ChevronDown className={cn("h-3 w-3 transition-transform duration-200", showLetterDrawer && "rotate-180")} />
-          </button>
         </div>
 
         {/* Ligne 2 : Rayons / Catégories Visuelles avec émojis */}
@@ -556,75 +369,6 @@ export default function PantryView({
               );
             })}
         </div>
-
-        {/* Panneau dépliable : Index Alphabétique A-Z & Pépites / Essentiels */}
-        {showLetterDrawer && (
-          <div className="p-3 rounded-2xl bg-muted/40 dark:bg-zinc-900/40 border border-border/60 space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
-            {/* Lettres alphabétiques A-Z */}
-            {pantryLetters.length > 0 && (
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5 flex items-center gap-1">
-                  <span>🔤</span>
-                  <span>Filtrer par lettre initiale</span>
-                </p>
-                <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-1">
-                  {pantryLetters.map(({ letter, count }) => {
-                    const isSelected = creativeFilter.type === 'letter' && creativeFilter.value === letter;
-                    return (
-                      <button
-                        key={letter}
-                        type="button"
-                        onClick={() => handleLetterFilter(letter)}
-                        className={cn(
-                          "h-7 min-w-7 px-1.5 rounded-lg text-xs font-black shrink-0 transition-all duration-150 flex items-center justify-center gap-0.5 border cursor-pointer",
-                          isSelected
-                            ? "bg-primary text-primary-foreground border-primary shadow-xs scale-110"
-                            : "bg-background text-foreground border-border/60 hover:bg-muted active:scale-95"
-                        )}
-                        title={`${count} produit${count > 1 ? 's' : ''} commençant par ${letter}`}
-                      >
-                        <span className="uppercase">{letter}</span>
-                        <span className="text-[9px] opacity-70 font-normal">{count}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Pépites et Essentiels du placard */}
-            {stapleIngredients.length > 0 && (
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5 flex items-center gap-1">
-                  <span>✨</span>
-                  <span>Essentiels & ingrédients phares</span>
-                </p>
-                <div className="flex flex-wrap items-center gap-1.5">
-                  {stapleIngredients.map(item => {
-                    const isSelected = creativeFilter.type === 'ingredient' && creativeFilter.value.toLowerCase() === item.name.toLowerCase();
-                    const emoji = getIngredientEmoji(item.name);
-                    return (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => handleStapleFilter(item.name)}
-                        className={cn(
-                          "h-7 px-2.5 rounded-full text-xs font-semibold transition-all duration-150 flex items-center gap-1 border cursor-pointer",
-                          isSelected
-                            ? "bg-primary text-primary-foreground border-primary shadow-xs scale-105"
-                            : "bg-background text-foreground border-border/60 hover:bg-muted active:scale-95"
-                        )}
-                      >
-                        <span>{emoji}</span>
-                        <span>{item.name}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
 
         {/* Bannière active ultra-compacte sur UNE SEULE LIGNE */}
         {isFilterActive && (
@@ -730,6 +474,9 @@ export default function PantryView({
                         {palette.emoji}
                       </span>
                       <span className="break-words font-semibold tracking-tight">{category.name}</span>
+                      <span className="text-[11px] sm:text-xs font-normal opacity-75 ml-1 shrink-0">
+                        ({items.length !== (categoryCounts.get(category.name) ?? items.length) ? `${items.length}/${categoryCounts.get(category.name) ?? items.length}` : (categoryCounts.get(category.name) ?? items.length)})
+                      </span>
                     </span>
                   </CardTitle>
                   {category.name !== 'Autre' && <div className="flex items-center gap-1 shrink-0 opacity-100 md:opacity-0 md:group-hover/card:opacity-100 transition-opacity ml-1">
