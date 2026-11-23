@@ -34,6 +34,14 @@ const CULINARY_KEYWORD_IMAGES: CulinaryEntry[] = [
     url: 'https://images.unsplash.com/photo-1572695157366-5e585ab2b69f?w=800&auto=format&fit=crop&q=80'
   },
   {
+    keywords: ['avocat', 'avocado', 'guacamole'],
+    url: 'https://images.unsplash.com/photo-1525351484163-7529414344d8?w=800&auto=format&fit=crop&q=80'
+  },
+  {
+    keywords: ['california', 'maki', 'sushi'],
+    url: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=800&auto=format&fit=crop&q=80'
+  },
+  {
     keywords: ['pizza', 'pide', 'khachapuri'],
     url: 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=800&auto=format&fit=crop&q=80'
   },
