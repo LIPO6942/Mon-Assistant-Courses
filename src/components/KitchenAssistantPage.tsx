@@ -725,8 +725,8 @@ export default function KitchenAssistantPage() {
 
   const handleDeleteIngredient = (id: string) => setPantry(prev => prev.filter(ing => ing.id !== id));
 
-  const openAddDialog = (category?: string) => {
-    setEditingIngredient({ category: category || 'Autre', unit: 'pièce', price: 0, name: '' });
+  const openAddDialog = (category?: string, initialName?: string) => {
+    setEditingIngredient({ category: category || 'Autre', unit: 'pièce', price: 0, name: initialName || '' });
     setAddEditDialogOpen(true);
   };
 

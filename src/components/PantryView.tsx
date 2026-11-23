@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Plus, PlusCircle, Pencil, Trash2, Search, BrainCircuit, History, ChevronUp, ChevronDown, AlarmClock } from 'lucide-react';
+import { Plus, PlusCircle, Pencil, Trash2, Search, BrainCircuit, History, ChevronUp, ChevronDown, AlarmClock, X } from 'lucide-react';
 import type { Receipt, Ingredient, CategoryDef, PurchaseHistory, DbaratiItem } from '@/lib/types';
 import BudgetManager from './BudgetManager';
 import { cn, getProductStatus, isNonFoodItem } from '@/lib/utils';
@@ -21,7 +21,7 @@ interface PantryViewProps {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   openQuantityDialog: (ingredient: Ingredient) => void;
-  openAddDialog: (category?: string) => void;
+  openAddDialog: (category?: string, initialName?: string) => void;
   openEditDialog: (ingredient: Ingredient) => void;
   handleDeleteIngredient: (id: string) => void;
   openCategoryDialog: (category?: CategoryDef) => void;
@@ -81,6 +81,10 @@ export default function PantryView({
   onMoveCategory,
   userId,
 }: PantryViewProps) {
+  const totalMatchingIngredients = useMemo(() => {
+    return Object.values(groupedIngredients).reduce((sum, items) => sum + items.length, 0);
+  }, [groupedIngredients]);
+
   return (
     <div>
       <BudgetManager
@@ -106,8 +110,25 @@ export default function PantryView({
           />
         </Sheet>
         <div className="relative flex-grow">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-          <Input type="search" placeholder="Rechercher un ingrédient..." className="pl-11 rounded-full h-11 text-base" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
+          <Input
+            type="search"
+            placeholder="Rechercher un ingrédient..."
+            className="pl-11 pr-10 rounded-full h-11 text-base"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          {searchQuery.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              title="Effacer la recherche"
+              aria-label="Effacer la recherche"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
         </div>
         <Sheet>
           <SheetTrigger asChild>
@@ -127,6 +148,44 @@ export default function PantryView({
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {(() => {
           const filledCategories = Object.entries(groupedIngredients).filter(([, items]) => items.length > 0);
+
+          if (filledCategories.length === 0 && searchQuery.trim().length > 0) {
+            return (
+              <div className="col-span-full py-12 px-6 flex flex-col items-center justify-center text-center bg-card/60 dark:bg-zinc-900/40 rounded-3xl border border-dashed border-border/80 shadow-xs animate-in fade-in duration-200">
+                <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-3 text-2xl shadow-inner">
+                  🔍
+                </div>
+                <h3 className="text-base font-bold text-foreground mb-1">
+                  Aucun ingrédient ne correspond à « {searchQuery.trim()} »
+                </h3>
+                <p className="text-xs text-muted-foreground max-w-sm mb-5">
+                  Vérifiez l'orthographe ou ajoutez directement cet ingrédient à votre garde-manger.
+                </p>
+                <div className="flex flex-wrap items-center justify-center gap-2.5">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSearchQuery('')}
+                    className="rounded-full text-xs font-semibold gap-1.5 h-9 px-4"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                    Réinitialiser la recherche
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => openAddDialog(undefined, searchQuery.trim())}
+                    className="rounded-full text-xs font-semibold gap-1.5 h-9 px-4 shadow-sm"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    Ajouter « {searchQuery.trim()} »
+                  </Button>
+                </div>
+              </div>
+            );
+          }
+
           // Calculer les thèmes avec unicité absolue des émojis (aucun doublon)
           const categoryNames = filledCategories.map(([categoryName]) => {
             const cat = categories.find(c => c.name === categoryName);
@@ -292,6 +351,28 @@ export default function PantryView({
           <span className="font-semibold text-muted-foreground group-hover:text-primary transition-colors">Ajouter une catégorie</span>
         </Card>
       </div>
+
+      {/* Pilule flottante pour réinitialiser la recherche lors du défilement */}
+      {searchQuery.trim().length > 0 && (
+        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 bg-card/95 dark:bg-zinc-900/95 backdrop-blur-md border border-primary/30 shadow-2xl px-4 py-2 rounded-full flex items-center gap-3 text-xs font-semibold animate-in slide-in-from-bottom-3 duration-200">
+          <span className="flex items-center gap-1.5 text-foreground whitespace-nowrap">
+            <Search className="h-3.5 w-3.5 text-primary" />
+            <span>
+              {totalMatchingIngredients} ingrédient{totalMatchingIngredients > 1 ? 's' : ''} pour <strong>« {searchQuery.trim()} »</strong>
+            </span>
+          </span>
+          <Button
+            type="button"
+            size="sm"
+            variant="secondary"
+            onClick={() => setSearchQuery('')}
+            className="h-6 px-2.5 rounded-full text-[11px] font-bold bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 gap-1 transition-colors shrink-0"
+          >
+            <X className="h-3 w-3" />
+            <span>Tout afficher</span>
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
