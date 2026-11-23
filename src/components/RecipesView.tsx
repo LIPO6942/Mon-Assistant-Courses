@@ -350,6 +350,8 @@ export default function RecipesView({
   const [dbaratiAccordionValue, setDbaratiAccordionValue] = useState<string>('');
   const [dbaratiLetterFilter, setDbaratiLetterFilter] = useState<string | null>(null);
   const [dbaratiSearchQuery, setDbaratiSearchQuery] = useState('');
+  const [isDbaratiWheelOpen, setIsDbaratiWheelOpen] = useState(false);
+  const [hoveredWheelLetter, setHoveredWheelLetter] = useState<string | null>(null);
 
   // Extraction robuste de la première lettre : élimine tous les émojis, symboles, guillemets, tirets et accents
   const getFirstLetter = (str: string): string => {
@@ -1038,38 +1040,54 @@ export default function RecipesView({
                 </Badge>
               </div>
 
-              {/* Badges de filtrage actif visibles même plié avec bouton réinitialiser en 1 clic */}
-              {(dbaratiLetterFilter || dbaratiSearchQuery) && (
-                <div
-                  className="flex items-center gap-1.5"
-                  onClick={(e) => {
-                    e.stopPropagation();
+              <div
+                className="flex items-center gap-2"
+                onClick={(e) => {
+                  e.stopPropagation();
+                }}
+              >
+                {/* Bouton Cadran Demi-Lune Dbarati visible même plié */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsDbaratiWheelOpen(true);
+                    setHoveredWheelLetter(dbaratiLetterFilter);
                   }}
+                  className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-gradient-to-r from-primary to-indigo-600 text-white shadow-sm hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                  title="Ouvrir le cadran alphabétique Dbarati"
                 >
-                  {dbaratiLetterFilter && (
-                    <Badge
-                      variant="secondary"
-                      className="text-xs bg-primary text-white font-black px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-sm cursor-pointer hover:bg-primary/90"
-                      onClick={() => handleSelectDbaratiLetter(null)}
-                      title="Cliquer pour retirer le filtre de lettre"
-                    >
-                      <span>🔤 {dbaratiLetterFilter}</span>
-                      <X className="h-3 w-3 ml-0.5" />
-                    </Badge>
-                  )}
-                  {dbaratiSearchQuery && (
-                    <Badge
-                      variant="secondary"
-                      className="text-xs bg-primary text-white font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm cursor-pointer hover:bg-primary/90 max-w-[140px] truncate"
-                      onClick={() => setDbaratiSearchQuery('')}
-                      title="Cliquer pour effacer la recherche"
-                    >
-                      <span className="truncate">🔍 « {dbaratiSearchQuery} »</span>
-                      <X className="h-3 w-3 ml-0.5 shrink-0" />
-                    </Badge>
-                  )}
-                </div>
-              )}
+                  <span className="text-sm">🎡</span>
+                  <span>Cadran Dbarati A-Z</span>
+                </button>
+
+                {/* Badges de filtrage actif visibles même plié avec bouton réinitialiser en 1 clic */}
+                {(dbaratiLetterFilter || dbaratiSearchQuery) && (
+                  <div className="flex items-center gap-1.5">
+                    {dbaratiLetterFilter && (
+                      <Badge
+                        variant="secondary"
+                        className="text-xs bg-primary text-white font-black px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-sm cursor-pointer hover:bg-primary/90"
+                        onClick={() => handleSelectDbaratiLetter(null)}
+                        title="Cliquer pour retirer le filtre de lettre"
+                      >
+                        <span>🔤 {dbaratiLetterFilter}</span>
+                        <X className="h-3 w-3 ml-0.5" />
+                      </Badge>
+                    )}
+                    {dbaratiSearchQuery && (
+                      <Badge
+                        variant="secondary"
+                        className="text-xs bg-primary text-white font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm cursor-pointer hover:bg-primary/90 max-w-[140px] truncate"
+                        onClick={() => setDbaratiSearchQuery('')}
+                        title="Cliquer pour effacer la recherche"
+                      >
+                        <span className="truncate">🔍 « {dbaratiSearchQuery} »</span>
+                        <X className="h-3 w-3 ml-0.5 shrink-0" />
+                      </Badge>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </AccordionTrigger>
           <AccordionContent>
@@ -3000,6 +3018,252 @@ export default function RecipesView({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* --- CADRAN DEMI-LUNE CENTRÉ POUR DBARATI (BOTTOM ARC WHEEL) --- */}
+      {/* 1. Bouton Flottant Déclencheur (Accessible sur toute la page, même plié) */}
+      {dbarati && dbarati.length > 0 && dbaratiLetters.length > 0 && (
+        <div className="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-40 select-none animate-in fade-in zoom-in-90 duration-200">
+          <button
+            type="button"
+            onClick={() => {
+              setIsDbaratiWheelOpen(true);
+              setHoveredWheelLetter(dbaratiLetterFilter);
+            }}
+            className={cn(
+              "h-12 px-3.5 sm:h-13 sm:px-4 rounded-full flex items-center gap-2 shadow-2xl transition-all duration-300 border-2 active:scale-95 cursor-pointer backdrop-blur-md",
+              dbaratiLetterFilter
+                ? "bg-gradient-to-tr from-primary to-indigo-600 text-white border-white/40 ring-4 ring-primary/25 shadow-primary/30"
+                : "bg-gradient-to-tr from-primary to-indigo-600 text-white border-white/20 hover:scale-105 shadow-primary/25"
+            )}
+            title="Ouvrir le cadran alphabétique Dbarati"
+            aria-label="Cadran alphabétique Dbarati"
+          >
+            <span className="text-base sm:text-lg">🎡</span>
+            <div className="flex flex-col items-start leading-none pr-1">
+              <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-white">Dbarati</span>
+              <span className="text-[9px] font-bold opacity-90 text-white/90">
+                {dbaratiLetterFilter ? `Lettre ${dbaratiLetterFilter}` : 'Cadran A-Z'}
+              </span>
+            </div>
+            {dbaratiLetterFilter && (
+              <span
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleSelectDbaratiLetter(null);
+                }}
+                className="h-4 w-4 rounded-full bg-white/25 hover:bg-white/40 flex items-center justify-center text-[10px] font-black ml-0.5"
+                title="Réinitialiser"
+              >
+                ✕
+              </span>
+            )}
+          </button>
+        </div>
+      )}
+
+      {/* 2. Le Cadran Demi-Lune Modal Centré */}
+      {isDbaratiWheelOpen && (
+        <>
+          {/* Arrière-plan flouté */}
+          <div
+            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200"
+            onClick={() => {
+              setIsDbaratiWheelOpen(false);
+              setHoveredWheelLetter(null);
+            }}
+          />
+
+          {/* Panneau Demi-Lune centré en bas */}
+          <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-lg z-50 rounded-t-[36px] bg-card/98 dark:bg-zinc-900/98 border-t border-x border-primary/30 shadow-2xl p-4 sm:p-5 pb-6 backdrop-blur-2xl animate-in slide-in-from-bottom-8 duration-250 select-none">
+            {/* Poignée de drag */}
+            <div className="w-12 h-1.5 rounded-full bg-muted-foreground/30 mx-auto mb-3" />
+
+            {/* En-tête explicite Dbarati */}
+            <div className="flex items-center justify-between pb-2.5 mb-2 border-b border-border/40">
+              <div className="flex items-center gap-2">
+                <div className="h-8 w-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center text-lg shadow-inner">
+                  🍳
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-foreground flex items-center gap-1.5">
+                    <span>Cadran Demi-Lune Dbarati</span>
+                    <Badge variant="outline" className="text-[10px] font-bold text-primary border-primary/20">
+                      {dbarati.length} idées
+                    </Badge>
+                  </h3>
+                  <p className="text-[10px] sm:text-[11px] text-muted-foreground">
+                    Touchez ou glissez sur l&apos;arc pour filtrer vos plats Dbarati
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsDbaratiWheelOpen(false);
+                  setHoveredWheelLetter(null);
+                }}
+                className="h-7 w-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+                title="Fermer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Bulle 3D géante en relief jaillissant (Aperçu) */}
+            <div className="flex flex-col items-center justify-center my-2">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-primary to-indigo-600 text-white font-black text-3xl flex items-center justify-center shadow-2xl ring-4 ring-primary/30 transform -rotate-2 scale-110 animate-in zoom-in-75 duration-150">
+                {hoveredWheelLetter || dbaratiLetterFilter || '★'}
+              </div>
+              <div className="mt-2 text-center px-4">
+                <div className="text-xs font-black text-foreground">
+                  {(hoveredWheelLetter || dbaratiLetterFilter) ? (
+                    <>
+                      Plats Dbarati en <span className="text-primary font-black uppercase text-sm">« {hoveredWheelLetter || dbaratiLetterFilter} »</span>
+                    </>
+                  ) : (
+                    'Toutes vos idées Dbarati'
+                  )}
+                </div>
+                <div className="text-[11px] text-muted-foreground font-medium mt-0.5 truncate max-w-xs sm:max-w-sm">
+                  {(() => {
+                    const target = hoveredWheelLetter || dbaratiLetterFilter;
+                    if (!target) return `${dbarati.length} plats enregistrés au total`;
+                    const matches = dbarati.filter(i => getFirstLetter(i.text) === target);
+                    if (matches.length === 0) return 'Aucun plat pour cette lettre';
+                    const sample = matches.slice(0, 3).map(i => i.text.replace(/^[\p{Emoji_Presentation}\p{Extended_Pictographic}\s]+/gu, '')).join(', ');
+                    return `${matches.length} plat${matches.length > 1 ? 's' : ''} : ${sample}`;
+                  })()}
+                </div>
+              </div>
+            </div>
+
+            {/* Cadran Demi-Lune Incurvé (Disposition en Arc sous le pouce) */}
+            <div
+              className="relative my-3 p-1"
+              onTouchMove={(e) => {
+                const touch = e.touches[0];
+                if (!touch) return;
+                const targetEl = document.elementFromPoint(touch.clientX, touch.clientY);
+                const letterEl = targetEl?.closest('[data-wheel-letter]');
+                const letter = letterEl?.getAttribute('data-wheel-letter');
+                if (letter && letter !== hoveredWheelLetter) {
+                  setHoveredWheelLetter(letter === 'ALL' ? null : letter);
+                  if (typeof navigator !== 'undefined' && navigator.vibrate) {
+                    try { navigator.vibrate(8); } catch { }
+                  }
+                }
+              }}
+              onTouchEnd={() => {
+                if (hoveredWheelLetter !== undefined) {
+                  handleSelectDbaratiLetter(hoveredWheelLetter);
+                  setIsDbaratiWheelOpen(false);
+                  setHoveredWheelLetter(null);
+                }
+              }}
+            >
+              {/* Arc courbé visuel décoratif */}
+              <div className="flex items-center justify-center mb-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/75 flex items-center gap-1">
+                  <span>✦</span>
+                  <span>Arc alphabétique interactif</span>
+                  <span>✦</span>
+                </span>
+              </div>
+
+              {/* Ruban tactile défilant incurvé avec effet 3D relief au survol/toucher */}
+              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-2 px-1 scroll-smooth snap-x">
+                {/* Bouton Tous */}
+                <button
+                  type="button"
+                  data-wheel-letter="ALL"
+                  onClick={() => {
+                    handleSelectDbaratiLetter(null);
+                    setIsDbaratiWheelOpen(false);
+                    setHoveredWheelLetter(null);
+                  }}
+                  onMouseEnter={() => setHoveredWheelLetter(null)}
+                  className={cn(
+                    "h-10 px-3.5 rounded-xl font-bold text-xs shrink-0 transition-all duration-150 snap-start flex items-center gap-1.5 border shadow-2xs cursor-pointer",
+                    (hoveredWheelLetter === null && dbaratiLetterFilter === null)
+                      ? "bg-primary text-primary-foreground border-primary shadow-lg scale-105 font-black ring-2 ring-primary/30 z-10"
+                      : "bg-background/90 hover:bg-muted text-foreground border-border/60 hover:border-primary/40 active:scale-95"
+                  )}
+                >
+                  <span>★ Tous</span>
+                  <span className="text-[10px] opacity-80 font-normal">({dbarati.length})</span>
+                </button>
+
+                {/* Lettres de Dbarati avec relief 3D */}
+                {dbaratiLetters.map(({ letter, count }) => {
+                  const isHovered = (hoveredWheelLetter || dbaratiLetterFilter) === letter;
+                  const isSelected = dbaratiLetterFilter === letter;
+
+                  return (
+                    <button
+                      key={letter}
+                      type="button"
+                      data-wheel-letter={letter}
+                      onClick={() => {
+                        handleSelectDbaratiLetter(letter);
+                        setIsDbaratiWheelOpen(false);
+                        setHoveredWheelLetter(null);
+                      }}
+                      onMouseEnter={() => setHoveredWheelLetter(letter)}
+                      className={cn(
+                        "h-10 min-w-10 px-2.5 rounded-xl text-xs font-black shrink-0 transition-all duration-150 snap-center flex items-center justify-center gap-0.5 border cursor-pointer",
+                        isHovered
+                          ? "bg-gradient-to-tr from-primary to-indigo-600 text-white border-primary shadow-xl ring-4 ring-primary/30 scale-125 -translate-y-1 z-20"
+                          : isSelected
+                            ? "bg-primary text-primary-foreground border-primary ring-2 ring-primary/30 font-black shadow-md"
+                            : "bg-background/90 text-foreground border-border/60 hover:bg-primary/5 hover:border-primary/40 hover:-translate-y-0.5 active:scale-95 shadow-2xs"
+                      )}
+                      title={`Filtrer Dbarati par la lettre ${letter} (${count})`}
+                    >
+                      <span className="uppercase text-sm">{letter}</span>
+                      <span className={cn(
+                        "text-[9px] font-semibold ml-0.5",
+                        isHovered || isSelected ? "opacity-90" : "text-muted-foreground"
+                      )}>
+                        {count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Boutons d'action au bas du cadran */}
+            <div className="flex items-center gap-2 pt-2 border-t border-border/40">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  handleSelectDbaratiLetter(null);
+                  setIsDbaratiWheelOpen(false);
+                  setHoveredWheelLetter(null);
+                }}
+                className="flex-1 rounded-xl text-xs font-bold h-9"
+              >
+                ★ Tout afficher ({dbarati.length})
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => {
+                  if (hoveredWheelLetter) {
+                    handleSelectDbaratiLetter(hoveredWheelLetter);
+                  }
+                  setIsDbaratiWheelOpen(false);
+                }}
+                className="flex-1 rounded-xl text-xs font-bold h-9 bg-gradient-to-r from-primary to-indigo-600 text-white shadow-sm"
+              >
+                Confirmer la sélection
+              </Button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
