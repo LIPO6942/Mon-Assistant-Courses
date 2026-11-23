@@ -159,7 +159,7 @@ export default function PantryView({
                   Aucun ingrédient ne correspond à « {searchQuery.trim()} »
                 </h3>
                 <p className="text-xs text-muted-foreground max-w-sm mb-5">
-                  Vérifiez l'orthographe ou ajoutez directement cet ingrédient à votre garde-manger.
+                  Vérifiez l&apos;orthographe ou ajoutez directement cet ingrédient à votre garde-manger.
                 </p>
                 <div className="flex flex-wrap items-center justify-center gap-2.5">
                   <Button
