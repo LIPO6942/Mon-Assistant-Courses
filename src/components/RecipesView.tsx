@@ -2859,7 +2859,7 @@ export default function RecipesView({
             {/* Éventail des lettres radiales */}
             {isDialOpen && (
               <div
-                className="absolute bottom-1 right-1 pointer-events-auto"
+                className="absolute bottom-16 right-0 w-64 sm:w-72 max-w-[calc(100vw-36px)] rounded-3xl rounded-br-sm bg-card/95 dark:bg-zinc-900/95 backdrop-blur-xl border border-primary/25 shadow-2xl p-3.5 animate-in zoom-in-90 origin-bottom-right duration-200 pointer-events-auto"
                 onTouchMove={(e) => {
                   const touch = e.touches[0];
                   if (!touch) return;
@@ -2881,91 +2881,80 @@ export default function RecipesView({
               >
                 {/* Bulle d'aperçu géante en relief 3D */}
                 {hoveredDialLetter && (
-                  <div className="absolute -top-20 -left-16 pointer-events-none animate-in zoom-in-75 duration-150 z-40">
-                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-primary to-indigo-600 text-white font-black text-2xl flex items-center justify-center shadow-2xl ring-4 ring-white/30 border border-white/20 transform -rotate-6">
+                  <div className="absolute -top-16 left-1/2 -translate-x-1/2 pointer-events-none animate-in zoom-in-75 duration-150 z-50">
+                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-primary to-indigo-600 text-white font-black text-2xl flex items-center justify-center shadow-2xl ring-4 ring-white/30 border border-white/20 transform -rotate-3">
                       {hoveredDialLetter === 'ALL' ? 'Tous' : hoveredDialLetter}
                     </div>
                   </div>
                 )}
 
-                {/* Option « Tous » pour réinitialiser le filtre */}
-                {(() => {
-                  const allAngle = 92;
-                  const allRad = (allAngle * Math.PI) / 180;
-                  const allRadius = dbaratiLetters.length > 6 ? 126 : 94;
-                  const allX = -Math.cos(allRad) * allRadius;
-                  const allY = -Math.sin(allRad) * allRadius;
-                  const isHovered = hoveredDialLetter === 'ALL';
+                {/* En-tête de la palette avec compteur de lettres et fermeture */}
+                <div className="flex items-center justify-between pb-2 mb-2.5 border-b border-border/50">
+                  <span className="text-[11px] font-bold text-muted-foreground flex items-center gap-1.5">
+                    <span>🔤</span>
+                    <span>Index Dbarati ({dbaratiLetters.length} lettre{dbaratiLetters.length > 1 ? 's' : ''})</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsDialOpen(false);
+                      setHoveredDialLetter(null);
+                    }}
+                    className="h-5 w-5 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
 
-                  return (
-                    <button
-                      key="ALL"
-                      type="button"
-                      data-dial-letter="ALL"
-                      onClick={() => handleSelectDbaratiLetter(null)}
-                      onMouseEnter={() => setHoveredDialLetter('ALL')}
-                      onMouseLeave={() => setHoveredDialLetter(null)}
-                      style={{
-                        transform: `translate(${allX}px, ${allY}px) ${isHovered ? 'scale(1.25)' : 'scale(1)'}`,
-                      }}
-                      className={cn(
-                        "absolute bottom-0 right-0 h-9 px-2.5 rounded-full font-bold text-xs flex items-center justify-center transition-all duration-150 shadow-lg border",
-                        isHovered
-                          ? "bg-primary text-primary-foreground shadow-2xl ring-4 ring-primary/30 z-20"
-                          : dbaratiLetterFilter === null
-                            ? "bg-primary text-primary-foreground border-primary shadow-md"
-                            : "bg-card/95 text-foreground border-border/80 hover:bg-muted"
-                      )}
-                      title="Tous les plats"
-                    >
-                      Tous
-                    </button>
-                  );
-                })()}
+                {/* Grille tactile des lettres sous le pouce */}
+                <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 max-h-[60vh] overflow-y-auto no-scrollbar p-0.5">
+                  {/* Bouton Tous les plats */}
+                  <button
+                    type="button"
+                    data-dial-letter="ALL"
+                    onClick={() => handleSelectDbaratiLetter(null)}
+                    onMouseEnter={() => setHoveredDialLetter('ALL')}
+                    onMouseLeave={() => setHoveredDialLetter(null)}
+                    className={cn(
+                      "col-span-2 h-10 rounded-full font-bold text-xs flex items-center justify-center transition-all duration-150 shadow-sm border",
+                      hoveredDialLetter === 'ALL'
+                        ? "scale-105 bg-primary text-primary-foreground shadow-xl ring-4 ring-primary/30 z-20"
+                        : dbaratiLetterFilter === null
+                          ? "bg-primary text-primary-foreground border-primary font-black shadow-md"
+                          : "bg-muted/70 text-foreground border-border/60 hover:bg-muted"
+                    )}
+                  >
+                    ★ Tous les plats
+                  </button>
 
-                {/* Boutons des lettres de Dbarati */}
-                {dbaratiLetters.map((letter, index) => {
-                  const count = dbaratiLetters.length;
-                  const startAngle = 106;
-                  const endAngle = 184;
-                  const angle = count === 1 ? 145 : startAngle + (index / (count - 1)) * (endAngle - startAngle);
-                  const rad = (angle * Math.PI) / 180;
+                  {/* Boutons des lettres de Dbarati */}
+                  {dbaratiLetters.map((letter) => {
+                    const isHovered = hoveredDialLetter === letter;
+                    const isSelected = dbaratiLetterFilter === letter;
 
-                  // Rayon dynamique (staggering si plus de 6 lettres pour éviter tout chevauchement)
-                  const radius = count > 6
-                    ? (index % 2 === 0 ? 82 : 124)
-                    : 94;
-
-                  const x = -Math.cos(rad) * radius;
-                  const y = -Math.sin(rad) * radius;
-                  const isHovered = hoveredDialLetter === letter;
-                  const isSelected = dbaratiLetterFilter === letter;
-
-                  return (
-                    <button
-                      key={letter}
-                      type="button"
-                      data-dial-letter={letter}
-                      onClick={() => handleSelectDbaratiLetter(letter)}
-                      onMouseEnter={() => setHoveredDialLetter(letter)}
-                      onMouseLeave={() => setHoveredDialLetter(null)}
-                      style={{
-                        transform: `translate(${x}px, ${y}px) ${isHovered ? 'scale(1.3)' : 'scale(1)'}`,
-                      }}
-                      className={cn(
-                        "absolute bottom-0 right-0 w-9 h-9 sm:w-10 sm:h-10 rounded-full font-black text-sm flex items-center justify-center transition-all duration-150 shadow-lg border",
-                        isHovered
-                          ? "bg-gradient-to-tr from-primary to-indigo-600 text-white shadow-2xl ring-4 ring-primary/40 z-30"
-                          : isSelected
-                            ? "bg-primary text-primary-foreground border-primary ring-2 ring-primary/30 font-black shadow-md"
-                            : "bg-card/95 text-foreground border-border/70 hover:border-primary/50 hover:bg-muted"
-                      )}
-                      title={`Plats commençant par ${letter}`}
-                    >
-                      {letter}
-                    </button>
-                  );
-                })}
+                    return (
+                      <button
+                        key={letter}
+                        type="button"
+                        data-dial-letter={letter}
+                        onClick={() => handleSelectDbaratiLetter(letter)}
+                        onMouseEnter={() => setHoveredDialLetter(letter)}
+                        onMouseLeave={() => setHoveredDialLetter(null)}
+                        className={cn(
+                          "h-10 rounded-full font-black text-sm flex items-center justify-center transition-all duration-150 shadow-sm border",
+                          isHovered
+                            ? "scale-125 bg-gradient-to-tr from-primary to-indigo-600 text-white shadow-2xl ring-4 ring-primary/40 z-30"
+                            : isSelected
+                              ? "bg-primary text-primary-foreground border-primary ring-2 ring-primary/30 font-black shadow-md"
+                              : "bg-background/80 text-foreground border-border/60 hover:border-primary/40 hover:bg-muted"
+                        )}
+                        title={`Plats commençant par ${letter}`}
+                      >
+                        {letter}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             )}
 
