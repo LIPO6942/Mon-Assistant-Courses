@@ -1091,9 +1091,9 @@ export default function RecipesView({
                 <div className="relative max-w-md mx-auto w-full">
                   <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                   <Input
-                    type="search"
+                    type="text"
                     placeholder="Rechercher une recette (ex: Couscous, Ojja...)"
-                    className="pl-10 pr-9 rounded-full h-10 text-xs sm:text-sm bg-background/85 backdrop-blur-sm border-border/60 shadow-xs focus-visible:ring-primary/30"
+                    className="pl-10 pr-9 rounded-full h-10 text-xs sm:text-sm bg-background/85 backdrop-blur-sm border-border/60 shadow-xs focus-visible:ring-primary/30 [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden"
                     value={dbaratiSearchQuery}
                     onChange={(e) => handleSearchDbaratiChange(e.target.value)}
                   />

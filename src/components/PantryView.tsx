@@ -112,9 +112,9 @@ export default function PantryView({
         <div className="relative flex-grow">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
           <Input
-            type="search"
+            type="text"
             placeholder="Rechercher un ingrédient..."
-            className="pl-11 pr-10 rounded-full h-11 text-base"
+            className="pl-11 pr-10 rounded-full h-11 text-base [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
