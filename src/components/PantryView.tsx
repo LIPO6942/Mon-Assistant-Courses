@@ -16,8 +16,7 @@ import { getPantryCategoryTheme, getPantryCategoryThemesMap } from '@/lib/pantry
 
 type CreativeFilter =
   | { type: 'all' }
-  | { type: 'status'; value: 'red' | 'orange' | 'green' }
-  | { type: 'category'; value: string };
+  | { type: 'status'; value: 'red' | 'orange' | 'green' };
 
 interface PantryViewProps {
   dbarati?: DbaratiItem[];
@@ -131,18 +130,6 @@ export default function PantryView({
     }
   };
 
-  const handleCategoryFilter = (categoryName: string) => {
-    if (creativeFilter.type === 'category' && creativeFilter.value === categoryName) {
-      setCreativeFilter({ type: 'all' });
-    } else {
-      setCreativeFilter({ type: 'category', value: categoryName });
-      setSearchQuery('');
-    }
-    if (typeof navigator !== 'undefined' && navigator.vibrate) {
-      try { navigator.vibrate(10); } catch { }
-    }
-  };
-
   const handleClearAllFilters = () => {
     setCreativeFilter({ type: 'all' });
     setSearchQuery('');
@@ -160,7 +147,6 @@ export default function PantryView({
       if (creativeFilter.value === 'orange') return '🟠 Stock à surveiller';
       if (creativeFilter.value === 'green') return '🟢 En stock';
     }
-    if (creativeFilter.type === 'category') return `Rayon « ${creativeFilter.value} »`;
     return '';
   }, [creativeFilter, searchQuery]);
 
@@ -178,8 +164,6 @@ export default function PantryView({
         const s = getProductStatus(purchaseHistory[i.id], i.name, dbarati, i.category);
         return s === creativeFilter.value;
       });
-    } else if (creativeFilter.type === 'category') {
-      items = items.filter(i => (i.category || 'Autre') === creativeFilter.value);
     }
 
     const acc = categories.reduce((obj, cat) => ({ ...obj, [cat.name]: [] }), {} as Record<string, Ingredient[]>);
@@ -338,36 +322,6 @@ export default function PantryView({
             </button>
           )}
 
-        </div>
-
-        {/* Ligne 2 : Rayons / Catégories Visuelles avec émojis */}
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 scroll-smooth snap-x">
-          {categories
-            .filter(cat => (categoryCounts.get(cat.name) || 0) > 0)
-            .map(cat => {
-              const count = categoryCounts.get(cat.name) || 0;
-              const isSelected = creativeFilter.type === 'category' && creativeFilter.value === cat.name;
-              const theme = categoryThemesMap[cat.name] || getPantryCategoryTheme(cat.name);
-
-              return (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() => handleCategoryFilter(cat.name)}
-                  className={cn(
-                    "h-7 px-2.5 rounded-full text-xs font-medium shrink-0 transition-all duration-150 snap-start flex items-center gap-1.5 border cursor-pointer",
-                    isSelected
-                      ? cn(theme.pillBg, theme.pillBorder, theme.pillText, "font-bold shadow-xs scale-105 ring-2 ring-primary/25")
-                      : "bg-background/80 hover:bg-muted/80 text-foreground/80 border-border/60 active:scale-95"
-                  )}
-                  title={`Filtrer par le rayon ${cat.name} (${count})`}
-                >
-                  <span className="text-sm leading-none shrink-0">{theme.emoji}</span>
-                  <span className="truncate max-w-[120px]">{cat.name}</span>
-                  <span className="text-[10px] opacity-75 font-semibold">({count})</span>
-                </button>
-              );
-            })}
         </div>
 
         {/* Bannière active ultra-compacte sur UNE SEULE LIGNE */}

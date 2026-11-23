@@ -34,7 +34,7 @@ const STOP_WORDS = new Set([
   'hache', 'hachee', 'haches', 'hachees', 'pile', 'pilee', 'piles', 'pilees',
   'emince', 'emincee', 'eminces', 'emincees', 'coupe', 'coupee', 'coupes', 'coupees',
   'morceaux', 'rondelles', 'tranches', 'filets', 'filet', 'gousses', 'gousse',
-  'cuisses', 'cuisse', 'blancs', 'blanc', 'chair', 'cubes', 'fines', 'fins',
+  'cuisses', 'cuisse', 'blancs', 'blanc', 'escalopes', 'escalope', 'pilons', 'pilon', 'ailes', 'aile', 'poitrine', 'chair', 'cubes', 'fines', 'fins',
   'poudre', 'feuilles', 'feuille', 'branches', 'branche', 'botte', 'bottes',
   'boite', 'boites', 'conserve', 'conserves', 'pave', 'paves', 'chair'
 ]);
