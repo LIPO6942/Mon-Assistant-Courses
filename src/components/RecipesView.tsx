@@ -2391,7 +2391,7 @@ export default function RecipesView({
             title="Ouvrir les filtres avancés (portions, continents, critères)"
           >
             <SlidersHorizontal className="h-3.5 w-3.5 text-primary" />
-            <span>Filtres &amp; Portions</span>
+            <span>Filtres</span>
             {activeIdeaFiltersCount > 0 && (
               <Badge className="h-4 min-w-[16px] px-1 text-[10px] bg-primary text-primary-foreground font-bold rounded-full">
                 {activeIdeaFiltersCount}
@@ -2448,14 +2448,13 @@ export default function RecipesView({
         {/* Panneau pliable épuré Filtres & Portions (Option A optimisé, compact & centré) */}
         {showIdeaFilters && (
           <div className="mt-2 mb-5 p-3.5 sm:p-5 rounded-2xl bg-card/95 border border-primary/20 shadow-md max-w-xl mx-auto space-y-3.5 animate-in fade-in slide-in-from-top-2 duration-200 text-center flex flex-col items-center">
-            {/* Header du panneau avec réinitialisation si actif et bouton de fermeture */}
-            <div className="w-full flex items-center justify-between border-b border-border/40 pb-2">
-              <div className="w-6 shrink-0" />
-              <span className="text-xs sm:text-sm font-bold text-foreground flex items-center justify-center gap-1.5 mx-auto">
+            {/* Header du panneau parfaitement centré avec réinitialisation si actif et bouton de fermeture */}
+            <div className="w-full relative flex items-center justify-center border-b border-border/40 pb-2">
+              <span className="text-xs sm:text-sm font-bold text-foreground flex items-center justify-center gap-1.5">
                 <SlidersHorizontal className="h-3.5 w-3.5 text-primary" />
                 Préférences de recherche
               </span>
-              <div className="flex items-center gap-1.5 shrink-0">
+              <div className="absolute right-0 top-0 bottom-2 flex items-center gap-1.5">
                 {activeIdeaFiltersCount > 0 && (
                   <button
                     type="button"
@@ -2538,16 +2537,16 @@ export default function RecipesView({
                 size="sm"
                 onClick={() => setSortByAvailability(prev => !prev)}
                 className={cn(
-                  "h-9 px-5 rounded-full text-xs sm:text-sm font-bold gap-2 transition-all shadow-sm cursor-pointer",
+                  "h-10 px-6 sm:px-8 rounded-full text-xs sm:text-sm font-black gap-2 transition-all shadow-sm cursor-pointer",
                   sortByAvailability
                     ? "bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600 ring-2 ring-emerald-500/25 scale-105 shadow-md"
                     : "border-emerald-600/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10"
                 )}
                 title="Trier selon le stock disponible dans le garde-manger"
               >
-                <PackageCheck className="h-4 w-4 shrink-0" />
+                <PackageCheck className="h-4.5 w-4.5 shrink-0" />
                 <span>En stock</span>
-                {sortByAvailability && <X className="h-3 w-3 ml-0.5 opacity-80" />}
+                {sortByAvailability && <X className="h-3.5 w-3.5 ml-0.5 opacity-80" />}
               </Button>
 
               <div className="flex items-center justify-center gap-2">
@@ -2556,7 +2555,7 @@ export default function RecipesView({
                   variant={filterQuick ? "secondary" : "outline"}
                   onClick={() => setFilterQuick(!filterQuick)}
                   className={cn(
-                    "h-7 sm:h-8 px-3 rounded-full text-[11px] sm:text-xs font-semibold gap-1.5 transition-all cursor-pointer",
+                    "h-7 sm:h-8 px-3.5 rounded-full text-[11px] sm:text-xs font-semibold gap-1.5 transition-all cursor-pointer",
                     filterQuick && 'ring-2 ring-primary font-bold bg-primary/15 text-primary'
                   )}
                 >
@@ -2569,7 +2568,7 @@ export default function RecipesView({
                   variant={filterEconomical ? "secondary" : "outline"}
                   onClick={() => setFilterEconomical(!filterEconomical)}
                   className={cn(
-                    "h-7 sm:h-8 px-3 rounded-full text-[11px] sm:text-xs font-semibold gap-1.5 transition-all cursor-pointer",
+                    "h-7 sm:h-8 px-3.5 rounded-full text-[11px] sm:text-xs font-semibold gap-1.5 transition-all cursor-pointer",
                     filterEconomical && 'ring-2 ring-primary font-bold bg-primary/15 text-primary'
                   )}
                 >
@@ -2580,9 +2579,9 @@ export default function RecipesView({
             </div>
 
             {/* Continents : UNE SEULE LIGNE HORIZONTALE DÉFILANTE CENTRÉE */}
-            <div className="w-full space-y-1.5 pt-1">
+            <div className="w-full space-y-1.5 pt-1 text-center">
               <span className="text-[11px] font-semibold text-muted-foreground block text-center">Origine géographique :</span>
-              <div className="flex items-center justify-center gap-1.5 overflow-x-auto no-scrollbar py-1 px-0.5 max-w-full">
+              <div className="w-full flex items-center justify-start sm:justify-center gap-1.5 overflow-x-auto no-scrollbar py-1 px-1">
                 {[
                   { id: 'Tous', label: 'Tous', icon: '🌐' },
                   { id: 'Europe', label: 'Europe', icon: '🇪🇺' },
