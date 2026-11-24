@@ -2445,21 +2445,22 @@ export default function RecipesView({
           </Button>
         </div>
 
-        {/* Panneau pliable épuré Filtres & Portions (Option A optimisé & compact) */}
+        {/* Panneau pliable épuré Filtres & Portions (Option A optimisé, compact & centré) */}
         {showIdeaFilters && (
-          <div className="mt-2 mb-5 p-3.5 sm:p-4 rounded-2xl bg-card/95 border border-primary/20 shadow-md max-w-2xl mx-auto space-y-3 animate-in fade-in slide-in-from-top-2 duration-200 text-left">
+          <div className="mt-2 mb-5 p-3.5 sm:p-5 rounded-2xl bg-card/95 border border-primary/20 shadow-md max-w-xl mx-auto space-y-3.5 animate-in fade-in slide-in-from-top-2 duration-200 text-center flex flex-col items-center">
             {/* Header du panneau avec réinitialisation si actif et bouton de fermeture */}
-            <div className="flex items-center justify-between border-b border-border/40 pb-2">
-              <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
+            <div className="w-full flex items-center justify-between border-b border-border/40 pb-2">
+              <div className="w-6 shrink-0" />
+              <span className="text-xs sm:text-sm font-bold text-foreground flex items-center justify-center gap-1.5 mx-auto">
                 <SlidersHorizontal className="h-3.5 w-3.5 text-primary" />
                 Préférences de recherche
               </span>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 shrink-0">
                 {activeIdeaFiltersCount > 0 && (
                   <button
                     type="button"
                     onClick={handleResetIdeaFilters}
-                    className="text-[11px] text-muted-foreground hover:text-primary font-medium flex items-center gap-1 transition-colors cursor-pointer"
+                    className="text-[11px] text-muted-foreground hover:text-primary font-medium flex items-center gap-1 transition-colors cursor-pointer mr-1"
                   >
                     <X className="h-3 w-3" />
                     Réinitialiser ({activeIdeaFiltersCount})
@@ -2469,7 +2470,7 @@ export default function RecipesView({
                   type="button"
                   size="icon"
                   variant="ghost"
-                  className="h-6 w-6 rounded-full hover:bg-muted p-0 text-muted-foreground"
+                  className="h-6 w-6 rounded-full hover:bg-muted p-0 text-muted-foreground cursor-pointer"
                   onClick={() => setShowIdeaFilters(false)}
                   title="Fermer les filtres"
                 >
@@ -2478,90 +2479,88 @@ export default function RecipesView({
               </div>
             </div>
 
-            {/* Ligne compacte : Portions & Filtres rapides */}
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              {/* Portions */}
-              <div className="flex items-center gap-2">
-                <span className="text-[11px] font-semibold text-muted-foreground shrink-0">Portions :</span>
-                <div className="inline-flex items-center gap-1.5 bg-background dark:bg-zinc-900 border border-border/60 rounded-full p-0.5 shadow-xs">
-                  <div className="flex items-center gap-0.5 bg-muted/80 dark:bg-zinc-800/80 rounded-full p-0.5">
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="ghost"
-                      className="h-6 w-6 rounded-full hover:bg-background p-0"
-                      onClick={() => handleSetIdeaPortions(p => Math.max(1, p - 1))}
-                      disabled={ideaPortions <= 1}
-                      aria-label="Moins de personnes"
-                    >
-                      <Minus className="h-3 w-3" />
-                    </Button>
-                    <span className="w-12 text-center text-[11px] font-bold text-foreground tabular-nums">
-                      {ideaPortions} pers.
-                    </span>
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="ghost"
-                      className="h-6 w-6 rounded-full hover:bg-background p-0"
-                      onClick={() => handleSetIdeaPortions(p => Math.min(20, p + 1))}
-                      disabled={ideaPortions >= 20}
-                      aria-label="Plus de personnes"
-                    >
-                      <Plus className="h-3 w-3" />
-                    </Button>
-                  </div>
+            {/* Sélecteur de portions centré (mention 'Portions' retirée pour libérer de l'espace) */}
+            <div className="w-full flex items-center justify-center">
+              <div className="inline-flex items-center gap-1.5 bg-background dark:bg-zinc-900 border border-border/60 rounded-full p-0.5 shadow-xs">
+                <div className="flex items-center gap-0.5 bg-muted/80 dark:bg-zinc-800/80 rounded-full p-0.5">
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    className="h-6 w-6 rounded-full hover:bg-background p-0 cursor-pointer"
+                    onClick={() => handleSetIdeaPortions(p => Math.max(1, p - 1))}
+                    disabled={ideaPortions <= 1}
+                    aria-label="Moins de personnes"
+                  >
+                    <Minus className="h-3 w-3" />
+                  </Button>
+                  <span className="w-14 text-center text-xs font-bold text-foreground tabular-nums">
+                    {ideaPortions} pers.
+                  </span>
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    className="h-6 w-6 rounded-full hover:bg-background p-0 cursor-pointer"
+                    onClick={() => handleSetIdeaPortions(p => Math.min(20, p + 1))}
+                    disabled={ideaPortions >= 20}
+                    aria-label="Plus de personnes"
+                  >
+                    <Plus className="h-3 w-3" />
+                  </Button>
+                </div>
 
-                  <div className="flex items-center gap-0.5 border-l border-border/60 pl-1.5 pr-1">
-                    {[2, 4, 6].map(nb => (
-                      <button
-                        key={nb}
-                        type="button"
-                        onClick={() => handleSetIdeaPortions(nb)}
-                        className={cn(
-                          "h-5 w-5 text-[10px] font-bold rounded-full transition-all flex items-center justify-center",
-                          ideaPortions === nb
-                            ? "bg-primary text-primary-foreground shadow-xs scale-105"
-                            : "text-muted-foreground hover:bg-muted"
-                        )}
-                      >
-                        {nb}p
-                      </button>
-                    ))}
-                  </div>
+                <div className="flex items-center gap-0.5 border-l border-border/60 pl-1.5 pr-1">
+                  {[2, 4, 6].map(nb => (
+                    <button
+                      key={nb}
+                      type="button"
+                      onClick={() => handleSetIdeaPortions(nb)}
+                      className={cn(
+                        "h-5 w-5 text-[10px] font-bold rounded-full transition-all flex items-center justify-center cursor-pointer",
+                        ideaPortions === nb
+                          ? "bg-primary text-primary-foreground shadow-xs scale-105"
+                          : "text-muted-foreground hover:bg-muted"
+                      )}
+                    >
+                      {nb}p
+                    </button>
+                  ))}
                 </div>
               </div>
+            </div>
 
-              {/* Filtres rapides */}
-              <div className="flex flex-wrap items-center gap-1.5">
-                <Button
-                  type="button"
-                  variant={sortByAvailability ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSortByAvailability(prev => !prev)}
-                  className={cn(
-                    "h-7 rounded-full text-[11px] font-semibold gap-1 transition-all shadow-xs",
-                    sortByAvailability
-                      ? "bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600 ring-2 ring-emerald-500/20"
-                      : "border-emerald-600/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10"
-                  )}
-                  title="Trier selon le stock disponible dans le garde-manger"
-                >
-                  <PackageCheck className="h-3 w-3 shrink-0" />
-                  <span>En stock</span>
-                  {sortByAvailability && <X className="h-2.5 w-2.5 ml-0.5 opacity-80" />}
-                </Button>
+            {/* Filtres rapides : 'En stock' agrandi et centré en haut, puis '< 30 min' et 'Éco' en dessous centrés */}
+            <div className="w-full flex flex-col items-center justify-center gap-2 pt-0.5">
+              <Button
+                type="button"
+                variant={sortByAvailability ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSortByAvailability(prev => !prev)}
+                className={cn(
+                  "h-9 px-5 rounded-full text-xs sm:text-sm font-bold gap-2 transition-all shadow-sm cursor-pointer",
+                  sortByAvailability
+                    ? "bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600 ring-2 ring-emerald-500/25 scale-105 shadow-md"
+                    : "border-emerald-600/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10"
+                )}
+                title="Trier selon le stock disponible dans le garde-manger"
+              >
+                <PackageCheck className="h-4 w-4 shrink-0" />
+                <span>En stock</span>
+                {sortByAvailability && <X className="h-3 w-3 ml-0.5 opacity-80" />}
+              </Button>
 
+              <div className="flex items-center justify-center gap-2">
                 <Button
                   size="sm"
                   variant={filterQuick ? "secondary" : "outline"}
                   onClick={() => setFilterQuick(!filterQuick)}
                   className={cn(
-                    "h-7 rounded-full text-[11px] font-medium gap-1 transition-all",
+                    "h-7 sm:h-8 px-3 rounded-full text-[11px] sm:text-xs font-semibold gap-1.5 transition-all cursor-pointer",
                     filterQuick && 'ring-2 ring-primary font-bold bg-primary/15 text-primary'
                   )}
                 >
-                  <Clock className="h-3 w-3 shrink-0" />
+                  <Clock className="h-3.5 w-3.5 shrink-0" />
                   <span>≤ 30 min</span>
                 </Button>
 
@@ -2570,20 +2569,20 @@ export default function RecipesView({
                   variant={filterEconomical ? "secondary" : "outline"}
                   onClick={() => setFilterEconomical(!filterEconomical)}
                   className={cn(
-                    "h-7 rounded-full text-[11px] font-medium gap-1 transition-all",
+                    "h-7 sm:h-8 px-3 rounded-full text-[11px] sm:text-xs font-semibold gap-1.5 transition-all cursor-pointer",
                     filterEconomical && 'ring-2 ring-primary font-bold bg-primary/15 text-primary'
                   )}
                 >
-                  <Coins className="h-3 w-3 shrink-0" />
+                  <Coins className="h-3.5 w-3.5 shrink-0" />
                   <span>Éco</span>
                 </Button>
               </div>
             </div>
 
-            {/* Continents : UNE SEULE LIGNE HORIZONTALE DÉFILANTE (libère l'espace vertical) */}
-            <div className="space-y-1 pt-1">
-              <span className="text-[11px] font-semibold text-muted-foreground block">Origine géographique :</span>
-              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1 px-0.5 max-w-full">
+            {/* Continents : UNE SEULE LIGNE HORIZONTALE DÉFILANTE CENTRÉE */}
+            <div className="w-full space-y-1.5 pt-1">
+              <span className="text-[11px] font-semibold text-muted-foreground block text-center">Origine géographique :</span>
+              <div className="flex items-center justify-center gap-1.5 overflow-x-auto no-scrollbar py-1 px-0.5 max-w-full">
                 {[
                   { id: 'Tous', label: 'Tous', icon: '🌐' },
                   { id: 'Europe', label: 'Europe', icon: '🇪🇺' },
