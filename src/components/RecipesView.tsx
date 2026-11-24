@@ -6,7 +6,7 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, Shuffle, Dices, Clock, Coins, Utensils, BookUser, Search, Tag, Sparkles, TrendingDown, ClipboardList, Check, Trash2, Plus, Minus, Users, ChevronUp, ChevronDown, Loader2, X, Calendar, AlertCircle, Cake, PackageCheck, CheckCircle2, Globe } from 'lucide-react';
+import { PlusCircle, Shuffle, Dices, Clock, Coins, Utensils, BookUser, Search, Tag, Sparkles, TrendingDown, ClipboardList, Check, Trash2, Plus, Minus, Users, ChevronUp, ChevronDown, Loader2, X, Calendar, AlertCircle, Cake, PackageCheck, CheckCircle2, Globe, SlidersHorizontal } from 'lucide-react';
 import type { Recipe, UserRecipe, BasketItem, PurchaseHistory, CommunityPurchase, DbaratiItem, Ingredient, RecipeIngredient } from '@/lib/types';
 import { streetFoodOptions } from '@/lib/data';
 import { cn, getProductStatus, formatDbaratiDate } from '@/lib/utils';
@@ -315,6 +315,24 @@ export default function RecipesView({
 
   const [filterQuick, setFilterQuick] = useState(false);
   const [filterEconomical, setFilterEconomical] = useState(false);
+  const [showIdeaFilters, setShowIdeaFilters] = useState(false);
+
+  const activeIdeaFiltersCount = useMemo(() => {
+    let count = 0;
+    if (selectedContinent !== 'Tous') count++;
+    if (sortByAvailability) count++;
+    if (filterQuick) count++;
+    if (filterEconomical) count++;
+    return count;
+  }, [selectedContinent, sortByAvailability, filterQuick, filterEconomical]);
+
+  const handleResetIdeaFilters = () => {
+    setSelectedContinent('Tous');
+    setSortByAvailability(false);
+    setFilterQuick(false);
+    setFilterEconomical(false);
+  };
+
   const [ideaPortions, setIdeaPortions] = useState<number>(() => {
     if (typeof window !== 'undefined') {
       try {
@@ -906,10 +924,13 @@ export default function RecipesView({
     <div className="space-y-8">
       <Accordion type="single" collapsible className="w-full">
         <AccordionItem value="item-1">
-          <AccordionTrigger>
-            <div className="flex justify-center items-center gap-3 py-2 text-primary">
-              <BookUser className="h-8 w-8 text-primary" />
-              <h2 className='text-3xl font-bold'>Recetteti</h2>
+          <AccordionTrigger className="hover:no-underline">
+            <div className="flex justify-center items-center gap-3 py-2 text-primary w-full">
+              <BookUser className="h-7 w-7 sm:h-8 sm:w-8 text-primary shrink-0" />
+              <h2 className='text-2xl sm:text-3xl font-bold'>Recetteti</h2>
+              <Badge variant="outline" className="text-xs font-semibold bg-primary/10 text-primary border-primary/20">
+                {userRecipes.length}
+              </Badge>
             </div>
           </AccordionTrigger>
           <AccordionContent>
@@ -1013,8 +1034,8 @@ export default function RecipesView({
       >
         <AccordionItem value="dbarati" id="dbarati-accordion-section">
           <AccordionTrigger className="hover:no-underline">
-            <div className="flex flex-wrap items-center justify-between w-full pr-3 py-1">
-              <div className="flex items-center gap-3 text-primary">
+            <div className="relative flex items-center justify-center w-full py-2 text-primary">
+              <div className="flex items-center justify-center gap-3">
                 <ClipboardList className="h-7 w-7 text-primary shrink-0" />
                 <h2 className='text-2xl sm:text-3xl font-bold'>Dbarati</h2>
                 <Badge variant="outline" className="text-xs font-semibold bg-primary/10 text-primary border-primary/20">
@@ -1025,7 +1046,7 @@ export default function RecipesView({
               {/* Badge de filtre de lettre actif visible même plié avec réinitialisation en 1 clic */}
               {dbaratiLetterFilter && (
                 <div
-                  className="flex items-center gap-1.5"
+                  className="absolute right-2 sm:right-4 flex items-center gap-1.5"
                   onClick={(e) => {
                     e.stopPropagation();
                   }}
@@ -2314,7 +2335,7 @@ export default function RecipesView({
               type="button"
               onClick={() => setDishCourseFilter('plat')}
               className={cn(
-                "inline-flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer shrink-0",
+                "inline-flex items-center gap-1.5 px-3 sm:px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer shrink-0",
                 dishCourseFilter === 'plat'
                   ? "bg-primary text-primary-foreground shadow-sm scale-102"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted"
@@ -2328,7 +2349,7 @@ export default function RecipesView({
               type="button"
               onClick={() => setDishCourseFilter('dessert')}
               className={cn(
-                "inline-flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer shrink-0",
+                "inline-flex items-center gap-1.5 px-3 sm:px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer shrink-0",
                 dishCourseFilter === 'dessert'
                   ? "bg-pink-600 text-white shadow-sm scale-102"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted"
@@ -2342,7 +2363,7 @@ export default function RecipesView({
               type="button"
               onClick={() => setDishCourseFilter('all')}
               className={cn(
-                "inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer shrink-0",
+                "inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer shrink-0",
                 dishCourseFilter === 'all'
                   ? "bg-accent/80 text-foreground shadow-xs font-bold border border-border"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted"
@@ -2354,192 +2375,248 @@ export default function RecipesView({
           </div>
         </div>
 
-        {/* Dynamic Portion Selector */}
-        <div className="flex justify-center mb-5 w-full px-1">
-          <div className="inline-flex items-center justify-center gap-1.5 sm:gap-2.5 bg-background/95 dark:bg-zinc-900/95 border border-primary/25 rounded-full p-1 sm:px-3 sm:py-1.5 shadow-sm max-w-[95%]">
-            <div className="flex items-center gap-1 text-[11px] sm:text-xs font-semibold text-muted-foreground pl-1 shrink-0">
-              <Users className="h-3.5 w-3.5 text-primary" />
-              <span className="hidden xs:inline">Pour</span>
-            </div>
-
-            <div className="flex items-center gap-0.5 bg-muted/80 dark:bg-zinc-800/80 rounded-full p-0.5 shrink-0">
-              <Button
-                type="button"
-                size="icon"
-                variant="ghost"
-                className="h-6 w-6 rounded-full hover:bg-background p-0"
-                onClick={() => handleSetIdeaPortions(p => Math.max(1, p - 1))}
-                disabled={ideaPortions <= 1}
-                aria-label="Moins de personnes"
-              >
-                <Minus className="h-3 w-3" />
-              </Button>
-              <span className="w-12 text-center text-[11px] sm:text-xs font-bold text-foreground tabular-nums">
-                {ideaPortions} {ideaPortions > 1 ? 'pers.' : 'pers.'}
-              </span>
-              <Button
-                type="button"
-                size="icon"
-                variant="ghost"
-                className="h-6 w-6 rounded-full hover:bg-background p-0"
-                onClick={() => handleSetIdeaPortions(p => Math.min(20, p + 1))}
-                disabled={ideaPortions >= 20}
-                aria-label="Plus de personnes"
-              >
-                <Plus className="h-3 w-3" />
-              </Button>
-            </div>
-
-            <div className="flex items-center gap-1 border-l border-border/60 pl-1.5 pr-0.5 shrink-0">
-              {[2, 4, 6].map(nb => (
-                <button
-                  key={nb}
-                  type="button"
-                  onClick={() => handleSetIdeaPortions(nb)}
-                  className={cn(
-                    "h-6 w-6 text-[10px] sm:text-[11px] font-bold rounded-full transition-all flex items-center justify-center",
-                    ideaPortions === nb
-                      ? "bg-primary text-primary-foreground shadow-xs scale-105"
-                      : "text-muted-foreground hover:bg-muted"
-                  )}
-                >
-                  {nb}p
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Continents horizontal scrollable pills with toggle on/off */}
-        <div className="flex items-center justify-center gap-1.5 overflow-x-auto no-scrollbar py-1 px-1 mb-3">
-          {[
-            { id: 'Tous', label: 'Tous', icon: '🌐' },
-            { id: 'Europe', label: 'Europe', icon: '🇪🇺' },
-            { id: 'Asie', label: 'Asie', icon: '🥢' },
-            { id: 'Amériques', label: 'Amériques', icon: '🌮' },
-            { id: 'Afrique', label: 'Afrique & Orient', icon: '🌍' },
-            { id: 'Océanie', label: 'Océanie', icon: '🦘' },
-          ].map(tab => {
-            const isSelected = selectedContinent === tab.id;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => {
-                  if (tab.id === 'Tous') {
-                    setSelectedContinent('Tous');
-                  } else {
-                    setSelectedContinent(prev => prev === tab.id ? 'Tous' : (tab.id as ContinentFilter));
-                  }
-                }}
-                className={cn(
-                  "inline-flex items-center gap-1 px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-semibold shrink-0 transition-all cursor-pointer border",
-                  isSelected
-                    ? "bg-primary text-primary-foreground border-primary shadow-xs scale-102"
-                    : "bg-background/80 hover:bg-muted text-muted-foreground border-border/60 hover:text-foreground"
-                )}
-                title={isSelected && tab.id !== 'Tous' ? "Cliquer pour désactiver et revenir à l'aléatoire mondial" : undefined}
-              >
-                <span>{tab.icon}</span>
-                <span>{tab.label}</span>
-                {isSelected && tab.id !== 'Tous' && (
-                  <X className="h-3 w-3 ml-0.5 opacity-80 hover:opacity-100" />
-                )}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Action toggles (Disponibilité Garde-manger, Rapide, Éco) */}
-        <div className="flex flex-wrap items-center justify-center gap-2 mb-5">
+        {/* Ligne d'action épurée (Option A) : Bouton Filtres & Portions + Bouton Trouver une idée */}
+        <div className="flex flex-wrap items-center justify-center gap-2.5 mb-4">
           <Button
             type="button"
-            variant={sortByAvailability ? "default" : "outline"}
+            variant={showIdeaFilters || activeIdeaFiltersCount > 0 ? "secondary" : "outline"}
             size="sm"
-            onClick={() => setSortByAvailability(prev => !prev)}
+            onClick={() => setShowIdeaFilters(prev => !prev)}
             className={cn(
-              "h-8 rounded-full text-xs font-semibold gap-1.5 transition-all shadow-xs",
+              "h-10 rounded-full px-4 text-xs font-semibold gap-2 transition-all shadow-xs border",
+              activeIdeaFiltersCount > 0
+                ? "border-primary/40 text-primary bg-primary/10 ring-1 ring-primary/20 font-bold"
+                : "border-border/80 hover:bg-muted"
+            )}
+            title="Ouvrir les filtres avancés (portions, continents, critères)"
+          >
+            <SlidersHorizontal className="h-3.5 w-3.5 text-primary" />
+            <span>Filtres &amp; Portions</span>
+            {activeIdeaFiltersCount > 0 && (
+              <Badge className="h-4 min-w-[16px] px-1 text-[10px] bg-primary text-primary-foreground font-bold rounded-full">
+                {activeIdeaFiltersCount}
+              </Badge>
+            )}
+            <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-200", showIdeaFilters && "rotate-180")} />
+          </Button>
+
+          <Button
+            onClick={findRandomRecipes}
+            className={cn(
+              "h-10 rounded-full px-6 text-xs sm:text-sm font-bold shadow-md transition-all gap-2",
               sortByAvailability
-                ? "bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600 ring-2 ring-emerald-500/20"
-                : "border-emerald-600/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10"
-            )}
-            title="Activer pour trier selon le % d'ingrédients disponibles dans votre garde-manger"
-          >
-            <PackageCheck className="h-3.5 w-3.5 shrink-0" />
-            <span>En stock d&apos;abord</span>
-            {sortByAvailability && <X className="h-3 w-3 ml-0.5 opacity-80 hover:opacity-100" />}
-          </Button>
-
-          <Button
-            size="sm"
-            variant={filterQuick ? "secondary" : "outline"}
-            onClick={() => setFilterQuick(!filterQuick)}
-            className={cn(
-              "h-8 rounded-full text-xs font-medium gap-1.5 transition-all",
-              filterQuick && 'ring-2 ring-primary font-bold bg-primary/15 text-primary'
+                ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                : dishCourseFilter === 'dessert'
+                  ? "bg-pink-600 hover:bg-pink-700 text-white"
+                  : ""
             )}
           >
-            <Clock className="h-3.5 w-3.5 shrink-0" />
-            <span>≤ 30 min</span>
-          </Button>
-
-          <Button
-            size="sm"
-            variant={filterEconomical ? "secondary" : "outline"}
-            onClick={() => setFilterEconomical(!filterEconomical)}
-            className={cn(
-              "h-8 rounded-full text-xs font-medium gap-1.5 transition-all",
-              filterEconomical && 'ring-2 ring-primary font-bold bg-primary/15 text-primary'
+            {sortByAvailability ? (
+              <>
+                <PackageCheck className="h-4 w-4 shrink-0" />
+                <span>
+                  {dishCourseFilter === 'plat'
+                    ? "Voir les plats en stock"
+                    : dishCourseFilter === 'dessert'
+                      ? "Voir les desserts en stock"
+                      : "Voir les recettes en stock"}
+                </span>
+              </>
+            ) : (
+              <>
+                {dishCourseFilter === 'plat' ? (
+                  <>
+                    <Utensils className="h-4 w-4 shrink-0" />
+                    <span>Trouver un plat salé</span>
+                  </>
+                ) : dishCourseFilter === 'dessert' ? (
+                  <>
+                    <Cake className="h-4 w-4 shrink-0" />
+                    <span>Trouver un dessert sucré</span>
+                  </>
+                ) : (
+                  <>
+                    <Shuffle className="h-4 w-4 shrink-0" />
+                    <span>Trouver une idée</span>
+                  </>
+                )}
+              </>
             )}
-          >
-            <Coins className="h-3.5 w-3.5 shrink-0" />
-            <span>Économique</span>
           </Button>
         </div>
 
-        <Button
-          onClick={findRandomRecipes}
-          className={cn(
-            "h-10 sm:h-11 rounded-full px-6 sm:px-8 text-sm sm:text-base font-bold shadow-md transition-all gap-2",
-            sortByAvailability
-              ? "bg-emerald-600 hover:bg-emerald-700 text-white"
-              : dishCourseFilter === 'dessert'
-                ? "bg-pink-600 hover:bg-pink-700 text-white"
-                : ""
-          )}
-        >
-          {sortByAvailability ? (
-            <>
-              <PackageCheck className="h-4 w-4 shrink-0" />
-              <span>
-                {dishCourseFilter === 'plat'
-                  ? "Voir les plats en stock"
-                  : dishCourseFilter === 'dessert'
-                    ? "Voir les desserts en stock"
-                    : "Voir les recettes en stock"}
+        {/* Panneau pliable épuré Filtres & Portions (Option A) */}
+        {showIdeaFilters && (
+          <div className="mt-2 mb-5 p-4 sm:p-5 rounded-2xl bg-card/95 border border-primary/20 shadow-sm max-w-2xl mx-auto space-y-4 animate-in fade-in slide-in-from-top-2 duration-200 text-left">
+            {/* Header du panneau avec réinitialisation si actif */}
+            <div className="flex items-center justify-between border-b border-border/40 pb-2.5">
+              <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                <SlidersHorizontal className="h-3.5 w-3.5 text-primary" />
+                Préférences de recherche
               </span>
-            </>
-          ) : (
-            <>
-              {dishCourseFilter === 'plat' ? (
-                <>
-                  <Utensils className="h-4 w-4 shrink-0" />
-                  <span>Trouver un plat salé</span>
-                </>
-              ) : dishCourseFilter === 'dessert' ? (
-                <>
-                  <Cake className="h-4 w-4 shrink-0" />
-                  <span>Trouver un dessert sucré</span>
-                </>
-              ) : (
-                <>
-                  <Shuffle className="h-4 w-4 shrink-0" />
-                  <span>Trouver une idée (Plat + Dessert)</span>
-                </>
+              {activeIdeaFiltersCount > 0 && (
+                <button
+                  type="button"
+                  onClick={handleResetIdeaFilters}
+                  className="text-[11px] text-muted-foreground hover:text-primary font-medium flex items-center gap-1 transition-colors cursor-pointer"
+                >
+                  <X className="h-3 w-3" />
+                  Réinitialiser ({activeIdeaFiltersCount})
+                </button>
               )}
-            </>
-          )}
-        </Button>
+            </div>
+
+            {/* Dynamic Portion Selector */}
+            <div className="space-y-1.5">
+              <span className="text-[11px] font-semibold text-muted-foreground block">Portions :</span>
+              <div className="inline-flex items-center justify-start gap-2 bg-background dark:bg-zinc-900 border border-border/60 rounded-full p-1 shadow-xs max-w-full">
+                <div className="flex items-center gap-1 text-[11px] sm:text-xs font-semibold text-muted-foreground pl-2 shrink-0">
+                  <Users className="h-3.5 w-3.5 text-primary" />
+                  <span>Pour</span>
+                </div>
+
+                <div className="flex items-center gap-0.5 bg-muted/80 dark:bg-zinc-800/80 rounded-full p-0.5 shrink-0">
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    className="h-6 w-6 rounded-full hover:bg-background p-0"
+                    onClick={() => handleSetIdeaPortions(p => Math.max(1, p - 1))}
+                    disabled={ideaPortions <= 1}
+                    aria-label="Moins de personnes"
+                  >
+                    <Minus className="h-3 w-3" />
+                  </Button>
+                  <span className="w-12 text-center text-[11px] sm:text-xs font-bold text-foreground tabular-nums">
+                    {ideaPortions} pers.
+                  </span>
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    className="h-6 w-6 rounded-full hover:bg-background p-0"
+                    onClick={() => handleSetIdeaPortions(p => Math.min(20, p + 1))}
+                    disabled={ideaPortions >= 20}
+                    aria-label="Plus de personnes"
+                  >
+                    <Plus className="h-3 w-3" />
+                  </Button>
+                </div>
+
+                <div className="flex items-center gap-1 border-l border-border/60 pl-2 pr-1 shrink-0">
+                  {[2, 4, 6].map(nb => (
+                    <button
+                      key={nb}
+                      type="button"
+                      onClick={() => handleSetIdeaPortions(nb)}
+                      className={cn(
+                        "h-6 w-6 text-[10px] sm:text-[11px] font-bold rounded-full transition-all flex items-center justify-center",
+                        ideaPortions === nb
+                          ? "bg-primary text-primary-foreground shadow-xs scale-105"
+                          : "text-muted-foreground hover:bg-muted"
+                      )}
+                    >
+                      {nb}p
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Continents horizontal scrollable pills with toggle on/off */}
+            <div className="space-y-1.5">
+              <span className="text-[11px] font-semibold text-muted-foreground block">Origine géographique :</span>
+              <div className="flex items-center flex-wrap gap-1.5 py-0.5">
+                {[
+                  { id: 'Tous', label: 'Tous', icon: '🌐' },
+                  { id: 'Europe', label: 'Europe', icon: '🇪🇺' },
+                  { id: 'Asie', label: 'Asie', icon: '🥢' },
+                  { id: 'Amériques', label: 'Amériques', icon: '🌮' },
+                  { id: 'Afrique', label: 'Afrique & Orient', icon: '🌍' },
+                  { id: 'Océanie', label: 'Océanie', icon: '🦘' },
+                ].map(tab => {
+                  const isSelected = selectedContinent === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => {
+                        if (tab.id === 'Tous') {
+                          setSelectedContinent('Tous');
+                        } else {
+                          setSelectedContinent(prev => prev === tab.id ? 'Tous' : (tab.id as ContinentFilter));
+                        }
+                      }}
+                      className={cn(
+                        "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] sm:text-xs font-semibold shrink-0 transition-all cursor-pointer border",
+                        isSelected
+                          ? "bg-primary text-primary-foreground border-primary shadow-xs"
+                          : "bg-background/80 hover:bg-muted text-muted-foreground border-border/60 hover:text-foreground"
+                      )}
+                      title={isSelected && tab.id !== 'Tous' ? "Cliquer pour désactiver et revenir à l'aléatoire mondial" : undefined}
+                    >
+                      <span>{tab.icon}</span>
+                      <span>{tab.label}</span>
+                      {isSelected && tab.id !== 'Tous' && (
+                        <X className="h-3 w-3 ml-0.5 opacity-80 hover:opacity-100" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Action toggles (Disponibilité Garde-manger, Rapide, Éco) */}
+            <div className="space-y-1.5">
+              <span className="text-[11px] font-semibold text-muted-foreground block">Filtres rapides :</span>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  type="button"
+                  variant={sortByAvailability ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSortByAvailability(prev => !prev)}
+                  className={cn(
+                    "h-8 rounded-full text-xs font-semibold gap-1.5 transition-all shadow-xs",
+                    sortByAvailability
+                      ? "bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600 ring-2 ring-emerald-500/20"
+                      : "border-emerald-600/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10"
+                  )}
+                  title="Activer pour trier selon le % d'ingrédients disponibles dans votre garde-manger"
+                >
+                  <PackageCheck className="h-3.5 w-3.5 shrink-0" />
+                  <span>En stock d&apos;abord</span>
+                  {sortByAvailability && <X className="h-3 w-3 ml-0.5 opacity-80 hover:opacity-100" />}
+                </Button>
+
+                <Button
+                  size="sm"
+                  variant={filterQuick ? "secondary" : "outline"}
+                  onClick={() => setFilterQuick(!filterQuick)}
+                  className={cn(
+                    "h-8 rounded-full text-xs font-medium gap-1.5 transition-all",
+                    filterQuick && 'ring-2 ring-primary font-bold bg-primary/15 text-primary'
+                  )}
+                >
+                  <Clock className="h-3.5 w-3.5 shrink-0" />
+                  <span>≤ 30 min</span>
+                </Button>
+
+                <Button
+                  size="sm"
+                  variant={filterEconomical ? "secondary" : "outline"}
+                  onClick={() => setFilterEconomical(!filterEconomical)}
+                  className={cn(
+                    "h-8 rounded-full text-xs font-medium gap-1.5 transition-all",
+                    filterEconomical && 'ring-2 ring-primary font-bold bg-primary/15 text-primary'
+                  )}
+                >
+                  <Coins className="h-3.5 w-3.5 shrink-0" />
+                  <span>Économique</span>
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {suggestedRecipes.length > 0 && (
           <div className="mt-8 mb-2 max-w-4xl mx-auto flex items-center justify-between gap-2 px-2 text-xs text-muted-foreground animate-in fade-in">
@@ -2888,7 +2965,8 @@ export default function RecipesView({
       </Dialog>
 
       {/* --- RÉGLETTE ALPHABÉTIQUE ULTRA-MINCE LATÉRALE FAÇON « CONTACTS » (PHONE INDEXER) --- */}
-      {dbarati && dbarati.length > 0 && dbaratiLetters.length > 0 && (
+      {/* Visible UNIQUEMENT quand l'accordéon Dbarati est déplié */}
+      {dbaratiAccordionValue === 'dbarati' && dbarati && dbarati.length > 0 && dbaratiLetters.length > 0 && (
         <aside
           aria-label="Index alphabétique Dbarati façon Contacts"
           className="fixed right-1 sm:right-2 top-1/2 -translate-y-1/2 z-40 select-none flex flex-col items-center"
