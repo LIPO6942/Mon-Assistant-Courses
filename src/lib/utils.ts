@@ -11,6 +11,19 @@ export function cn(...inputs: ClassValue[]) {
  * en combinant le comportement d'achat (fréquence calendaire)
  * et le comportement de préparation culinaire réel (Dbarati).
  */
+/**
+ * Ingrédients phares de base / fond de placard (Dbarati) :
+ * Produits couramment achetés en réserve ou multi-usages qui servent pour plusieurs préparations.
+ * Ex: oignons, ail, lait, citron, sel, poivre, huile, farine, sucre, beurre, vinaigre, moutarde, etc.
+ * À l'inverse, les ingrédients spécifiques / non-phares (avocat, saumon, crevettes, mascarpone, etc.)
+ * sont généralement consommés dès qu'un plat les utilisant est cuisiné (1 préparation = 1 consommation).
+ */
+export function isStapleFoodIngredient(name?: string): boolean {
+  if (!name) return false;
+  const norm = normalizeSearchText(name);
+  return /\b(oignon|oignons|ail|gousse|gousses|citron|citrons|lait|huile|sel|poivre|farine|sucre|beurre|vinaigre|moutarde|epice|epices|concentre de tomate|sauce tomate|levure|persil|coriandre)\b/i.test(norm);
+}
+
 export function getProductStatus(
   history: PurchaseRecord[] | undefined,
   ingredientName?: string,
@@ -18,6 +31,45 @@ export function getProductStatus(
   categoryName?: string
 ): 'green' | 'orange' | 'red' | null {
   try {
+    const isStaple = isStapleFoodIngredient(ingredientName);
+
+    // Vérifier si l'ingrédient a déjà été consommé via les préparations Dbarati,
+    // même s'il n'y a pas d'historique de ticket de caisse enregistré
+    if (ingredientName && dbaratiItems && Array.isArray(dbaratiItems) && dbaratiItems.length > 0) {
+      const ingredientTokens = extractSignificantTokens(ingredientName);
+      if (ingredientTokens.length > 0) {
+        const matchingDishes = dbaratiItems.filter(dish => {
+          if (!dish || typeof dish.text !== 'string' || !dish.text.trim()) return false;
+          const dishTokens = extractSignificantTokens(dish.text);
+          if (dishTokens.length === 0) return false;
+          return ingredientTokens.some(ingTok => {
+            if (ingTok.length < 3) return false;
+            return dishTokens.some(dt => dt.includes(ingTok) || ingTok.includes(dt));
+          });
+        });
+
+        if (matchingDishes.length > 0) {
+          const allPrepDates: Date[] = [];
+          matchingDishes.forEach(dish => {
+            const dates = Array.isArray(dish.prepHistory) && dish.prepHistory.length > 0
+              ? dish.prepHistory
+              : (dish.lastPreparedAt ? [dish.lastPreparedAt] : []);
+            dates.forEach(d => {
+              if (d) {
+                const parsed = new Date(d);
+                if (!isNaN(parsed.getTime())) allPrepDates.push(parsed);
+              }
+            });
+          });
+
+          // Si aucune date d'achat n'est enregistrée mais qu'un plat non-phare a été préparé :
+          if ((!history || !Array.isArray(history) || history.length === 0) && allPrepDates.length > 0 && !isStaple) {
+            return 'red';
+          }
+        }
+      }
+    }
+
     if (!history || !Array.isArray(history) || history.length === 0) return null;
 
     const validHistory = history.filter(r => r && r.date);
@@ -112,9 +164,11 @@ export function getProductStatus(
           // 1. Nombre de préparations depuis le dernier achat
           const prepsSincePurchase = allPrepDates.filter(d => d.getTime() >= lastPurchase.getTime()).length;
 
-          // 2. Déterminer le ratio attendu de préparations par achat
-          let expectedPrepsPerPurchase = 3; // Réserve standard moyenne (ex: paquet ou portionnage frigo/congélo)
-          if (sortedHistory.length >= 1 && allPrepDates.length > 0) {
+          // 2. Déterminer le ratio attendu de préparations par achat :
+          // Pour les ingrédients phares (oignons, ail, lait, citron...) : réserve pour plusieurs plats (3 en moyenne).
+          // Pour les ingrédients non-phares (viande, poisson, avocat, mascarpone...) : 1 seul plat consomme l'achat !
+          let expectedPrepsPerPurchase = isStaple ? 3 : 1;
+          if (isStaple && sortedHistory.length >= 1 && allPrepDates.length > 0) {
             const observedRatio = allPrepDates.length / sortedHistory.length;
             if (observedRatio >= 1) {
               expectedPrepsPerPurchase = Math.max(1, Math.round(observedRatio));
@@ -178,6 +232,41 @@ export function isInAppBrowser(): boolean {
     /WhatsApp/i.test(ua) ||
     /Snapchat/i.test(ua)
   );
+}
+
+/**
+ * Ouvre la recherche de recette directement dans l'application TikTok (Android / iOS)
+ * avec bascule propre sur le web pour garantir le bon fonctionnement suite aux dernières
+ * mises à jour de TikTok.
+ */
+export function openTikTokSearch(recipeTitle: string) {
+  if (typeof window === 'undefined') return;
+  const query = encodeURIComponent('recette ' + (recipeTitle || '').trim());
+  const webUrl = `https://www.tiktok.com/search?q=${query}`;
+
+  const ua = navigator.userAgent || '';
+  const isAndroid = /android/i.test(ua);
+  const isIOS = /iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream;
+
+  if (isAndroid) {
+    // Sur Android Chrome : L'Intent URL officiel force l'ouverture directe de l'application TikTok
+    // avec le mot-clé de recherche, avec repli automatique (fallback) vers le web si l'app n'est pas installée.
+    const intentUrl = `intent://search?keyword=${query}#Intent;package=com.zhiliaoapp.musically;scheme=snssdk1233;S.browser_fallback_url=${encodeURIComponent(webUrl)};end;`;
+    window.location.href = intentUrl;
+  } else if (isIOS) {
+    // Sur iOS : essaie d'ouvrir le deep-link de l'app TikTok avec repli rapide sur le web
+    const appUrl = `snssdk1233://search?keyword=${query}`;
+    const start = Date.now();
+    window.location.href = appUrl;
+    setTimeout(() => {
+      if (Date.now() - start < 1500) {
+        window.open(webUrl, '_blank', 'noopener,noreferrer');
+      }
+    }, 800);
+  } else {
+    // Sur ordinateur ou autre navigateur
+    window.open(webUrl, '_blank', 'noopener,noreferrer');
+  }
 }
 
 const STOP_WORDS = new Set([

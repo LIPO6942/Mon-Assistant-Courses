@@ -15,7 +15,7 @@ import UserRecipeForm from './UserRecipeForm';
 import Image from 'next/image';
 import { Label } from './ui/label';
 import { Checkbox } from './ui/checkbox';
-import { cn, getProductStatus } from '@/lib/utils';
+import { cn, getProductStatus, openTikTokSearch } from '@/lib/utils';
 import RecipeContent from './RecipeContent';
 import { getRecipeImageUrl } from '@/lib/recipe-images';
 
@@ -271,21 +271,20 @@ export default function KitchenAssistantDialogs(props: KitchenAssistantDialogsPr
 
                   {/* TikTok Button */}
                   <Button
+                    type="button"
                     variant="outline"
                     size="sm"
-                    className="h-6 px-2 rounded-full text-[10px] font-medium shrink-0 gap-1 border-zinc-300 dark:border-zinc-700 bg-zinc-900/10 dark:bg-zinc-100/10 text-foreground hover:bg-muted"
-                    asChild
+                    className="h-6 px-2 rounded-full text-[10px] font-medium shrink-0 gap-1 border-zinc-300 dark:border-zinc-700 bg-zinc-900/10 dark:bg-zinc-100/10 text-foreground hover:bg-muted cursor-pointer"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      openTikTokSearch(currentRecipe.title);
+                    }}
+                    title="Ouvrir la recette sur TikTok"
                   >
-                    <a
-                      href={`https://www.tiktok.com/search?q=${encodeURIComponent('recette ' + currentRecipe.title)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <svg className="h-3 w-3 fill-current" viewBox="0 0 24 24">
-                        <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.24 1.07-.14 1.61.24 1.14 1.17 2.06 2.3 2.29 1.05.21 2.19-.07 2.95-.81.65-.62.98-1.52.99-2.42.02-3.83.01-7.66.01-11.49-.01-2.22-.01-4.44-.02-6.66z"/>
-                      </svg>
-                      <span>TikTok</span>
-                    </a>
+                    <svg className="h-3 w-3 fill-current" viewBox="0 0 24 24">
+                      <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.24 1.07-.14 1.61.24 1.14 1.17 2.06 2.3 2.29 1.05.21 2.19-.07 2.95-.81.65-.62.98-1.52.99-2.42.02-3.83.01-7.66.01-11.49-.01-2.22-.01-4.44-.02-6.66z"/>
+                    </svg>
+                    <span>TikTok</span>
                   </Button>
 
                   {/* Google Search Button */}

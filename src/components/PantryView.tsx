@@ -140,6 +140,14 @@ export default function PantryView({
 
   const isFilterActive = creativeFilter.type !== 'all' || searchQuery.trim().length > 0;
 
+  const hasExactMatch = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return true;
+    return pantry.some(i => i.name.trim().toLowerCase() === q);
+  }, [pantry, searchQuery]);
+
+  const showAddSuggestion = searchQuery.trim().length > 0 && !hasExactMatch;
+
   const creativeFilterLabel = useMemo(() => {
     if (searchQuery.trim()) return `« ${searchQuery.trim()} »`;
     if (creativeFilter.type === 'status') {
@@ -366,7 +374,9 @@ export default function PantryView({
                   Aucun ingrédient ne correspond à ce filtre
                 </h3>
                 <p className="text-xs text-muted-foreground max-w-sm mb-5">
-                  Essayez un autre filtre ou réinitialisez pour afficher tout votre garde-manger.
+                  {searchQuery.trim()
+                    ? `« ${searchQuery.trim()} » n'est pas encore dans votre garde-manger.`
+                    : "Essayez un autre filtre ou réinitialisez pour afficher tout votre garde-manger."}
                 </p>
                 <div className="flex flex-wrap items-center justify-center gap-2.5">
                   <Button
@@ -379,17 +389,6 @@ export default function PantryView({
                     <X className="h-3.5 w-3.5" />
                     Réinitialiser le filtre
                   </Button>
-                  {searchQuery.trim() && (
-                    <Button
-                      type="button"
-                      size="sm"
-                      onClick={() => openAddDialog(undefined, searchQuery.trim())}
-                      className="rounded-full text-xs font-semibold gap-1.5 h-9 px-4 shadow-sm cursor-pointer"
-                    >
-                      <Plus className="h-3.5 w-3.5" />
-                      Ajouter « {searchQuery.trim()} »
-                    </Button>
-                  )}
                 </div>
               </div>
             );
@@ -564,21 +563,43 @@ export default function PantryView({
         </Card>
       </div>
 
-      {/* Pilule flottante pour réinitialiser le filtre lors du défilement */}
+      {/* Pilule flottante ancrée au-dessus du clavier et en bas d'écran */}
       {isFilterActive && (
-        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 bg-card/95 dark:bg-zinc-900/95 backdrop-blur-md border border-primary/30 shadow-2xl px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full flex items-center gap-2.5 text-xs font-semibold animate-in slide-in-from-bottom-3 duration-200">
-          <span className="flex items-center gap-1.5 text-foreground whitespace-nowrap">
-            <Sparkles className="h-3.5 w-3.5 text-primary shrink-0" />
-            <span>
-              {totalMatchingIngredients} produit{totalMatchingIngredients > 1 ? 's' : ''} ({creativeFilterLabel})
+        <div className="fixed bottom-4 sm:bottom-5 left-1/2 -translate-x-1/2 z-40 max-w-[95vw] bg-card/95 dark:bg-zinc-900/95 backdrop-blur-md border border-primary/30 shadow-2xl px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-full flex items-center gap-1.5 sm:gap-2 text-xs font-semibold animate-in slide-in-from-bottom-3 duration-200">
+          {showAddSuggestion ? (
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => openAddDialog(undefined, searchQuery.trim())}
+              className="h-7 sm:h-8 px-3 rounded-full text-xs font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs gap-1.5 shrink-0 cursor-pointer active:scale-95 transition-all"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              <span className="truncate max-w-[160px] sm:max-w-xs">
+                Ajouter « {searchQuery.trim()} »
+              </span>
+            </Button>
+          ) : (
+            <span className="flex items-center gap-1.5 text-foreground whitespace-nowrap px-1 text-[11px] sm:text-xs">
+              <Sparkles className="h-3.5 w-3.5 text-primary shrink-0" />
+              <span>
+                {totalMatchingIngredients} produit{totalMatchingIngredients > 1 ? 's' : ''} ({creativeFilterLabel})
+              </span>
             </span>
-          </span>
+          )}
+
+          {showAddSuggestion && totalMatchingIngredients > 0 && (
+            <span className="text-[10px] sm:text-[11px] text-muted-foreground font-medium px-0.5 shrink-0 whitespace-nowrap">
+              ({totalMatchingIngredients} trouvé{totalMatchingIngredients > 1 ? 's' : ''})
+            </span>
+          )}
+
           <Button
             type="button"
             size="sm"
-            variant="secondary"
+            variant="ghost"
             onClick={handleClearAllFilters}
-            className="h-6 px-2.5 rounded-full text-[11px] font-bold bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 gap-1 transition-colors shrink-0 cursor-pointer"
+            className="h-7 sm:h-8 px-2 sm:px-2.5 rounded-full text-[11px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted/80 gap-1 transition-colors shrink-0 cursor-pointer active:scale-95"
+            title="Tout afficher"
           >
             <X className="h-3 w-3" />
             <span>Tout afficher</span>

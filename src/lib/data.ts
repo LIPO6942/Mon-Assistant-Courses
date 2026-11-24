@@ -2694,7 +2694,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Jus de citron', quantity: 1, unit: 'cuillère à soupe' },
     ],
     preparation: `1. Faites tremper la gélatine dans l'eau froide 5 min.\n2. Chauffez la crème avec le sucre et la vanille fendue et grattée. Ne pas faire bouillir.\n3. Hors du feu, incorporez la gélatine essorée et mélangez bien.\n4. Versez dans des ramequins et réfrigérez au moins 4 heures.\n5. Pour le coulis : chauffez les fruits rouges avec 2 c.à.s de sucre et le citron, mixez et filtrez.\n6. Démoulez les panna cotta et nappez de coulis.`,
-    imageUrl: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=600&auto=format&fit=crop&q=80'
+    imageUrl: 'https://images.unsplash.com/photo-1587314168485-3236d6710814?w=800&auto=format&fit=crop&q=80'
   },
   {
     id: 'r132',
@@ -3337,7 +3337,7 @@ export const discoverableRecipes: Recipe[] = [
     portions: 8,
     preparationTime: 35,
     isEconomical: true,
-    imageUrl: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800&auto=format&fit=crop&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1590080875515-8a3a8dc5735e?w=800&auto=format&fit=crop&q=80',
     ingredients: [
       { name: 'Pâte feuilletée pur beurre', quantity: 1, unit: 'pièce' },
       { name: 'Lait entier', quantity: 250, unit: 'ml' },
@@ -3819,7 +3819,7 @@ export const discoverableRecipes: Recipe[] = [
     portions: 6,
     preparationTime: 45,
     isEconomical: true,
-    imageUrl: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800&auto=format&fit=crop&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1528975604071-b4dc52a2d18c?w=800&auto=format&fit=crop&q=80',
     ingredients: [
       { name: 'Lait de coco onctueux', quantity: 400, unit: 'ml' },
       { name: 'Lait concentré sucré', quantity: 397, unit: 'gramme (g)' },
@@ -3842,7 +3842,7 @@ export const discoverableRecipes: Recipe[] = [
     portions: 4,
     preparationTime: 15,
     isEconomical: true,
-    imageUrl: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800&auto=format&fit=crop&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=800&auto=format&fit=crop&q=80',
     ingredients: [
       { name: 'Lait de coco', quantity: 400, unit: 'ml' },
       { name: 'Lait concentré sucré', quantity: 200, unit: 'gramme (g)' },
@@ -3987,7 +3987,7 @@ export const discoverableRecipes: Recipe[] = [
     portions: 6,
     preparationTime: 35,
     isEconomical: true,
-    imageUrl: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=800&auto=format&fit=crop&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=800&auto=format&fit=crop&q=80',
     ingredients: [
       { name: 'Farine de blé', quantity: 150, unit: 'gramme (g)' },
       { name: 'Œufs entiers', quantity: 4, unit: 'pièce' },
@@ -4031,7 +4031,7 @@ export const discoverableRecipes: Recipe[] = [
     portions: 3,
     preparationTime: 30,
     isEconomical: true,
-    imageUrl: 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=800&auto=format&fit=crop&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1621293954908-907159247fc8?w=800&auto=format&fit=crop&q=80',
     ingredients: [
       { name: 'Riz gluant', quantity: 200, unit: 'gramme (g)' },
       { name: 'Lait de coco', quantity: 250, unit: 'ml' },
@@ -4052,7 +4052,7 @@ export const discoverableRecipes: Recipe[] = [
     portions: 4,
     preparationTime: 15,
     isEconomical: true,
-    imageUrl: 'https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?w=800&auto=format&fit=crop&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1579954115545-a95591f28bfc?w=800&auto=format&fit=crop&q=80',
     ingredients: [
       { name: 'Lait entier', quantity: 500, unit: 'ml' },
       { name: 'Fécule de maïs (maïzena)', quantity: 40, unit: 'gramme (g)' },

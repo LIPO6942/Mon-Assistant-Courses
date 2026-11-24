@@ -88,54 +88,99 @@ export default function RecipeContent({
                                 isFocusMode ? "opacity-30 scale-[0.98] blur-[1px] pointer-events-none max-h-20 overflow-hidden" : "opacity-100"
                             )}
                         >
-                            <div className="flex items-center gap-2 mb-3">
-                                <ListFilter className="h-4 w-4 text-primary" />
-                                <h3 className="text-xs font-black uppercase tracking-widest">Ingrédients</h3>
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                {ingredients.map((ing, i) => {
+                            {(() => {
+                                // Pré-calcul de la disponibilité réelle en tenant compte des consommations Dbarati
+                                const ingredientStatuses = ingredients.map(ing => {
                                     const pantryItem = findMatchingPantryItem(ing.name, pantry);
-                                    let statusColor = 'bg-zinc-300 dark:bg-zinc-700';
-                                    let statusTitle = "Non disponible au garde-manger";
-
-                                    if (pantryItem && pantryItem.name) {
-                                        const history = purchaseHistory && typeof purchaseHistory === 'object' ? (
-                                            (pantryItem.id ? purchaseHistory[pantryItem.id] : undefined) ||
-                                            purchaseHistory[pantryItem.name] ||
-                                            (pantryItem.name ? purchaseHistory[pantryItem.name.toLowerCase()] : undefined)
-                                        ) : undefined;
-                                        const status = getProductStatus(history, pantryItem.name, Array.isArray(dbarati) ? dbarati : []);
-                                        if (status === 'green') {
-                                            statusColor = 'bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.6)]';
-                                            statusTitle = "En stock & frais (garde-manger)";
-                                        } else if (status === 'orange') {
-                                            statusColor = 'bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.6)]';
-                                            statusTitle = "En stock (à renouveler / dernières portions)";
-                                        } else if (status === 'red') {
-                                            statusColor = 'bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.6)]';
-                                            statusTitle = "Épuisé ou consommé dans Dbarati";
-                                        } else {
-                                            statusColor = 'bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.6)]';
-                                            statusTitle = "Disponible au garde-manger";
-                                        }
-                                    } else {
-                                        statusColor = 'bg-zinc-300 dark:bg-zinc-700';
-                                        statusTitle = "Non disponible au garde-manger";
+                                    if (!pantryItem || !pantryItem.name) {
+                                        return {
+                                            isAvailable: false,
+                                            statusColor: 'bg-zinc-300 dark:bg-zinc-700',
+                                            statusTitle: 'Non disponible au garde-manger',
+                                            badgeLabel: 'Pas en stock',
+                                            badgeClass: 'text-muted-foreground bg-muted border-border/40'
+                                        };
                                     }
 
-                                    return (
-                                        <div key={i} className="flex items-center justify-between p-2 bg-zinc-50 dark:bg-zinc-900/50 rounded-lg border border-zinc-100 dark:border-zinc-800/50 gap-2 min-w-0">
-                                            <div className="flex items-center gap-2 min-w-0 flex-1">
-                                                <div className={cn("w-2 h-2 rounded-full shrink-0", statusColor)} title={statusTitle} />
-                                                <span className="text-xs sm:text-sm font-medium truncate">{ing.name}</span>
+                                    const history = purchaseHistory && typeof purchaseHistory === 'object' ? (
+                                        (pantryItem.id ? purchaseHistory[pantryItem.id] : undefined) ||
+                                        purchaseHistory[pantryItem.name] ||
+                                        (pantryItem.name ? purchaseHistory[pantryItem.name.toLowerCase()] : undefined)
+                                    ) : undefined;
+
+                                    const status = getProductStatus(history, pantryItem.name, Array.isArray(dbarati) ? dbarati : []);
+
+                                    if (status === 'red') {
+                                        return {
+                                            isAvailable: false,
+                                            statusColor: 'bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.6)]',
+                                            statusTitle: 'Épuisé ou consommé dans vos repas (Dbarati)',
+                                            badgeLabel: 'Épuisé',
+                                            badgeClass: 'text-red-600 dark:text-red-400 bg-red-500/10 border-red-500/25'
+                                        };
+                                    } else if (status === 'orange') {
+                                        return {
+                                            isAvailable: true,
+                                            statusColor: 'bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.6)]',
+                                            statusTitle: 'En stock (à renouveler / dernières portions)',
+                                            badgeLabel: 'Dernière portion',
+                                            badgeClass: 'text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/25'
+                                        };
+                                    } else {
+                                        return {
+                                            isAvailable: true,
+                                            statusColor: 'bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.6)]',
+                                            statusTitle: 'En stock au garde-manger',
+                                            badgeLabel: 'En stock',
+                                            badgeClass: 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/25'
+                                        };
+                                    }
+                                });
+
+                                const availableCount = ingredientStatuses.filter(s => s.isAvailable).length;
+
+                                return (
+                                    <>
+                                        <div className="flex items-center justify-between mb-3">
+                                            <div className="flex items-center gap-2">
+                                                <ListFilter className="h-4 w-4 text-primary" />
+                                                <h3 className="text-xs font-black uppercase tracking-widest">Ingrédients</h3>
                                             </div>
-                                            <span className="text-[10px] font-bold bg-white dark:bg-zinc-900 px-1.5 py-0.5 rounded border border-zinc-100 dark:border-zinc-800 shadow-xs shrink-0 whitespace-nowrap">
-                                                {calculateAdjustedQuantity(ing.quantity, basePortions, portions, ing.unit)} {ing.unit}
+                                            <span className={cn(
+                                                "text-[10px] font-bold px-2 py-0.5 rounded-full border",
+                                                availableCount === ingredients.length
+                                                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25"
+                                                    : availableCount > 0
+                                                        ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25"
+                                                        : "bg-zinc-500/10 text-muted-foreground border-zinc-500/25"
+                                            )}>
+                                                {availableCount} / {ingredients.length} en stock
                                             </span>
                                         </div>
-                                    );
-                                })}
-                            </div>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                            {ingredients.map((ing, i) => {
+                                                const stat = ingredientStatuses[i];
+                                                return (
+                                                    <div key={i} className="flex items-center justify-between p-2 bg-zinc-50 dark:bg-zinc-900/50 rounded-lg border border-zinc-100 dark:border-zinc-800/50 gap-2 min-w-0">
+                                                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                                                            <div className={cn("w-2 h-2 rounded-full shrink-0", stat.statusColor)} title={stat.statusTitle} />
+                                                            <span className={cn("text-xs sm:text-sm font-medium truncate", !stat.isAvailable && "opacity-75")}>
+                                                                {ing.name}
+                                                            </span>
+                                                            <span className={cn("text-[9px] font-bold px-1.5 py-0.2 rounded border shrink-0 hidden xs:inline", stat.badgeClass)}>
+                                                                {stat.badgeLabel}
+                                                            </span>
+                                                        </div>
+                                                        <span className="text-[10px] font-bold bg-white dark:bg-zinc-900 px-1.5 py-0.5 rounded border border-zinc-100 dark:border-zinc-800 shadow-xs shrink-0 whitespace-nowrap">
+                                                            {calculateAdjustedQuantity(ing.quantity, basePortions, portions, ing.unit)} {ing.unit}
+                                                        </span>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </>
+                                );
+                            })()}
                         </section>
 
                         {/* Preparation Section */}

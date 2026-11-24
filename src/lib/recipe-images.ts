@@ -301,7 +301,7 @@ const CULINARY_KEYWORD_IMAGES: CulinaryEntry[] = [
   },
   {
     keywords: ['panna cotta'],
-    url: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=800&auto=format&fit=crop&q=80'
+    url: 'https://images.unsplash.com/photo-1587314168485-3236d6710814?w=800&auto=format&fit=crop&q=80'
   },
   {
     keywords: ['baklava'],
@@ -312,8 +312,24 @@ const CULINARY_KEYWORD_IMAGES: CulinaryEntry[] = [
     url: 'https://images.unsplash.com/photo-1621236378699-8597faf6a176?w=800&auto=format&fit=crop&q=80'
   },
   {
-    keywords: ['pastel de nata', 'flan'],
-    url: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800&auto=format&fit=crop&q=80'
+    keywords: ['pastel de nata', 'pastéis de nata'],
+    url: 'https://images.unsplash.com/photo-1590080875515-8a3a8dc5735e?w=800&auto=format&fit=crop&q=80'
+  },
+  {
+    keywords: ['flan', 'flan coco'],
+    url: 'https://images.unsplash.com/photo-1528975604071-b4dc52a2d18c?w=800&auto=format&fit=crop&q=80'
+  },
+  {
+    keywords: ['mango sticky rice', 'sticky rice'],
+    url: 'https://images.unsplash.com/photo-1621293954908-907159247fc8?w=800&auto=format&fit=crop&q=80'
+  },
+  {
+    keywords: ['mahalabia', 'mouhallabié', 'mhalbi'],
+    url: 'https://images.unsplash.com/photo-1579954115545-a95591f28bfc?w=800&auto=format&fit=crop&q=80'
+  },
+  {
+    keywords: ['tres leches', 'torta de tres leches'],
+    url: 'https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=800&auto=format&fit=crop&q=80'
   },
   {
     keywords: ['brownie', 'brownies'],
@@ -378,8 +394,8 @@ const CULINARY_KEYWORD_IMAGES: CulinaryEntry[] = [
     url: 'https://images.unsplash.com/photo-1535400255456-984241443b29?w=800&auto=format&fit=crop&q=80'
   },
   {
-    keywords: ['blanc-manger', 'blanc manger', 'flan coco'],
-    url: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800&auto=format&fit=crop&q=80'
+    keywords: ['blanc-manger', 'blanc manger'],
+    url: 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=800&auto=format&fit=crop&q=80'
   },
   {
     keywords: ['tourment d amour', 'tourment d\'amour'],

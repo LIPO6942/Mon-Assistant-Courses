@@ -7,7 +7,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/componen
 import { Badge } from '@/components/ui/badge';
 import type { Recipe } from '@/lib/types';
 import { BookOpen, Trash2, Share2, ExternalLink, BookUser } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, openTikTokSearch } from '@/lib/utils';
 
 interface SavedRecipesSheetProps {
   recipes: Recipe[];
@@ -52,6 +52,22 @@ export default function SavedRecipesSheet({
                         const isTikTok = link.label.toLowerCase() === 'tiktok';
                         const isGoogle = link.label.toLowerCase() === 'google';
 
+                        if (isTikTok) {
+                          return (
+                            <Button
+                              key={i}
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openTikTokSearch(recipe.title)}
+                              className="flex-1 h-8 text-[10px] gap-1 py-1 transition-all duration-300 font-bold bg-black hover:bg-zinc-800 text-white border-none shadow-sm cursor-pointer"
+                              title="Ouvrir sur l'application TikTok"
+                            >
+                              <ExternalLink className="h-3 w-3 text-white" />
+                              <span>{link.label}</span>
+                            </Button>
+                          );
+                        }
+
                         return (
                           <Button
                             key={i}
@@ -60,13 +76,12 @@ export default function SavedRecipesSheet({
                             className={cn(
                               "flex-1 h-8 text-[10px] gap-1 py-1 transition-all duration-300 font-bold",
                               isYouTube && "bg-[#FF0000] hover:bg-[#CC0000] text-white border-none shadow-sm",
-                              isTikTok && "bg-black hover:bg-zinc-800 text-white border-none shadow-sm",
                               isGoogle && "bg-gradient-to-r from-blue-500/10 via-red-500/10 to-yellow-500/10 border-primary/10 hover:border-primary/30"
                             )}
                             asChild
                           >
                             <a href={link.url} target="_blank" rel="noopener noreferrer">
-                              <ExternalLink className={cn("h-3 w-3", (isYouTube || isTikTok) && "text-white")} />
+                              <ExternalLink className={cn("h-3 w-3", isYouTube && "text-white")} />
                               {link.label}
                             </a>
                           </Button>
