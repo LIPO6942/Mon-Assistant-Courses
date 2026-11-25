@@ -6,7 +6,7 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, Shuffle, Dices, Clock, Coins, Utensils, BookUser, Search, Tag, Sparkles, TrendingDown, ClipboardList, Check, Trash2, Plus, Minus, Users, ChevronUp, ChevronDown, Loader2, X, Calendar, AlertCircle, Cake, PackageCheck, CheckCircle2, Globe, SlidersHorizontal } from 'lucide-react';
+import { PlusCircle, Shuffle, Dices, Clock, Coins, Utensils, BookUser, Search, Tag, Sparkles, TrendingDown, ClipboardList, Check, Trash2, Plus, Minus, Users, ChevronUp, ChevronDown, Loader2, X, Calendar, AlertCircle, Cake, PackageCheck, CheckCircle2, Globe, SlidersHorizontal, Salad } from 'lucide-react';
 import type { Recipe, UserRecipe, BasketItem, PurchaseHistory, CommunityPurchase, DbaratiItem, Ingredient, RecipeIngredient } from '@/lib/types';
 import { streetFoodOptions } from '@/lib/data';
 import { cn, getProductStatus, formatDbaratiDate } from '@/lib/utils';
@@ -1066,15 +1066,10 @@ export default function RecipesView({
           </AccordionTrigger>
           <AccordionContent>
             <div className='py-4 px-1.5 sm:px-5 rounded-2xl bg-gradient-to-br from-indigo-50/50 via-white to-rose-50/50 dark:from-indigo-950/20 dark:via-background dark:to-rose-950/20 border border-border/40 shadow-xl backdrop-blur-sm'>
-              <div className='flex flex-col items-center mb-3'>
-                <p className='text-muted-foreground text-center max-w-2xl text-xs sm:text-sm leading-relaxed'>
-                  <span className="font-semibold text-primary">Dbarati</span> : Vos idées de repas et vos habitudes culinaires.
+              <div className='flex flex-col items-center mb-4 text-center'>
+                <p className='text-muted-foreground max-w-xl text-xs sm:text-sm leading-relaxed'>
+                  Vos idées de repas, plats traditionnels et habitudes culinaires.
                 </p>
-                <div className="flex items-center gap-1.5 mt-1">
-                  <Badge variant="outline" className="text-[10px] sm:text-xs font-bold bg-white/50 dark:bg-zinc-900/50 text-muted-foreground/80 border-primary/10 px-2.5 py-0.5 rounded-full">
-                    {dbarati.length} {dbarati.length > 1 ? 'idées' : 'idée'} enregistrée{dbarati.length > 1 ? 's' : ''}
-                  </Badge>
-                </div>
               </div>
 
               {/* Bannière filtre actif par lettre ultra-compacte sur une seule ligne */}
@@ -1325,28 +1320,38 @@ export default function RecipesView({
                 );
               })()}
 
-              {/* Entrées Section (Collapsible) - Moved Above Random Wheel */}
-              <div className="max-w-4xl mx-auto mb-8 bg-white/30 dark:bg-zinc-900/10 rounded-2xl p-4 border border-border/20 shadow-sm">
+              {/* Entrées Section (Vert Émeraude & Fraîcheur - Moderne & Aéré) */}
+              <div className="max-w-4xl mx-auto mb-6 bg-gradient-to-br from-emerald-50/50 via-card/80 to-teal-50/30 dark:from-emerald-950/20 dark:via-zinc-900/40 dark:to-teal-950/15 rounded-2xl p-3.5 sm:p-5 border border-emerald-500/20 shadow-sm space-y-4">
                 <button
+                  type="button"
                   onClick={() => setIsEntreesExpanded(!isEntreesExpanded)}
-                  className="w-full flex justify-between items-center py-2 text-sm font-semibold text-muted-foreground hover:text-primary transition-colors focus:outline-none"
+                  className="w-full flex items-center justify-between p-3 sm:p-3.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/15 dark:bg-emerald-950/35 dark:hover:bg-emerald-950/50 border border-emerald-500/25 transition-all text-left group cursor-pointer shadow-2xs"
                 >
-                  <span className="flex items-center gap-2">
-                    <Utensils className="h-4 w-4" /> Entrées
-                    <Badge variant="outline" className="text-[10px] py-0 px-1.5 h-4 ml-2">
-                      {dbarati.filter(i => i.type === 'entree').length}
-                    </Badge>
-                  </span>
-                  {isEntreesExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 flex items-center justify-center shrink-0">
+                      <Salad className="h-4.5 w-4.5" />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm sm:text-base font-bold text-emerald-950 dark:text-emerald-100">
+                        Entrées
+                      </span>
+                      <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/70 dark:text-emerald-200 border-emerald-300/40 text-[11px] font-bold px-2 py-0.5 rounded-full">
+                        {dbarati.filter(i => i.type === 'entree').length}
+                      </Badge>
+                    </div>
+                  </div>
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center text-emerald-700 dark:text-emerald-300 group-hover:bg-emerald-500/15 transition-colors">
+                    {isEntreesExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  </div>
                 </button>
 
                 {isEntreesExpanded && (
-                  <div className="animate-in slide-in-from-top-2 fade-in duration-300 pt-4">
+                  <div className="animate-in slide-in-from-top-2 fade-in duration-300 pt-1 space-y-4">
 
                     {/* Add new Entree - Multiline Layout */}
-                    <div className="max-w-md mx-auto mb-6 scale-95 origin-top">
+                    <div className="max-w-md mx-auto scale-95 origin-top">
                       <form
-                        className="flex flex-col gap-3"
+                        className="flex flex-col gap-2.5"
                         onSubmit={(e) => {
                           e.preventDefault();
                           if (newEntreeText.trim()) {
@@ -1356,22 +1361,22 @@ export default function RecipesView({
                         }}
                       >
                         <Input
-                          placeholder="Ajouter une entrée..."
-                          className="rounded-xl h-10 text-sm border-primary/20 bg-background/50 w-full"
+                          placeholder="Ajouter une entrée (salade, soupe, brik...)"
+                          className="rounded-xl h-10 text-sm border-emerald-500/30 focus-visible:ring-emerald-500/30 bg-background/80 w-full"
                           value={newEntreeText}
                           onChange={(e) => setNewEntreeText(e.target.value)}
                         />
 
                         {newEntreeText.length > 0 && (
                           <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-1 duration-200">
-                            <div className="flex border border-primary/20 rounded-xl overflow-hidden shadow-sm h-10 flex-1">
+                            <div className="flex border border-emerald-500/20 rounded-xl overflow-hidden shadow-sm h-10 flex-1">
                               {(['Soupe', 'Salade', 'Sauce'] as const).map(tag => (
                                 <button
                                   key={tag}
                                   type="button"
                                   className={cn(
-                                    "px-2 text-[10px] font-medium transition-colors border-r border-primary/10 last:border-r-0 hover:bg-primary/10",
-                                    newEntreeTag === tag ? "bg-primary/10 text-primary font-bold" : "bg-card text-muted-foreground"
+                                    "px-2 text-[10px] font-medium transition-colors border-r border-emerald-500/10 last:border-r-0 hover:bg-emerald-500/10 flex-1",
+                                    newEntreeTag === tag ? "bg-emerald-600 text-white font-bold" : "bg-card text-muted-foreground"
                                   )}
                                   onClick={() => setNewEntreeTag(tag)}
                                 >
@@ -1382,7 +1387,7 @@ export default function RecipesView({
                             <Button
                               type="submit"
                               size="icon"
-                              className="h-10 w-10 rounded-xl shrink-0"
+                              className="h-10 w-10 rounded-xl shrink-0 bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
                               disabled={!newEntreeText.trim()}
                             >
                               <Plus className="h-4 w-4" />
@@ -1394,12 +1399,17 @@ export default function RecipesView({
 
                     {/* Filters (Always visible if entrees exist) */}
                     {dbarati.filter(i => i.type === 'entree').length > 0 && (
-                      <div className="flex gap-2 mb-4 overflow-x-auto pb-1.5 no-scrollbar px-1 snap-x scroll-smooth w-full">
+                      <div className="flex gap-2 overflow-x-auto pb-1.5 no-scrollbar px-1 snap-x scroll-smooth w-full">
                         {(['Toutes', 'Soupe', 'Salade', 'Sauce'] as const).map(filter => (
                           <Badge
                             key={filter}
                             variant={activeEntreeFilter === filter ? "default" : "outline"}
-                            className="shrink-0 cursor-pointer text-[10px] py-1 px-3 snap-center"
+                            className={cn(
+                              "shrink-0 cursor-pointer text-[10px] sm:text-xs py-1 px-3 snap-center transition-all",
+                              activeEntreeFilter === filter
+                                ? "bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600 shadow-xs font-bold"
+                                : "border-emerald-500/30 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-500/10"
+                            )}
                             onClick={() => setActiveEntreeFilter(filter)}
                           >
                             {filter}
@@ -1428,7 +1438,7 @@ export default function RecipesView({
                                   "relative p-3 rounded-xl border transition-all duration-300 group flex flex-col",
                                   item.done
                                     ? "bg-muted/40 border-border/40 opacity-90 scale-[0.98]"
-                                    : "bg-white dark:bg-card border-border/60 hover:border-primary/40 hover:shadow-lg"
+                                    : "bg-white dark:bg-card border-border/60 hover:border-emerald-500/40 hover:shadow-md hover:shadow-emerald-500/5"
                                 )}
                                 onMouseDown={() => {
                                   longPressTimer.current = setTimeout(() => {
@@ -1714,28 +1724,38 @@ export default function RecipesView({
                 );
               })()}
 
-              {/* Plats Section (Collapsible) */}
-              <div className="max-w-4xl mx-auto mb-6 bg-white/30 dark:bg-zinc-900/10 rounded-2xl p-4 border border-border/20 shadow-sm">
+              {/* Plats Section (Ambre / Terracotta Chaud - Moderne & Aéré) */}
+              <div className="max-w-4xl mx-auto mb-6 bg-gradient-to-br from-amber-50/50 via-card/80 to-orange-50/30 dark:from-amber-950/20 dark:via-zinc-900/40 dark:to-orange-950/15 rounded-2xl p-3.5 sm:p-5 border border-amber-500/20 shadow-sm space-y-4">
                 <button
+                  type="button"
                   onClick={() => setIsPlatsExpanded(!isPlatsExpanded)}
-                  className="w-full flex justify-between items-center py-2 text-sm font-semibold text-muted-foreground hover:text-primary transition-colors focus:outline-none"
+                  className="w-full flex items-center justify-between p-3 sm:p-3.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/15 dark:bg-amber-950/35 dark:hover:bg-amber-950/50 border border-amber-500/25 transition-all text-left group cursor-pointer shadow-2xs"
                 >
-                  <span className="flex items-center gap-2">
-                    <Utensils className="h-4 w-4" /> Plats
-                    <Badge variant="outline" className="text-[10px] py-0 px-1.5 h-4 ml-2">
-                      {dbarati.filter(i => i.type === 'plat' || !i.type).length}
-                    </Badge>
-                  </span>
-                  {isPlatsExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0">
+                      <Utensils className="h-4.5 w-4.5" />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm sm:text-base font-bold text-amber-950 dark:text-amber-100">
+                        Plats
+                      </span>
+                      <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-900/70 dark:text-amber-200 border-amber-300/40 text-[11px] font-bold px-2 py-0.5 rounded-full">
+                        {dbarati.filter(i => i.type === 'plat' || !i.type).length}
+                      </Badge>
+                    </div>
+                  </div>
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center text-amber-700 dark:text-amber-300 group-hover:bg-amber-500/15 transition-colors">
+                    {isPlatsExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  </div>
                 </button>
 
                 {isPlatsExpanded && (
-                  <div className="animate-in slide-in-from-top-2 fade-in duration-300 pt-4">
+                  <div className="animate-in slide-in-from-top-2 fade-in duration-300 pt-1 space-y-4">
 
                     {/* Add new Plat - Multiline Layout */}
-                    <div className="max-w-md mx-auto mb-6 scale-95 origin-top">
+                    <div className="max-w-md mx-auto scale-95 origin-top">
                       <form
-                        className="flex flex-col gap-3"
+                        className="flex flex-col gap-2.5"
                         onSubmit={(e) => {
                           e.preventDefault();
                           if (newPlatText.trim()) {
@@ -1745,22 +1765,22 @@ export default function RecipesView({
                         }}
                       >
                         <Input
-                          placeholder="Un plat ? Couscous, Pasta..."
-                          className="rounded-xl h-10 text-sm border-primary/20 bg-background/50 w-full"
+                          placeholder="Un plat ? Couscous, Pasta, Ojja..."
+                          className="rounded-xl h-10 text-sm border-amber-500/30 focus-visible:ring-amber-500/30 bg-background/80 w-full"
                           value={newPlatText}
                           onChange={(e) => setNewPlatText(e.target.value)}
                         />
 
                         {newPlatText.length > 0 && (
                           <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-1 duration-200">
-                            <div className="flex border border-primary/20 rounded-xl overflow-hidden shadow-sm h-10 flex-1">
+                            <div className="flex border border-amber-500/20 rounded-xl overflow-hidden shadow-sm h-10 flex-1">
                               {(['Pates', 'Sauces', 'Sandwich', 'Autres'] as const).map(tag => (
                                 <button
                                   key={tag}
                                   type="button"
                                   className={cn(
-                                    "px-2 text-[10px] font-medium transition-colors border-r border-primary/10 last:border-r-0 hover:bg-primary/10 flex-1",
-                                    newPlatTag === tag ? "bg-primary/10 text-primary font-bold" : "bg-card text-muted-foreground"
+                                    "px-2 text-[10px] font-medium transition-colors border-r border-amber-500/10 last:border-r-0 hover:bg-amber-500/10 flex-1",
+                                    newPlatTag === tag ? "bg-amber-600 text-white font-bold" : "bg-card text-muted-foreground"
                                   )}
                                   onClick={() => setNewPlatTag(tag)}
                                 >
@@ -1771,7 +1791,7 @@ export default function RecipesView({
                             <Button
                               type="submit"
                               size="icon"
-                              className="h-10 w-10 rounded-xl shrink-0"
+                              className="h-10 w-10 rounded-xl shrink-0 bg-amber-600 hover:bg-amber-700 text-white shadow-xs"
                               disabled={!newPlatText.trim()}
                             >
                               <Plus className="h-4 w-4" />
@@ -1783,12 +1803,17 @@ export default function RecipesView({
 
                     {/* Filters (Always visible if plats exist) */}
                     {dbarati.filter(i => i.type === 'plat' || !i.type).length > 0 && (
-                      <div className="flex gap-2 mb-4 overflow-x-auto pb-1.5 no-scrollbar px-1 snap-x scroll-smooth w-full">
+                      <div className="flex gap-2 overflow-x-auto pb-1.5 no-scrollbar px-1 snap-x scroll-smooth w-full">
                         {(['Tous', 'Pates', 'Sauces', 'Sandwich', 'Autres'] as const).map(filter => (
                           <Badge
                             key={filter}
                             variant={activePlatFilter === filter ? "default" : "outline"}
-                            className="shrink-0 cursor-pointer text-[10px] py-1 px-3 snap-center"
+                            className={cn(
+                              "shrink-0 cursor-pointer text-[10px] sm:text-xs py-1 px-3 snap-center transition-all",
+                              activePlatFilter === filter
+                                ? "bg-amber-600 hover:bg-amber-700 text-white border-amber-600 shadow-xs font-bold"
+                                : "border-amber-500/30 text-amber-800 dark:text-amber-300 hover:bg-amber-500/10"
+                            )}
                             onClick={() => setActivePlatFilter(filter)}
                           >
                             {filter}
@@ -1817,7 +1842,7 @@ export default function RecipesView({
                                   "relative p-3 rounded-xl border transition-all duration-300 group flex flex-col",
                                   item.done
                                     ? "bg-muted/40 border-border/40 opacity-90 scale-[0.98]"
-                                    : "bg-white dark:bg-card border-border/60 hover:border-primary/40 hover:shadow-lg"
+                                    : "bg-white dark:bg-card border-border/60 hover:border-amber-500/40 hover:shadow-md hover:shadow-amber-500/5"
                                 )}
                                 onMouseDown={() => {
                                   longPressTimer.current = setTimeout(() => {
@@ -2012,28 +2037,38 @@ export default function RecipesView({
                 )}
               </div>
 
-              {/* Desserts Section (Collapsible) */}
-              <div className="max-w-4xl mx-auto mb-6 bg-white/30 dark:bg-zinc-900/10 rounded-2xl p-4 border border-border/20 shadow-sm">
+              {/* Desserts Section (Rose / Framboise Douceur - Moderne & Aéré) */}
+              <div className="max-w-4xl mx-auto mb-6 bg-gradient-to-br from-rose-50/50 via-card/80 to-pink-50/30 dark:from-rose-950/20 dark:via-zinc-900/40 dark:to-pink-950/15 rounded-2xl p-3.5 sm:p-5 border border-rose-500/20 shadow-sm space-y-4">
                 <button
+                  type="button"
                   onClick={() => setIsDessertsExpanded(!isDessertsExpanded)}
-                  className="w-full flex justify-between items-center py-2 text-sm font-semibold text-muted-foreground hover:text-primary transition-colors focus:outline-none"
+                  className="w-full flex items-center justify-between p-3 sm:p-3.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/15 dark:bg-rose-950/35 dark:hover:bg-rose-950/50 border border-rose-500/25 transition-all text-left group cursor-pointer shadow-2xs"
                 >
-                  <span className="flex items-center gap-2">
-                    <Cake className="h-4 w-4 text-primary" /> Desserts
-                    <Badge variant="outline" className="text-[10px] py-0 px-1.5 h-4 ml-2">
-                      {dbarati.filter(i => i.type === 'dessert').length}
-                    </Badge>
-                  </span>
-                  {isDessertsExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-rose-500/20 text-rose-700 dark:text-rose-300 flex items-center justify-center shrink-0">
+                      <Cake className="h-4.5 w-4.5" />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm sm:text-base font-bold text-rose-950 dark:text-rose-100">
+                        Desserts
+                      </span>
+                      <Badge className="bg-rose-100 text-rose-800 dark:bg-rose-900/70 dark:text-rose-200 border-rose-300/40 text-[11px] font-bold px-2 py-0.5 rounded-full">
+                        {dbarati.filter(i => i.type === 'dessert').length}
+                      </Badge>
+                    </div>
+                  </div>
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center text-rose-700 dark:text-rose-300 group-hover:bg-rose-500/15 transition-colors">
+                    {isDessertsExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  </div>
                 </button>
 
                 {isDessertsExpanded && (
-                  <div className="animate-in slide-in-from-top-2 fade-in duration-300 pt-4">
+                  <div className="animate-in slide-in-from-top-2 fade-in duration-300 pt-1 space-y-4">
 
                     {/* Add new Dessert - Multiline Layout */}
-                    <div className="max-w-md mx-auto mb-6 scale-95 origin-top">
+                    <div className="max-w-md mx-auto scale-95 origin-top">
                       <form
-                        className="flex flex-col gap-3"
+                        className="flex flex-col gap-2.5"
                         onSubmit={(e) => {
                           e.preventDefault();
                           if (newDessertText.trim()) {
@@ -2044,21 +2079,21 @@ export default function RecipesView({
                       >
                         <Input
                           placeholder="Un dessert ? Tiramisu, Crème caramel, Gâteau..."
-                          className="rounded-xl h-10 text-sm border-primary/20 bg-background/50 w-full"
+                          className="rounded-xl h-10 text-sm border-rose-500/30 focus-visible:ring-rose-500/30 bg-background/80 w-full"
                           value={newDessertText}
                           onChange={(e) => setNewDessertText(e.target.value)}
                         />
 
                         {newDessertText.length > 0 && (
                           <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-1 duration-200">
-                            <div className="flex border border-primary/20 rounded-xl overflow-hidden shadow-sm h-10 flex-1">
+                            <div className="flex border border-rose-500/20 rounded-xl overflow-hidden shadow-sm h-10 flex-1">
                               {(['Gâteau', 'Crème', 'Fruits', 'Pâtisserie', 'Autres'] as const).map(tag => (
                                 <button
                                   key={tag}
                                   type="button"
                                   className={cn(
-                                    "px-2 text-[10px] font-medium transition-colors border-r border-primary/10 last:border-r-0 hover:bg-primary/10 flex-1",
-                                    newDessertTag === tag ? "bg-primary/10 text-primary font-bold" : "bg-card text-muted-foreground"
+                                    "px-2 text-[10px] font-medium transition-colors border-r border-rose-500/10 last:border-r-0 hover:bg-rose-500/10 flex-1",
+                                    newDessertTag === tag ? "bg-rose-600 text-white font-bold" : "bg-card text-muted-foreground"
                                   )}
                                   onClick={() => setNewDessertTag(tag)}
                                 >
@@ -2069,7 +2104,7 @@ export default function RecipesView({
                             <Button
                               type="submit"
                               size="icon"
-                              className="h-10 w-10 rounded-xl shrink-0"
+                              className="h-10 w-10 rounded-xl shrink-0 bg-rose-600 hover:bg-rose-700 text-white shadow-xs"
                               disabled={!newDessertText.trim()}
                             >
                               <Plus className="h-4 w-4" />
@@ -2081,12 +2116,17 @@ export default function RecipesView({
 
                     {/* Filters (Always visible if desserts exist) */}
                     {dbarati.filter(i => i.type === 'dessert').length > 0 && (
-                      <div className="flex gap-2 mb-4 overflow-x-auto pb-1.5 no-scrollbar px-1 snap-x scroll-smooth w-full">
+                      <div className="flex gap-2 overflow-x-auto pb-1.5 no-scrollbar px-1 snap-x scroll-smooth w-full">
                         {(['Tous', 'Gâteau', 'Crème', 'Fruits', 'Pâtisserie', 'Autres'] as const).map(filter => (
                           <Badge
                             key={filter}
                             variant={activeDessertFilter === filter ? "default" : "outline"}
-                            className="shrink-0 cursor-pointer text-[10px] py-1 px-3 snap-center"
+                            className={cn(
+                              "shrink-0 cursor-pointer text-[10px] sm:text-xs py-1 px-3 snap-center transition-all",
+                              activeDessertFilter === filter
+                                ? "bg-rose-600 hover:bg-rose-700 text-white border-rose-600 shadow-xs font-bold"
+                                : "border-rose-500/30 text-rose-800 dark:text-rose-300 hover:bg-rose-500/10"
+                            )}
                             onClick={() => setActiveDessertFilter(filter)}
                           >
                             {filter}
@@ -2115,7 +2155,7 @@ export default function RecipesView({
                                   "relative p-3 rounded-xl border transition-all duration-300 group flex flex-col",
                                   item.done
                                     ? "bg-muted/40 border-border/40 opacity-90 scale-[0.98]"
-                                    : "bg-white dark:bg-card border-border/60 hover:border-primary/40 hover:shadow-lg"
+                                    : "bg-white dark:bg-card border-border/60 hover:border-rose-500/40 hover:shadow-md hover:shadow-rose-500/5"
                                 )}
                                 onMouseDown={() => {
                                   longPressTimer.current = setTimeout(() => {
