@@ -5109,7 +5109,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Safran pur, gingembre et beurre fondu', quantity: 1, unit: 'cuillère à café' }
     ],
     preparation: `1. Faites mijoter le poulet avec les oignons, le beurre, le safran, le gingembre, un bâton de cannelle et du sel pendant 30 minutes. Retirez le poulet et effilochez-le finement.\n2. Faites réduire le jus d'oignons restant jusqu'à caramélisation, puis cassez les œufs dedans en remuant pour obtenir une texture brouillée fondante.\n3. Concassez les amandes frites avec un peu de sucre glace et de cannelle.\n4. Dans un moule rond, superposez les feuilles de brick badigeonnées de beurre fondu.\n5. Disposez successivement la couche de poulet effiloché, la couche d'œufs aux oignons, puis la couche d'amandes sucrées.\n6. Rabattez les feuilles, fermez avec deux autres feuilles beurrées et enfournez à 190°C pendant 25 minutes jusqu'à dorure parfaite.\n7. Décorez le dessus de lignes de cannelle et de sucre glace tamisé avant de servir tiède.`,
-  }
+  },
   {
     id: 'r264',
     title: 'Chakhchoukha de Biskra à l\'Agneau & Pois Chiches',
@@ -5130,7 +5130,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Piments verts frais', quantity: 2, unit: 'pièce' }
     ],
     preparation: `1. Faites dorer l'agneau avec un oignon haché et de l'huile dans une cocotte.\n2. Ajoutez le concentré de tomate, l'ail pilé, le ras el hanout, le sel et les pois chiches, puis couvrez d'un litre d'eau bouillante.\n3. Laissez mijoter à feu moyen 45 minutes jusqu'à viande tendre et sauce nappante.\n4. Déchirez les galettes de pâte fine en petits morceaux dans un grand plat et passez-les quelques minutes à la vapeur pour les assouplir.\n5. Arrosez généreusement la pâte chaude de sauce rouge parfumée.\n6. Disposez les morceaux d'agneau, les pois chiches et les piments sur le dessus et dégustez bien chaud à la cuillère.`,
-  }
+  },
   {
     id: 'r265',
     title: 'Rechta Algéroise au Poulet, Navets & Cannelle',
@@ -5152,7 +5152,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Smen ou beurre doux fondu', quantity: 40, unit: 'gramme (g)' }
     ],
     preparation: `1. Dans le bas du couscoussier, faites dorer le poulet avec un oignon râpé, du smen, un bâton de cannelle, sel et poivre blanc.\n2. Couvrez d'eau chaude et ajoutez les navets et les pois chiches. Laissez mijoter 25 minutes.\n3. Enduisez les fils de rechta d'un filet d'huile et cuisez-les à la vapeur dans le haut du couscoussier pendant 15 minutes.\n4. Retirez la rechta, arrosez-la d'une louche de bouillon, égrainez avec les mains et remettez à la vapeur 10 minutes avec les courgettes dans le bouillon.\n5. Enduisez les pâtes cuites d'une noix de smen ou beurre frais.\n6. Servez la rechta dans un grand plat, garnie du poulet, des navets et courgettes, nappée de sauce blanche et saupoudrée d'un voile de cannelle.`,
-  }
+  },
   {
     id: 'r266',
     title: 'Zaalouk d\'Aubergines Grillées & Tomates Épicées',
@@ -5174,7 +5174,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Jus de citron frais', quantity: 1, unit: 'cuillère à soupe' }
     ],
     preparation: `1. Faites griller les aubergines entières au four ou directement sur la flamme pour leur donner un léger goût fumé, puis prélevez la chair à la cuillère.\n2. Dans une poêle, faites chauffer l'huile d'olive avec les tomates concassées, l'ail, le cumin, le paprika et du sel pendant 8 minutes jusqu'à compotée.\n3. Incorporez la chair d'aubergine et écrasez le tout à la fourchette en mélangeant intimement sur feu doux.\n4. Poursuivez la cuisson 10 minutes en remuant pour bien dessécher la préparation.\n5. Terminez avec le jus de citron et la coriandre fraîche. Servez tiède ou frais avec du pain marocain ou pita.`,
-  }
+  },
   {
     id: 'r267',
     title: 'Tajine Marocain d\'Agneau aux Pruneaux & Amandes Dorées',
@@ -5196,7 +5196,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Graines de sésame dorées', quantity: 1, unit: 'cuillère à soupe' }
     ],
     preparation: `1. Faites dorer l'agneau dans un tajine ou une cocotte avec un oignon haché, du beurre et les épices (gingembre, safran, sel, poivre).\n2. Mouillez d'eau chaude à mi-hauteur, couvrez et laissez mijoter doucement 50 minutes jusqu'à viande tendre.\n3. Dans une petite casserole, pochez les pruneaux dans une louche de bouillon avec le miel et la cannelle jusqu'à texture sirupeuse.\n4. Déposez les pruneaux confits sur la viande.\n5. Parsemez d'amandes dorées et de graines de sésame torréfiées avant de servir dans le plat à tajine avec du pain chaud.`,
-  }
+  },
   {
     id: 'r268',
     title: 'Harira Marocaine Traditionnelle aux Lentilles & Pois Chiches',
@@ -5219,7 +5219,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Gingembre, curcuma et smen (beurre rance)', quantity: 1, unit: 'cuillère à café' }
     ],
     preparation: `1. Dans une marmite, faites revenir la viande avec l'oignon râpé, le smen, le céleri, le gingembre et le curcuma.\n2. Ajoutez les pois chiches, les lentilles et les tomates mixées, puis couvrez d'un litre et demi d'eau.\n3. Laissez mijoter à couvert 35 minutes jusqu'à ce que les pois chiches soient fondants.\n4. Versez la tedouira (farine délayée) en fouettant continuellement pour épaissir doucement le velouté sans grumeaux.\n5. Ajoutez les vermicelles et laissez cuire 5 minutes.\n6. Hors du feu, ajoutez la coriandre fraîche ciselée et servez bien chaud avec des dattes et des quartiers de citron.`,
-  }
+  },
   {
     id: 'r269',
     title: 'Tajine de Poulet au Citron Confit & Olives Vertes',
@@ -5240,7 +5240,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Gingembre moulu, curcuma et filaments de safran', quantity: 1, unit: 'cuillère à café' }
     ],
     preparation: `1. Faites dorer le poulet dans un tajine ou une sauteuse avec l'huile d'olive, les oignons et l'ail pendant 8 minutes.\n2. Incorporez le gingembre, le curcuma, le safran, du sel et du poivre.\n3. Mouillez d'un verre d'eau chaude, couvrez et laissez mijoter à feu doux 30 minutes.\n4. Rincez les olives et coupez les écorces de citron confit en lanières fines.\n5. Ajoutez les olives et le citron confit dans la sauce et laissez réduire 10 minutes à découvert jusqu'à sauce courte et nappante (daghmira).\n6. Parsemez de coriandre fraîche et servez très chaud avec du bon pain maison.`,
-  }
+  },
   {
     id: 'r270',
     title: 'Mansaf Jordanien à l\'Agneau & Sauce Yaourt Jameed',
@@ -5261,7 +5261,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Cardamome moulue et feuille de laurier', quantity: 1, unit: 'cuillère à café' }
     ],
     preparation: `1. Faites pocher les morceaux d'agneau dans une cocotte d'eau avec laurier, oignon et cardamome pendant 45 minutes jusqu'à ce que la viande soit très tendre. Conservez le bouillon.\n2. Dans une autre casserole, fouettez le yaourt avec une cuillère de fécule de maïs et 2 louches de bouillon d'agneau chaud.\n3. Portez la sauce au yaourt à doux frémissement en remuant sans arrêt pour éviter qu'elle ne tranche.\n4. Plongez les morceaux d'agneau dans la sauce au yaourt et laissez mijoter ensemble 15 minutes.\n5. Sur un grand plat rond, étalez le pain markook et imbibez-le d'un peu de sauce au yaourt.\n6. Recouvrez d'une montagne de riz au safran doré, déposez les morceaux d'agneau au sommet et parsemez d'amandes et pignons croustillants. Servez la sauce chaude à côté.`,
-  }
+  },
   {
     id: 'r271',
     title: 'Shawarma Maison au Poulet Épicé & Sauce Toum à l\'Ail',
@@ -5283,7 +5283,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Cornichons au vinaigre et tomates émincées', quantity: 4, unit: 'pièce' }
     ],
     preparation: `1. Émincez le poulet en très fines lanières. Mélangez avec le yaourt, le jus de citron, l'huile d'olive, les épices et l'ail écrasé. Laissez mariner 20 minutes.\n2. Faites chauffer une grande poêle en fonte à feu vif et saisissez le poulet par petites portions pour qu'il grille sans bouillir.\n3. Ouvrez les pains pita en deux, tartinez généreusement de crème d'ail toum.\n4. Garnissez de poulet bien chaud et croustillant sur les bords, lamelles de cornichons et dés de tomates.\n5. Roulez fermement les sandwichs et toastez-les rapidement sur une presse ou poêle chaude pour rendre le pain croustillant.`,
-  }
+  },
   {
     id: 'r272',
     title: 'Kibbeh Libanais Croustillant au Bœuf & Pignons',
@@ -5304,7 +5304,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Huile pour friture', quantity: 300, unit: 'ml' }
     ],
     preparation: `1. Pour la pâte externe : mixez la moitié de la viande avec le boulghour fin, un oignon râpé, du sel et les sept-épices pour obtenir une pâte très lisse et malléable.\n2. Pour la farce : faites revenir l'autre moitié de viande hachée avec le second oignon, la cannelle, du sel et incorporez les pignons dorés.\n3. Façonnez des boules de pâte de la taille d'une noix, creusez le centre avec l'index pour former une coque fine.\n4. Remplissez d'une cuillère de farce et refermez en pinçant les deux extrémités en fuseau pointu.\n5. Plongez les kibbehs dans un bain d'huile bien chaude à 180°C pendant 5 minutes jusqu'à belle couleur brune dorée.\n6. Égouttez sur du papier absorbant et servez avec un yaourt au concombre ou du houmous.`,
-  }
+  },
   {
     id: 'r273',
     title: 'Fatteh d\'Aubergines Libanaise aux Pois Chiches & Yaourt',
@@ -5326,7 +5326,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Pignons de pin dorés au beurre et sumac', quantity: 30, unit: 'gramme (g)' }
     ],
     preparation: `1. Faites rôtir les dés d'aubergines au four avec un filet d'huile d'olive jusqu'à ce qu'ils soient tendres et dorés.\n2. Faites dorer les carrés de pain pita au four ou à la poêle pour les rendre ultra croustillants.\n3. Préparez la sauce : fouettez le yaourt avec le tahini, l'ail écrasé, le jus de citron et une pincée de sel.\n4. Dans un plat de service creux, déposez d'abord la couche de pain pita croustillant, puis les pois chiches chauds et les dés d'aubergines.\n5. Nappez généreusement de sauce yaourt-tahini froide.\n6. Versez aussitôt les pignons de pin crépitants avec leur beurre mousseux, saupoudrez de sumac et de persil et servez immédiatement.`,
-  }
+  },
   {
     id: 'r274',
     title: 'Koshari Égyptien aux Lentilles, Pâtes & Oignons Frits',
@@ -5348,7 +5348,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Cumin moulu et piment de Cayenne', quantity: 1, unit: 'cuillère à café' }
     ],
     preparation: `1. Faites frire les rondelles d'oignon farinées dans l'huile chaude jusqu'à ce qu'elles deviennent brun foncé et ultra croustillantes. Égouttez.\n2. Faites cuire les lentilles dans l'eau avec du cumin pendant 15 minutes, puis ajoutez le riz et les vermicelles dorés dans le même bouillon pour cuire ensemble.\n3. Faites cuire les macaronis séparément dans de l'eau bouillante salée, égouttez.\n4. Préparez la sauce tomate relevée d'ail, vinaigre de cidre, cumin et piment.\n5. Dressez en strates dans un grand bol : le mélange riz-lentilles, les macaronis, les pois chiches, la sauce tomate chaude et terminez par une généreuse couronne d'oignons frits croustillants.`,
-  }
+  },
   {
     id: 'r275',
     title: 'Shish Taouk Libanais Grillé au Citron & Épices',
@@ -5369,7 +5369,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Paprika doux, origan et coriandre moulue', quantity: 1, unit: 'cuillère à soupe' }
     ],
     preparation: `1. Dans un bol, préparez la marinade avec le yaourt, le citron, l'huile d'olive, l'ail écrasé et les épices.\n2. Enrobez les cubes de poulet de cette marinade et laissez reposer au frais au moins 20 minutes.\n3. Enfilez les morceaux de poulet sur des piques à brochettes.\n4. Faites griller sur un barbecue très chaud ou une poêle gril striée pendant 10 à 12 minutes en retournant régulièrement.\n5. Servez bien chaud avec du pain pita, de la crème d'ail et des légumes grillés.`,
-  }
+  },
   {
     id: 'r276',
     title: 'Adana Kebab Turc d\'Agneau Grillé & Sumac',
@@ -5390,7 +5390,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Galettes de pain turc lavash', quantity: 4, unit: 'pièce' }
     ],
     preparation: `1. Pétrissez la viande d'agneau hachée avec le poivron rouge essoré, l'ail écrasé, le piment en flocons et le sel pendant 5 minutes pour développer la cohésion.\n2. Moulez la préparation de viande le long de brochettes métalliques plates et larges en pressant avec les doigts humides.\n3. Faites griller à feu vif sur un barbecue ou grill pendant 8 minutes en les retournant délicatement.\n4. Chauffez les galettes de pain lavash directement sur la viande pour capter les sucs.\n5. Glissez la brochette dans le pain et accompagnez de salade d'oignons rouges au sumac et tomates braisées.`,
-  }
+  },
   {
     id: 'r277',
     title: 'Lahmacun Turc Croustillant au Bœuf Haché & Persil',
@@ -5411,7 +5411,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Pâte de poivron turc (biber salçasi) et cumin', quantity: 1, unit: 'cuillère à soupe' }
     ],
     preparation: `1. Mélangez intimement la viande hachée crue avec les tomates mixées, le poivron, le persil, la pâte de poivron et les épices.\n2. Étalez la pâte à la main le plus finement possible sur du papier cuisson.\n3. Tartinez une couche très mince de garniture de viande sur chaque disque jusqu'aux bords.\n4. Enfournez sur une plaque très chaude ou pierre à pizza à 250°C pendant 5 à 7 minutes jusqu'à ce que la pâte soit bien croustillante et cloquée.\n5. Arrosez d'un filet de citron frais, garnissez de feuilles de persil et oignons, puis roulez et dégustez immédiatement.`,
-  }
+  },
   {
     id: 'r278',
     title: 'Iskender Kebab Turc au Yaourt & Beurre Noisette',
@@ -5432,7 +5432,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Piments verts grillés', quantity: 4, unit: 'pièce' }
     ],
     preparation: `1. Faites dorer rapidement les tranches de bœuf à feu vif dans une poêle avec une noisette de beurre.\n2. Toastez les cubes de pain pide et répartissez-les au fond d'une grande assiette creuse.\n3. Recouvrez le pain des lamelles de viande chaude et juteuse.\n4. Nappez généreusement la viande de sauce tomate chaude parfumée.\n5. Déposez une belle portion de yaourt froid sur le côté de l'assiette.\n6. Juste au moment de servir, versez le beurre noisette mousseux et crépitant sur la viande. Décorez d'un piment grillé.`,
-  }
+  },
   {
     id: 'r279',
     title: 'Pide Turque au Bœuf Haché, Poivrons & Fromage Doré',
@@ -5453,7 +5453,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Piment doux turc et cumin', quantity: 1, unit: 'cuillère à café' }
     ],
     preparation: `1. Faites revenir le bœuf haché avec l'oignon, le poivron en dés et les épices pendant 6 minutes.\n2. Étalez la pâte en deux longs ovales sur une plaque de cuisson.\n3. Déposez la farce au bœuf au centre en laissant 2 cm libres sur les bords.\n4. Parsemez de fromage râpé.\n5. Repliez les bords de pâte sur la garniture et pincez fermement les deux extrémités pour former une barquette pointue.\n6. Badigeonnez les bords de jaune d'œuf et enfournez à 220°C pendant 15 minutes jusqu'à belle dorure.`,
-  }
+  },
   {
     id: 'r280',
     title: 'Kumpir Turc à la Pomme de Terre Géante Farcie',
@@ -5474,7 +5474,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Cornichons croquants et sauce yaourt', quantity: 2, unit: 'cuillère à soupe' }
     ],
     preparation: `1. Lavez les pommes de terre, piquez-les à la fourchette, emballez-les dans du papier aluminium et enfournez à 200°C pendant 50 minutes jusqu'à ce que la chair soit très tendre.\n2. Fendez les pommes de terre en deux dans la longueur sans couper la peau inférieure.\n3. À l'aide d'une fourchette, écrasez la chair chaude à l'intérieur de la peau avec le beurre et le fromage râpé jusqu'à consistance de purée filante et crémeuse.\n4. Garnissez généreusement l'intérieur de maïs, rondelles d'olives, cornichons et sauce yaourt fraîche.\n5. Dégustez bien chaud à la petite cuillère.`,
-  }
+  },
   {
     id: 'r281',
     title: 'Pad Thaï Traditionnel aux Crevettes & Tofu Doré',
@@ -5496,7 +5496,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Cacahuètes grillées concassées', quantity: 30, unit: 'gramme (g)' }
     ],
     preparation: `1. Faites tremper les nouilles de riz dans de l'eau tiède pendant 20 minutes jusqu'à ce qu'elles soient souples mais encore fermes.\n2. Dans un wok très chaud avec de l'huile, faites sauter les dés de tofu et les crevettes 2 minutes, puis poussez-les sur le côté du wok.\n3. Cassez les œufs dans l'espace libre et brouillez-les rapidement.\n4. Ajoutez les nouilles égouttées et versez la sauce tamarin-poisson-sucre.\n5. Faites sauter vigoureusement 2 minutes pour que les nouilles s'imprègnent de la sauce et deviennent translucides.\n6. Incorporez les pousses de soja et la ciboule. Servez aussitôt parsemé de cacahuètes concassées et d'un quartier de lime.`,
-  }
+  },
   {
     id: 'r282',
     title: 'Poulet Tikka Masala Crémeux aux Épices Indiennes',
@@ -5517,7 +5517,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Gingembre frais râpé et gousses d\'ail', quantity: 1, unit: 'cuillère à soupe' }
     ],
     preparation: `1. Faites mariner le poulet dans le yaourt, le citron, le gingembre, l'ail et les épices pendant 15 minutes.\n2. Faites dorer les morceaux de poulet à feu très vif dans une poêle chaude pour leur donner un goût grillé. Réservez.\n3. Dans la même poêle, faites revenir un oignon haché avec les épices restantes et le beurre.\n4. Ajoutez le coulis de tomate et laissez mijoter 10 minutes jusqu'à épaississement.\n5. Incorporez la crème fraîche et les morceaux de poulet doré, puis laissez frémir doucement 5 minutes pour lier les saveurs.\n6. Servez avec du riz basmati chaud et des naans à l'ail.`,
-  }
+  },
   {
     id: 'r283',
     title: 'Butter Chicken Indien Onctueux & Velouté (Murgh Makhani)',
@@ -5539,7 +5539,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Garam masala et miel doux', quantity: 1, unit: 'cuillère à café' }
     ],
     preparation: `1. Faites mariner le poulet dans du yaourt, ail, gingembre et épices, puis saisissez-le à la poêle très chaude jusqu'à ce qu'il soit bien doré.\n2. Dans une sauteuse, faites fondre le beurre avec le coulis de tomate et la pâte de noix de cajou pendant 10 minutes.\n3. Mixez la sauce si nécessaire pour la rendre ultra soyeuse.\n4. Incorporez la crème liquide, le miel et les morceaux de poulet.\n5. Laissez frémir 8 minutes à feu très doux.\n6. Froissez les feuilles de kasuri methi entre vos mains au-dessus de la sauce pour apporter le parfum authentique du restaurant indien. Servez avec du riz basmati.`,
-  }
+  },
   {
     id: 'r284',
     title: 'Biryani d\'Agneau Hyderabadi au Riz Basmati Safran',
@@ -5560,7 +5560,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Bâtons de cannelle, cardamome et clous de girofle', quantity: 1, unit: 'cuillère à café' }
     ],
     preparation: `1. Faites cuire le riz basmati dans une grande casserole d'eau bouillante épicée jusqu'à ce qu'il soit cuit à 70%. Égouttez.\n2. Dans une cocotte lourde, faites dorer l'agneau mariné avec les épices et la moitié des oignons frits pendant 25 minutes.\n3. Disposez le riz pré-cuit par-dessus la couche d'agneau sans mélanger.\n4. Arrosez de l'infusion de safran jaune et de ghee fondu, puis parsemez de feuilles de menthe et du reste d'oignons frits.\n5. Couvrez hermétiquement d'une feuille d'aluminium sous le couvercle et laissez cuire à feu très doux (dum) pendant 25 minutes.\n6. Ouvrez la cocotte, soulevez délicatement les couches à la spatule et servez ce plat royal avec un raïta frais.`,
-  }
+  },
   {
     id: 'r285',
     title: 'Palak Paneer Onctueux aux Épinards & Fromage',
@@ -5581,7 +5581,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Garam masala, cumin et curcuma', quantity: 1, unit: 'cuillère à café' }
     ],
     preparation: `1. Blanchissez les feuilles d'épinards 2 minutes dans l'eau bouillante salée, puis plongez-les aussitôt dans l'eau glacée pour préserver leur couleur vert éclatant.\n2. Mixez les épinards blanchis en purée onctueuse avec un petit filet d'eau.\n3. Faites dorer légèrement les cubes de paneer dans une poêle avec un filet d'huile. Réservez.\n4. Faites revenir l'ail, le gingembre, l'oignon et les épices dans une sauteuse, puis ajoutez la tomate concassée et laissez compoter 5 minutes.\n5. Incorporez la purée d'épinards et la crème, puis ajoutez les cubes de paneer doré.\n6. Laissez mijoter à feu doux 5 minutes pour réchauffer l'ensemble et dégustez avec du riz ou des chapatis.`,
-  }
+  },
   {
     id: 'r286',
     title: 'Dal Makhani aux Lentilles Noires & Beurre Épicé',
@@ -5602,7 +5602,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Gingembre râpé, ail écrasé et garam masala', quantity: 1, unit: 'cuillère à soupe' }
     ],
     preparation: `1. Faites cuire les lentilles et haricots dans de l'eau avec du sel jusqu'à tendreté complète (environ 40 minutes).\n2. Écrasez légèrement une partie des lentilles au dos de la cuillère pour donner de l'onctuosité.\n3. Dans une cocotte, faites revenir l'ail et le gingembre dans le beurre, ajoutez la purée de tomates et les épices.\n4. Versez les lentilles cuites avec leur eau de cuisson.\n5. Laissez mijoter à feu très doux pendant 30 minutes en remuant pour que le dal devienne crémeux et velouté.\n6. Incorporez la crème liquide et une belle noisette de beurre avant de servir avec des naans chauds.`,
-  }
+  },
   {
     id: 'r287',
     title: 'Bœuf Rendang Indonésien au Lait de Coco & Citronnelle',
@@ -5623,7 +5623,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Sucre de palme et sel', quantity: 1, unit: 'cuillère à soupe' }
     ],
     preparation: `1. Faites revenir la pâte d'épices fraîches dans une cocotte avec un peu d'huile jusqu'à ce que les arômes se libèrent.\n2. Ajoutez les cubes de bœuf et faites-les dorer sur toutes les faces.\n3. Versez le lait de coco, ajoutez la citronnelle écrasée, les feuilles de lime et le sucre de palme.\n4. Portez à ébullition, puis baissez le feu au minimum et laissez mijoter à découvert pendant environ 1h30 en remuant régulièrement.\n5. Lorsque le liquide s'est presque totalement évaporé, la viande cuit dans sa propre huile de coco et prend une teinte brun foncé caramélisée irrésistible.\n6. Servez avec du riz jasmin chaud.`,
-  }
+  },
   {
     id: 'r288',
     title: 'Satay de Poulet Indonésien & Sauce Cacahuète',
@@ -5644,7 +5644,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Jus de citron vert', quantity: 1, unit: 'cuillère à soupe' }
     ],
     preparation: `1. Faites mariner le poulet avec la sauce kecap manis, le curcuma, l'ail et un filet d'huile pendant 15 minutes.\n2. Enfilez les lanières de poulet en accordéon sur des piques en bambou préalablement trempées dans l'eau.\n3. Préparez la sauce satay : faites chauffer le beurre de cacahuète avec le lait de coco, un peu de kecap manis, du piment et le jus de lime jusqu'à texture veloutée.\n4. Faites griller les brochettes sur un grill très chaud pendant 8 minutes en les badigeonnant de marinade.\n5. Nappez de sauce cacahuète chaude et servez avec des concombres croquants et du riz blanc.`,
-  }
+  },
   {
     id: 'r289',
     title: 'Soupe Tom Yum Thaïlandaise aux Crevettes & Citronnelle',
@@ -5665,7 +5665,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Jus de citron vert frais et coriandre', quantity: 2, unit: 'cuillère à soupe' }
     ],
     preparation: `1. Portez à ébullition 750 ml d'eau ou de bouillon de crevettes avec la citronnelle, le galanga et les feuilles de kaffir lime pour infuser 5 minutes.\n2. Incorporez la pâte de piment thaï et la sauce de poisson pour colorer le bouillon.\n3. Ajoutez les champignons et laissez cuire 3 minutes.\n4. Plongez les crevettes dans le bouillon frémissant pendant 2 à 3 minutes jusqu'à ce qu'elles deviennent roses et opaques.\n5. Coupez le feu et ajoutez immédiatement le jus de citron vert frais pour préserver sa fraîcheur acidulée.\n6. Servez très chaud parsemé de coriandre fraîche et de piments oiseaux écrasés.`,
-  }
+  },
   {
     id: 'r290',
     title: 'Curry Vert Thaïlandais au Poulet & Lait de Coco',
@@ -5686,7 +5686,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Sauce de poisson (nam pla) et sucre de palme', quantity: 1, unit: 'cuillère à soupe' }
     ],
     preparation: `1. Faites chauffer 3 cuillères de crème de coco dans une sauteuse jusqu'à ce que l'huile se sépare.\n2. Ajoutez la pâte de curry vert et faites revenir 2 minutes pour libérer ses parfums aromatiques intenses.\n3. Ajoutez les émincés de poulet et faites-les dorer dans la pâte de curry.\n4. Versez le reste de lait de coco et un demi-verre d'eau. Portez à ébullition.\n5. Ajoutez les aubergines coupées et laissez mijoter à feu moyen pendant 10 minutes.\n6. Assaisonnez de sauce poisson et sucre de palme, puis retirez du feu et jetez les feuilles de basilic thaï frais. Dégustez avec du riz au jasmin.`,
-  }
+  },
   {
     id: 'r291',
     title: 'Nasi Goreng Indonésien au Poulet & Œuf Miroir',
@@ -5707,7 +5707,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Ciboules émincées et oignons frits', quantity: 2, unit: 'cuillère à soupe' }
     ],
     preparation: `1. Dans un wok très chaud avec un filet d'huile, faites sauter le poulet avec l'ail et le sambal pendant 3 minutes.\n2. Ajoutez le riz froid en écrasant les éventuels blocs avec la spatule pour bien séparer chaque grain.\n3. Versez la sauce kecap manis et faites sauter vigoureusement 3 minutes pour enrober le riz d'une belle couleur caramel ambré.\n4. Dans une petite poêle à part, faites frire les deux œufs au plat en gardant les jaunes coulants.\n5. Dressez le riz sauté dans deux assiettes, déposez un œuf au plat au sommet, parsemez d'oignons frits et servez avec des tranches de concombre.`,
-  }
+  },
   {
     id: 'r292',
     title: 'Poulet Katsu Curry Japonais Pané au Panko Croustillant',
@@ -5728,7 +5728,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Oignon émincé', quantity: 1, unit: 'pièce' }
     ],
     preparation: `1. Faites revenir l'oignon, la carotte et la pomme de terre dans une casserole avec un filet d'huile pendant 5 minutes. Couvrez d'eau et laissez cuire 15 minutes.\n2. Hors du feu, délayez les tablettes de curry dans le bouillon chaud, puis remettez à feu doux 5 minutes jusqu'à épaississement velouté.\n3. Aplatissez légèrement les blancs de poulet, passez-les successivement dans la farine, l'œuf battu puis généreusement dans le panko.\n4. Faites frire le poulet dans une huile à 175°C pendant 6 minutes jusqu'à ce qu'il soit bien doré et croustillant. Égouttez et coupez en lanières.\n5. Dressez une moitié d'assiette avec du riz blanc et l'autre moitié avec la sauce curry chaude, puis posez le poulet croustillant au centre.`,
-  }
+  },
   {
     id: 'r293',
     title: 'Yakitori de Poulet Caramélisé à la Sauce Teriyaki',
@@ -5748,7 +5748,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Sucre de canne', quantity: 2, unit: 'cuillère à soupe' }
     ],
     preparation: `1. Dans une petite casserole, faites frémir la sauce soja, le mirin et le sucre pendant 5 minutes pour faire réduire la sauce en un glaçage sirupeux teriyaki.\n2. Coupez le poulet en cubes et les ciboules en tronçons de 3 cm.\n3. Enfilez en alternant morceaux de poulet et de ciboule sur des petites piques en bois.\n4. Faites griller à feu vif sur un grill ou une poêle chaude pendant 6 minutes en les retournant.\n5. Badigeonnez généreusement de sauce teriyaki au pinceau des deux côtés et poursuivez la cuisson 2 minutes pour laquer et caraméliser la viande.\n6. Servez chaud avec un peu de riz blanc et des graines de sésame.`,
-  }
+  },
   {
     id: 'r294',
     title: 'Gyoza Japonais Grillés au Poulet & Chou Chinois',
@@ -5768,7 +5768,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Huile de sésame grillé et sauce soja', quantity: 1, unit: 'cuillère à soupe' }
     ],
     preparation: `1. Mélangez le poulet haché avec le chou chinois essoré, le gingembre, l'ail, la sauce soja et l'huile de sésame.\n2. Déposez une cuillère à café de farce au centre de chaque disque de pâte.\n3. Humidifiez le bord avec un doigt mouillé, pliez en deux et formez 4 à 5 petits plis sur une seule face pour sceller hermétiquement.\n4. Chauffez une poêle avec un filet d'huile de sésame et disposez les gyozas debout pour faire dorer le fond pendant 2 minutes.\n5. Versez un demi-verre d'eau dans la poêle et couvrez immédiatement pour cuire 4 minutes à la vapeur.\n6. Retirez le couvercle et laissez s'évaporer l'eau pour que le dessous redevienne croustillant. Servez avec une sauce soja-vinaigre de riz.`,
-  }
+  },
   {
     id: 'r295',
     title: 'Pho Bo Vietnamien au Bouillon Parfumé & Bœuf Tendre',
@@ -5789,7 +5789,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Pousses de soja, basilic thaï et quartier de lime', quantity: 1, unit: 'portion' }
     ],
     preparation: `1. Faites griller à sec le gingembre, l'oignon, la badiane et la cannelle dans une casserole pour libérer les huiles essentielles.\n2. Versez le bouillon de bœuf, ajoutez une cuillère de sauce poisson et laissez frémir doucement 30 minutes.\n3. Faites cuire les nouilles de riz selon le paquet, égouttez-les et répartissez-les dans de grands bols chauds.\n4. Disposez les lamelles crues de bœuf très fin sur les nouilles chaudes.\n5. Versez le bouillon fumant directement sur le bœuf qui va cuire instantanément au contact du liquide bouillant.\n6. Garnissez généreusement de pousses de soja fraîches, herbes aromatiques et d'un filet de jus de lime.`,
-  }
+  },
   {
     id: 'r296',
     title: 'Bœuf Bulgogi Coréen Mariné à la Poire & Huile de Sésame',
@@ -5810,7 +5810,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Ciboules fraîches émincées et graines de sésame', quantity: 2, unit: 'cuillère à soupe' }
     ],
     preparation: `1. Mélangez la poire râpée avec la sauce soja, l'huile de sésame, l'ail écrasé et le sucre brun pour créer la marinade bulgogi.\n2. Enrobez les fines lamelles de bœuf de cette marinade et laissez reposer 20 minutes.\n3. Chauffez une poêle en fonte ou un grill à feu très vif.\n4. Saisissez la viande marinée rapidement par petites poignées pendant 3 à 4 minutes pour caraméliser les bords tout en gardant le cœur juteux.\n5. Parsemez de graines de sésame et de ciboule fraîche.\n6. Dégustez enveloppé dans des feuilles de salade avec du riz blanc.`,
-  }
+  },
   {
     id: 'r297',
     title: 'Bibimbap Coréen au Bœuf Sauté, Légumes & Gochujang',
@@ -5831,7 +5831,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Pâte de piment coréen gochujang', quantity: 2, unit: 'cuillère à soupe' }
     ],
     preparation: `1. Faites sauter séparément à la poêle avec un filet d'huile de sésame les carottes, les courgettes et le bœuf.\n2. Faites frire les deux œufs au plat au jaune bien coulant.\n3. Répartissez le riz blanc très chaud dans deux grands bols.\n4. Disposez harmonieusement chaque garniture en rayons colorés autour du bol : carottes, courgettes, épinards, bœuf sauté.\n5. Déposez l'œuf au plat au centre et une belle cuillère de pâte gochujang.\n6. Mélangez vigoureusement l'ensemble du bol à la cuillère juste avant de déguster pour un festival de textures.`,
-  }
+  },
   {
     id: 'r298',
     title: 'Chili con Carne Mexicain au Bœuf & Haricots Rouges',
@@ -5853,7 +5853,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Chocolat noir 70%', quantity: 1, unit: 'carré' }
     ],
     preparation: `1. Faites revenir l'oignon et le poivron émincés dans une cocotte avec un peu d'huile pendant 5 minutes.\n2. Ajoutez le bœuf haché et faites-le dorer en l'émiettant à la spatule.\n3. Incorporez l'ail écrasé, les épices à chili, le cumin et le sel.\n4. Versez les tomates concassées et un demi-verre d'eau, couvrez et laissez mijoter doucement 25 minutes.\n5. Ajoutez les haricots rouges et le carré de chocolat noir (secret des chefs pour la rondeur en bouche), puis poursuivez la cuisson 10 minutes.\n6. Servez bien chaud avec du riz blanc, de la crème aigre ou du cheddar râpé.`,
-  }
+  },
   {
     id: 'r299',
     title: 'Fajitas de Poulet Grillé aux Poivrons & Guacamole',
@@ -5874,7 +5874,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Guacamole frais maison et jus de lime', quantity: 1, unit: 'portion' }
     ],
     preparation: `1. Enrobez le poulet des épices avec deux cuillères d'huile d'olive et le jus d'une demi-lime.\n2. Faites chauffer une grande poêle en fonte à feu vif et saisissez les lanières de poulet pendant 6 minutes jusqu'à coloration dorée. Réservez.\n3. Dans la même poêle, faites sauter les poivrons et l'oignon à feu vif pendant 5 minutes pour qu'ils restent légèrement croquants.\n4. Remettez le poulet dans la poêle pour tout réchauffer ensemble.\n5. Réchauffez les tortillas quelques secondes à la poêle sèche.\n6. Laissez chacun garnir sa tortilla de poulet aux poivrons, d'une belle cuillère de guacamole et refermer pour déguster.`,
-  }
+  },
   {
     id: 'r300',
     title: 'Tacos de Bœuf Barbacoa Fondant aux Épices Douces',
@@ -5895,7 +5895,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Oignon blanc et coriandre fraîche pour garnir', quantity: 1, unit: 'portion' }
     ],
     preparation: `1. Mixez le piment chipotle avec l'ail, le jus de lime, le vinaigre et les épices pour former une pâte aromatique.\n2. Enrobez les morceaux de bœuf et faites-les dorer dans une cocotte.\n3. Couvrez de bouillon de bœuf, couvrez et laissez mijoter à feu doux 50 minutes jusqu'à ce que la viande s'effiloche sans effort.\n4. Effilochez la viande avec deux fourchettes et remettez-la dans le jus de cuisson réduit.\n5. Réchauffez les tortillas de maïs sur une poêle bien chaude.\n6. Garnissez généreusement de bœuf barbacoa juteux, parsemez d'oignon blanc haché cru et de coriandre fraîche.`,
-  }
+  },
   {
     id: 'r301',
     title: 'Empanadas Argentines au Bœuf Épicé & Olives',
@@ -5916,7 +5916,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Cumin, paprika doux et une pincée d\'origan', quantity: 1, unit: 'cuillère à soupe' }
     ],
     preparation: `1. Faites suer doucement les oignons dans un peu d'huile jusqu'à ce qu'ils soient translucides et sucrés.\n2. Ajoutez le bœuf et faites cuire rapidement sans trop dessécher la viande. Retirez du feu.\n3. Incorporez les épices, les olives en rondelles et les dés d'œufs durs. Laissez tiédir.\n4. Déposez une belle cuillère de farce au centre de chaque disque de pâte.\n5. Humidifiez les bords, repliez en demi-lune et réalisez le fameux repulgue (torsade traditionnelle) pour sceller.\n6. Dorez au jaune d'œuf et enfournez à 200°C pendant 18 minutes jusqu'à belle dorure croustillante.`,
-  }
+  },
   {
     id: 'r302',
     title: 'Ceviche Péruvien au Poisson Blanc & Lait de Tigre',
@@ -5937,7 +5937,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Patate douce cuite et maïs grillé (cancha)', quantity: 1, unit: 'portion' }
     ],
     preparation: `1. Coupez le poisson très frais en cubes réguliers de 1,5 cm.\n2. Dans un bol bien froid frotté à l'ail, déposez les dés de poisson avec une pincée de sel fin et mélangez délicatement.\n3. Versez le jus de lime frais et ajoutez le piment émincé.\n4. Mélangez doucement pendant 2 minutes : le poisson commence à devenir opaque en surface tout en restant fondant à cœur.\n5. Ajoutez les lamelles d'oignon rouge préalablement rincées à l'eau froide et la coriandre ciselée.\n6. Servez immédiatement dans des assiettes froides, accompagné de tranches de patate douce et de maïs croquant.`,
-  }
+  },
   {
     id: 'r303',
     title: 'Lomo Saltado Péruvien au Bœuf Sauté & Frites',
@@ -5958,7 +5958,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Coriandre fraîche hachée', quantity: 2, unit: 'cuillère à soupe' }
     ],
     preparation: `1. Faites cuire les frites séparément jusqu'à ce qu'elles soient bien croustillantes.\n2. Faites chauffer un wok avec de l'huile jusqu'à ce qu'il fume légèrement.\n3. Saisissez les lanières de bœuf à feu vif pendant 2 minutes pour les caraméliser à l'extérieur tout en les gardant juteuses. Réservez.\n4. Dans le même wok, faites sauter rapidement les oignons et les tomates pendant 1 minute.\n5. Déglacez avec la sauce soja et le vinaigre de vin rouge pour créer une sauce brillante.\n6. Remettez le bœuf et incorporez les frites croustillantes et la coriandre. Mélangez 30 secondes et servez aussitôt avec du riz blanc.`,
-  }
+  },
   {
     id: 'r304',
     title: 'Arepas Vénézuéliennes Reina Pepiada au Poulet & Avocat',
@@ -5978,7 +5978,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Oignon rouge très finement ciselé', quantity: 2, unit: 'cuillère à soupe' }
     ],
     preparation: `1. Mélangez la farine de maïs avec de l'eau tiède salée jusqu'à formation d'une pâte souple et non collante. Laissez reposer 5 minutes.\n2. Formez 4 galettes épaisses d'environ 1,5 cm d'épaisseur.\n3. Faites-les dorer dans une poêle huilée 5 minutes de chaque côté, puis passez-les 10 minutes au four à 180°C pour les rendre creuses et croustillantes.\n4. Préparez la garniture Reina Pepiada : mélangez le poulet effiloché avec l'avocat écrasé, la mayonnaise, l'oignon et le jus de lime.\n5. Ouvrez les arepas tièdes comme des petits pains pita et garnissez généreusement de la crème de poulet à l'avocat.`,
-  }
+  },
   {
     id: 'r305',
     title: 'Risotto Crémeux aux Champignons Sauvages & Parmesan',
@@ -5999,7 +5999,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Échalote finement ciselée', quantity: 1, unit: 'pièce' }
     ],
     preparation: `1. Faites sauter les champignons émincés dans une poêle avec une noisette de beurre, ail et persil. Réservez.\n2. Dans une casserole, faites suer l'échalote dans un filet d'huile d'olive, puis nacrez le riz 2 minutes jusqu'à ce qu'il devienne translucide.\n3. Versez le bouillon chaud louche par louche en remuant constamment et en attendant que le liquide soit absorbé avant d'en rajouter.\n4. Après 16 à 18 minutes de cuisson al dente, retirez la casserole du feu.\n5. Procédez à la mantecatura : incorporez le beurre froid coupé en dés et le parmesan râpé en fouettant vigoureusement pour obtenir une texture ondeante et crémeuse.\n6. Ajoutez les champignons poêlés et servez immédiatement dans des assiettes creuses chaudes.`,
-  }
+  },
   {
     id: 'r306',
     title: 'Pâtes Cacio e Pepe au Pecorino Romano & Poivre Concassé',
@@ -6017,7 +6017,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Grains de poivre noir concassés', quantity: 1, unit: 'cuillère à soupe' }
     ],
     preparation: `1. Faites cuire les pâtes dans une marmite d'eau modérément salée (le fromage apportera déjà le sel).\n2. Dans une grande poêle, faites torréfier à sec le poivre noir concassé pendant 1 minute pour réveiller tous ses arômes.\n3. Versez une louche d'eau de cuisson des pâtes riche en amidon dans la poêle avec le poivre.\n4. Dans un bol, préparez une pâte crémeuse en mélangeant le pecorino râpé avec un peu d'eau de cuisson tiédie.\n5. Égouttez les pâtes très al dente 2 minutes avant la fin et versez-les dans la poêle avec le poivre.\n6. Hors du feu, versez la crème de pecorino en remuant énergiquement pour former une émulsion soyeuse sans faire grainer le fromage. Servez sans attendre.`,
-  }
+  },
   {
     id: 'r307',
     title: 'Osso Buco alla Milanese au Veau Fondant & Gremolata',
@@ -6038,7 +6038,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Farine pour fariner la viande', quantity: 2, unit: 'cuillère à soupe' }
     ],
     preparation: `1. Incisez la membrane entourant les jarrets pour éviter qu'ils ne se recroquevillent, farinez-les légèrement et saisissez-les au beurre chaud des deux côtés. Réservez.\n2. Dans la même cocotte, faites suer la brunoise de légumes pendant 8 minutes.\n3. Remettez les morceaux de veau, ajoutez les tomates et mouillez de bouillon chaud à mi-hauteur.\n4. Couvrez et laissez mijoter à feu très doux pendant 1h20 jusqu'à ce que la viande se détache toute seule de l'os.\n5. Préparez la gremolata en mélangeant le zeste de citron finement râpé, l'ail écrasé et le persil plat ciselé.\n6. Parsemez la gremolata sur la viande mijotée au dernier moment et servez avec un risotto au safran.`,
-  }
+  },
   {
     id: 'r308',
     title: 'Gratin Dauphinois Traditionnel Fondant à la Muscade',
@@ -6059,7 +6059,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Noix de muscade fraîchement râpée', quantity: 1, unit: 'pincée' }
     ],
     preparation: `1. Épluchez les pommes de terre et taillez-les en rondelles régulières de 3 mm sans les rincer (pour garder leur amidon qui lie la sauce).\n2. Frottez généreusement un plat à gratin avec une gousse d'ail coupée en deux, puis beurrez-le.\n3. Dans une casserole, faites chauffer le lait, la crème, l'ail écrasé, la muscade, le sel et le poivre blanc jusqu'à frémissement.\n4. Disposez les rondelles de pommes de terre en couches régulières dans le plat.\n5. Versez le mélange de crème chaude par-dessus pour immerger les pommes de terre.\n6. Enfournez à 160°C pendant 45 à 50 minutes jusqu'à ce que la pointe d'un couteau s'enfonce comme dans du beurre et que le dessus soit gratiné doré sans ajout de fromage.`,
-  }
+  },
   {
     id: 'r309',
     title: 'Ratatouille Niçoise aux Légumes d\'Été Rôtis',
@@ -6080,7 +6080,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Huile d\'olive extra vierge et thym frais', quantity: 4, unit: 'cuillère à soupe' }
     ],
     preparation: `1. Faites dorer séparément chaque légume (aubergines, courgettes, poivrons) dans une grande poêle avec un filet d'huile d'olive pour qu'ils conservent leur texture et leur saveur propre.\n2. Dans une cocotte, faites suer l'oignon et l'ail avec les tomates concassées et le thym pendant 10 minutes.\n3. Réunissez tous les légumes pré-cuits dans la cocotte.\n4. Couvrez et laissez mijoter à feu très doux pendant 25 minutes sans remuer trop fort pour ne pas écraser les légumes.\n5. Dégustez chaud en accompagnement ou froid le lendemain sur du pain grillé frotté à l'ail.`,
-  }
+  },
   {
     id: 'r310',
     title: 'Paella Valencienne au Poulet & Légumes du Soleil',
@@ -6101,7 +6101,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Branche de romarin frais', quantity: 1, unit: 'pièce' }
     ],
     preparation: `1. Dans une grande poêle à paella (paellera) avec de l'huile d'olive, faites dorer le poulet salé jusqu'à ce qu'il soit bien doré.\n2. Poussez la viande sur les bords, ajoutez les haricots plats au centre et faites-les revenir 5 minutes.\n3. Ajoutez la tomate râpée et le paprika doux, mélangez avec la viande.\n4. Versez l'eau chaude et le safran, laissez frémir 15 minutes pour créer un bouillon savoureux.\n5. Répartissez le riz en croix dans la poêle, puis étalez-le uniformément sans plus y toucher.\n6. Cuisez 10 minutes à feu vif, puis 8 minutes à feu doux avec la branche de romarin sur le dessus jusqu'à formation du croustillant au fond (socarrat).`,
-  }
+  },
   {
     id: 'r311',
     title: 'Tarte Citron Meringuée Acidulée & Meringue Italienne',
@@ -6122,7 +6122,7 @@ export const discoverableRecipes: Recipe[] = [
       { name: 'Blancs d\'œufs pour la meringue', quantity: 3, unit: 'pièce' }
     ],
     preparation: `1. Faites cuire le fond de tarte sablée à blanc à 180°C pendant 18 minutes. Laissez refroidir.\n2. Dans une casserole, fouettez le jus de citron, les zestes, les œufs entiers et le sucre à feu doux jusqu'à épaississement de la crème.\n3. Hors du feu, incorporez le beurre froid au fouet pour une texture soyeuse et brillante. Versez dans le fond de tarte et lissez.\n4. Montez les blancs en neige ferme avec un sirop de sucre pour obtenir une meringue italienne brillante et ferme.\n5. Pochez la meringue sur la crème au citron et dorez délicatement au chalumeau de cuisine.`,
-  }
+  },
   {
     id: 'r312',
     title: 'Profiteroles Maison Glacées Vanille & Chocolat Chaud',
