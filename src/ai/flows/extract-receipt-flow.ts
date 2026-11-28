@@ -51,7 +51,8 @@ RÈGLES CRITIQUES :
 5. CATÉGORIES :
    - Eau (Pristine, Safia, Sabrine, Melliti, Aqualine, Marwa...)
    - Boissons (Jus, Soda, Café, Thé, Delio...)
-   - Frais (Lait, Yaourt, Fromage, Beurre...)
+   - Frais (Lait, Yaourt, Fromage, Beurre, Lait concentré...)
+6. PRÉCISION DES NOMS DE PRODUITS : Garde toujours les distinctions culinaires importantes dans "normalizedLabel". Par exemple, NE RACCOURCIS JAMAIS "Lait concentré" (ou "LAIT CONC", "LAIT CONCENTRE SUCRE", "NESTLE") en "Lait" — écris "Lait concentré". Idem pour "Lait de coco", "Lait d'amande", "Concentré de tomate".
    - Pâtes (Spaghetti, Macaroni, Vermicelle, Couscous...)
    - Epicerie Salée (Huile, Tomate, Harissa, Farine, Semoule, Sel, Epices...)
    - Epicerie Sucrée (Biscuits, Chocolat, Chamia, Cake, Confiture...)

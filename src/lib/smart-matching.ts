@@ -247,9 +247,118 @@ export const PASTA_VARIETIES: string[] = [
 ];
 
 /**
+ * Détecte si un libellé de produit désigne du lait concentré (y compris "Nestlé" / "nestle" employé seul ou avec lait concentré).
+ */
+export function isCondensedMilkLabel(label: string): boolean {
+    const norm = (label || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+    if (!norm) return false;
+
+    // Mention explicite de lait concentré (ou abréviations ticket: "lait conc", "l conc", faute de frappe "conecntre")
+    if (
+        /\blait\b.*\b(concentr[ea]?s?|conecntr[ea]?s?|conc)\b/.test(norm) ||
+        /\b(concentr[ea]?s?|conecntr[ea]?s?|conc)\b.*\blait\b/.test(norm) ||
+        /\bl\s+conc\b/.test(norm) ||
+        /\b(nestle|vanoise)\b.*\blait\b/.test(norm) && /\bconc/.test(norm)
+    ) {
+        return true;
+    }
+
+    // Mention de Nestlé sans autre produit alimentaire distinct (ex: "Nestlé", "nestle", "Nestlé sucré", "Nestlé 397g")
+    if (/\bnestle\b/.test(norm) && !/\b(chocolat|cafe|nescafe|cacao|cereale|cereales|biscuit|glace|eau|yaourt)\b/.test(norm)) {
+        return true;
+    }
+
+    return false;
+}
+
+const MATCHING_DISTINCT_QUALIFIERS: Record<string, string[]> = {
+    'lait': ['coco', 'amande', 'avoine', 'soja', 'riz', 'noisette', 'chanvre', 'concentre', 'ribot', 'caille', 'poudre'],
+    'pomme': ['terre'],
+    'creme': ['coco', 'marron', 'tartre', 'anglaise'],
+    'sauce': ['soja', 'huitre', 'poisson', 'barbecue', 'worcestershire', 'nuoc', 'nam'],
+    'pate': ['curry', 'arachide', 'pistache', 'tartiner'],
+    'vinaigre': ['balsamique', 'cidre', 'riz'],
+    'farine': ['pois', 'chiche', 'mais', 'seigle', 'sarrasin', 'chataigne', 'riz', 'coco'],
+    'huile': ['coco', 'sesame', 'lin', 'ricin'],
+    'sucre': ['glace', 'roux'],
+    'eau': ['fleur', 'rose'],
+};
+
+function getConflictTokens(text: string): Set<string> {
+    const norm = (text || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/\b(\d+[\.,]?\d*)\s*(kg|gr|g|ml|lt|l|cl|pcs|piece|u|un|x|pack|promo|bt|bte|bouteille|sachet)\b/g, ' ')
+        .replace(/[^a-z0-9]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+    const tokens = new Set<string>();
+    const rawWords = norm.split(' ').filter(Boolean);
+    for (let i = 0; i < rawWords.length; i++) {
+        let w = rawWords[i];
+        if (w === 'concentree' || w === 'concentrees' || w === 'concentres' || w === 'conecntre' || w === 'conecntree') {
+            w = 'concentre';
+        } else if (w === 'conc' && i > 0 && (rawWords[i - 1] === 'lait' || rawWords[i - 1] === 'l')) {
+            w = 'concentre';
+        } else if (w === 'marrons') {
+            w = 'marron';
+        } else if (w.length > 3 && (w.endsWith('s') || w.endsWith('x')) && !['riz', 'mais', 'pois', 'jus'].includes(w)) {
+            w = w.slice(0, -1);
+        }
+        tokens.add(w);
+    }
+
+    // Si l'article est "Nestlé" employé comme lait concentré, il porte implicitement lait + concentre
+    if (isCondensedMilkLabel(text)) {
+        tokens.add('lait');
+        tokens.add('concentre');
+    }
+
+    return tokens;
+}
+
+/**
+ * Empêche la confusion entre un produit générique et une variante fondamentalement distincte
+ * (ex: "Lait concentré" ne doit JAMAIS matcher "Lait" ou "Lait Entier", "Lait de coco" != "Lait").
+ */
+export function hasDistinctProductConflict(nameA: string, nameB: string): boolean {
+    const setA = getConflictTokens(nameA);
+    const setB = getConflictTokens(nameB);
+    if (setA.size === 0 || setB.size === 0) return false;
+
+    for (const [root, qualifiers] of Object.entries(MATCHING_DISTINCT_QUALIFIERS)) {
+        if (setA.has(root) && setB.has(root)) {
+            for (const q of qualifiers) {
+                if (setA.has(q) !== setB.has(q)) {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+/**
  * Détecte si un libellé de ticket correspond à une marque phare qui doit être assimilée à son article générique
  */
 export function resolveBrandToGenericProduct(rawLabel: string): { genericName: string; brand: string; category: string } | null {
+    if (isCondensedMilkLabel(rawLabel)) {
+        const normLabel = (rawLabel || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        let brand = '';
+        if (/\bnestle\b/.test(normLabel)) brand = 'Nestlé';
+        else if (/\bvanoise\b/.test(normLabel)) brand = 'Vanoise';
+        return { genericName: 'Lait concentré', brand, category: 'Produits Laitiers & Oeufs' };
+    }
+
     const norm = normalize(rawLabel);
     const words = norm.split(' ').filter(Boolean);
     for (const word of words) {
@@ -424,7 +533,7 @@ export function guessCategoryForProduct(
     }
 
     // C. PRODUITS LAITIERS, FROMAGES, CRÈMERIE & ŒUFS
-    if (/\b(lait|laitier|laitiers|yaourt|yaourts|yogourt|fromage|fromages|fromy|mozzarella|ricotta|gruyere|emmental|gouda|edam|parmesan|cheddar|feta|sicilien|beurre|creme fraiche|creme liquide|cremerie|laban|raib|oeuf|oeufs|vitalait|delice lait|caciotta|kiri|president|danone|mamie nova)\b/i.test(text)) {
+    if (/\b(lait|lait concentre|nestle|vanoise|laitier|laitiers|yaourt|yaourts|yogourt|fromage|fromages|fromy|mozzarella|ricotta|gruyere|emmental|gouda|edam|parmesan|cheddar|feta|sicilien|beurre|creme fraiche|creme liquide|cremerie|laban|raib|oeuf|oeufs|vitalait|delice lait|caciotta|kiri|president|danone|mamie nova)\b/i.test(text)) {
         const found = findUserCat([
             'produits laitiers', 'laitier', 'laitiers', 'cremerie', 'fromage', 'fromages', 'oeuf', 'oeufs', 'frais'
         ]);
@@ -518,6 +627,30 @@ export function guessCategoryForProduct(
     return categories[0]?.name || 'Autre';
 }
 
+function findCondensedMilkMatch<T extends { name: string }>(rawLabel: string, candidates: T[]): T | undefined {
+    if (!isCondensedMilkLabel(rawLabel)) return undefined;
+    const condensed = candidates.filter(c => isCondensedMilkLabel(c.name));
+    if (condensed.length === 0) return undefined;
+
+    const normRaw = normalize(rawLabel);
+    const exact = condensed.find(c => normalize(c.name) === normRaw);
+    if (exact) return exact;
+
+    const prefersNestle = /\bnestle\b/.test(normRaw);
+    if (prefersNestle) {
+        const nestleItem = condensed.find(c => /\bnestle\b/.test(normalize(c.name)));
+        if (nestleItem) return nestleItem;
+    }
+
+    const prefersGeneric = /\bconc/.test(normRaw);
+    if (prefersGeneric) {
+        const genericItem = condensed.find(c => /\bconc/.test(normalize(c.name)));
+        if (genericItem) return genericItem;
+    }
+
+    return condensed[0];
+}
+
 export class SmartMatchingService {
     private static ALIASES_KEY = 'product_aliases';
     private static CUSTOM_INGREDIENTS_KEY = 'custom_ingredients';
@@ -540,7 +673,9 @@ export class SmartMatchingService {
         }
         if (alias) {
             const found = allIngredients.find(i => i.id === alias!.ingredientId);
-            if (found) return { ingredient: found, confidence: alias.confidenceScore ?? 1, isAlias: true };
+            if (found && !hasDistinctProductConflict(rawName, found.name)) {
+                return { ingredient: found, confidence: alias.confidenceScore ?? 1, isAlias: true };
+            }
         }
 
         // 2. Priorité absolue : Rapprochement par produit de base pur sans arôme
@@ -551,6 +686,7 @@ export class SmartMatchingService {
 
         if (baseRawNoSpace.length >= 3) {
             const pureBase = allIngredients.find(i => {
+                if (hasDistinctProductConflict(rawName, i.name)) return false;
                 const normI = normalize(i.name);
                 return normI === baseRaw || normI.replace(/\s+/g, '') === baseRawNoSpace;
             });
@@ -559,8 +695,14 @@ export class SmartMatchingService {
             }
         }
 
+        // 2b. Rapprochement spécifique Lait concentré <-> Nestlé / nestle
+        const condensedMatch = findCondensedMilkMatch(rawName, allIngredients);
+        if (condensedMatch) {
+            return { ingredient: condensedMatch, confidence: 0.97, isAlias: false };
+        }
+
         // 3. Recherche exacte sur le nom normalisé
-        const exactMatch = allIngredients.find(i => normalize(i.name) === normRaw);
+        const exactMatch = allIngredients.find(i => normalize(i.name) === normRaw && !hasDistinctProductConflict(rawName, i.name));
         if (exactMatch) return { ingredient: exactMatch, confidence: 1, isAlias: false };
 
         // 3b. Reconnaissance automatique de marque phare (ex: "Denya", "Marwa", "Safia" -> "Eau minérale")
@@ -568,6 +710,7 @@ export class SmartMatchingService {
         if (brandMapping) {
             const genericNorm = normalize(brandMapping.genericName);
             const foundGeneric = allIngredients.find(i => {
+                if (hasDistinctProductConflict(brandMapping.genericName, i.name)) return false;
                 const normI = normalize(i.name);
                 return normI === genericNorm || normI.includes(genericNorm) || genericNorm.includes(normI);
             });
@@ -580,6 +723,7 @@ export class SmartMatchingService {
         const rawNoSpace = normRaw.replace(/\s+/g, '');
         if (rawNoSpace.length >= 3) {
             const collapsedExact = allIngredients.find(i => {
+                if (hasDistinctProductConflict(rawName, i.name)) return false;
                 const ingNoSpace = normalize(i.name).replace(/\s+/g, '');
                 return ingNoSpace === rawNoSpace;
             });
@@ -589,6 +733,7 @@ export class SmartMatchingService {
         // 3d. Rapprochement par article de base (même si l'ingrédient du garde-manger avait lui aussi une mention d'arôme : ex "Danup fraise")
         if (baseRawNoSpace.length >= 3) {
             const baseMatch = allIngredients.find(i => {
+                if (hasDistinctProductConflict(rawName, i.name)) return false;
                 const normI = normalize(i.name);
                 if (normI === baseRaw) return true;
                 const iNoSpace = normI.replace(/\s+/g, '');
@@ -621,6 +766,7 @@ export class SmartMatchingService {
         let bestContainmentScore = 0;
 
         for (const ing of allIngredients) {
+            if (hasDistinctProductConflict(rawName, ing.name)) continue;
             const normIng = normalize(ing.name);
 
             // Priorité absolue : Le nom MAC est un préfixe exact ou contenu exact du nom importé
@@ -651,6 +797,7 @@ export class SmartMatchingService {
         let bestScore = 0;
 
         for (const ing of allIngredients) {
+            if (hasDistinctProductConflict(rawName, ing.name)) continue;
             const normIng = normalize(ing.name);
 
             const lenRatio = Math.min(normRaw.length, normIng.length) / Math.max(normRaw.length, normIng.length);
@@ -704,7 +851,9 @@ export class SmartMatchingService {
         }
         if (alias) {
             const found = items.find(i => i.id === alias!.ingredientId);
-            if (found) return { item: found, confidence: alias.confidenceScore ?? 1 };
+            if (found && !hasDistinctProductConflict(rawLabel, found.name)) {
+                return { item: found, confidence: alias.confidenceScore ?? 1 };
+            }
         }
 
         // 2. Priorité absolue : Rapprochement par produit de base pur sans arôme
@@ -713,6 +862,7 @@ export class SmartMatchingService {
 
         if (baseRawNoSpace.length >= 3) {
             const pureBase = items.find(i => {
+                if (hasDistinctProductConflict(rawLabel, i.name)) return false;
                 const normI = normalize(i.name);
                 return normI === baseRaw || normI.replace(/\s+/g, '') === baseRawNoSpace;
             });
@@ -721,8 +871,14 @@ export class SmartMatchingService {
             }
         }
 
+        // 2b. Rapprochement spécifique Lait concentré <-> Nestlé / nestle
+        const condensedMatch = findCondensedMilkMatch(rawLabel, items);
+        if (condensedMatch) {
+            return { item: condensedMatch, confidence: 0.97 };
+        }
+
         // 3. Égalité exacte après normalisation & lemmatisation (ex: "Tomates" == "Tomate")
-        const exact = items.find(i => normalize(i.name) === normRaw);
+        const exact = items.find(i => normalize(i.name) === normRaw && !hasDistinctProductConflict(rawLabel, i.name));
         if (exact) return { item: exact, confidence: 1 };
 
         // 3b. Reconnaissance automatique de marque phare (ex: "Denya", "Marwa", "Safia" -> "Eau minérale")
@@ -730,6 +886,7 @@ export class SmartMatchingService {
         if (brandMapping) {
             const genericNorm = normalize(brandMapping.genericName);
             const foundGeneric = items.find(i => {
+                if (hasDistinctProductConflict(brandMapping.genericName, i.name)) return false;
                 const normI = normalize(i.name);
                 return normI === genericNorm || normI.includes(genericNorm) || genericNorm.includes(normI);
             });
@@ -742,6 +899,7 @@ export class SmartMatchingService {
         const rawNoSpace = normRaw.replace(/\s+/g, '');
         if (rawNoSpace.length >= 3) {
             const collapsed = items.find(i => {
+                if (hasDistinctProductConflict(rawLabel, i.name)) return false;
                 const itNoSpace = normalize(i.name).replace(/\s+/g, '');
                 return itNoSpace === rawNoSpace;
             });
@@ -751,6 +909,7 @@ export class SmartMatchingService {
         // 3d. Rapprochement par article de base (même si le panier avait un arôme : ex: "Danup Fraise" dans le panier)
         if (baseRawNoSpace.length >= 3) {
             const baseMatch = items.find(i => {
+                if (hasDistinctProductConflict(rawLabel, i.name)) return false;
                 const normI = normalize(i.name);
                 if (normI === baseRaw) return true;
                 const iNoSpace = normI.replace(/\s+/g, '');
@@ -783,6 +942,7 @@ export class SmartMatchingService {
         let bestContainmentScore = 0;
 
         for (const it of items) {
+            if (hasDistinctProductConflict(rawLabel, it.name)) continue;
             const normIt = normalize(it.name);
             if (normRaw.startsWith(normIt + ' ') && normIt.length >= 2) {
                 if (0.95 > bestContainmentScore) { bestContainment = it; bestContainmentScore = 0.95; }
@@ -809,6 +969,7 @@ export class SmartMatchingService {
         let bestScore = 0;
 
         for (const it of items) {
+            if (hasDistinctProductConflict(rawLabel, it.name)) continue;
             const normIt = normalize(it.name);
             const lenRatio = Math.min(normRaw.length, normIt.length) / Math.max(normRaw.length, normIt.length);
             if (lenRatio < 0.45) continue;

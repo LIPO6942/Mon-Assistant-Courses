@@ -9,6 +9,7 @@ export type ProductDomain =
   | 'PASTA_GRAINS'
   | 'RICE'
   | 'DAIRY'
+  | 'CONDENSED_MILK'
   | 'CHEESE'
   | 'OIL'
   | 'SAUCE'
@@ -89,6 +90,15 @@ export function createDynamicBrandSvgLogo(
         trimmed,
         '<path d="M50 20 C44 28 40 35 40 42 A10 10 0 0 0 60 42 C60 35 56 28 50 20 Z" fill="#FFFFFF"/>',
         '#93C5FD'
+      );
+
+    case 'CONDENSED_MILK':
+      return createBrandSvgLogo(
+        '#005A9C',
+        '#FFFFFF',
+        trimmed,
+        '<rect x="38" y="23" width="24" height="24" rx="4" fill="#FDE68A" stroke="#FFFFFF" stroke-width="2"/><path d="M44 33 L50 27 L56 33" stroke="#005A9C" stroke-width="2.5" fill="none" stroke-linecap="round"/>',
+        '#FDE68A'
       );
 
     case 'CHEESE':
@@ -571,6 +581,32 @@ export const PREDEFINED_BRANDS: BrandDef[] = [
     ),
     domain: 'DAIRY',
     keywords: ['yoplait', 'yaourt', 'creme', 'produits laitiers']
+  },
+
+  // --- LAIT CONCENTRÉ ---
+  {
+    name: 'Nestlé',
+    logoUrl: createBrandSvgLogo(
+      '#005A9C',
+      '#FFFFFF',
+      'Nestlé',
+      '<path d="M36 39 Q50 46 64 39" stroke="#FDE68A" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="45" cy="32" r="2.5" fill="#FDE68A"/><circle cx="55" cy="32" r="2.5" fill="#FDE68A"/>',
+      '#93C5FD'
+    ),
+    domain: 'CONDENSED_MILK',
+    keywords: ['nestle', 'nestlé', 'lait concentre', 'lait concentré']
+  },
+  {
+    name: 'Vanoise',
+    logoUrl: createBrandSvgLogo(
+      '#C62828',
+      '#FFFFFF',
+      'Vanoise',
+      '<path d="M36 38 L50 24 L64 38 Z" fill="#FFE082" stroke="#FFFFFF" stroke-width="1.5"/>',
+      '#FFE082'
+    ),
+    domain: 'CONDENSED_MILK',
+    keywords: ['vanoise', 'lait concentre', 'lait concentré']
   },
 
   // --- FROMAGES (AVEC FROMY, SANS FROMITAL) ---
@@ -1142,7 +1178,18 @@ export function detectProductDomain(
     return 'CHEESE';
   }
 
-  // 8. Dairy (Milk, yogurt, butter, and culinary creams: crème fraîche, crème liquide, etc.)
+  // 8. Condensed Milk (MUST come before generic DAIRY so Nestlé/Vanoise don't mix with Délice/Vitalait)
+  if (
+    (/\blait\b.*\b(concentr[ea]?s?|conecntr[ea]?s?|conc)\b/.test(norm) ||
+      /\b(concentr[ea]?s?|conecntr[ea]?s?|conc)\b.*\blait\b/.test(norm) ||
+      /\bl\s*conc\b/.test(norm) ||
+      /\bnestle\b/.test(norm)) &&
+    !/\b(chocolat|cafe|nescafe|cacao|cereale|cereales|biscuit|glace)\b/.test(norm)
+  ) {
+    return 'CONDENSED_MILK';
+  }
+
+  // 8b. Dairy (Milk, yogurt, butter, and culinary creams: crème fraîche, crème liquide, etc.)
   // Strictly captures culinary creams BEFORE wellness hygiene so Nivea/Elseve are NEVER suggested!
   const isWellnessContext =
     /\b(hydratante|visage|mains?|corps|solaire|anti[- ]rides?|de jour|de nuit|apaisante|depilatoire|reparatrice|cica|bebe|lavante|anti[- ]age)\b/.test(norm) ||
@@ -1241,6 +1288,27 @@ export function getSortedBrandsForProduct(
   }
 
   const domain = detectProductDomain(ingredientName, categoryName);
+
+  // RÈGLE STRICTE LAIT CONCENTRÉ / NESTLÉ : UNIQUEMENT (Nestlé, Vanoise) et AUCUNE autre marque
+  if (domain === 'CONDENSED_MILK') {
+    const CONDENSED_MILK_ALLOWED = ['Nestlé', 'Vanoise'];
+    const condensedBrands: BrandDef[] = CONDENSED_MILK_ALLOWED.map(name => {
+      const predefined = PREDEFINED_BRANDS.find(b => b.name.toLowerCase() === name.toLowerCase());
+      return predefined || {
+        name,
+        logoUrl: createDynamicBrandSvgLogo(name, 'CONDENSED_MILK'),
+        domain: 'CONDENSED_MILK',
+        keywords: [name.toLowerCase(), 'lait concentre']
+      };
+    });
+
+    return condensedBrands.sort((a, b) => {
+      const freqA = brandFrequency[a.name] || 0;
+      const freqB = brandFrequency[b.name] || 0;
+      if (freqB !== freqA) return freqB - freqA;
+      return CONDENSED_MILK_ALLOWED.indexOf(a.name) - CONDENSED_MILK_ALLOWED.indexOf(b.name);
+    });
+  }
 
   const candidateMap = new Map<string, BrandDef>();
 

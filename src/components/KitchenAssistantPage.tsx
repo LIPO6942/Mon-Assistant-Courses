@@ -81,6 +81,7 @@ export default function KitchenAssistantPage() {
   const [aiSuggestions, setAiSuggestions] = useState<SuggestRecipeOutput[]>([]);
   const [isChandyekLoading, setIsChandyekLoading] = useState(false);
   const [chandyekError, setChandyekError] = useState<string | null>(null);
+  const hasAutoFilledChandyek = useRef(false);
 
   // Dialogs State
   const [isAddEditDialogOpen, setAddEditDialogOpen] = useState(false);
@@ -605,21 +606,27 @@ export default function KitchenAssistantPage() {
       });
   }, [chandyekIngredients, pantry]);
 
-  // Auto-add ingredients with green status to Ch3andek (en excluant strictement les produits bien-être et maison comme les piles)
+  // Auto-add ingredients with green status to Ch3andek (une seule fois au chargement initial, en excluant strictement les produits bien-être et maison)
   useEffect(() => {
     if (!isDataLoaded) return;
 
-    const greenIngredients = pantry.filter(ingredient => {
-      const status = getProductStatus(purchaseHistory[ingredient.id], ingredient.name, dbarati);
-      const isExcluded = isNonFoodItem(ingredient.name, ingredient.category);
-      return status === 'green' && !isExcluded;
-    });
+    if (!hasAutoFilledChandyek.current) {
+      hasAutoFilledChandyek.current = true;
+      const greenIngredients = pantry.filter(ingredient => {
+        const status = getProductStatus(purchaseHistory[ingredient.id], ingredient.name, dbarati);
+        const isExcluded = isNonFoodItem(ingredient.name, ingredient.category);
+        return status === 'green' && !isExcluded;
+      });
 
-    // Only add if there are green ingredients and chandyek is empty
-    if (greenIngredients.length > 0 && !chandyekIngredients) {
-      const ingredientNames = greenIngredients.map(ing => ing.name).join(', ');
-      setChandyekIngredients(ingredientNames);
-    } else if (chandyekIngredients) {
+      // Only add on initial load if there are green ingredients and chandyek is empty
+      if (greenIngredients.length > 0 && !chandyekIngredients) {
+        const ingredientNames = greenIngredients.map(ing => ing.name).join(', ');
+        setChandyekIngredients(ingredientNames);
+        return;
+      }
+    }
+
+    if (chandyekIngredients) {
       // Nettoyer automatiquement si des articles non-alimentaires étaient déjà enregistrés
       const cleaned = chandyekIngredients
         .split(', ')
@@ -1390,6 +1397,7 @@ export default function KitchenAssistantPage() {
   };
 
   const handleToggleChandyekIngredient = (ingredientName: string) => {
+    hasAutoFilledChandyek.current = true;
     // Bloquer les articles des catégories non-alimentaires et produits maison/bien-être
     const ingredient = pantry.find(ing => ing.name === ingredientName);
     if (isNonFoodItem(ingredientName, ingredient?.category)) return; // Ignorer silencieusement
@@ -1405,6 +1413,7 @@ export default function KitchenAssistantPage() {
   };
 
   const handleClearChandyekIngredients = () => {
+    hasAutoFilledChandyek.current = true;
     setChandyekIngredients('');
     setAiSuggestions([]);
     setChandyekError(null);
